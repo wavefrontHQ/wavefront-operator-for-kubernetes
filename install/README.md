@@ -16,8 +16,8 @@ To deploy this operator, you will need a cluster with the following minimum setu
 
 ### Add the Wavefront Repo
 ```
-$ helm repo add wavefront 'https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator/master/install/'
-$ helm repo update
+helm repo add wavefront 'https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator/master/install/'
+helm repo update
 ```
 
 ### Install the Chart
@@ -28,13 +28,13 @@ The required options for the chart are:
 
 To deploy a release named "test" into a namespace "test-ns":
 ```
-$ helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-ns
+helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-ns
 ```
 
 ## Uninstallation
 To uninstall/delete a deployed chart named "test":
 ```
-$ helm delete test --purge
+helm delete test --purge
 ```
 
 CRDs created by this chart are not removed as part of helm delete. To remove the CRDs:
