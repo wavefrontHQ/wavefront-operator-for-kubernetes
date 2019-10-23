@@ -42,3 +42,10 @@ CRDs created by this chart are not removed as part of helm delete. To remove the
 kubectl delete crd wavefrontcollectors.wavefront.com
 kubectl delete crd wavefrontproxies.wavefront.com
 ```
+
+## Development
+To update the helm chart:
+- Update the files under `./wavefront-operator`
+- Run `helm package ./wavefront-operator` to update the tgz file
+- Run `helm repo index .` to update the `index.yaml`
+- Commit the changes to this repo
