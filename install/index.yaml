@@ -3,9 +3,9 @@ entries:
   wavefront-operator:
   - apiVersion: v1
     appVersion: 0.1.0
-    created: 2019-10-23T12:52:14.764649-07:00
+    created: 2019-10-23T13:58:32.807111-07:00
     description: Helm chart for the Wavefront operator for Kubernetes
-    digest: e4e70d4d1c6106beb13f285f5808c3c7307fce033bb6aa9f5d73b38de9371989
+    digest: c8ad5e23d91e7d1c586954536925eca25eff898191729a4309cb834293bfc414
     home: https://www.wavefront.com
     keywords:
     - metric
@@ -24,4 +24,4 @@ entries:
     urls:
     - wavefront-operator-0.1.0.tgz
     version: 0.1.0
-generated: 2019-10-23T12:52:14.763532-07:00
+generated: 2019-10-23T13:58:32.805984-07:00
