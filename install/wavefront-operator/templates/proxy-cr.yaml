@@ -1,0 +1,19 @@
+{{- if .Values.proxy.enabled }}
+apiVersion: wavefront.com/v1alpha1
+kind: WavefrontProxy
+metadata:
+  name: {{ template "wavefront-operator.proxy.fullname" . }}
+spec:
+  image: {{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag }}
+  url: {{ .Values.wavefront.url }}/api
+  token: {{ .Values.wavefront.token }}
+  size: 3
+  proxyEnabled: true
+  metricPorts: 2878
+  proxyConfig:
+    metrics:
+    trace:
+    histogram:
+    dataPreprocess:
+    advanced:
+{{- end }}
