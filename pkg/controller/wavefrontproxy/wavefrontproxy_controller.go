@@ -2,11 +2,11 @@ package wavefrontproxy
 
 import (
 	"context"
-	wavefrontv1alpha1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
+	"github.com/go-logr/logr"
+	wfv1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,10 +20,6 @@ import (
 )
 
 var log = logf.Log.WithName("controller_wavefrontproxy")
-
-const (
-	WavefrontProxyKind = "WavefrontProxy"
-)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -50,16 +46,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource WavefrontProxy
-	err = c.Watch(&source.Kind{Type: &wavefrontv1alpha1.WavefrontProxy{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &wfv1.WavefrontProxy{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner WavefrontProxy
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource Deployments and requeue the owner WavefrontProxy
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &wavefrontv1alpha1.WavefrontProxy{},
+		OwnerType:    &wfv1.WavefrontProxy{},
 	})
 	if err != nil {
 		return err
@@ -81,17 +76,16 @@ type ReconcileWavefrontProxy struct {
 
 // Reconcile reads that state of the cluster for a WavefrontProxy object and makes changes based on the state read
 // and what is in the WavefrontProxy.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling WavefrontProxy")
+	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name",
+		request.Name)
+	reqLogger.Info("Reconciling WavefrontProxy :::")
 
 	// Fetch the WavefrontProxy instance
-	instance := &wavefrontv1alpha1.WavefrontProxy{}
+	instance := &wfv1.WavefrontProxy{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -103,136 +97,105 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	// TODO: Handle Defaults? - r.scheme.Default(instance)
-	// TODO: Handle Updates here.
 
-	// Define a new Pod object
-	if !instance.Spec.ProxyEnabled {
-		reqLogger.Info("Skip reconcile since :", "ProxyEnabled", instance.Spec.ProxyEnabled)
-		return reconcile.Result{}, nil
+	// Make desired InternalWavefrontProxyInstance.
+	var desiredIp = &InternalWavefrontProxy{}
+	desiredIp.initialize(instance.DeepCopy())
+
+	if result, err := r.reconcileProxy(desiredIp, reqLogger); err != nil {
+		return result, err
 	}
 
+	return reconcile.Result{}, nil
+}
+
+// reconcileProxy verifies whether the given deployment already exists, If not creates a new one.
+// If exists, then brings it from current state -> desired state.
+func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result,
+	error) {
+	desiredDep := newDeployment(ip)
+
 	// Check if the deployment already exists, if not create a new one.
-	found := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, found)
+	existingDep := &appsv1.Deployment{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Name, Namespace: ip.instance.Namespace}, existingDep)
 	if err != nil && errors.IsNotFound(err) {
-		dep := r.newDeploymentForCR(instance)
-
-		// Set WavefrontProxy instance as the owner and controller
-		if err := controllerutil.SetControllerReference(instance, dep, r.scheme); err != nil {
+		// Set WavefrontProxy ip as the owner and controller
+		if err := controllerutil.SetControllerReference(ip.instance, desiredDep, r.scheme); err != nil {
 			return reconcile.Result{}, err
 		}
 
-		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-		err = r.client.Create(context.TODO(), dep)
+		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", desiredDep.Namespace,
+			"Deployment.Name", desiredDep.Name)
+		err = r.client.Create(context.TODO(), desiredDep)
 		if err != nil {
-			reqLogger.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+			reqLogger.Error(err, "Failed to create new Deployment", "Deployment.Namespace",
+				desiredDep.Namespace, "Deployment.Name", desiredDep.Name)
 			return reconcile.Result{}, err
 		}
-		//instance.Status.CreatedTimestamp = metav1.Now();
-		//err := r.client.Status().Update(context.TODO(), instance)
-		//if err != nil {
-		//	reqLogger.Error(err, "Failed to update WavefrontProxy CreatedTimestamp status")
-		//	return reconcile.Result{}, err
-		//}
-		//reqLogger.Info("CreatedTimestamp :: ", "instance.Status.CreatedTimestamp", instance.Status.CreatedTimestamp)
-		// Deployment created successfully - return and requeue
-		return reconcile.Result{Requeue: true}, nil
+		// A new CR Deployment was successfull, now create a new CR Service.
+		return r.reconcileProxySvc(ip, false, reqLogger)
 	} else if err != nil {
 		reqLogger.Error(err, "Failed to get Deployment")
 		return reconcile.Result{}, err
 	}
 
-	// Ensure the deployment size is the same as the spec
-	size := instance.Spec.Size
-	if *found.Spec.Replicas != size {
-		found.Spec.Replicas = &size
-		err = r.client.Update(context.TODO(), found)
+	reqLogger.Info("Check WavefrontProxy Updated :::")
+	// Deployment already exists, update if the desired spec has changed
+	if specChanged(existingDep, desiredDep) {
+		//if specChanged(&existingDep.Spec, &ip.Spec) {
+		reqLogger.Info("UPDATING::: the existing deployment")
+		err := r.client.Update(context.TODO(), desiredDep)
 		if err != nil {
-			reqLogger.Error(err, "Failed to update Deployment", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 			return reconcile.Result{}, err
 		}
-		instance.Status.UpdatedTimestamp = metav1.Now()
-		//err := r.client.Status().Update(context.TODO(), instance)
-		//if err != nil {
-		//	reqLogger.Error(err, "Failed to update WavefrontProxy UpdatedTimestamp status")
-		//	return reconcile.Result{}, err
-		//}
-		//reqLogger.Info("UpdatedTimestamp :: ", "instance.Status.UpdatedTimestamp", instance.Status.UpdatedTimestamp)
-		// Spec updated - return and requeue
-		return reconcile.Result{Requeue: true}, nil
+		// Update CR service if CR spec changed.
+		if result, err := r.reconcileProxySvc(ip, true, reqLogger); err != nil {
+			return result, err
+		}
 	}
 
-	// TODO: Update Proxy status with appropriate details.
-
-	// Deployment already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace,
-		"Deployment.Name", found.Name)
+	reqLogger.Info("Return WavefrontProxy Reconcile - No Requeue")
 	return reconcile.Result{}, nil
+
 }
 
-// deploymentForMemcached returns a memcached Deployment object
-func (r *ReconcileWavefrontProxy) newDeploymentForCR(instance *wavefrontv1alpha1.WavefrontProxy) *appsv1.Deployment {
-	labels := getLabelsForCR(instance)
-	replicas := instance.Spec.Size
-
-	dep := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name,
-			Namespace: instance.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: *(newPodSpecForCR(instance)),
-			},
-		},
+// reconcileProxySvc verifies whether the given service already exists, If not creates a new one.
+// If exists, then brings it from current state -> desired state.
+func (r *ReconcileWavefrontProxy) reconcileProxySvc(ip *InternalWavefrontProxy, isSpecChanged bool, reqLogger logr.Logger) (reconcile.Result, error) {
+	// Check if the service already exists, if not create a new one.
+	existingSvc := &corev1.Service{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Name, Namespace: ip.instance.Namespace}, existingSvc)
+	if err != nil && errors.IsNotFound(err) {
+		svc := newService(ip)
+		// Set WavefrontProxy instance as the owner and controller
+		if err := controllerutil.SetControllerReference(ip.instance, svc, r.scheme); err != nil {
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Creating a new Service", "Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
+		err = r.client.Create(context.TODO(), svc)
+		if err != nil {
+			reqLogger.Error(err, "Failed to create new Service", "Service.Namespace", svc.Namespace, "Service.Name", svc.Name)
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		reqLogger.Error(err, "Failed to get Service")
+		return reconcile.Result{}, err
 	}
 
-	return dep
-}
-
-// getLabelsForCR returns the labels for selecting the resources
-// belonging to the given WavefrontProxy CR name.
-func getLabelsForCR(instance *wavefrontv1alpha1.WavefrontProxy) map[string]string {
-	// For consistency, labels assigned are as per suggested yaml at
-	// https://github.com/wavefrontHQ/wavefront-kubernetes/blob/master/wavefront-proxy/wavefront.yaml
-	// If any changes are made, make sure they are reflected in both places.
-	return map[string]string{
-		"app":  "wavefront-proxy",
-		"name": instance.Name,
+	// wavefront-proxy service exists and
+	if isSpecChanged {
+		desiredSvc := verifyAndModifySvc(*existingSvc, ip)
+		if desiredSvc != nil {
+			reqLogger.Info("Updating the wavefront-proxy service")
+			err = r.client.Update(context.TODO(), desiredSvc)
+			if err != nil {
+				reqLogger.Error(err, "Failed to update the wavefront-proxy service")
+				return reconcile.Result{}, err
+			}
+		}
 	}
-}
 
-func newPodSpecForCR(instance *wavefrontv1alpha1.WavefrontProxy) *corev1.PodSpec {
-	envVar := constructEnvVars(instance)
-	return &corev1.PodSpec{
-		Containers: []corev1.Container{{
-			Name:            "wavefront-proxy",
-			Image:           instance.Spec.Image,
-			ImagePullPolicy: corev1.PullAlways,
-			Env:             envVar,
-			Ports: []corev1.ContainerPort{{
-				// TODO : Extract comma separated ports.
-				Name:          "metric",
-				ContainerPort: 2878,
-			}},
-		}},
-	}
-}
-
-func constructEnvVars(instance *wavefrontv1alpha1.WavefrontProxy) []corev1.EnvVar {
-	return []corev1.EnvVar{{
-		Name:  "WAVEFRONT_URL",
-		Value: instance.Spec.Url,
-	}, {
-		Name:  "WAVEFRONT_TOKEN",
-		Value: instance.Spec.Token,
-	}}
+	reqLogger.Info("Return WavefrontProxy Reconcile - No Requeue")
+	return reconcile.Result{}, nil
 }

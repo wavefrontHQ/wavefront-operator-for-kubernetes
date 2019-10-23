@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,76 +17,51 @@ type WavefrontProxySpec struct {
 	Image string `json:"image,omitempty"`
 
 	// Wavefront URL (cluster).
-	Url string `json:"url,omitempty"`
+	Url string `json:"url"`
 
 	// Wavefront API Token.
-	Token string `json:"token,omitempty"`
+	Token string `json:"token"`
 
-	// The no. of replicas for Wavefront Proxy
-	Size int32 `json:"size,omitempty"`
+	// The no. of replicas for Wavefront Proxy. Defaults to 1
+	Size *int32 `json:"size,omitempty"`
 
-	// Whether proxy is enabled.
-	ProxyEnabled bool `json:"proxyEnabled,omitempty"`
+	// The port number the proxy will listen on for metrics in Wavefront data format.
+	// This is usually port 2878 by default.
+	MetricPort int32 `json:"metricPort,omitempty"`
 
-	Config ProxyConfig `json:"config,omitempty"`
-
-	//// The port number the proxy will listen on for metrics in Wavefront data format.
-	//// This is usually port 2878
-	MetricPorts int32 `json:"metricPorts,omitempty"`
-}
-
-type ProxyConfig struct {
-	MetricsConfig `json:"metrics,omitempty"`
-
-	TraceConfig `json:"trace,omitempty"`
-
-	HistogramConfig `json:"histogram,omitempty"`
-
-	AdvancedConfig corev1.ConfigMap `json:"advanced,omitempty"`
-
-	DataPreProcessConfig `json:"dataPreprocess,omitempty"`
-}
-
-type MetricsConfig struct {
-	// Comma-separated list of ports to listen on for Wavefront formatted data.(Default: 2878)
-	//MetricPorts int32 `json:"metricPorts,omitempty"`
-}
-
-type TraceConfig struct {
-
-	// Comma-separated list of ports to listen on for Wavefront trace formatted data. Defaults to none.
+	// The port to listen on for Wavefront trace formatted data. Defaults to none.
 	// This is usually 30000
-	TracePorts int32 `json:"tracePorts,omitempty"`
+	TracePort int32 `json:"tracePort,omitempty"`
 
-	// Comma-separated list of ports on which to listen on for Jaeger Thrift formatted data. Defaults to none.
+	// The port to listen on for Jaeger Thrift formatted data. Defaults to none.
 	// This is usually 30001
-	JaegerPorts int32 `json:"jaegerPorts,omitempty"`
+	JaegerPort int32 `json:"jaegerPort,omitempty"`
 
-	// Comma-separated list of ports on which to listen on for Zipkin Thrift formatted data. Defaults to none.
+	// The port to listen on for Zipkin formatted data. Defaults to none.
 	// This is usually 9411
-	ZipkinPorts int32 `json:"zipkinPorts,omitempty"`
+	ZipkinPort int32 `json:"zipkinPort,omitempty"`
 
 	// Sampling rate to apply to tracing spans sent to the proxy. This rate is applied to all
 	// data formats the proxy is listening on.
 	// Value should be between 0.0 and 1.0.  Default is 1.0
-	TraceSamplingRate float32 `json:"traceSamplingRate,omitempty"`
+	TraceSamplingRate float64 `json:"traceSamplingRate,omitempty"`
 
 	// When this is set to a value greater than 0, spans that are greater than or equal to this value will be sampled.
-	TraceSamplingDuration float32 `json:"traceSamplingDuration,omitempty"`
-}
+	TraceSamplingDuration float64 `json:"traceSamplingDuration,omitempty"`
 
-type HistogramConfig struct {
-	// Comma-separated list of ports to listen on for Wavefront histogram distribution formatted data.
+	// The port to listen on for Wavefront histogram distribution formatted data.
 	// This is usually 40000
-	HistogramDistPorts string `json:"histogramDistPorts,omitempty"`
-}
+	HistogramDistPort int32 `json:"histogramDistPort,omitempty"`
 
-type DataPreProcessConfig struct {
-	PreprocessorConfigFile corev1.ConfigMap `json:"preprocessorConfigFile,omitempty"`
-	CustomSourceTags       string           `json:"customSourceTags,omitempty"`
-	Prefix                 string           `json:"prefix,omitempty"`
-	WhitelistRegex         string           `json:"whitelistRegex,omitempty"`
-	BlacklistRegex         string           `json:"blacklistRegex,omitempty"`
+	// The name of the config map providing the preprocessor rules for the Wavefront proxy.
+	Preprocessor string `json:"preprocessor,omitempty"`
+
+	// The name of the config map providing the advanced configurations for the Wavefront proxy.
+	Advanced string `json:"advanced,omitempty"`
+
+	// The comma separated list of ports that need to be opened on Proxy Pod and Services.
+	// Needs to be explicitly specified when using "Advanced" configuration.
+	AdditionalPorts string `json:"additionalPorts,omitempty"`
 }
 
 // WavefrontProxyStatus defines the observed state of WavefrontProxy

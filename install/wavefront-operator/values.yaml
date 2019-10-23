@@ -16,7 +16,7 @@ wavefront:
 ## Wavefront Operator is responsible for managing the lifecycle of the various Wavefront components
 operator:
   image:
-    repository: vikramraman/wavefront-operator
+    repository: akodali/wavefront-operator
     tag: latest
     pullPolicy: IfNotPresent
 
@@ -142,11 +142,13 @@ proxy:
   image:
     repository: wavefronthq/proxy
     tag: 4.38
-    pullPolicy: IfNotPresent
 
   ## The port number the proxy will listen on for metrics in Wavefront data format.
   ## This is usually 2878
-  port: 2878
+  metricPort: 2878
+
+  ## The no. of replicas for Wavefront Proxy. Defaults to 1
+  # size: 3
 
   ## The port nubmer the proxy will listen on for tracing spans in Wavefront trace data format.
   ## This is usually 30000
@@ -169,36 +171,21 @@ proxy:
   ## spans that are greater than or equal to this value will be sampled.
   # traceSamplingDuration: 500
 
-  ## Any configuration property can be passed to the proxy via command line args in
-  ## in the format: `--<property_name> <value>`. Multiple properties can be specified
-  ## separated by whitespace.
-  ## Ref: https://docs.wavefront.com/proxies_configuring.html
-  # args:
+  ## The port to listen on for Wavefront histogram distribution formatted data.
+  ## This is usually 40000
+  #	histogramDistPort: 40000
 
-  ## Proxy is a Java application. By default Java will consume upto 4G of heap memory.
-  ## This can be used to override the default. Uses the `-Xmx` command line option for java
-  # heap: 1024m
+  ## The name of the config map providing the preprocessor rules for the Wavefront proxy.
+  ## This is synonymous to https://github.com/wavefrontHQ/wavefront-proxy/blob/master/pkg/etc/wavefront/wavefront-proxy/preprocessor_rules.yaml.default
+  #	preprocessor:
 
-  ## Preprocessor rules is a powerful way to apply filtering or to enhance metrics as they flow
-  ## through the proxy. You can configure the rules here. By default a rule to drop Kubernetes
-  ## generated labels is applied to remove unecessary and often noisy tags.
-  ## Ref: https://docs.wavefront.com/proxies_preprocessor_rules.html
-  # preprocessor:
-  #   rules.yaml: |
-  #     '2878':
-  #     # fix %2F to be a / instead.  May be required on EKS.
-  #     - rule    : fix-forward-slash
-  #       action  : replaceRegex
-  #       scope   : pointLine
-  #       search  : "%2F"
-  #       replace : "/"
-  #     # replace bad characters ("&", "$", "!", "@") with underscores in the entire point line string
-  #     - rule    : replace-badchars
-  #       action  : replaceRegex
-  #       scope   : pointLine
-  #       search  : "[&\\$!@]"
-  #       replace : "_"
+  ## The name of the config map providing the advanced configurations for the Wavefront proxy.
+  ## This is synonymous to the wavefront.conf file at https://docs.wavefront.com/proxies_configuring.html#paths
+  #	advanced:
 
+  ## The comma separated list of ports that need to be opened on Proxy Pod and Services.
+  ## Needs to be explicitly specified when using "Advanced" configuration.
+  #	additionalPorts: 2879, 30001
 
 ## Specifies whether RBAC resources should be created
 rbac:

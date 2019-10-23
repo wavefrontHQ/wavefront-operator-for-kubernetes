@@ -6,11 +6,11 @@ metadata:
   namespace: wavefront
 data:
   collector.yaml: |
-    clusterName: demo-cluster
+    clusterName: k8s-demo-cluster
     enableDiscovery: true
 
     sinks:
-    - proxyAddress: wavefront-proxy.wavefront.svc.cluster.local:2878
+    - proxyAddress: example-wavefrontproxy.wavefront.svc.cluster.local:2878
       tags:
         version: 1.0.0-rc8
 

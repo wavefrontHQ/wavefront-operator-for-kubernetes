@@ -136,6 +136,7 @@ func (r *ReconcileWavefrontCollector) reconcileDaemonSet(reqLogger logr.Logger, 
 		// DaemonSet created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
+		reqLogger.Info("Return error")
 		return reconcile.Result{}, err
 	}
 

@@ -3,7 +3,7 @@ kind: Role
 metadata:
   creationTimestamp: null
   name: wavefront-operator
-  namespace: wavefront-collector
+  namespace: wavefront
 rules:
 - apiGroups:
   - ""

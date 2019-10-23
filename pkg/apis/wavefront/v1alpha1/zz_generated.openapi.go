@@ -11,12 +11,12 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./pkg/apis/wavefront/v1alpha1.WavefrontCollector":       schema_pkg_apis_wavefront_v1alpha1_WavefrontCollector(ref),
-		"./pkg/apis/wavefront/v1alpha1.WavefrontCollectorSpec":   schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref),
-		"./pkg/apis/wavefront/v1alpha1.WavefrontCollectorStatus": schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorStatus(ref),
-		"./pkg/apis/wavefront/v1alpha1.WavefrontProxy":           schema_pkg_apis_wavefront_v1alpha1_WavefrontProxy(ref),
-		"./pkg/apis/wavefront/v1alpha1.WavefrontProxySpec":       schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref),
-		"./pkg/apis/wavefront/v1alpha1.WavefrontProxyStatus":     schema_pkg_apis_wavefront_v1alpha1_WavefrontProxyStatus(ref),
+		"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollector":       schema_pkg_apis_wavefront_v1alpha1_WavefrontCollector(ref),
+		"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollectorSpec":   schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref),
+		"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollectorStatus": schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorStatus(ref),
+		"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxy":           schema_pkg_apis_wavefront_v1alpha1_WavefrontProxy(ref),
+		"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxySpec":       schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref),
+		"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxyStatus":     schema_pkg_apis_wavefront_v1alpha1_WavefrontProxyStatus(ref),
 	}
 }
 
@@ -47,19 +47,19 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollector(ref common.ReferenceC
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/wavefront/v1alpha1.WavefrontCollectorSpec"),
+							Ref: ref("github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollectorSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/wavefront/v1alpha1.WavefrontCollectorStatus"),
+							Ref: ref("github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollectorStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/wavefront/v1alpha1.WavefrontCollectorSpec", "./pkg/apis/wavefront/v1alpha1.WavefrontCollectorStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollectorSpec", "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontCollectorStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -196,19 +196,19 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxy(ref common.ReferenceCallb
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/wavefront/v1alpha1.WavefrontProxySpec"),
+							Ref: ref("github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxySpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/wavefront/v1alpha1.WavefrontProxyStatus"),
+							Ref: ref("github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxyStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/wavefront/v1alpha1.WavefrontProxySpec", "./pkg/apis/wavefront/v1alpha1.WavefrontProxyStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxySpec", "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1.WavefrontProxyStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -241,35 +241,86 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 					},
 					"size": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The no. of replicas for Wavefront Proxy",
+							Description: "The no. of replicas for Wavefront Proxy. Defaults to 1",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
-					"proxyEnabled": {
+					"metricPort": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether proxy is enabled.",
-							Type:        []string{"boolean"},
+							Description: "The port number the proxy will listen on for metrics in Wavefront data format. This is usually port 2878 by default.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"tracePort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The port to listen on for Wavefront trace formatted data. Defaults to none. This is usually 30000",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"jaegerPort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The port to listen on for Jaeger Thrift formatted data. Defaults to none. This is usually 30001",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"zipkinPort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The port to listen on for Zipkin formatted data. Defaults to none. This is usually 9411",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"traceSamplingRate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Sampling rate to apply to tracing spans sent to the proxy. This rate is applied to all data formats the proxy is listening on. Value should be between 0.0 and 1.0.  Default is 1.0",
+							Type:        []string{"number"},
+							Format:      "double",
+						},
+					},
+					"traceSamplingDuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "When this is set to a value greater than 0, spans that are greater than or equal to this value will be sampled.",
+							Type:        []string{"number"},
+							Format:      "double",
+						},
+					},
+					"histogramDistPort": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The port to listen on for Wavefront histogram distribution formatted data. This is usually 40000",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"preprocessor": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The name of the config map providing the preprocessor rules for the Wavefront proxy.",
+							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"config": {
+					"advanced": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/wavefront/v1alpha1.ProxyConfig"),
+							Description: "The name of the config map providing the advanced configurations for the Wavefront proxy.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
-					"metricPorts": {
+					"additionalPorts": {
 						SchemaProps: spec.SchemaProps{
-							Description: "// The port number the proxy will listen on for metrics in Wavefront data format. // This is usually port 2878",
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Description: "The comma separated list of ports that need to be opened on Proxy Pod and Services. Needs to be explicitly specified when using \"Advanced\" configuration.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
+				Required: []string{"url", "token"},
 			},
 		},
-		Dependencies: []string{
-			"./pkg/apis/wavefront/v1alpha1.ProxyConfig"},
+		Dependencies: []string{},
 	}
 }
 

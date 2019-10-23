@@ -197,7 +197,6 @@ spec:
     storage: true
 ---
 # wavefrontproxy_crd.yaml
-
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -229,88 +228,71 @@ spec:
           type: object
         spec:
           properties:
-            config:
-              properties:
-                advanced:
-                  type: object
-                dataPreprocess:
-                  properties:
-                    blacklistRegex:
-                      type: string
-                    customSourceTags:
-                      type: string
-                    prefix:
-                      type: string
-                    preprocessorConfigFile:
-                      type: object
-                    whitelistRegex:
-                      type: string
-                  type: object
-                histogram:
-                  properties:
-                    histogramDistPorts:
-                      description: Comma-separated list of ports to listen on for
-                        Wavefront histogram distribution formatted data. This is usually
-                        40000
-                      type: string
-                  type: object
-                metrics:
-                  type: object
-                trace:
-                  properties:
-                    jaegerPorts:
-                      description: Comma-separated list of ports on which to listen
-                        on for Jaeger Thrift formatted data. Defaults to none. This
-                        is usually 30001
-                      format: int32
-                      type: integer
-                    tracePorts:
-                      description: Comma-separated list of ports to listen on for
-                        Wavefront trace formatted data. Defaults to none. This is
-                        usually 30000
-                      format: int32
-                      type: integer
-                    traceSamplingDuration:
-                      description: When this is set to a value greater than 0, spans
-                        that are greater than or equal to this value will be sampled.
-                      format: float
-                      type: number
-                    traceSamplingRate:
-                      description: Sampling rate to apply to tracing spans sent to
-                        the proxy. This rate is applied to all data formats the proxy
-                        is listening on. Value should be between 0.0 and 1.0.  Default
-                        is 1.0
-                      format: float
-                      type: number
-                    zipkinPorts:
-                      description: Comma-separated list of ports on which to listen
-                        on for Zipkin Thrift formatted data. Defaults to none. This
-                        is usually 9411
-                      format: int32
-                      type: integer
-                  type: object
-              type: object
+            additionalPorts:
+              description: The comma separated list of ports that need to be opened
+                on Proxy Pod and Services. Needs to be explicitly specified when using
+                "Advanced" configuration.
+              type: string
+            advanced:
+              description: The name of the config map providing the advanced configurations
+                for the Wavefront proxy.
+              type: string
+            histogramDistPort:
+              description: The port to listen on for Wavefront histogram distribution
+                formatted data. This is usually 40000
+              format: int32
+              type: integer
             image:
               description: The WavefrontProxy image to use. Defaults to wavefronthq/proxy:latest
               type: string
-            metricPorts:
-              description: // The port number the proxy will listen on for metrics
-                in Wavefront data format. // This is usually port 2878
+            jaegerPort:
+              description: The port to listen on for Jaeger Thrift formatted data.
+                Defaults to none. This is usually 30001
               format: int32
               type: integer
-            proxyEnabled:
-              description: Whether proxy is enabled.
-              type: boolean
+            metricPort:
+              description: The port number the proxy will listen on for metrics in
+                Wavefront data format. This is usually port 2878 by default.
+              format: int32
+              type: integer
+            preprocessor:
+              description: The name of the config map providing the preprocessor rules
+                for the Wavefront proxy.
+              type: string
             size:
-              description: The no. of replicas for Wavefront Proxy
+              description: The no. of replicas for Wavefront Proxy. Defaults to 1
               format: int32
               type: integer
             token:
               description: Wavefront API Token.
               type: string
+            tracePort:
+              description: The port to listen on for Wavefront trace formatted data.
+                Defaults to none. This is usually 30000
+              format: int32
+              type: integer
+            traceSamplingDuration:
+              description: When this is set to a value greater than 0, spans that
+                are greater than or equal to this value will be sampled.
+              format: double
+              type: number
+            traceSamplingRate:
+              description: Sampling rate to apply to tracing spans sent to the proxy.
+                This rate is applied to all data formats the proxy is listening on.
+                Value should be between 0.0 and 1.0.  Default is 1.0
+              format: double
+              type: number
             url:
               description: Wavefront URL (cluster).
               type: string
+            zipkinPort:
+              description: The port to listen on for Zipkin formatted data. Defaults
+                to none. This is usually 9411
+              format: int32
+              type: integer
+          required:
+          - url
+          - token
           type: object
         status:
           properties:

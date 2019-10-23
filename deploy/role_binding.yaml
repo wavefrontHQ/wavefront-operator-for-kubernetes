@@ -2,7 +2,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: wavefront-operator
-  namespace: wavefront-collector
+  namespace: wavefront
 subjects:
 - kind: ServiceAccount
   name: wavefront-operator
