@@ -95,15 +95,6 @@ data:
         port: 11211
         conf: |
           servers = ["${host}:${port}"]
-      - name: consul
-        type: telegraf/consul
-        selectors:
-          images:
-          - 'consul*'
-        port: 8500
-        conf: |
-          address = ["${host}:${port}"]
-          scheme = "http"
       - name: kube-dns-discovery
         type: prometheus
         selectors:
