@@ -100,10 +100,10 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	
+
 	// Make desired InternalWavefrontProxyInstance.
 	var desiredIp = &InternalWavefrontProxy{}
-	desiredIp.initialize(instance.DeepCopy())
+	desiredIp.initialize(instance.DeepCopy(), reqLogger)
 
 	result, err := r.reconcileProxy(desiredIp, reqLogger)
 	if err != nil {

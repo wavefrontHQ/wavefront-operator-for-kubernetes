@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"github.com/wavefronthq/wavefront-operator/pkg/controller/wavefrontupgradeutil"
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -54,7 +55,7 @@ type InternalWavefrontProxy struct {
 	ServicePortsMap map[string]corev1.ServicePort
 }
 
-func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy) {
+func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqLogger logr.Logger) {
 	ip.instance = instance
 
 	// Configs with defaults.
@@ -72,8 +73,10 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy) {
 			ip.instance.Status.Version = instanceVersion
 		} else {
 			// Update the Image
-			upgradeVersion := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion)
-			if ip.instance.Status.Version != upgradeVersion {
+			upgradeVersion, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion)
+			if err != nil {
+				reqLogger.Error(err, "Unable to fetch Versions for Auto Upgrade.")
+			} else if ip.instance.Status.Version != upgradeVersion {
 				ip.instance.Status.Version = upgradeVersion
 				ip.instance.Spec.Image = imagePrefix + upgradeVersion
 			}
