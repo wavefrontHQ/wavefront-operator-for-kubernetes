@@ -66,23 +66,10 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 	}
 
 	instanceVersion := strings.Split(ip.instance.Spec.Image, ":")[1]
-	if (instanceVersion != "latest") {
-		// If enabled for auto upgrade, deploy with latest available minor version.
-		if !ip.instance.Spec.EnableAutoUpgrade {
-			//No change needed for Image.
-			ip.instance.Status.Version = instanceVersion
-		} else {
-			// Update the Image
-			upgradeVersion, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion)
-			if err != nil {
-				reqLogger.Error(err, "Unable to fetch Versions for Auto Upgrade.")
-			} else if ip.instance.Status.Version != upgradeVersion {
-				ip.instance.Status.Version = upgradeVersion
-				ip.instance.Spec.Image = imagePrefix + upgradeVersion
-			}
-		}
-	} else {
-		ip.instance.Status.Version = ""
+	finalVer, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade)
+	if err != nil {
+		ip.instance.Status.Version = finalVer
+		ip.instance.Spec.Image = imagePrefix + finalVer
 	}
 
 	ip.ContainerPortsMap = make(map[string]corev1.ContainerPort)
