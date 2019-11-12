@@ -100,8 +100,7 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-
-	reqLogger.Info("EnableAutoUpgrade:: ", "EnableAutoUpgrade ::" , instance.Spec.EnableAutoUpgrade)
+	
 	// Make desired InternalWavefrontProxyInstance.
 	var desiredIp = &InternalWavefrontProxy{}
 	desiredIp.initialize(instance.DeepCopy())
