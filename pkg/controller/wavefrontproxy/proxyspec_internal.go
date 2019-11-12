@@ -67,9 +67,11 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 
 	instanceVersion := strings.Split(ip.instance.Spec.Image, ":")[1]
 	finalVer, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade)
-	if err != nil {
+	if err == nil {
 		ip.instance.Status.Version = finalVer
 		ip.instance.Spec.Image = imagePrefix + finalVer
+	} else {
+		reqLogger.Error(err, "Fetching latest version failed.")
 	}
 
 	ip.ContainerPortsMap = make(map[string]corev1.ContainerPort)

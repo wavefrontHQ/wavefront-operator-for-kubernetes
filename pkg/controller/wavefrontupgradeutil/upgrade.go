@@ -66,7 +66,8 @@ func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgra
 	}
 
 	if foundUpgradeVersion {
-		log.Info("Found new Minor Upgrade version :: " + finalSemV.Original() + ", current version " + currentVersion)
+		log.Info("Found newer Minor Upgrade version :: " + finalSemV.Original() + ", " +
+			"current version " + currentVersion)
 	}
 
 	return finalSemV.Original(), nil
