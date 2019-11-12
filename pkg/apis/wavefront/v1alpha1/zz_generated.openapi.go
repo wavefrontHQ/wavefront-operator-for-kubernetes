@@ -83,13 +83,6 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 							Format:      "",
 						},
 					},
-					"disableUpdate": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether to disable automatically updating the collector if a new version becomes available.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
 					"enableDebug": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Whether to enable debug logging and profiling",
@@ -133,6 +126,13 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 						SchemaProps: spec.SchemaProps{
 							Description: "The name of the config map providing the configuration for the collector instance. If empty, a default name of \"collectorName-config\" is assumed.",
 							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"enableAutoUpgrade": {
+						SchemaProps: spec.SchemaProps{
+							Description: "If set to true, Collector pods will be upgraded automatically in case new minor upgrade version is available. For pinning Collector to a specific version, you will need to set this option to false. We support only minor version Auto Upgrades.",
+							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
@@ -316,6 +316,13 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 							Format:      "",
 						},
 					},
+					"enableAutoUpgrade": {
+						SchemaProps: spec.SchemaProps{
+							Description: "If set to true, Proxy pods will be upgraded automatically in case new minor upgrade version is available. For pinning Proxy to a specific version, you will need to set this option to false. We support only minor version Auto Upgrades.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 				Required: []string{"url", "token"},
 			},
@@ -332,14 +339,8 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxyStatus(ref common.Referenc
 				Properties: map[string]spec.Schema{
 					"version": {
 						SchemaProps: spec.SchemaProps{
-							Description: "INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"createdTimestamp": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"updatedTimestamp": {

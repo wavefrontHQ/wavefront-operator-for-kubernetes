@@ -17,9 +17,6 @@ type WavefrontCollectorSpec struct {
 	// Whether to deploy the collector as a daemonset. False will roll out as a deployment.
 	Daemon bool `json:"daemon,omitempty"`
 
-	// Whether to disable automatically updating the collector if a new version becomes available.
-	DisableUpdate bool `json:"disableUpdate,omitempty"`
-
 	// Whether to enable debug logging and profiling
 	EnableDebug bool `json:"enableDebug,omitempty"`
 
@@ -35,6 +32,11 @@ type WavefrontCollectorSpec struct {
 	// The name of the config map providing the configuration for the collector instance.
 	// If empty, a default name of "collectorName-config" is assumed.
 	ConfigName string `json:"configName,omitempty"`
+
+	// If set to true, Collector pods will be upgraded automatically in case new minor upgrade version is available.
+	// For pinning Collector to a specific version, you will need to set this option to false.
+	// We support only minor version Auto Upgrades.
+	EnableAutoUpgrade bool `json:"enableAutoUpgrade,omitempty"`
 }
 
 // WavefrontCollectorStatus defines the observed state of WavefrontCollector

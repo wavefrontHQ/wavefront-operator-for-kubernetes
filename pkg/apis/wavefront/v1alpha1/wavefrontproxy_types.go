@@ -62,6 +62,11 @@ type WavefrontProxySpec struct {
 	// The comma separated list of ports that need to be opened on Proxy Pod and Services.
 	// Needs to be explicitly specified when using "Advanced" configuration.
 	AdditionalPorts string `json:"additionalPorts,omitempty"`
+
+	// If set to true, Proxy pods will be upgraded automatically in case new minor upgrade version is available.
+	// For pinning Proxy to a specific version, you will need to set this option to false.
+	// We support only minor version Auto Upgrades.
+	EnableAutoUpgrade bool `json:"enableAutoUpgrade,omitempty"`
 }
 
 // WavefrontProxyStatus defines the observed state of WavefrontProxy
@@ -70,8 +75,8 @@ type WavefrontProxyStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
 	Version          string      `json:"version,omitempty"`
-	CreatedTimestamp metav1.Time `json:"createdTimestamp,omitempty"`
 	UpdatedTimestamp metav1.Time `json:"updatedTimestamp,omitempty"`
 }
 

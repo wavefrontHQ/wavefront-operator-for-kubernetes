@@ -5,10 +5,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
+	"github.com/wavefronthq/wavefront-operator/pkg/controller/wavefrontupgradeutil"
 )
 
 const (
 	defaultImage = "wavefronthq/proxy:latest"
+
+	imagePrefix = "wavefronthq/proxy:"
 
 	defaultMetricPort = 2878
 
@@ -27,6 +30,11 @@ const (
 type InternalWavefrontProxy struct {
 	// The actual deep copy of instance
 	instance *wfv1.WavefrontProxy
+
+	// -----Wavefront Proxy CR Instance/Instance Status related.----- //
+	// boolean value to indicate if the CR is newly created/updated during reconcile.
+	// This is used to update the CR instance/status. Not used to identify auto upgrades.
+	updateCR bool
 
 	// -----Wavefront Proxy Deployment related.----- //
 	// The container ports required to be opened up for wavefront proxy
@@ -54,6 +62,24 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy) {
 	// Proxy Image
 	if ip.instance.Spec.Image == "" {
 		ip.instance.Spec.Image = defaultImage
+	}
+
+	instanceVersion := strings.Split(ip.instance.Spec.Image, ":")[1]
+	if (instanceVersion != "latest") {
+		// If enabled for auto upgrade, deploy with latest available minor version.
+		if !ip.instance.Spec.EnableAutoUpgrade {
+			//No change needed for Image.
+			ip.instance.Status.Version = instanceVersion
+		} else {
+			// Update the Image
+			upgradeVersion := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion)
+			if ip.instance.Status.Version != upgradeVersion {
+				ip.instance.Status.Version = upgradeVersion
+				ip.instance.Spec.Image = imagePrefix + upgradeVersion
+			}
+		}
+	} else {
+		ip.instance.Status.Version = ""
 	}
 
 	ip.ContainerPortsMap = make(map[string]corev1.ContainerPort)
