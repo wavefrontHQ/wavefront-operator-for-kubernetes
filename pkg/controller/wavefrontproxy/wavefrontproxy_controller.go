@@ -110,12 +110,11 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 		return result, err
 	} else if desiredIp.updateCR {
 		err := r.updateCRStatus(instance, desiredIp, reqLogger)
-		reqLogger.Info("Updated WavefrontProxy CR Status.")
 		if err != nil {
 			reqLogger.Error(err, "Failed to update WavefrontProxy CR status")
 			return reconcile.Result{}, err
 		}
-		return result, nil
+		reqLogger.Info("Updated WavefrontProxy CR Status.")
 	}
 
 	return reconcile.Result{RequeueAfter: 1 * time.Hour}, nil

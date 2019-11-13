@@ -12,8 +12,6 @@ import (
 const (
 	defaultImage = "wavefronthq/proxy:latest"
 
-	imagePrefix = "wavefronthq/proxy:"
-
 	defaultMetricPort = 2878
 
 	defaultImagePullPolicy = corev1.PullIfNotPresent
@@ -69,7 +67,7 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 	finalVer, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade)
 	if err == nil {
 		ip.instance.Status.Version = finalVer
-		ip.instance.Spec.Image = imagePrefix + finalVer
+		ip.instance.Spec.Image = wavefrontupgradeutil.ImagePrefix + wavefrontupgradeutil.ProxyImageName + ":" + finalVer
 	} else {
 		reqLogger.Error(err, "Fetching latest version failed.")
 	}

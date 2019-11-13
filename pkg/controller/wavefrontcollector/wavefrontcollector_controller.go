@@ -21,6 +21,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
+	"strings"
+	"github.com/wavefronthq/wavefront-operator/pkg/controller/wavefrontupgradeutil"
 )
 
 var log = logf.Log.WithName("controller_wavefrontcollector")
@@ -105,19 +108,46 @@ func (r *ReconcileWavefrontCollector) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
+	desiredCRInstance := instance.DeepCopy()
+	getlatestCollector(reqLogger, desiredCRInstance)
+
+	var updateCR bool
 	if instance.Spec.Daemon {
-		return r.reconcileDaemonSet(reqLogger, instance)
+		updateCR, err = r.reconcileDaemonSet(reqLogger, desiredCRInstance)
 	} else {
-		return r.reconcileDeployment(reqLogger, instance)
+		updateCR, err = r.reconcileDeployment(reqLogger, desiredCRInstance)
+	}
+	if err != nil {
+		return reconcile.Result{}, err
+	} else if updateCR {
+		err := r.updateCRStatus(reqLogger, instance, desiredCRInstance)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update WavefrontCollector CR status")
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Updated WavefrontCollector CR Status.")
+	}
+	return reconcile.Result{RequeueAfter: 1 * time.Hour}, nil
+}
+
+func getlatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) {
+	instanceVersion := strings.Split(instance.Spec.Image, ":")[1]
+	finalVer, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.CollectorImageName, instanceVersion, instance.Spec.EnableAutoUpgrade)
+	if err == nil {
+		instance.Status.Version = finalVer
+		instance.Spec.Image = wavefrontupgradeutil.ImagePrefix + wavefrontupgradeutil.CollectorImageName+ ":" + finalVer
+	} else {
+		reqLogger.Error(err, "Fetching latest version failed.")
 	}
 }
 
-func (r *ReconcileWavefrontCollector) reconcileDaemonSet(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) (reconcile.Result, error) {
+func (r *ReconcileWavefrontCollector) reconcileDaemonSet(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) (bool, error) {
+	updateCR := false
 	ds := newDaemonSetForCR(instance)
 
 	// Set WavefrontCollector instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, ds, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return updateCR, err
 	}
 
 	// delete a deployment if one exists matching the same name
@@ -130,26 +160,29 @@ func (r *ReconcileWavefrontCollector) reconcileDaemonSet(reqLogger logr.Logger, 
 		reqLogger.Info("Creating a new DaemonSet")
 		err = r.client.Create(context.TODO(), ds)
 		if err != nil {
-			return reconcile.Result{}, err
+			return updateCR, err
 		}
-
+		// Update CR Status on Create.
+		updateCR = true
 		// DaemonSet created successfully - don't requeue
-		return reconcile.Result{}, nil
+		return updateCR, nil
 	} else if err != nil {
 		reqLogger.Info("Return error")
-		return reconcile.Result{}, err
+		return updateCR, err
 	}
 
 	if specChanged(&found.Spec.Template, &instance.Spec) {
 		reqLogger.Info("Updating the existing daemonset")
 		err := r.client.Update(context.TODO(), ds)
+		// Update CR Status on Update.
+		updateCR = true
 		if err != nil {
-			return reconcile.Result{}, err
+			return updateCR, err
 		}
 	}
 
 	// Already exists - don't requeue
-	return reconcile.Result{}, nil
+	return updateCR, nil
 }
 
 func newDaemonSetForCR(instance *wavefrontv1alpha1.WavefrontCollector) *appsv1.DaemonSet {
@@ -246,12 +279,13 @@ func newPodSpecForCR(instance *wavefrontv1alpha1.WavefrontCollector) corev1.PodS
 	}
 }
 
-func (r *ReconcileWavefrontCollector) reconcileDeployment(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) (reconcile.Result, error) {
+func (r *ReconcileWavefrontCollector) reconcileDeployment(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) (bool, error) {
+	updateCR := false
 	deployment := newDeploymentForCR(instance)
 
 	// Set WavefrontCollector instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return updateCR, err
 	}
 
 	// delete daemon set if one exists matching the same name
@@ -264,14 +298,15 @@ func (r *ReconcileWavefrontCollector) reconcileDeployment(reqLogger logr.Logger,
 		reqLogger.Info("Creating a new Deployment")
 		err = r.client.Create(context.TODO(), deployment)
 		if err != nil {
-			return reconcile.Result{}, err
+			return updateCR, err
 		}
-
+		// Update CR Status on Create.
+		updateCR = true
 		// Deployment created successfully - don't requeue
-		return reconcile.Result{}, nil
+		return updateCR, nil
 	} else if err != nil {
 		reqLogger.Error(err, "error looking up deployment")
-		return reconcile.Result{}, err
+		return updateCR, err
 	}
 
 	// already exists. update if spec has changed
@@ -279,12 +314,13 @@ func (r *ReconcileWavefrontCollector) reconcileDeployment(reqLogger logr.Logger,
 		reqLogger.Info("Updating the existing deployment")
 		err := r.client.Update(context.TODO(), deployment)
 		if err != nil {
-			return reconcile.Result{}, err
+			return updateCR, err
 		}
+		// Update CR Status on Update.
+		updateCR = true
 	}
 
-	// no changes, don't requeue
-	return reconcile.Result{}, nil
+	return updateCR, nil
 }
 
 func newDeploymentForCR(instance *wavefrontv1alpha1.WavefrontCollector) *appsv1.Deployment {
@@ -313,4 +349,13 @@ func buildLabels(name string) map[string]string {
 		"k8s-app": "wavefront-collector",
 		"name":    name,
 	}
+}
+
+// updateCRStatus updates the status of the WavefrontProxy CR.
+func (r *ReconcileWavefrontCollector) updateCRStatus(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector, desiredCRInstance *wavefrontv1alpha1.WavefrontCollector) error {
+	reqLogger.Info("Updating WavefrontCollector CR Status :")
+	instance.Status = desiredCRInstance.Status
+	instance.Status.UpdatedTimestamp = metav1.Now()
+
+	return r.client.Status().Update(context.TODO(), instance)
 }

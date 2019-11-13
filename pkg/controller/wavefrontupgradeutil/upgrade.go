@@ -14,6 +14,8 @@ const (
 	ProxyImageName = "proxy"
 
 	CollectorImageName = "wavefront-kubernetes-collector"
+
+	ImagePrefix = "wavefronthq/"
 )
 
 func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgrade bool) (string, error) {
