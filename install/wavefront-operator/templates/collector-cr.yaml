@@ -7,9 +7,7 @@ spec:
   image: {{ .Values.collector.image.repository }}:{{ .Values.collector.image.tag }}
   daemon: {{ .Values.collector.useDaemonset }}
   configName: {{ template "wavefront-operator.collector.fullname" . }}-config
-  {{- if .Values.collector.enableAutoUpgrade }}
-  enableAutoUpgrade: {{ .Values.collector.enableAutoUpgrade }}
-  {{- end -}}
+
   env:
   - name: HOST_PROC
     value: /host/proc
@@ -31,4 +29,8 @@ spec:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
     operator: Exists
+
+  {{- if .Values.collector.enableAutoUpgrade }}
+  enableAutoUpgrade: {{ .Values.collector.enableAutoUpgrade }}
+  {{- end -}}
 {{- end }}
