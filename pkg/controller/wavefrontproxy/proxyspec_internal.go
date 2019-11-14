@@ -5,7 +5,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
-	"github.com/wavefronthq/wavefront-operator/pkg/controller/wavefrontupgradeutil"
+	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
 	"github.com/go-logr/logr"
 )
 
@@ -64,10 +64,10 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 	}
 
 	instanceVersion := strings.Split(ip.instance.Spec.Image, ":")[1]
-	finalVer, err := wavefrontupgradeutil.GetLatestVersion(wavefrontupgradeutil.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade)
+	finalVer, err := util.GetLatestVersion(util.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade)
 	if err == nil {
 		ip.instance.Status.Version = finalVer
-		ip.instance.Spec.Image = wavefrontupgradeutil.ImagePrefix + wavefrontupgradeutil.ProxyImageName + ":" + finalVer
+		ip.instance.Spec.Image = util.ImagePrefix + util.ProxyImageName + ":" + finalVer
 	} else {
 		reqLogger.Error(err, "Fetching latest version failed.")
 	}

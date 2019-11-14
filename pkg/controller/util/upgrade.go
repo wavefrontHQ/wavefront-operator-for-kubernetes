@@ -1,4 +1,4 @@
-package wavefrontupgradeutil
+package util
 
 import (
 	"net/http"
