@@ -132,7 +132,7 @@ func (r *ReconcileWavefrontCollector) Reconcile(request reconcile.Request) (reco
 
 func getlatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) {
 	instanceVersion := strings.Split(instance.Spec.Image, ":")[1]
-	finalVer, err := util.GetLatestVersion(util.CollectorImageName, instanceVersion, instance.Spec.EnableAutoUpgrade)
+	finalVer, err := util.GetLatestVersion(util.CollectorImageName, instanceVersion, instance.Spec.EnableAutoUpgrade, reqLogger)
 	if err == nil {
 		instance.Status.Version = finalVer
 		instance.Spec.Image = util.ImagePrefix + util.CollectorImageName + ":" + finalVer

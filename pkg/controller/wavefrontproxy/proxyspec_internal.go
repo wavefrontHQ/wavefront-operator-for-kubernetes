@@ -64,7 +64,7 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 	}
 
 	instanceVersion := strings.Split(ip.instance.Spec.Image, ":")[1]
-	finalVer, err := util.GetLatestVersion(util.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade)
+	finalVer, err := util.GetLatestVersion(util.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
 	if err == nil {
 		ip.instance.Status.Version = finalVer
 		ip.instance.Spec.Image = util.ImagePrefix + util.ProxyImageName + ":" + finalVer

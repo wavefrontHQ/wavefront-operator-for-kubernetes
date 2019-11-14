@@ -3,7 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/Masterminds/semver"
-	"github.com/prometheus/common/log"
+	"github.com/go-logr/logr"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +18,7 @@ const (
 	ImagePrefix = "wavefronthq/"
 )
 
-func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgrade bool) (string, error) {
+func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
 	if !enableAutoUpgrade {
 		return currentVersion, nil
 	}
@@ -68,7 +68,7 @@ func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgra
 	}
 
 	if foundUpgradeVersion {
-		log.Info("Found newer Minor Upgrade version :: " + finalSemV.Original() + ", " +
+		reqLogger.Info("Found newer Minor Upgrade version :: " + finalSemV.Original() + ", " +
 			"current version " + currentVersion)
 	}
 

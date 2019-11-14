@@ -2,14 +2,16 @@ package util
 
 import (
 	"github.com/Masterminds/semver"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"testing"
 )
 
 func TestProxyValidUpgrade(t *testing.T) {
+	reqLogger := logf.Log.WithName("Upgrade_Test")
 	// Proxy
 	v := "5.1"
 	semV, _ := semver.NewVersion(v)
-	returnVer, err := GetLatestVersion(ProxyImageName, v, true)
+	returnVer, err := GetLatestVersion(ProxyImageName, v, true, reqLogger)
 	if err != nil {
 		t.Error("Failed to get latest version :: ", err)
 	}
@@ -22,10 +24,11 @@ func TestProxyValidUpgrade(t *testing.T) {
 }
 
 func TestCollectorValidUpgrade(t *testing.T) {
+	reqLogger := logf.Log.WithName("Upgrade_Test")
 	// Collector
 	v := "1.0.0"
 	semV, _ := semver.NewVersion(v)
-	returnVer, err := GetLatestVersion(CollectorImageName, v, true)
+	returnVer, err := GetLatestVersion(CollectorImageName, v, true, reqLogger)
 	if err != nil {
 		t.Error("Failed to get latest version :: ", err)
 	}
@@ -38,9 +41,10 @@ func TestCollectorValidUpgrade(t *testing.T) {
 }
 
 func TestImageLatest(t *testing.T) {
+	reqLogger := logf.Log.WithName("Upgrade_Test")
 	// Proxy
 	v := "latest"
-	returnVer, err := GetLatestVersion(ProxyImageName, v, true)
+	returnVer, err := GetLatestVersion(ProxyImageName, v, true, reqLogger)
 	if err != nil {
 		t.Error("Failed to get latest version :: ", err)
 	}
@@ -52,10 +56,11 @@ func TestImageLatest(t *testing.T) {
 }
 
 func TestUpgradeDisabled(t *testing.T) {
+	reqLogger := logf.Log.WithName("Upgrade_Test")
 	// Proxy
 	v := "2.1"
 	semV, _ := semver.NewVersion(v)
-	returnVer, err := GetLatestVersion(ProxyImageName, v, false)
+	returnVer, err := GetLatestVersion(ProxyImageName, v, false, reqLogger)
 	if err != nil {
 		t.Error("Failed to get latest version :: ", err)
 	}
