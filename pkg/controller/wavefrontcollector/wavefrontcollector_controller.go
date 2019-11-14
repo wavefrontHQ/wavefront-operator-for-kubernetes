@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	wavefrontv1alpha1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
+	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -21,9 +22,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 	"strings"
-	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
+	"time"
 )
 
 var log = logf.Log.WithName("controller_wavefrontcollector")
@@ -135,7 +135,7 @@ func getlatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.Wavef
 	finalVer, err := util.GetLatestVersion(util.CollectorImageName, instanceVersion, instance.Spec.EnableAutoUpgrade)
 	if err == nil {
 		instance.Status.Version = finalVer
-		instance.Spec.Image = util.ImagePrefix + util.CollectorImageName+ ":" + finalVer
+		instance.Spec.Image = util.ImagePrefix + util.CollectorImageName + ":" + finalVer
 	} else {
 		reqLogger.Error(err, "Fetching latest version failed.")
 	}

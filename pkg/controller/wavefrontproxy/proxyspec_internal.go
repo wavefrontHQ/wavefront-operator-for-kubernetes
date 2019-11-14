@@ -1,12 +1,12 @@
 package wavefrontproxy
 
 import (
+	"github.com/go-logr/logr"
 	wfv1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
+	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
-	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
-	"github.com/go-logr/logr"
 )
 
 const (

@@ -6,8 +6,8 @@ import (
 	wfv1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,7 +19,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
-
 )
 
 var log = logf.Log.WithName("controller_wavefrontproxy")
@@ -178,7 +177,6 @@ func (r *ReconcileWavefrontProxy) updateCRStatus(instance *wfv1.WavefrontProxy, 
 
 	return r.client.Status().Update(context.TODO(), instance)
 }
-
 
 // reconcileProxySvc verifies whether the given service already exists, If not creates a new one.
 // If exists, then brings it from current state -> desired state.

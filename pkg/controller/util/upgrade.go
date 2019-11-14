@@ -1,13 +1,13 @@
 package util
 
 import (
-	"net/http"
-	"github.com/tidwall/gjson"
 	"fmt"
-	"io/ioutil"
-	"strings"
-	"github.com/prometheus/common/log"
 	"github.com/Masterminds/semver"
+	"github.com/prometheus/common/log"
+	"github.com/tidwall/gjson"
+	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
 const (
@@ -55,9 +55,9 @@ func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgra
 	}
 
 	// Filter based on major version and then minor version (Also, should be non-"rc" build).
-	foundUpgradeVersion :=  false
+	foundUpgradeVersion := false
 	for _, v := range versions.Array() {
-		if strings.HasPrefix(v.String(), majorVersion) && !strings.Contains(v.String(), "rc") && !strings.Contains(v.String(), "beta"){
+		if strings.HasPrefix(v.String(), majorVersion) && !strings.Contains(v.String(), "rc") && !strings.Contains(v.String(), "beta") {
 			if semV, err := semver.NewVersion(v.String()); err == nil {
 				if semV.GreaterThan(finalSemV) {
 					finalSemV = semV

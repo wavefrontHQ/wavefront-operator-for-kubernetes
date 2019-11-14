@@ -1,8 +1,8 @@
 package util
 
 import (
-	"testing"
 	"github.com/Masterminds/semver"
+	"testing"
 )
 
 func TestProxyValidUpgrade(t *testing.T) {
@@ -17,11 +17,9 @@ func TestProxyValidUpgrade(t *testing.T) {
 
 	if returnSemV.LessThan(semV) || returnSemV.Equal(semV) {
 		t.Error("Error :: Expected returned version for Proxy Upgrade : ", returnVer,
-			" to be greater than input version : " , v)
+			" to be greater than input version : ", v)
 	}
 }
-
-
 
 func TestCollectorValidUpgrade(t *testing.T) {
 	// Collector
@@ -35,7 +33,7 @@ func TestCollectorValidUpgrade(t *testing.T) {
 
 	if returnSemV.LessThan(semV) || returnSemV.Equal(semV) {
 		t.Error("Error :: Expected returned version for Collector Upgrade : ", returnVer,
-			" to be greater than input version : " , v)
+			" to be greater than input version : ", v)
 	}
 }
 
@@ -49,7 +47,7 @@ func TestImageLatest(t *testing.T) {
 
 	if v != returnVer {
 		t.Error("Error :: Expected returned version for Proxy Upgrade : ", returnVer,
-			" to be same as input version : " , v)
+			" to be same as input version : ", v)
 	}
 }
 
@@ -65,7 +63,6 @@ func TestUpgradeDisabled(t *testing.T) {
 
 	if !returnSemV.Equal(semV) {
 		t.Error("Error :: Expected returned version for Proxy Upgrade : ", returnVer,
-			" to be same as input version : " , v)
+			" to be same as input version : ", v)
 	}
 }
-
