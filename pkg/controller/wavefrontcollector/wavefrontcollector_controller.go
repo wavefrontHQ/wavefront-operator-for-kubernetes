@@ -109,7 +109,7 @@ func (r *ReconcileWavefrontCollector) Reconcile(request reconcile.Request) (reco
 	}
 
 	desiredCRInstance := instance.DeepCopy()
-	getlatestCollector(reqLogger, desiredCRInstance)
+	getLatestCollector(reqLogger, desiredCRInstance)
 
 	var updateCR bool
 	if instance.Spec.Daemon {
@@ -130,14 +130,20 @@ func (r *ReconcileWavefrontCollector) Reconcile(request reconcile.Request) (reco
 	return reconcile.Result{RequeueAfter: 1 * time.Hour}, nil
 }
 
-func getlatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) {
-	instanceVersion := strings.Split(instance.Spec.Image, ":")[1]
-	finalVer, err := util.GetLatestVersion(util.CollectorImageName, instanceVersion, instance.Spec.EnableAutoUpgrade, reqLogger)
-	if err == nil {
-		instance.Status.Version = finalVer
-		instance.Spec.Image = util.ImagePrefix + util.CollectorImageName + ":" + finalVer
+func getLatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.WavefrontCollector) {
+	imgSlice := strings.Split(instance.Spec.Image, ":")
+	// Validate Image format and Auto Upgrade.
+	if len(imgSlice) == 2 {
+		instance.Status.Version = imgSlice[1]
+		finalVer, err := util.GetLatestVersion(instance.Spec.Image, instance.Spec.EnableAutoUpgrade, reqLogger)
+		if err == nil {
+			instance.Status.Version = finalVer
+			instance.Spec.Image = util.DockerHubImagePrefix + util.CollectorImageName + ":" + finalVer
+		} else {
+			reqLogger.Error(err, "Auto Upgrade Error.")
+		}
 	} else {
-		reqLogger.Error(err, "Fetching latest version failed.")
+		reqLogger.Info("Cannot update CR's Status.version", "Un-recognized format for CR Image", instance.Spec.Image)
 	}
 }
 

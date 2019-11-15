@@ -63,13 +63,19 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 		ip.instance.Spec.Image = defaultImage
 	}
 
-	instanceVersion := strings.Split(ip.instance.Spec.Image, ":")[1]
-	finalVer, err := util.GetLatestVersion(util.ProxyImageName, instanceVersion, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
-	if err == nil {
-		ip.instance.Status.Version = finalVer
-		ip.instance.Spec.Image = util.ImagePrefix + util.ProxyImageName + ":" + finalVer
+	imgSlice := strings.Split(ip.instance.Spec.Image, ":")
+	// Validate Image format and Auto Upgrade.
+	if len(imgSlice) == 2 {
+		ip.instance.Status.Version = imgSlice[1]
+		finalVer, err := util.GetLatestVersion(ip.instance.Spec.Image, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
+		if err == nil {
+			ip.instance.Status.Version = finalVer
+			ip.instance.Spec.Image = util.DockerHubImagePrefix + util.ProxyImageName + ":" + finalVer
+		} else {
+			reqLogger.Error(err, "Auto Upgrade Error.")
+		}
 	} else {
-		reqLogger.Error(err, "Fetching latest version failed.")
+		reqLogger.Info("Cannot update CR's Status.version", "Un-recognized format for CR Image", instance.Spec.Image)
 	}
 
 	ip.ContainerPortsMap = make(map[string]corev1.ContainerPort)

@@ -15,16 +15,29 @@ const (
 
 	CollectorImageName = "wavefront-kubernetes-collector"
 
-	ImagePrefix = "wavefronthq/"
+	DockerHubImagePrefix = "wavefronthq/"
 )
 
-func GetLatestVersion(crImageName string, currentVersion string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
+// GetLatestVersion checks for auto upgrade eligibility and returns the latest minor version as applicable.
+func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
+	// Auto upgrade is supported only for docker hub images.
+	if !strings.HasPrefix(crImage, DockerHubImagePrefix) {
+		return "", fmt.Errorf("Auto Upgrade not supported, Cause :: Not a Docker Hub Image.")
+	}
+
+	imgSlice := strings.Split(crImage, ":")
+	crImageName := strings.TrimPrefix(imgSlice[0], DockerHubImagePrefix)
+	currentVersion := imgSlice[1]
+
+	// Auto Upgrade support
 	if !enableAutoUpgrade {
+		reqLogger.Info("Auto Upgrade not supported,", " Cause :: enableAutoUpgrade is set to ", enableAutoUpgrade)
 		return currentVersion, nil
 	}
 
 	// "latest" effectively renders auto upgrade useless.
 	if currentVersion == "latest" {
+		reqLogger.Info("Auto Upgrade not supported,", " Cause :: currentVersion is ", currentVersion)
 		return currentVersion, nil
 	}
 
