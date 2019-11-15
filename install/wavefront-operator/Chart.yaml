@@ -10,10 +10,12 @@ keywords:
 - alerting
 home: https://www.wavefront.com
 sources:
-- https://github.com/wavefrontHQ/wavefront-kubernetes-collector
+- https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes
 - https://github.com/wavefrontHQ/java/tree/master/proxy
 maintainers:
 - name: vikramraman
   email: rvikram@vmware.com
 - name: puckpuck
   email: pierre@wavefront.com
+- name: anilkodali
+  email: akodali@vmware.com
