@@ -46,6 +46,7 @@ kubectl delete crd wavefrontproxies.wavefront.com
 ## Development
 To update the helm chart:
 - Update the files under `./wavefront-operator`
+- Increment `version` in Chart.yaml to next desired version.
 - Run `helm package ./wavefront-operator` to update the tgz file
 - Run `helm repo index .` to update the `index.yaml`
 - Commit the changes to this repo
