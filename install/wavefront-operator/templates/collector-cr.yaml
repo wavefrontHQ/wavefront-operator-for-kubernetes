@@ -29,4 +29,8 @@ spec:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
     operator: Exists
+
+  {{- if .Values.collector.enableAutoUpgrade }}
+  enableAutoUpgrade: {{ .Values.collector.enableAutoUpgrade }}
+  {{- end -}}
 {{- end }}

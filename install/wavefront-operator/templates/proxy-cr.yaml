@@ -40,4 +40,7 @@ spec:
   {{- if .Values.proxy.additionalPorts }}
   additionalPorts: {{ .Values.proxy.additionalPorts }}
   {{- end -}}
+  {{- if .Values.proxy.enableAutoUpgrade }}
+  enableAutoUpgrade: {{ .Values.proxy.enableAutoUpgrade }}
+  {{- end -}}
 {{- end }}

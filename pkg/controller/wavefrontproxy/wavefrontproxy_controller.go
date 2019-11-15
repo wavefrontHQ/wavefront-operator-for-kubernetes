@@ -7,6 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -17,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
 )
 
 var log = logf.Log.WithName("controller_wavefrontproxy")
@@ -100,19 +102,26 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 
 	// Make desired InternalWavefrontProxyInstance.
 	var desiredIp = &InternalWavefrontProxy{}
-	desiredIp.initialize(instance.DeepCopy())
+	desiredIp.initialize(instance.DeepCopy(), reqLogger)
 
-	if result, err := r.reconcileProxy(desiredIp, reqLogger); err != nil {
+	result, err := r.reconcileProxy(desiredIp, reqLogger)
+	if err != nil {
 		return result, err
+	} else if desiredIp.updateCR {
+		err := r.updateCRStatus(instance, desiredIp, reqLogger)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update WavefrontProxy CR status")
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Updated WavefrontProxy CR Status.")
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: 1 * time.Hour}, nil
 }
 
 // reconcileProxy verifies whether the given deployment already exists, If not creates a new one.
 // If exists, then brings it from current state -> desired state.
-func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result,
-	error) {
+func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
 	desiredDep := newDeployment(ip)
 
 	// Check if the deployment already exists, if not create a new one.
@@ -132,6 +141,8 @@ func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, req
 				desiredDep.Namespace, "Deployment.Name", desiredDep.Name)
 			return reconcile.Result{}, err
 		}
+		// Update CR Status on Create.
+		ip.updateCR = true
 		// A new CR Deployment was successfull, now create a new CR Service.
 		return r.reconcileProxySvc(ip, false, reqLogger)
 	} else if err != nil {
@@ -139,24 +150,32 @@ func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, req
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Check WavefrontProxy Updated :::")
+	reqLogger.Info("Check WavefrontProxy Updated :: ")
 	// Deployment already exists, update if the desired spec has changed
 	if specChanged(existingDep, desiredDep) {
-		//if specChanged(&existingDep.Spec, &ip.Spec) {
-		reqLogger.Info("UPDATING::: the existing deployment")
+		reqLogger.Info("Updating the existing deployment.")
 		err := r.client.Update(context.TODO(), desiredDep)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		// Update CR Status on Update.
+		ip.updateCR = true
 		// Update CR service if CR spec changed.
 		if result, err := r.reconcileProxySvc(ip, true, reqLogger); err != nil {
 			return result, err
 		}
 	}
 
-	reqLogger.Info("Return WavefrontProxy Reconcile - No Requeue")
 	return reconcile.Result{}, nil
+}
 
+// updateCRStatus updates the status of the WavefrontProxy CR.
+func (r *ReconcileWavefrontProxy) updateCRStatus(instance *wfv1.WavefrontProxy, desiredIp *InternalWavefrontProxy, reqLogger logr.Logger) error {
+	reqLogger.Info("Updating WavefrontProxy CR Status :")
+	instance.Status = desiredIp.instance.Status
+	instance.Status.UpdatedTimestamp = metav1.Now()
+
+	return r.client.Status().Update(context.TODO(), instance)
 }
 
 // reconcileProxySvc verifies whether the given service already exists, If not creates a new one.
@@ -196,6 +215,5 @@ func (r *ReconcileWavefrontProxy) reconcileProxySvc(ip *InternalWavefrontProxy, 
 		}
 	}
 
-	reqLogger.Info("Return WavefrontProxy Reconcile - No Requeue")
 	return reconcile.Result{}, nil
 }

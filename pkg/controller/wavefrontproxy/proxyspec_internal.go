@@ -1,7 +1,9 @@
 package wavefrontproxy
 
 import (
+	"github.com/go-logr/logr"
 	wfv1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
+	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
@@ -28,6 +30,11 @@ type InternalWavefrontProxy struct {
 	// The actual deep copy of instance
 	instance *wfv1.WavefrontProxy
 
+	// -----Wavefront Proxy CR Instance/Instance Status related.----- //
+	// boolean value to indicate if the CR is newly created/updated during reconcile.
+	// This is used to update the CR instance/status. Not used to identify auto upgrades.
+	updateCR bool
+
 	// -----Wavefront Proxy Deployment related.----- //
 	// The container ports required to be opened up for wavefront proxy
 	ContainerPorts    []corev1.ContainerPort
@@ -46,7 +53,7 @@ type InternalWavefrontProxy struct {
 	ServicePortsMap map[string]corev1.ServicePort
 }
 
-func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy) {
+func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqLogger logr.Logger) {
 	ip.instance = instance
 
 	// Configs with defaults.
@@ -54,6 +61,21 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy) {
 	// Proxy Image
 	if ip.instance.Spec.Image == "" {
 		ip.instance.Spec.Image = defaultImage
+	}
+
+	imgSlice := strings.Split(ip.instance.Spec.Image, ":")
+	// Validate Image format and Auto Upgrade.
+	if len(imgSlice) == 2 {
+		ip.instance.Status.Version = imgSlice[1]
+		finalVer, err := util.GetLatestVersion(ip.instance.Spec.Image, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
+		if err == nil {
+			ip.instance.Status.Version = finalVer
+			ip.instance.Spec.Image = util.DockerHubImagePrefix + util.ProxyImageName + ":" + finalVer
+		} else {
+			reqLogger.Error(err, "Auto Upgrade Error.")
+		}
+	} else {
+		reqLogger.Info("Cannot update CR's Status.version", "Un-recognized format for CR Image", instance.Spec.Image)
 	}
 
 	ip.ContainerPortsMap = make(map[string]corev1.ContainerPort)
