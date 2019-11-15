@@ -3,9 +3,9 @@ entries:
   wavefront-operator:
   - apiVersion: v1
     appVersion: 0.1.0
-    created: "2019-11-15T15:26:10.676053-08:00"
+    created: "2019-11-15T15:35:37.352342-08:00"
     description: Helm chart for the Wavefront operator for Kubernetes
-    digest: 81dba6876d8e7086c3b8ce38a081461f4169e034ed1e8b75d229769d33537b1a
+    digest: 98396d39ff1424fa8de7f66298bca47aea7d014df1eb3a5f0ff85a283f5823a9
     home: https://www.wavefront.com
     keywords:
     - metric
@@ -18,7 +18,7 @@ entries:
     - email: pierre@wavefront.com
       name: puckpuck
     - email: akodali@vmware.com
-      name: anilkodali
+      name: akodali18
     name: wavefront-operator
     sources:
     - https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes
@@ -28,7 +28,7 @@ entries:
     version: 0.1.2
   - apiVersion: v1
     appVersion: 0.1.0
-    created: "2019-11-15T15:26:10.671612-08:00"
+    created: "2019-11-15T15:35:37.350444-08:00"
     description: Helm chart for the Wavefront operator for Kubernetes
     digest: 634aa5875872c00124715f361b299b28c6231661f60e6e53349905ca5cd79886
     home: https://www.wavefront.com
@@ -49,4 +49,4 @@ entries:
     urls:
     - wavefront-operator-0.1.1.tgz
     version: 0.1.1
-generated: "2019-11-15T15:26:10.668227-08:00"
+generated: "2019-11-15T15:35:37.348813-08:00"
