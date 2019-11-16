@@ -17,6 +17,10 @@ type WavefrontCollectorSpec struct {
 	// Whether to deploy the collector as a daemonset. False will roll out as a deployment.
 	Daemon bool `json:"daemon,omitempty"`
 
+	// This flag is specifically for Openshift, if set to true, Collector will use default config bundled in the image
+	// else it will use the config from ConfigName
+	IsOpenshiftDefault bool `json:"isOpenshiftDefault,omitempty"`
+
 	// Whether to enable debug logging and profiling
 	EnableDebug bool `json:"enableDebug,omitempty"`
 

@@ -245,6 +245,42 @@ func newPodSpecForCR(instance *wavefrontv1alpha1.WavefrontCollector) corev1.PodS
 		debug = "--log-level=debug"
 	}
 
+    volumeMounts :=  []corev1.VolumeMount{{
+		Name:      "procfs",
+		MountPath: "/host/proc",
+		ReadOnly:  true,
+	}}
+    
+    volumes := []corev1.Volume{{
+		Name: "procfs",
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: "/proc",
+				},
+			},
+		},
+	}
+	
+	if instance.Spec.IsOpenshiftDefault {
+		configVM :=  corev1.VolumeMount{	
+			Name:  "collector-config",  
+			MountPath: "/etc/collector",  
+			ReadOnly:  true,
+		}
+
+		configV := corev1.Volume {
+			Name: "collector-config",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{Name: configName},
+				},
+			},
+		}
+    
+		volumeMounts = append(volumeMounts, configVM)
+		volumes = append(volumes, configV)
+	}
+
 	return corev1.PodSpec{
 		ServiceAccountName: instance.Name,
 		Tolerations:        instance.Spec.Tolerations,
@@ -256,32 +292,9 @@ func newPodSpecForCR(instance *wavefrontv1alpha1.WavefrontCollector) corev1.PodS
 			Command:         []string{"/wavefront-collector", daemon, debug, "--config-file=/etc/collector/collector.yaml"},
 			Env:             instance.Spec.Env,
 			Resources:       instance.Spec.Resources,
-			VolumeMounts: []corev1.VolumeMount{{
-				Name:      "procfs",
-				MountPath: "/host/proc",
-				ReadOnly:  true,
-			}, {
-				Name:      "collector-config",
-				MountPath: "/etc/collector",
-				ReadOnly:  true,
-			}},
+			VolumeMounts: volumeMounts ,
 		}},
-
-		Volumes: []corev1.Volume{{
-			Name: "procfs",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/proc",
-				},
-			},
-		}, {
-			Name: "collector-config",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{Name: configName},
-				},
-			},
-		}},
+		Volumes: volumes,
 	}
 }
 

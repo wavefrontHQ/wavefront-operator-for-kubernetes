@@ -22,6 +22,10 @@ type WavefrontProxySpec struct {
 	// Wavefront API Token.
 	Token string `json:"token"`
 
+	// This flag is specifically for Openshift, if set to true, Collector will use default config bundled in the image
+	// else it will use the config from ConfigName
+	IsOpenshiftDefault bool `json:"isOpenshiftDefault,omitempty"`
+
 	// The no. of replicas for Wavefront Proxy. Defaults to 1
 	Size *int32 `json:"size,omitempty"`
 

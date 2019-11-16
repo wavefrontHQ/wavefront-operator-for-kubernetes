@@ -73,6 +73,11 @@ spec:
             token:
               description: Wavefront API Token.
               type: string
+            isOpenshiftDefault:
+              description:  This flag is specifically for Openshift, if set to true, 
+                Collector will use default config bundled in the image
+                else it will use the config from ConfigName
+              type: boolean
             tracePort:
               description: The port to listen on for Wavefront trace formatted data.
                 Defaults to none. This is usually 30000
