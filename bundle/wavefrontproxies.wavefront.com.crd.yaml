@@ -74,11 +74,11 @@ spec:
               description: Wavefront API Token.
               type: string
             openshift:
-              description:  This flag is specifically for Openshift, this need to be set true always when 
+              description:  This flag is specifically for Openshift, this need to be set true when 
                 running proxy in Openshift platform.
               type: boolean
             storageClaimName:
-              description: The name of the storage claim to be used for spool mount.
+              description: The name of the storage claim to be used for proxy spool directory.
               type: string  
             tracePort:
               description: The port to listen on for Wavefront trace formatted data.

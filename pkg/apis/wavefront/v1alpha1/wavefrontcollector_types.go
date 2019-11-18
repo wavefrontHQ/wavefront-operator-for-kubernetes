@@ -19,7 +19,7 @@ type WavefrontCollectorSpec struct {
 
 	// This flag is specifically for Openshift, if set to true, Collector will use default config bundled in the image
 	// else it will use the config from ConfigName
-	IsOpenshiftDefault bool `json:"isOpenshiftDefault,omitempty"`
+	OpenshiftDefault bool `json:"openshiftDefault,omitempty"`
 
 	// Whether to enable debug logging and profiling
 	EnableDebug bool `json:"enableDebug,omitempty"`

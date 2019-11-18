@@ -261,7 +261,7 @@ func newPodSpecForCR(instance *wavefrontv1alpha1.WavefrontCollector) corev1.PodS
 		},
 	}}
 
-	if !instance.Spec.IsOpenshiftDefault {
+	if !instance.Spec.OpenshiftDefault {
 		configVM := corev1.VolumeMount{
 			Name:      "collector-config",
 			MountPath: "/etc/collector",

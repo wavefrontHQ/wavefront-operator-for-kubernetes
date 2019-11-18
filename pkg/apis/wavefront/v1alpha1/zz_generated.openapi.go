@@ -25,6 +25,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollector(ref common.ReferenceC
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "WavefrontCollector is the Schema for the wavefrontcollectors API",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -68,6 +69,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "WavefrontCollectorSpec defines the desired state of WavefrontCollector",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"image": {
 						SchemaProps: spec.SchemaProps{
@@ -79,6 +81,13 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 					"daemon": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Whether to deploy the collector as a daemonset. False will roll out as a deployment.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"openshiftDefault": {
+						SchemaProps: spec.SchemaProps{
+							Description: "This flag is specifically for Openshift, if set to true, Collector will use default config bundled in the image else it will use the config from ConfigName",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -149,6 +158,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorStatus(ref common.Refe
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "WavefrontCollectorStatus defines the observed state of WavefrontCollector",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"version": {
 						SchemaProps: spec.SchemaProps{
@@ -174,6 +184,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxy(ref common.ReferenceCallb
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "WavefrontProxy is the Schema for the wavefrontproxies API",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -217,6 +228,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "WavefrontProxySpec defines the desired state of WavefrontProxy",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"image": {
 						SchemaProps: spec.SchemaProps{
@@ -235,6 +247,20 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 					"token": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Wavefront API Token.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"openshift": {
+						SchemaProps: spec.SchemaProps{
+							Description: "This flag is specifically for Openshift, this need to be set to true when running proxy in Openshift platform.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"storageClaimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The name of the storage claim to be used for spool mount.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -327,7 +353,6 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 				Required: []string{"url", "token"},
 			},
 		},
-		Dependencies: []string{},
 	}
 }
 
@@ -336,6 +361,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxyStatus(ref common.Referenc
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "WavefrontProxyStatus defines the observed state of WavefrontProxy",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"version": {
 						SchemaProps: spec.SchemaProps{
