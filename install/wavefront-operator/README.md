@@ -40,7 +40,7 @@ helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_C
 To deploy multiple WavefrontProxy CR instances in the same namespace, you can use the above helm command to deploy the 1st CR instance. To deploy the 2nd Proxy CR instance, you will also need to disable deploying the operator(Usually deployment architecture is one operator per namespace) and collector(Usually deployment architecture is one collector per cluster)
 
 ```
-helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME,operator.enabled=false,collector.enabled=false --namespace test-namespace --no-crd-hook
+helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME,operator.enabled=false,collector.enabled=false,kubeStateMetrics.enabled=false --namespace test-namespace --no-crd-hook
 ```
 
 ## Uninstalling the Chart
