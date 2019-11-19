@@ -22,6 +22,19 @@ To install the chart with a release name `test`:
 helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace
 ```
 
+Issues using helm:
+
+- CRD already exists:
+```
+Error: customresourcedefinitions.apiextensions.k8s.io <"wavefrontcollectors.wavefront.com"> already exists
+```
+
+If you see the above error, then try running the helm command with "--no-crd-hook" flag.
+
+```
+helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace --no-crd-hook
+```
+
 ## Uninstalling the Chart
 To uninstall/delete a deployed chart release:
 ```
