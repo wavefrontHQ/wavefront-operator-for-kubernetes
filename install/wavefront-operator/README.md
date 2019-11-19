@@ -29,7 +29,7 @@ Issues using helm:
 Error: customresourcedefinitions.apiextensions.k8s.io <"wavefrontcollectors.wavefront.com"> already exists
 ```
 
-then try running the helm command with "--no-crd-hook" flag.
+If you see the above error, then try running the helm command with "--no-crd-hook" flag.
 
 ```
 helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace --no-crd-hook
