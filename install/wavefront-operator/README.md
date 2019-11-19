@@ -22,6 +22,26 @@ To install the chart with a release name `test`:
 helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace
 ```
 
+Issues using helm:
+
+- CRD already exists:
+```
+Error: customresourcedefinitions.apiextensions.k8s.io <"wavefrontcollectors.wavefront.com"> already exists
+```
+
+then try running the helm command with "--no-crd-hook" flag.
+
+```
+helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace --no-crd-hook
+```
+
+- Deploying multiple CR instances in same namespace: (Valid for Proxy CR)
+To deploy multiple Proxy CR instances in the same namespace, you can use the above helm command to deploy the 1st CR instance. To deploy the 2nd Proxy CR instance, you can disable deploying operator and collector. (Note : Usually there should only be one collector per cluster and one operator per namespace)
+
+```
+helm install --name test ./wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME,operator.enabled=false,collector.enabled=false --namespace test-namespace --no-crd-hook
+```
+
 ## Uninstalling the Chart
 To uninstall/delete a deployed chart release:
 ```

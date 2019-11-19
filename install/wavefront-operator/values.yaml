@@ -15,8 +15,9 @@ wavefront:
 
 ## Wavefront Operator is responsible for managing the lifecycle of the various Wavefront components
 operator:
+  enabled: true
   image:
-    repository: akodali/wavefront-operator1
+    repository: akodali/wavefront-operator
     tag: latest
     pullPolicy: IfNotPresent
 
