@@ -124,11 +124,7 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 // If exists, then brings it from current state -> desired state.
 func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
 	desiredDep := newDeployment(ip)
-	if ip.instance.Spec.Openshift && ip.instance.Spec.StorageClaimName != "" {
-		if result, err := r.reconcilePvc(ip, reqLogger); err != nil {
-			return result, err
-		}
-	}
+
 	// Check if the deployment already exists, if not create a new one.
 	existingDep := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Name, Namespace: ip.instance.Namespace}, existingDep)
@@ -136,6 +132,12 @@ func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, req
 		// Set WavefrontProxy ip as the owner and controller
 		if err := controllerutil.SetControllerReference(ip.instance, desiredDep, r.scheme); err != nil {
 			return reconcile.Result{}, err
+		}
+
+		if ip.instance.Spec.Openshift && ip.instance.Spec.StorageClaimName != "" {
+			if result, err := r.reconcilePvc(ip, reqLogger); err != nil {
+				return result, err
+			}
 		}
 
 		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", desiredDep.Namespace,
@@ -223,6 +225,7 @@ func (r *ReconcileWavefrontProxy) reconcileProxySvc(ip *InternalWavefrontProxy, 
 	return reconcile.Result{}, nil
 }
 
+// Checks if PVC already present under the given namespace else it will create one with given name.
 func (r *ReconcileWavefrontProxy) reconcilePvc(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
 	existingPvc := &corev1.PersistentVolumeClaim{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Spec.StorageClaimName, Namespace: ip.instance.Namespace}, existingPvc)

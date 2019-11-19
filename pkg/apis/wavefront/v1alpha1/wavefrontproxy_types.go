@@ -22,12 +22,6 @@ type WavefrontProxySpec struct {
 	// Wavefront API Token.
 	Token string `json:"token"`
 
-	// This flag is specifically for Openshift, this need to be set to true when running proxy in Openshift platform.
-	Openshift bool `json:"openshift,omitempty"`
-
-	// The name of the storage claim to be used for spool mount.
-	StorageClaimName string `json:"storageClaimName,omitempty"`
-
 	// The no. of replicas for Wavefront Proxy. Defaults to 1
 	Size *int32 `json:"size,omitempty"`
 
@@ -73,6 +67,14 @@ type WavefrontProxySpec struct {
 	// For pinning Proxy to a specific version, you will need to set this option to false.
 	// We support only minor version Auto Upgrades.
 	EnableAutoUpgrade bool `json:"enableAutoUpgrade,omitempty"`
+
+	// Openshift Specific configurations starts from here
+
+	// Set to true when running proxy in Openshift platform.
+	Openshift bool `json:"openshift,omitempty"`
+
+	// The name of the storage claim to be used for creating proxy buffers directory.
+	StorageClaimName string `json:"storageClaimName,omitempty"`
 }
 
 // WavefrontProxyStatus defines the observed state of WavefrontProxy

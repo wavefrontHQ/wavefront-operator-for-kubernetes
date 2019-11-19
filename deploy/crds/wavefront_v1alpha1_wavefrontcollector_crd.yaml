@@ -44,11 +44,6 @@ spec:
                 to a specific version, you will need to set this option to false.
                 We support only minor version Auto Upgrades.
               type: boolean
-            openshiftDefault:
-              description:  This flag is specifically for Openshift, if set to true, 
-                Collector will use default config bundled in the image
-                else it will use the config from ConfigName
-              type: boolean
             enableDebug:
               description: Whether to enable debug logging and profiling
               type: boolean
@@ -69,6 +64,13 @@ spec:
               items:
                 type: object
               type: array
+            openshift:
+              description:  Set to true when running collector in Openshift platform.
+              type: boolean
+            openshiftDefault:
+              description:  If set to true, Collector will use default config bundled in the image
+                else it will use the config from ConfigName.
+              type: boolean
           type: object
         status:
           properties:

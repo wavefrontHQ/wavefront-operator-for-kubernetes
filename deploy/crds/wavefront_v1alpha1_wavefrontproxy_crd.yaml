@@ -73,13 +73,6 @@ spec:
             token:
               description: Wavefront API Token.
               type: string
-            openshift:
-              description:  This flag is specifically for Openshift, this need to be set true always when 
-                running proxy in Openshift platform.
-              type: boolean
-            storageClaimName:
-              description: The name of the storage claim to be used for spool mount.
-              type: string  
             tracePort:
               description: The port to listen on for Wavefront trace formatted data.
                 Defaults to none. This is usually 30000
@@ -104,6 +97,12 @@ spec:
                 to none. This is usually 9411
               format: int32
               type: integer
+            openshift:
+              description:  This need to be set to true when running proxy in Openshift platform.
+              type: boolean
+            storageClaimName:
+              description: The name of the storage claim to be used for creating proxy buffers directory.
+              type: string  
           required:
           - url
           - token

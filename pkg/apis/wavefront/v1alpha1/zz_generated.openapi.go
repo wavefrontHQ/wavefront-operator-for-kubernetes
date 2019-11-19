@@ -85,13 +85,6 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 							Format:      "",
 						},
 					},
-					"openshiftDefault": {
-						SchemaProps: spec.SchemaProps{
-							Description: "This flag is specifically for Openshift, if set to true, Collector will use default config bundled in the image else it will use the config from ConfigName",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
 					"enableDebug": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Whether to enable debug logging and profiling",
@@ -141,6 +134,20 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 					"enableAutoUpgrade": {
 						SchemaProps: spec.SchemaProps{
 							Description: "If set to true, Collector pods will be upgraded automatically in case new minor upgrade version is available. For pinning Collector to a specific version, you will need to set this option to false. We support only minor version Auto Upgrades.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"openshift": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Set to true when running collector in Openshift platform.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"openshiftDefault": {
+						SchemaProps: spec.SchemaProps{
+							Description: "If set to true, Collector will use default config bundled in the image else it will use the config from ConfigName",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -251,20 +258,6 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 							Format:      "",
 						},
 					},
-					"openshift": {
-						SchemaProps: spec.SchemaProps{
-							Description: "This flag is specifically for Openshift, this need to be set to true when running proxy in Openshift platform.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"storageClaimName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the storage claim to be used for spool mount.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"size": {
 						SchemaProps: spec.SchemaProps{
 							Description: "The no. of replicas for Wavefront Proxy. Defaults to 1",
@@ -346,6 +339,20 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 						SchemaProps: spec.SchemaProps{
 							Description: "If set to true, Proxy pods will be upgraded automatically in case new minor upgrade version is available. For pinning Proxy to a specific version, you will need to set this option to false. We support only minor version Auto Upgrades.",
 							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"openshift": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Set to true when running proxy in Openshift platform.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"storageClaimName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "The name of the storage claim to be used for creating proxy buffers directory.",
+							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
