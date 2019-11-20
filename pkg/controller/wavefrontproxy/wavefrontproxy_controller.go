@@ -135,7 +135,7 @@ func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, req
 		}
 
 		if ip.instance.Spec.Openshift && ip.instance.Spec.StorageClaimName != "" {
-			if result, err := r.reconcilePvc(ip, reqLogger); err != nil {
+			if result, err := r.getPvc(ip, reqLogger); err != nil {
 				return result, err
 			}
 		}
@@ -226,7 +226,7 @@ func (r *ReconcileWavefrontProxy) reconcileProxySvc(ip *InternalWavefrontProxy, 
 }
 
 // Checks if PVC already present under the given namespace else it will create one with given name.
-func (r *ReconcileWavefrontProxy) reconcilePvc(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileWavefrontProxy) getPvc(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
 	existingPvc := &corev1.PersistentVolumeClaim{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Spec.StorageClaimName, Namespace: ip.instance.Namespace}, existingPvc)
 	if err != nil && errors.IsNotFound(err) {
