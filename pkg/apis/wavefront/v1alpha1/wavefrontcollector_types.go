@@ -44,7 +44,7 @@ type WavefrontCollectorSpec struct {
 	Openshift bool `json:"openshift,omitempty"`
 
 	// If set to true, Collector will use default config bundled in the image
-	// else it will use the config from ConfigName
+	// else it will use the config from ConfigName.
 	UseOpenshiftDefaultConfig bool `json:"useOpenshiftDefaultConfig,omitempty"`
 }
 

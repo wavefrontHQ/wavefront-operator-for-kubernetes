@@ -74,7 +74,7 @@ type WavefrontProxySpec struct {
 	Openshift bool `json:"openshift,omitempty"`
 
 	// The name of the storage claim to be used for creating proxy buffers directory.
-	// This is applicable only in an Openshift environment."
+	// This is applicable only in an Openshift environment.
 	StorageClaimName string `json:"storageClaimName,omitempty"`
 }
 
