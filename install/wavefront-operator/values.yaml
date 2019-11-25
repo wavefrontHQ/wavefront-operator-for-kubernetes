@@ -17,8 +17,8 @@ wavefront:
 operator:
   enabled: true
   image:
-    repository: akodali/wavefront-operator
-    tag: latest
+    repository: wavefronthq/wavefront-operator-for-kubernetes
+    tag: 0.1.0-rc1
     pullPolicy: IfNotPresent
 
 
