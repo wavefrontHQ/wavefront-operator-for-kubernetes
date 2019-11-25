@@ -63,6 +63,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource Services and requeue the owner WavefrontProxy
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &wfv1.WavefrontProxy{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -169,6 +178,11 @@ func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, req
 		ip.updateCR = true
 		// Update CR service if CR spec changed.
 		if result, err := r.reconcileProxySvc(ip, true, reqLogger); err != nil {
+			return result, err
+		}
+	} else {
+		// Just Verifies existing of CR Service. If not creates a new CR Service.
+		if result, err := r.reconcileProxySvc(ip, false, reqLogger); err != nil {
 			return result, err
 		}
 	}
