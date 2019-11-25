@@ -145,7 +145,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontCollectorSpec(ref common.Refere
 							Format:      "",
 						},
 					},
-					"openshiftDefault": {
+					"useOpenshiftDefaultConfig": {
 						SchemaProps: spec.SchemaProps{
 							Description: "If set to true, Collector will use default config bundled in the image else it will use the config from ConfigName",
 							Type:        []string{"boolean"},
@@ -351,7 +351,7 @@ func schema_pkg_apis_wavefront_v1alpha1_WavefrontProxySpec(ref common.ReferenceC
 					},
 					"storageClaimName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The name of the storage claim to be used for creating proxy buffers directory.",
+							Description: "The name of the storage claim to be used for creating proxy buffers directory. This is applicable only in an Openshift environment.\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},

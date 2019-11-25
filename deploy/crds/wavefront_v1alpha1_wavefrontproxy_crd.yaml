@@ -102,6 +102,7 @@ spec:
               type: boolean
             storageClaimName:
               description: The name of the storage claim to be used for creating proxy buffers directory.
+                This is applicable only in an Openshift environment.
               type: string  
           required:
           - url

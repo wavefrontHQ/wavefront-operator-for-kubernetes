@@ -67,7 +67,7 @@ spec:
             openshift:
               description:  Set to true when running collector in Openshift platform.
               type: boolean
-            openshiftDefault:
+            useOpenshiftDefaultConfig:
               description:  If set to true, Collector will use default config bundled in the image
                 else it will use the config from ConfigName.
               type: boolean

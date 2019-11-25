@@ -14,7 +14,7 @@ metadata:
           "spec": {
             "token": "\u003cTOKEN\u003e",
             "url": "\u003chttps://YOUR_CLUSTER.wavefront.com/api/\u003e",
-            "image": "quay.io/wavefront/wavefront-proxy:5.7-rc1",
+            "image": "registry.connect.redhat.com/wavefronthq/proxy:5.7",
             "openshift": true,
             "storageClaimName": "wavefront-proxy-storage",
             "enableAutoUpgrade": false
@@ -29,7 +29,8 @@ metadata:
           },
           "spec": {
             "daemon": true,
-            "openshiftDefault": true,
+            "openshift": true,
+            "useOpenshiftDefaultConfig": true,
             "enableAutoUpgrade": false, 
             "env": [
               {
@@ -55,7 +56,7 @@ metadata:
                 }
               }
             ],
-            "image": "quay.io/wavefront/wavefront-kubernetes-collector:1.0.3-rc1",
+            "image": "registry.connect.redhat.com/wavefronthq/wavefront-kubernetes-collector:1.0.3-1",
             "tolerations": [
               {
                 "effect": "NoSchedule",
@@ -80,7 +81,7 @@ metadata:
     certified: "true"
     repository: https://github.com/wavefrontHQ/wavefront-operator
 
-  name: wavefront-operator.v0.0.1
+  name: wavefront-operator.v0.1.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -199,7 +200,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: wavefront-operator
-                image: quay.io/wavefront/wavefront-operator-rhel:v1
+                image: registry.connect.redhat.com/wavefronthq/wavefront-operator:0.1.0
                 imagePullPolicy: Always
                 name: wavefront-operator
                 resources: {}
@@ -289,5 +290,5 @@ spec:
   - name: Wavefront Operator
     url: https://github.com/wavefrontHQ/wavefront-operator
   replaces: wavefront-operator.v0.0.0
-  version: 0.0.1
+  version: 0.1.0
 
