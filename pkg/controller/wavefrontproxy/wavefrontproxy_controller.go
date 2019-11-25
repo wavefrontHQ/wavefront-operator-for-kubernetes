@@ -2,6 +2,8 @@ package wavefrontproxy
 
 import (
 	"context"
+	"time"
+
 	"github.com/go-logr/logr"
 	wfv1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -18,7 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 )
 
 var log = logf.Log.WithName("controller_wavefrontproxy")
@@ -133,6 +134,12 @@ func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, req
 			return reconcile.Result{}, err
 		}
 
+		if ip.instance.Spec.Openshift && ip.instance.Spec.StorageClaimName != "" {
+			if result, err := r.getPvc(ip, reqLogger); err != nil {
+				return result, err
+			}
+		}
+
 		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", desiredDep.Namespace,
 			"Deployment.Name", desiredDep.Name)
 		err = r.client.Create(context.TODO(), desiredDep)
@@ -215,5 +222,33 @@ func (r *ReconcileWavefrontProxy) reconcileProxySvc(ip *InternalWavefrontProxy, 
 		}
 	}
 
+	return reconcile.Result{}, nil
+}
+
+// Checks if PVC already present under the given namespace else it will create one with given name.
+func (r *ReconcileWavefrontProxy) getPvc(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
+	existingPvc := &corev1.PersistentVolumeClaim{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Spec.StorageClaimName, Namespace: ip.instance.Namespace}, existingPvc)
+	if err != nil && errors.IsNotFound(err) {
+		pvc := createPVC(ip)
+		// Set WavefrontProxy instance as the owner and controller
+		if err := controllerutil.SetControllerReference(ip.instance, pvc, r.scheme); err != nil {
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Creating a new PersistentVolumeClaim", "PersistentVolumeClaim.Namespace", pvc.Namespace,
+			"PersistentVolumeClaim.Name", pvc.Name)
+		err = r.client.Create(context.TODO(), pvc)
+		if err != nil {
+			reqLogger.Error(err, "Failed to create new PersistentVolumeClaim", "PersistentVolumeClaim.Namespace", pvc.Namespace,
+				"PersistentVolumeClaim.Name", pvc.Name)
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		reqLogger.Error(err, "Failed to get PersistentVolumeClaim")
+		return reconcile.Result{}, err
+	} else {
+		reqLogger.Info("Found PersistentVolumeClaim", "PersistentVolumeClaim.Name", existingPvc.Name)
+	}
 	return reconcile.Result{}, nil
 }

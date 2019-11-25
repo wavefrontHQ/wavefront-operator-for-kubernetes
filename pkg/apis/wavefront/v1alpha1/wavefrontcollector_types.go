@@ -37,6 +37,15 @@ type WavefrontCollectorSpec struct {
 	// For pinning Collector to a specific version, you will need to set this option to false.
 	// We support only minor version Auto Upgrades.
 	EnableAutoUpgrade bool `json:"enableAutoUpgrade,omitempty"`
+
+	// Openshift Specific configurations starts from here.
+
+	// Set to true when running collector in Openshift platform.
+	Openshift bool `json:"openshift,omitempty"`
+
+	// If set to true, Collector will use default config bundled in the image
+	// else it will use the config from ConfigName
+	UseOpenshiftDefaultConfig bool `json:"useOpenshiftDefaultConfig,omitempty"`
 }
 
 // WavefrontCollectorStatus defines the observed state of WavefrontCollector

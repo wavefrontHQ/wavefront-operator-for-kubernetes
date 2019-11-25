@@ -97,6 +97,13 @@ spec:
                 to none. This is usually 9411
               format: int32
               type: integer
+            openshift:
+              description:  This need to be set to true when running proxy in Openshift platform.
+              type: boolean
+            storageClaimName:
+              description: The name of the storage claim to be used for creating proxy buffers directory.
+                This is applicable only in an Openshift environment.
+              type: string  
           required:
           - url
           - token

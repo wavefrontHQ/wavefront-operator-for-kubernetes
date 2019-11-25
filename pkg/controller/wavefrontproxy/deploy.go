@@ -3,6 +3,7 @@ package wavefrontproxy
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -81,6 +82,21 @@ func newService(ip *InternalWavefrontProxy) *corev1.Service {
 		Spec: svcSpec(ip),
 	}
 	return svc
+}
+
+//new pvc returns a pvc
+func createPVC(ip *InternalWavefrontProxy) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ip.instance.Spec.StorageClaimName,
+			Namespace: ip.instance.Namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("5G")}},
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		},
+	}
 }
 
 func selectorForSvc(ip *InternalWavefrontProxy) map[string]string {

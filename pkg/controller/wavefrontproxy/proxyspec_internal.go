@@ -1,12 +1,13 @@
 package wavefrontproxy
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/go-logr/logr"
 	wfv1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
 	"github.com/wavefronthq/wavefront-operator/pkg/controller/util"
 	corev1 "k8s.io/api/core/v1"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -121,6 +122,22 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 
 	ip.volumeMount = make([]corev1.VolumeMount, 0, 2)
 	ip.volume = make([]corev1.Volume, 0, 2)
+	if ip.instance.Spec.Openshift {
+		ip.volumeMount = append(ip.volumeMount, corev1.VolumeMount{
+			Name:      "wavefront-proxy-storage",
+			MountPath: "/var/spool/wavefront-proxy",
+		})
+
+		ip.volume = append(ip.volume, corev1.Volume{
+			Name: "wavefront-proxy-storage",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: ip.instance.Spec.StorageClaimName,
+				},
+			},
+		})
+	}
+
 	if ip.instance.Spec.Preprocessor != "" {
 		envProxyArgs.WriteString(" --preprocessorConfigFile " + deafultPreprocessorMountPath + "/rules.yaml")
 		ip.volumeMount = append(ip.volumeMount, corev1.VolumeMount{

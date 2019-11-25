@@ -67,6 +67,15 @@ type WavefrontProxySpec struct {
 	// For pinning Proxy to a specific version, you will need to set this option to false.
 	// We support only minor version Auto Upgrades.
 	EnableAutoUpgrade bool `json:"enableAutoUpgrade,omitempty"`
+
+	// Openshift Specific configurations starts from here
+
+	// Set to true when running proxy in Openshift platform.
+	Openshift bool `json:"openshift,omitempty"`
+
+	// The name of the storage claim to be used for creating proxy buffers directory.
+	// This is applicable only in an Openshift environment."
+	StorageClaimName string `json:"storageClaimName,omitempty"`
 }
 
 // WavefrontProxyStatus defines the observed state of WavefrontProxy
