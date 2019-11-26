@@ -69,7 +69,7 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 	if len(imgSlice) == 2 {
 		ip.instance.Status.Version = imgSlice[1]
 		finalVer, err := util.GetLatestVersion(ip.instance.Spec.Image, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
-		if err == nil {
+		if err == nil && finalVer != "" {
 			ip.instance.Status.Version = finalVer
 			ip.instance.Spec.Image = util.DockerHubImagePrefix + util.ProxyImageName + ":" + finalVer
 		} else {

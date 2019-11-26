@@ -134,15 +134,15 @@ func (r *ReconcileWavefrontProxy) Reconcile(request reconcile.Request) (reconcil
 func (r *ReconcileWavefrontProxy) reconcileProxy(ip *InternalWavefrontProxy, reqLogger logr.Logger) (reconcile.Result, error) {
 	desiredDep := newDeployment(ip)
 
+	// Set WavefrontProxy ip as the owner and controller
+	if err := controllerutil.SetControllerReference(ip.instance, desiredDep, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Check if the deployment already exists, if not create a new one.
 	existingDep := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Name, Namespace: ip.instance.Namespace}, existingDep)
 	if err != nil && errors.IsNotFound(err) {
-		// Set WavefrontProxy ip as the owner and controller
-		if err := controllerutil.SetControllerReference(ip.instance, desiredDep, r.scheme); err != nil {
-			return reconcile.Result{}, err
-		}
-
 		if ip.instance.Spec.Openshift && ip.instance.Spec.StorageClaimName != "" {
 			if result, err := r.getPvc(ip, reqLogger); err != nil {
 				return result, err
@@ -227,6 +227,10 @@ func (r *ReconcileWavefrontProxy) reconcileProxySvc(ip *InternalWavefrontProxy, 
 	if isSpecChanged {
 		desiredSvc := verifyAndModifySvc(*existingSvc, ip)
 		if desiredSvc != nil {
+			// Set WavefrontProxy instance as the owner and controller
+			if err := controllerutil.SetControllerReference(ip.instance, desiredSvc, r.scheme); err != nil {
+				return reconcile.Result{}, err
+			}
 			reqLogger.Info("Updating the wavefront-proxy service")
 			err = r.client.Update(context.TODO(), desiredSvc)
 			if err != nil {
@@ -245,10 +249,6 @@ func (r *ReconcileWavefrontProxy) getPvc(ip *InternalWavefrontProxy, reqLogger l
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ip.instance.Spec.StorageClaimName, Namespace: ip.instance.Namespace}, existingPvc)
 	if err != nil && errors.IsNotFound(err) {
 		pvc := createPVC(ip)
-		// Set WavefrontProxy instance as the owner and controller
-		if err := controllerutil.SetControllerReference(ip.instance, pvc, r.scheme); err != nil {
-			return reconcile.Result{}, err
-		}
 		reqLogger.Info("Creating a new PersistentVolumeClaim", "PersistentVolumeClaim.Namespace", pvc.Namespace,
 			"PersistentVolumeClaim.Name", pvc.Name)
 		err = r.client.Create(context.TODO(), pvc)

@@ -137,7 +137,7 @@ func getLatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.Wavef
 	if len(imgSlice) == 2 {
 		instance.Status.Version = imgSlice[1]
 		finalVer, err := util.GetLatestVersion(instance.Spec.Image, instance.Spec.EnableAutoUpgrade, reqLogger)
-		if err == nil {
+		if err == nil && finalVer != "" {
 			instance.Status.Version = finalVer
 			instance.Spec.Image = util.DockerHubImagePrefix + util.CollectorImageName + ":" + finalVer
 		} else {
