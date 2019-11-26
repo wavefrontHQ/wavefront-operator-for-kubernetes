@@ -16,19 +16,24 @@ const (
 	CollectorImageName = "wavefront-kubernetes-collector"
 
 	DockerHubImagePrefix = "wavefronthq/"
+
+	TestSuffix = "-test"
 )
 
 // GetLatestVersion checks for auto upgrade eligibility and returns the latest minor version as applicable.
 func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
-	// Auto upgrade is supported only for docker hub images.
-	if !strings.HasPrefix(crImage, DockerHubImagePrefix) {
-		reqLogger.Info("Auto Upgrade not supported,", "Cause :: Not an offically supported wavefronthq Docker Hub Image.", crImage)
-		return "", nil
-	}
-
 	imgSlice := strings.Split(crImage, ":")
-	crImageName := strings.TrimPrefix(imgSlice[0], DockerHubImagePrefix)
+	crImageName := imgSlice[0]
 	currentVersion := imgSlice[1]
+
+	// Auto upgrade is supported only for official wavefronthq docker hub images.
+	// Relax docker hub official repository constraint for image names with suffix "-test".
+	if !strings.HasSuffix(crImageName, TestSuffix) {
+		if !strings.HasPrefix(crImage, DockerHubImagePrefix) {
+			reqLogger.Info("Auto Upgrade not supported,", "Cause :: Not an offically supported wavefronthq Docker Hub Image.", crImage)
+			return "", nil
+		}
+	}
 
 	// Auto Upgrade support
 	if !enableAutoUpgrade {
@@ -43,7 +48,7 @@ func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Log
 	}
 
 	// The last 20 tags should be good. Don't expect customers to be using a really old version of CR.
-	url := "https://registry.hub.docker.com/v2/repositories/wavefronthq/" + crImageName + "/tags/?page_size=20"
+	url := "https://registry.hub.docker.com/v2/repositories/" + crImageName + "/tags/?page_size=20"
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
