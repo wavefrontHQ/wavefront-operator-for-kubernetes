@@ -22,7 +22,8 @@ const (
 func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
 	// Auto upgrade is supported only for docker hub images.
 	if !strings.HasPrefix(crImage, DockerHubImagePrefix) {
-		return "", fmt.Errorf("Auto Upgrade not supported, Cause :: Not a Docker Hub Image.")
+		reqLogger.Info("Auto Upgrade not supported,", "Cause :: Not a Docker Hub Image.", crImage)
+		return "", nil
 	}
 
 	imgSlice := strings.Split(crImage, ":")
