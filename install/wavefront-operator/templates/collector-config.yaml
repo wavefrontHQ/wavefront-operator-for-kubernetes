@@ -108,7 +108,7 @@ data:
 
     {{- if .Values.collector.discovery.config }}
     # user supplied discovery config
-{{ tpl (toYaml .Values.collector.discovery.config) . | indent 4 }}
+{{ tpl (toYaml .Values.collector.discovery.config) . | indent 6 }}
     {{- end }}
     {{- end }}
 {{- end }}
