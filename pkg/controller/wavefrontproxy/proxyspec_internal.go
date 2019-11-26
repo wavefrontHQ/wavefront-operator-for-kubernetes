@@ -71,8 +71,8 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 		finalVer, err := util.GetLatestVersion(ip.instance.Spec.Image, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
 		if err == nil && finalVer != "" {
 			ip.instance.Status.Version = finalVer
-			ip.instance.Spec.Image = util.DockerHubImagePrefix + util.ProxyImageName + ":" + finalVer
-		} else {
+			ip.instance.Spec.Image = imgSlice[0] + ":" + finalVer
+		} else if err != nil {
 			reqLogger.Error(err, "Auto Upgrade Error.")
 		}
 	} else {
