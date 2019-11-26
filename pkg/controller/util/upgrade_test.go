@@ -87,8 +87,8 @@ func TestNonDockerImage(t *testing.T) {
 	// Collector
 	v := "5.1"
 	i := OpenShiftProxy + v
-	_, err := GetLatestVersion(i, true, reqLogger)
-	if err == nil {
-		t.Error("Expected error since Auto upgrade is not supported for OpenShift Images :: ")
+	returnVer, err := GetLatestVersion(i, true, reqLogger)
+	if err != nil || returnVer != "" {
+		t.Error("Expected empty version to be returned since Auto upgrade is not supported for OpenShift Images :: ")
 	}
 }
