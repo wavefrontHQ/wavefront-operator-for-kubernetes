@@ -22,7 +22,7 @@ const (
 func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
 	// Auto upgrade is supported only for docker hub images.
 	if !strings.HasPrefix(crImage, DockerHubImagePrefix) {
-		reqLogger.Info("Auto Upgrade not supported,", "Cause :: Not a Docker Hub Image.", crImage)
+		reqLogger.Info("Auto Upgrade not supported,", "Cause :: Not an offically supported wavefronthq Docker Hub Image.", crImage)
 		return "", nil
 	}
 
