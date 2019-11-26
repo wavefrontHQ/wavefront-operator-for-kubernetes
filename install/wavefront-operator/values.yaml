@@ -18,7 +18,7 @@ operator:
   enabled: true
   image:
     repository: wavefronthq/wavefront-operator-for-kubernetes
-    tag: 0.1.0-rc1
+    tag: 0.1.0-rc2
     pullPolicy: IfNotPresent
 
 
