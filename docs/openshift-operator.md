@@ -33,34 +33,17 @@ Now login into Wavefront and search for the "openshift-demo-cluster" in kubernet
 
 ## Using External Proxy
 Wavefront Collector can be configured to use external proxy using below steps:
-1. Download example configuration [file](https://raw.githubusercontent.com/wavefrontHQ/wavefront-collector-for-kubernetes/master/deploy/examples/openshift-config.yaml).
+1. Download example configuration [file](https://raw.githubusercontent.com/wavefrontHQ/wavefront-collector-for-kubernetes/master/deploy/examples/openshift-collector-configmap.yaml).
 2. Update `sinks.proxyAddress` with your external proxy address. Please refer this [document](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes/blob/master/docs/configuration.md) for more configuration options.
 3. Create a configMap using downloaded file under the project where operator is deployed.
-
-   Example:-
-   ```yaml
-   apiVersion: v1
-   kind: ConfigMap
-   metadata:
-     name: collector-config
-     namespace: wavefront-collector
-   data:
-     collector.yaml: |
-       clusterName: k8s-cluster
-       enableDiscovery: true
-       enableEvents: true
-       flushInterval: 30s
-       sinks:
-         - proxyAddress: external-proxy:2878
-       ...
-       ...
-   ```
 4. Now deploy the collector by navigating to Installed Operators → Wavefront Operator → Wavefront Collector → Create New.
 5. Set `spec.useOpenshiftDefaultConfig` to `false` and `spce.configName` to the configMap name created in step 3.
 6. Click on create.
 
 
 ## Advanced Wavefront Proxy Configuration
+You can configure the proxy to change how it processes your data, port numbers, metric prefix etc. Refer this [document](https://docs.wavefront.com/proxies_configuring.html#general-proxy-properties-and-examples) for more details on proxy configuration properties. Below are the steps to create configMap with advanced configuration properties:
+
 1. Create a configMap under the project where the operator is deployed.
 
    Example:-
@@ -79,9 +62,9 @@ Wavefront Collector can be configured to use external proxy using below steps:
 4. Set `spec.token` to Wavefront API token and `spec.url` to Wavefront URL.
 5. Click on create.
 
-**Note**:- Refer this [document](https://docs.wavefront.com/proxies_configuring.html#general-proxy-properties-and-examples) for more details on proxy configuration properties.
 
 ## Configuring Wavefront Proxy Preprocessor Rules
+Preprocessor rules allow you to manipulate incoming metrics before they reach the proxy, for example, you could remove confidential text strings or replace unacceptable characters. Refer this [document](https://docs.wavefront.com/proxies_preprocessor_rules.html#rule-configuration-file) for more details on preprocessor rules. Below are the steps to create configMap with preprocessor rules:
 
 1. Create a configMap under the project where the operator is deployed.
    
@@ -104,5 +87,3 @@ Wavefront Collector can be configured to use external proxy using below steps:
 3. Set `spec.preprocessor` to the configMap name created in Step 1.
 4. Set `spec.token` to Wavefront API token and `spec.url` to Wavefront URL.
 5. Click on create.
-
-**Note**:- Refer this [document](https://docs.wavefront.com/proxies_preprocessor_rules.html#rule-configuration-file) for more details on preprocessor rules.
