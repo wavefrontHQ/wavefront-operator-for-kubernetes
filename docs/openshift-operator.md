@@ -6,7 +6,7 @@ This page contains the Installation and Configuration steps for full-stack monit
 ## Prerequisite
 * Generate Wavefront API token as given in the [document](https://docs.wavefront.com/usersaccountmanaging.html#generating-an-api-token).
 
-**or**
+  **or**
 
 * You must have a external proxy installed and configured that is reachable to the Openshift Cluster.
 
@@ -34,7 +34,7 @@ Now login into Wavefront and search for the "openshift-demo-cluster" in kubernet
 ## Using External Proxy
 Wavefront Collector can be configured to use external proxy using below steps:
 1. Download example configuration [file](https://raw.githubusercontent.com/wavefrontHQ/wavefront-collector-for-kubernetes/master/deploy/examples/openshift-config.yaml).
-2. Update `sinks.proxyAddress` with your external proxy address. Please refer this [documentation](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes/blob/master/docs/configuration.md) for more configuration options.
+2. Update `sinks.proxyAddress` with your external proxy address. Please refer this [document](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes/blob/master/docs/configuration.md) for more configuration options.
 3. Create a configMap using downloaded file under the project where operator is deployed.
 
    Example:-
@@ -79,7 +79,7 @@ Wavefront Collector can be configured to use external proxy using below steps:
 4. Set `spec.token` to Wavefront API token and `spec.url` to Wavefront URL.
 5. Click on create.
 
-**Note**:- Refer this (document)[https://docs.wavefront.com/proxies_configuring.html#general-proxy-properties-and-examples] for more details on proxy configuration properties.
+**Note**:- Refer this [document](https://docs.wavefront.com/proxies_configuring.html#general-proxy-properties-and-examples) for more details on proxy configuration properties.
 
 ## Configuring Wavefront Proxy Preprocessor Rules
 
@@ -105,4 +105,4 @@ Wavefront Collector can be configured to use external proxy using below steps:
 4. Set `spec.token` to Wavefront API token and `spec.url` to Wavefront URL.
 5. Click on create.
 
-**Note**:- Refer this (document)[https://docs.wavefront.com/proxies_preprocessor_rules.html#rule-configuration-file] for more details on preprocessor rules.
+**Note**:- Refer this [document](https://docs.wavefront.com/proxies_preprocessor_rules.html#rule-configuration-file) for more details on preprocessor rules.
