@@ -104,25 +104,31 @@ spec:
     
      ### Prerequisite
      
-     * Generate Wavefront API token - https://docs.wavefront.com/users_account_managing.html#generating-an-api-token
+     * A Wavefront API token is needed to configure Wavefront Proxy.  Refer [Generating an API Token] (https://docs.wavefront.com/users_account_managing.html#generating-an-api-token) for generating a token.
      
-     ### Configure and create Wavefront Proxy
+     ### Create Wavefront Proxy
 
-     * Download example Wavefront Proxy CR and update below configuration properties in the file and create Wavefront Proxy.
-           `metadata.namespace` : Wavefront Operator namespace name.
-           `spec.url`           : Wavefront URL.
-           `spec.token`         : Wavefront API token.
+     * Download example Wavefront Proxy CR and update below configuration properties in the CR yaml and create Wavefront Proxy.
 
-       ``` curl -O https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator/master/deploy/crds/wavefront_proxy_basic_cr.yaml 
+          * `metadata.namespace` : Wavefront Operator namespace name.
+          * `spec.url`           : Wavefront cluster URL.
+          * `spec.token`         : Wavefront API token.
+
+       ```
+           curl -O https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator/master/deploy/crds/wavefront_proxy_basic_cr.yaml 
            kubectl create -f wavefront_proxy_basic_cr.yaml
        ```  
      
-     ### Configure and create Wavefront Collector       
+     ### Create Wavefront Collector
 
-     * Download example Wavefront Collector CR with configMap and update two occurrences of below propertry in the file and create Wavefront Collector.
-           `metadata.namespace` : Wavefront Operator namespace name.
+     * Download example Wavefront Collector CR with configMap and update below propertry in the CR yaml and create Wavefront Collector.
+
+          * `metadata.namespace` : Wavefront Operator namespace name.
+          * `clusterName`        : This is a unique name for the kubernetes cluster. All metrics in Wavefront will receive a `cluster` tag with this value.
+          * `sinks.proxyAddress` : The address for the Wavefront Proxy. The proxy can be anywhere network reachable including outside of the cluster.
        
-       ``` curl -O https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator/master/deploy/crds/wavefront_collector_bundle_cr.yaml
+       ```
+           curl -O https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator/master/deploy/crds/wavefront_collector_bundle_cr.yaml
            kubectl create -f wavefront_collector_bundle_cr.yaml
        ```
 
@@ -284,6 +290,6 @@ spec:
   links:
   - name: Wavefront Operator
     url: https://github.com/wavefrontHQ/wavefront-operator
-  replaces: wavefront-operator.v0.0.0
   version: 0.1.0
+
 

@@ -74,7 +74,7 @@ data:
 apiVersion: wavefront.com/v1alpha1
 kind: WavefrontCollector
 metadata:
-  name: example-wavefrontcollector
+  name: wavefront-collector
   namespace: wavefront
 spec:
   image: wavefronthq/wavefront-kubernetes-collector:1.0.0-rc8
