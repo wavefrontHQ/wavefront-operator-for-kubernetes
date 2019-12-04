@@ -31,6 +31,20 @@ To deploy a release named "test" into a namespace "test-ns":
 helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-ns
 ```
 
+### Issues using helm:
+
+- CRD already exists:
+```
+Error: customresourcedefinitions.apiextensions.k8s.io <"wavefrontcollectors.wavefront.com"> already exists
+```
+
+If you see the above error (can be seen when trying to create multiple releases), then try running 
+the helm command with "--no-crd-hook" flag.
+
+```
+helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace --no-crd-hook
+```
+
 ## Uninstallation
 To uninstall/delete a deployed chart named "test":
 ```
