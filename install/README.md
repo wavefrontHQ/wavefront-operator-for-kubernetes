@@ -31,7 +31,7 @@ To deploy a release named "test" into a namespace "test-ns":
 helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-ns
 ```
 
-### Issues using helm:
+### Troubleshooting:
 
 - CRD already exists:
 ```
