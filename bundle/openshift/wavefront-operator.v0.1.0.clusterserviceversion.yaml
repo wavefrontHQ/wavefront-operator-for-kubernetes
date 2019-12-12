@@ -16,8 +16,7 @@ metadata:
             "url": "\u003chttps://YOUR_CLUSTER.wavefront.com/api/\u003e",
             "image": "registry.connect.redhat.com/wavefronthq/proxy:5.7",
             "openshift": true,
-            "storageClaimName": "wavefront-proxy-storage",
-            "enableAutoUpgrade": false
+            "storageClaimName": "wavefront-proxy-storage"
           }
         },
         {
@@ -30,8 +29,7 @@ metadata:
           "spec": {
             "daemon": true,
             "openshift": true,
-            "useOpenshiftDefaultConfig": true,
-            "enableAutoUpgrade": false, 
+            "useOpenshiftDefaultConfig": true
             "env": [
               {
                 "name": "HOST_PROC",

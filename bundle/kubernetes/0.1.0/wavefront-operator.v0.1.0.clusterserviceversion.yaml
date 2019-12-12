@@ -14,8 +14,7 @@ metadata:
           "spec": {
             "token": "\u003cTOKEN\u003e",
             "url": "\u003chttps://YOUR_CLUSTER.wavefront.com/api/\u003e",
-            "image": "wavefronthq/proxy:5.7",
-            "enableAutoUpgrade": true
+            "image": "wavefronthq/proxy:5.7"
           }
         },
         {
@@ -26,8 +25,7 @@ metadata:
             "namespace": "wavefront"
           },
           "spec": {
-            "daemon": true,
-            "enableAutoUpgrade": true, 
+            "daemon": true
             "env": [
               {
                 "name": "HOST_PROC",
