@@ -14,8 +14,8 @@ This page contains the Installation and Configuration steps for full-stack monit
 
 1.  Login into Openshift Web UI as administrator.
 2.  Create a project with name "wavefront".
-3.  From the Left pane navigate to the "Catalog" → "OperatorHub".
-4.  From the list of Operator types select "Monitoring" → "Wavefront".
+3.  From the Left pane navigate to the Catalog → OperatorHub.
+4.  From the list of Operator types select Monitoring → Wavefront.
 5.  Click on the Wavefront Operator and click Install.
 6.  Subscribe for the Operator by selecting "wavefront" as namespace.
 7.  Once the subscription is successful the operator will be listed under "Installed Operators" and it deploys Wavefront Proxy and Wavefront Collector CRD's into the project.
@@ -37,7 +37,7 @@ Wavefront Collector can be configured to use external proxy using below steps:
 2. Update `sinks.proxyAddress` with your external proxy address. Please refer this [document](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes/blob/master/docs/configuration.md) for more configuration options.
 3. Create a configMap using downloaded file under the project where operator is deployed.
 4. Now deploy the collector by navigating to Installed Operators → Wavefront Operator → Wavefront Collector → Create New.
-5. Set `spec.useOpenshiftDefaultConfig` to `false` and `spce.configName` to the configMap name created in step 3.
+5. Set `spec.useOpenshiftDefaultConfig` to `false` and `spec.configName` to the configMap name created in step 3.
 6. Click on create.
 
 
