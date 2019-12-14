@@ -87,6 +87,7 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 	if ip.instance.Spec.MetricPort == 0 {
 		ip.instance.Spec.MetricPort = defaultMetricPort
 	}
+
 	ip.addPort("metricport", ip.instance.Spec.MetricPort)
 	envProxyArgs.WriteString(" --pushListenerPorts " + strconv.FormatInt(int64(ip.instance.Spec.MetricPort), 10))
 
@@ -177,8 +178,10 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 		// AdditonalPorts are meant for use with only Advanced config.
 		ports := getCommaSeparatedPorts(ip.instance.Spec.AdditionalPorts)
 		for i := range ports {
-			if port, err := strconv.Atoi(ports[i]); err == nil {
-				ip.addPort("port"+strconv.Itoa(i), int32(port))
+			if ports[i] != "" {
+				if port, err := strconv.Atoi(ports[i]); err == nil {
+					ip.addPort("port"+strconv.Itoa(i), int32(port))
+				}
 			}
 		}
 	}

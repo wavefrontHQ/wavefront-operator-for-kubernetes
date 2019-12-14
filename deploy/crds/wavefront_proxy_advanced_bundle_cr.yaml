@@ -7,6 +7,7 @@ metadata:
 data:
   wavefront.conf: |
     prefix = dev
+    traceListenerPorts=30000
     customSourceTags = <YOUR_K8S_CLUSTER>
 
 ---
@@ -39,3 +40,4 @@ spec:
   token: <TOKEN>
   preprocessor: preprocessor-config
   advanced: advanced-config
+  additionalPorts: "30000"
