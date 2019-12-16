@@ -38,7 +38,8 @@ spec:
   advanced: {{ .Values.proxy.advanced }}
   {{- end -}}
   {{- if .Values.proxy.additionalPorts }}
-  additionalPorts: {{ .Values.proxy.additionalPorts }}
+  # Wrapped in quotes to workaround issue https://github.com/helm/helm/issues/1694
+  additionalPorts: "{{ .Values.proxy.additionalPorts }}"
   {{- end -}}
   {{- if .Values.proxy.enableAutoUpgrade }}
   enableAutoUpgrade: {{ .Values.proxy.enableAutoUpgrade }}
