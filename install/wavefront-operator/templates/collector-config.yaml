@@ -14,7 +14,11 @@ data:
     {{- if .Values.collector.proxyAddress }}
     - proxyAddress: {{ .Values.collector.proxyAddress }}
     {{- else }}
+    {{- if .Values.proxy.metricPort }}
     - proxyAddress: {{ template "wavefront-operator.proxy.fullname" . }}:{{ .Values.proxy.metricPort }}
+    {{- else }}
+    - proxyAddress: {{ template "wavefront-operator.proxy.fullname" . }}:2878
+    {{- end }}
     {{- end }}
     {{- else }}
     - server: {{ .Values.wavefront.url }}
