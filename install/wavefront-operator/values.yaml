@@ -6,7 +6,7 @@
 clusterName: KUBERNETES_CLUSTER_NAME
 
 
-## Wavefront URL (cluster) and API Token
+## Wavefront URL (cluster) and API Token. (If using an external proxy the url and token are not required.)
 ## Required
 wavefront:
   url: https://YOUR_CLUSTER.wavefront.com
@@ -18,7 +18,7 @@ operator:
   enabled: true
   image:
     repository: wavefronthq/wavefront-operator-for-kubernetes
-    tag: 0.1.0-rc2
+    tag: 0.1.0-rc3
     pullPolicy: IfNotPresent
 
 
@@ -63,12 +63,13 @@ collector:
 
   ## If set to true, metrics will be sent to Wavefront via a Wavefront Proxy.
   ## When true you must either specify a value for `collector.proxyAddress` or set `proxy.enabled` to true
-  ## If set to false, metrics will be sent to Wavefront via the Direct Ingestion API
+  ## If set to false, metrics will be sent to Wavefront via the Direct Ingestion API.
   useProxy: true
 
   ## Can be used to specify a specific address for the Wavefront Proxy
   ## The proxy can be anywhere network reachable including outside of the cluster
-  ## Required if `collector.useProxy` is true and `proxy.enabled` is false
+  ## Required when using an External Proxy.
+  ## (To use an External Proxy you should set `collector.useProxy` to true and `proxy.enabled` to false)
   # proxyAddress: wavefront-proxy:2878
 
   ## If set to true Kubernetes API Server will also be scraped for metrics (default false)
@@ -149,8 +150,8 @@ proxy:
     tag: 4.38
 
   ## The port number the proxy will listen on for metrics in Wavefront data format.
-  ## This is usually 2878
-  metricPort: 2878
+  ## This is by default 2878
+  # metricPort: 2878
 
   ## The no. of replicas for Wavefront Proxy. Defaults to 1
   # size: 3
@@ -186,11 +187,11 @@ proxy:
 
   ## The name of the config map providing the advanced configurations for the Wavefront proxy.
   ## This is synonymous to the wavefront.conf file at https://docs.wavefront.com/proxies_configuring.html#paths
-  #	advanced:
+  # advanced: advanced-config
 
   ## The comma separated list of ports that need to be opened on Proxy Pod and Services.
   ## Needs to be explicitly specified when using "Advanced" configuration.
-  #	additionalPorts: 2879, 30001
+  # additionalPorts: 2879, 30001
 
   ## If set to true, Proxy pods will be upgraded automatically in case new minor upgrade version is available.
   ## For pinning Proxy to a specific version, you will need to set this option to false.
