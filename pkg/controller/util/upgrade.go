@@ -21,7 +21,7 @@ const (
 )
 
 // GetLatestVersion checks for auto upgrade eligibility and returns the latest minor version as applicable.
-func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Logger) (string, error) {
+func GetLatestVersion(crImage string, reqLogger logr.Logger) (string, error) {
 	imgSlice := strings.Split(crImage, ":")
 	crImageName := imgSlice[0]
 	currentVersion := imgSlice[1]
@@ -33,12 +33,6 @@ func GetLatestVersion(crImage string, enableAutoUpgrade bool, reqLogger logr.Log
 			reqLogger.Info("Auto Upgrade not supported,", "Cause :: Not an offically supported wavefronthq Docker Hub Image.", crImage)
 			return "", nil
 		}
-	}
-
-	// Auto Upgrade support
-	if !enableAutoUpgrade {
-		reqLogger.Info("Auto Upgrade not supported,", " Cause :: enableAutoUpgrade is set to ", enableAutoUpgrade)
-		return currentVersion, nil
 	}
 
 	// "latest" effectively renders auto upgrade useless.

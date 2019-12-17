@@ -64,16 +64,19 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 		ip.instance.Spec.Image = defaultImage
 	}
 
+
 	imgSlice := strings.Split(ip.instance.Spec.Image, ":")
 	// Validate Image format and Auto Upgrade.
 	if len(imgSlice) == 2 {
 		ip.instance.Status.Version = imgSlice[1]
-		finalVer, err := util.GetLatestVersion(ip.instance.Spec.Image, ip.instance.Spec.EnableAutoUpgrade, reqLogger)
-		if err == nil && finalVer != "" {
-			ip.instance.Status.Version = finalVer
-			ip.instance.Spec.Image = imgSlice[0] + ":" + finalVer
-		} else if err != nil {
-			reqLogger.Error(err, "Auto Upgrade Error.")
+		if ip.instance.Spec.EnableAutoUpgrade {
+			finalVer, err := util.GetLatestVersion(ip.instance.Spec.Image, reqLogger)
+			if err == nil && finalVer != "" {
+				ip.instance.Status.Version = finalVer
+				ip.instance.Spec.Image = imgSlice[0] + ":" + finalVer
+			} else if err != nil {
+				reqLogger.Error(err, "Auto Upgrade Error.")
+			}
 		}
 	} else {
 		reqLogger.Info("Cannot update CR's Status.version", "Un-recognized format for CR Image", instance.Spec.Image)
