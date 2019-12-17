@@ -64,6 +64,7 @@ func (ip *InternalWavefrontProxy) initialize(instance *wfv1.WavefrontProxy, reqL
 		ip.instance.Spec.Image = defaultImage
 	}
 
+
 	imgSlice := strings.Split(ip.instance.Spec.Image, ":")
 	// Validate Image format and Auto Upgrade.
 	if len(imgSlice) == 2 {
