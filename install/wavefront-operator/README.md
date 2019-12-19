@@ -42,8 +42,15 @@ To uninstall/delete a deployed chart release:
 helm delete <release-name> --purge
 ```
 
-CRDs created by this chart are not removed as part of helm delete. To remove the CRDs:
+CRDs and namespaces created by this chart are not removed as part of helm delete.
+
+To remove the CRDs:
 ```
 kubectl delete crd wavefrontcollectors.wavefront.com
 kubectl delete crd wavefrontproxies.wavefront.com
+```
+
+To remove the namespace:
+```
+kubectl delete namespace test-namespace
 ```
