@@ -28,7 +28,7 @@ The required options for the chart are:
 
 To deploy a release named "test" into a namespace "test-ns":
 ```
-helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-ns
+helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace
 ```
 
 ### Troubleshooting:
@@ -51,10 +51,17 @@ To uninstall/delete a deployed chart named "test":
 helm delete test --purge
 ```
 
-CRDs created by this chart are not removed as part of helm delete. To remove the CRDs:
+CRDs and namespaces created by this chart are not removed as part of helm delete.
+
+To remove the CRDs:
 ```
 kubectl delete crd wavefrontcollectors.wavefront.com
 kubectl delete crd wavefrontproxies.wavefront.com
+```
+
+To remove the namespace:
+```
+kubectl delete namespace test-namespace
 ```
 
 ## Development

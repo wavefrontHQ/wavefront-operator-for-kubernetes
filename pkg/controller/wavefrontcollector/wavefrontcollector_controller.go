@@ -136,12 +136,14 @@ func getLatestCollector(reqLogger logr.Logger, instance *wavefrontv1alpha1.Wavef
 	// Validate Image format and Auto Upgrade.
 	if len(imgSlice) == 2 {
 		instance.Status.Version = imgSlice[1]
-		finalVer, err := util.GetLatestVersion(instance.Spec.Image, instance.Spec.EnableAutoUpgrade, reqLogger)
-		if err == nil && finalVer != "" {
-			instance.Status.Version = finalVer
-			instance.Spec.Image = imgSlice[0] + ":" + finalVer
-		} else if err != nil {
-			reqLogger.Error(err, "Auto Upgrade Error.")
+		if instance.Spec.EnableAutoUpgrade {
+			finalVer, err := util.GetLatestVersion(instance.Spec.Image, reqLogger)
+			if err == nil && finalVer != "" {
+				instance.Status.Version = finalVer
+				instance.Spec.Image = imgSlice[0] + ":" + finalVer
+			} else if err != nil {
+				reqLogger.Error(err, "Auto Upgrade Error.")
+			}
 		}
 	} else {
 		reqLogger.Info("Cannot update CR's Status.version", "Un-recognized format for CR Image", instance.Spec.Image)
