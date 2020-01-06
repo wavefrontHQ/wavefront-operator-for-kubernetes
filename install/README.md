@@ -46,8 +46,7 @@ helm install wavefront wavefront/wavefront-operator --set wavefront.url=https://
 Error: customresourcedefinitions.apiextensions.k8s.io <"wavefrontcollectors.wavefront.com"> already exists
 ```
 
-If you see the above error (can be seen when trying to create multiple releases), then try running
-the helm command with "--no-crd-hook" flag.
+If you see the above error (can be seen when trying to create multiple releases), then try running the helm command with "--no-crd-hook" flag.
 
 ```
 helm install --name wavefront wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace wavefront --no-crd-hook
