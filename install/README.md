@@ -26,9 +26,17 @@ The required options for the chart are:
 - wavefront.url
 - wavefront.token
 
-To deploy a release named "test" into a namespace "test-ns":
+#### Helm 2
+To deploy a release named "wavefront" into a namespace "wavefront" using helm 2:
 ```
-helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace
+helm install --name wavefront wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace wavefront
+```
+
+#### Helm 3
+To deploy a release named "wavefront" into a namespace "wavefront" using helm 3:
+```
+kubectl create namespace wavefront
+helm install wavefront wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace wavefront
 ```
 
 ### Troubleshooting:
@@ -38,20 +46,20 @@ helm install --name test wavefront/wavefront-operator --set wavefront.url=https:
 Error: customresourcedefinitions.apiextensions.k8s.io <"wavefrontcollectors.wavefront.com"> already exists
 ```
 
-If you see the above error (can be seen when trying to create multiple releases), then try running 
+If you see the above error (can be seen when trying to create multiple releases), then try running
 the helm command with "--no-crd-hook" flag.
 
 ```
-helm install --name test wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace test-namespace --no-crd-hook
+helm install --name wavefront wavefront/wavefront-operator --set wavefront.url=https://YOUR_CLUSTER.wavefront.com,wavefront.token=YOUR_API_TOKEN,clusterName=YOUR_CLUSTER_NAME --namespace wavefront --no-crd-hook
 ```
 
 ## Uninstallation
-To uninstall/delete a deployed chart named "test":
+To uninstall/delete a release named "wavefront":
 ```
-helm delete test --purge
+helm delete wavefront --purge
 ```
 
-CRDs and namespaces created by this chart are not removed as part of helm delete.
+CRDs and namespaces created by this release are not removed as part of helm delete.
 
 To remove the CRDs:
 ```
@@ -61,7 +69,7 @@ kubectl delete crd wavefrontproxies.wavefront.com
 
 To remove the namespace:
 ```
-kubectl delete namespace test-namespace
+kubectl delete namespace wavefront
 ```
 
 ## Development
