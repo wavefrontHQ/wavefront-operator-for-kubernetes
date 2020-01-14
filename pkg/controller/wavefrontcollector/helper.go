@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	wavefrontv1alpha1 "github.com/wavefronthq/wavefront-operator/pkg/apis/wavefront/v1alpha1"
+	wavefrontv1alpha1 "github.com/wavefronthq/wavefront-operator-for-kubernetes/pkg/apis/wavefront/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 
