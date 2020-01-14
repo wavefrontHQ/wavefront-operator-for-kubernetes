@@ -2,12 +2,13 @@ package util
 
 import (
 	"fmt"
-	"github.com/Masterminds/semver"
-	"github.com/go-logr/logr"
-	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/Masterminds/semver"
+	"github.com/go-logr/logr"
+	"github.com/tidwall/gjson"
 )
 
 const (

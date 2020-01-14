@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+
 	wfv1 "github.com/wavefronthq/wavefront-operator-for-kubernetes/pkg/apis/wavefront/v1alpha1"
 	"github.com/wavefronthq/wavefront-operator-for-kubernetes/pkg/controller/util"
+
 	corev1 "k8s.io/api/core/v1"
 )
 

@@ -1,9 +1,10 @@
 package util
 
 import (
+	"testing"
+
 	"github.com/Masterminds/semver"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"testing"
 )
 
 var DockerHubProxy string = "wavefronthq/proxy:"

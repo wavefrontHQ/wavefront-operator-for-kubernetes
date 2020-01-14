@@ -3,20 +3,20 @@ package wavefrontcollector
 import (
 	"context"
 	"fmt"
-
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/types"
-
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
+
 	wavefrontv1alpha1 "github.com/wavefronthq/wavefront-operator-for-kubernetes/pkg/apis/wavefront/v1alpha1"
 	"github.com/wavefronthq/wavefront-operator-for-kubernetes/pkg/controller/util"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"

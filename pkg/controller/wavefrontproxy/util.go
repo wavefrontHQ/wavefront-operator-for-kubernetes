@@ -1,11 +1,12 @@
 package wavefrontproxy
 
 import (
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"reflect"
 	"sort"
 	"strings"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // getLabels returns the labels for the given WavefrontProxy CR name.
