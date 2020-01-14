@@ -1,7 +1,7 @@
 language: go
 
 # workaround for case sensitive build issues with wavefrontHQ
-go_import_path: github.com/wavefronthq/wavefront-operator
+go_import_path: github.com/wavefronthq/wavefront-operator-for-kubernetes
 
 go:
   - "1.12.x"
