@@ -377,10 +377,10 @@ spec:
       containers:
         - name: wavefront-operator
           # Replace this with the built image name
-          image: akodali/wavefront-operator:latest
+          image: wavefronthq/wavefront-operator-for-kubernetes:0.1.0-rc3
           command:
           - wavefront-operator
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
