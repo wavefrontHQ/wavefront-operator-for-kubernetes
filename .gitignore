@@ -80,3 +80,6 @@ tags
 .idea/*
 
 vendor/*
+
+# osstp
+osstp_golang.yml
