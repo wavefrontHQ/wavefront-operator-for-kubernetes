@@ -1,4 +1,4 @@
-# Wavefront Operator for Kubernetes [![build status][ci-img]][ci] [![Go Report Card][go-report-img]][go-report]
+# Wavefront Operator for Kubernetes [![build status][ci-img]][ci] [![Go Report Card][go-report-img]][go-report] [![Docker Pulls][docker-pull-img]][docker-img]
 
 [Wavefront](https://docs.wavefront.com) is a high-performance streaming analytics platform for monitoring and optimizing your environment and applications.
 
