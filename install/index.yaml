@@ -3,7 +3,37 @@ entries:
   wavefront-operator:
   - apiVersion: v1
     appVersion: 0.9.0
-    created: "2020-02-03T11:04:29.528768-08:00"
+    created: "2020-02-20T11:24:56.352904-08:00"
+    dependencies:
+    - condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://kubernetes-charts.storage.googleapis.com/
+      version: ^0.8.0
+    description: Helm chart for the Wavefront operator for Kubernetes
+    digest: a4e267472ca29395c5fd2c37d7399146a529b6583b4871aa7095d5a08ce713a2
+    home: https://www.wavefront.com
+    keywords:
+    - metric
+    - monitoring
+    - observability
+    - alerting
+    maintainers:
+    - email: rvikram@vmware.com
+      name: vikramraman
+    - email: pierre@wavefront.com
+      name: puckpuck
+    - email: akodali@vmware.com
+      name: akodali18
+    name: wavefront-operator
+    sources:
+    - https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes
+    - https://github.com/wavefrontHQ/java/tree/master/proxy
+    urls:
+    - wavefront-operator-0.9.2.tgz
+    version: 0.9.2
+  - apiVersion: v1
+    appVersion: 0.9.0
+    created: "2020-02-20T11:24:56.351454-08:00"
     dependencies:
     - condition: kubeStateMetrics.enabled
       name: kube-state-metrics
@@ -33,7 +63,7 @@ entries:
     version: 0.9.1
   - apiVersion: v1
     appVersion: 0.9.0
-    created: "2020-02-03T11:04:29.526406-08:00"
+    created: "2020-02-20T11:24:56.348686-08:00"
     dependencies:
     - condition: kubeStateMetrics.enabled
       name: kube-state-metrics
@@ -61,4 +91,4 @@ entries:
     urls:
     - wavefront-operator-0.9.0.tgz
     version: 0.9.0
-generated: "2020-02-03T11:04:29.522382-08:00"
+generated: "2020-02-20T11:24:56.342951-08:00"
