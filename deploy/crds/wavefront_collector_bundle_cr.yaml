@@ -57,7 +57,7 @@ data:
           - 'consul*'
         port: 8500
         conf: |
-          address = ["${host}:${port}"]
+          address = "${host}:${port}"
           scheme = "http"
       - name: kube-dns-discovery
         type: prometheus
