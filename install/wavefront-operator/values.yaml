@@ -150,7 +150,7 @@ proxy:
   enabled: true
   image:
     repository: wavefronthq/proxy
-    tag: 5.7
+    tag: 6.1
 
   ## The port number the proxy will listen on for metrics in Wavefront data format.
   ## This is by default 2878
