@@ -29,7 +29,7 @@ collector:
   enabled: true
   image:
     repository: wavefronthq/wavefront-kubernetes-collector
-    tag: 1.0.8
+    tag: 1.1.0
     pullPolicy: IfNotPresent
 
   ## If set to true, DaemonSet will be used for the collector.
@@ -219,4 +219,4 @@ serviceAccount:
 ## If enabled the kube-state-metrics chart will be installed as a subchart and the collector
 ## will be configured to capture metrics.
 kubeStateMetrics:
-  enabled: true
+  enabled: false
