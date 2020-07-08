@@ -89,6 +89,11 @@ collector:
   ## Ref: https://github.com/wavefrontHQ/wavefront-kubernetes-collector/blob/master/docs/discovery.md
   discovery:
     enabled: true
+
+  ## Whether to enable runtime discovery configurations
+  ## Ref: https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes/blob/master/docs/discovery.md#runtime-configurations
+  #   enableRuntimeConfigs: false
+
   ## Can be used to add additional discovery rules
   #   config:
   ## auto-discover a sample prometheus application

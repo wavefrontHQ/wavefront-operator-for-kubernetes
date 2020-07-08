@@ -31,12 +31,6 @@ rules:
   - get
   - update
   - create
-- apiGroups:
-  - extensions
-  resources:
-  - deployments
-  verbs:
-  - get
   - list
   - watch
 {{- if .Values.collector.kubernetesState }}

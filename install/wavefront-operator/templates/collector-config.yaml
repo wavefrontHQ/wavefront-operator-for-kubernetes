@@ -117,7 +117,10 @@ data:
 
     {{- if .Values.collector.discovery.enabled }}
     discovery:
-      discovery_interval: 15m
+      discovery_interval: 5m
+      {{- if .Values.collector.discovery.enableRuntimeConfigs }}
+      enable_runtime_plugins: {{ .Values.collector.discovery.enableRuntimeConfigs }}
+      {{- end }}
       plugins:
       - name: redis
         type: telegraf/redis

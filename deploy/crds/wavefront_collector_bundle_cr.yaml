@@ -33,6 +33,7 @@ data:
       - plugins: []
 
     discovery:
+      enable_runtime_plugins: false
       plugins:
       - name: kube-dns-discovery
         type: prometheus
