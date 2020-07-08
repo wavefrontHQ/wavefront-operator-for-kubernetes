@@ -29,7 +29,7 @@ collector:
   enabled: true
   image:
     repository: wavefronthq/wavefront-kubernetes-collector
-    tag: 1.1.0
+    tag: 1.2.0
     pullPolicy: IfNotPresent
 
   ## If set to true, DaemonSet will be used for the collector.
@@ -150,7 +150,7 @@ proxy:
   enabled: true
   image:
     repository: wavefronthq/proxy
-    tag: 6.1
+    tag: 8.2
 
   ## The port number the proxy will listen on for metrics in Wavefront data format.
   ## This is by default 2878
