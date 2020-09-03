@@ -103,6 +103,7 @@ rules:
   - nodes
   - nodes/stats
   - pods
+  - replicationcontrollers
   - services
   verbs:
   - get
@@ -120,6 +121,35 @@ rules:
   - extensions
   resources:
   - deployments
+  verbs:
+  - get
+  - list
+  - watch
+# required for kubernetes_state_source
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - statefulsets
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
   verbs:
   - get
   - list

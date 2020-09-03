@@ -12,7 +12,7 @@ data:
     sinks:
     - proxyAddress: example-wavefrontproxy.wavefront.svc.cluster.local:2878
       tags:
-        version: 1.2.0
+        version: 1.2.3
 
     sources:
       kubernetes_source:
@@ -53,7 +53,7 @@ metadata:
   name: wavefront-collector
   namespace: wavefront
 spec:
-  image: wavefronthq/wavefront-kubernetes-collector:1.2.0
+  image: wavefronthq/wavefront-kubernetes-collector:1.2.3
   daemon: true
   configName: collector-config
 
