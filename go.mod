@@ -35,4 +35,7 @@ replace (
 
 replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.10.0
 
+// bitbucket repo is removed, so internalized the goautoneg from https://github.com/adjust/goautoneg
+replace bitbucket.org/ww/goautoneg => ./pkg/goautoneg
+
 go 1.13
