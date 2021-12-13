@@ -20,7 +20,7 @@ const (
 
 	defaultMetricPort = 2878
 
-	defaultImagePullPolicy = corev1.PullIfNotPresent
+	defaultImagePullPolicy = corev1.Always
 
 	deafultPreprocessorMountPath = "/etc/wavefront/wavefront-proxy/preprocessor"
 
