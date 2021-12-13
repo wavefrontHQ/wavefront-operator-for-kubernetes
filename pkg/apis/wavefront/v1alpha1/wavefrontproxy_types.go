@@ -62,6 +62,9 @@ type WavefrontProxySpec struct {
 	// The name of the config map providing the advanced configurations for the Wavefront proxy.
 	Advanced string `json:"advanced,omitempty"`
 
+	// The name of the config map providing the JAVA_ARGS override for the Wavefront proxy.
+	JavaArgs string `json:"javaargs,omitempty"`
+
 	// The comma separated list of ports that need to be opened on Proxy Pod and Services.
 	// Needs to be explicitly specified when using "Advanced" configuration.
 	AdditionalPorts string `json:"additionalPorts,omitempty"`

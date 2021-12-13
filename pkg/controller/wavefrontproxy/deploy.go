@@ -70,6 +70,9 @@ func constructEnvVars(ip *InternalWavefrontProxy) []corev1.EnvVar {
 	}, {
 		Name:  "WAVEFRONT_PROXY_ARGS",
 		Value: ip.EnvWavefrontProxyArgs,
+	}, {
+		Name:  "JAVA_ARGS",
+		Value: ip.instance.Spec.JavaArgs,
 	}}
 }
 
