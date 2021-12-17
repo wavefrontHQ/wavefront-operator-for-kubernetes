@@ -1,5 +1,5 @@
-# Note
-The Log4j vulnerability fix has been implemented in Tanzu Observability (Wavefront) Proxy version 10.12. Please upgrade all proxies to this version: https://github.com/wavefrontHQ/wavefront-proxy/releases/tag/wavefront-10.12
+# Log4j Vulnerability
+[Critical] The Log4j vulnerability fix has been implemented in Tanzu Observability (Wavefront) Proxy version 10.12. Please upgrade all proxies to this version: https://github.com/wavefrontHQ/wavefront-proxy/releases/tag/wavefront-10.12
 
 # Wavefront Operator for Kubernetes [![build status][ci-img]][ci] [![Go Report Card][go-report-img]][go-report] [![Docker Pulls][docker-pull-img]][docker-img]
 
