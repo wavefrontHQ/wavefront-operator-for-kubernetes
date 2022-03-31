@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -49,7 +50,11 @@ type WavefrontOperatorReconciler struct {
 func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	err := r.provisionProxy(ctx, req)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -59,4 +64,8 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&wavefrontcomv1.WavefrontOperator{}).
 		Complete(r)
+}
+
+func (r *WavefrontOperatorReconciler) provisionProxy(ctx context.Context, req ctrl.Request) error {
+
 }

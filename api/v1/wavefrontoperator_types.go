@@ -28,8 +28,12 @@ type WavefrontOperatorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of WavefrontOperator. Edit wavefrontoperator_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// ClusterName is a unique name for the Kubernetes cluster to be
+	// identified via a metric tag on Wavefront.
+	ClusterName string `json:"clusterName,required"`
+
+	// Wavefront API Token.
+	WavefrontToken string `json:"wavefrontToken,required"`
 }
 
 // WavefrontOperatorStatus defines the observed state of WavefrontOperator
