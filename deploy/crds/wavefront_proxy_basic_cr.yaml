@@ -1,9 +1,0 @@
-# wavefrontproxy_cr.yaml
-apiVersion: wavefront.com/v1alpha1
-kind: WavefrontProxy
-metadata:
-  name: example-wavefrontproxy
-  namespace: wavefront
-spec:
-  url: <https://YOUR_CLUSTER.wavefront.com/api/>
-  token: <TOKEN>
