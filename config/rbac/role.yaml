@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - wavefront.com
+  resources:
+  - wavefrontoperators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - wavefront.com
+  resources:
+  - wavefrontoperators/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - wavefront.com
+  resources:
+  - wavefrontoperators/status
+  verbs:
+  - get
+  - patch
+  - update

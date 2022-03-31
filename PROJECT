@@ -1,0 +1,15 @@
+domain: wavefront.com
+layout:
+- go.kubebuilder.io/v3
+projectName: wavefront-operator-for-kubernetes
+repo: github.com/wavefrontHQ/wavefront-operator-for-kubernetes
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: wavefront.com
+  kind: WavefrontOperator
+  path: github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1
+  version: v1
+version: "3"
