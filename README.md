@@ -6,29 +6,43 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 # Installation
 
-If you are editing the API definitions,
-generate the manifests such as CRs or CRDs using:
+See the below steps to build and deploy the operator on your local kind cluster.
+
+(Optional) Recreate your kind cluster **conveniently** from within this current repo.
 ```
-make manifests
+# You're welcome.
+pushd ~/workspace/wavefront-collector-for-kubernetes
+    make nuke-kind
+popd
 ```
 
-Install the CRDs into the cluster:
+Generate the Custom Resource **Definition** (`manifests`),
+and apply it to the current cluster (`install`)
+(see below to create an **instance** of the Custom Resource):
 ```
-make install
+make manifests install
 ```
 
-To build and deploy the operator on local kind cluster follow the below steps.
-
+Build the controller manager binary from the go code:
 ```
 make build
-make manifests
-make install
-make docker-build IMG=kind-local/wavefront-operator
-kind load docker-image kind-local/wavefront-operator
+```
+
+Run the controller manager on the local cluster:
+```
+OPERATOR_VERSION=1
+make docker-build IMG=kind-local/wavefront-operator:${OPERATOR_VERSION}
+kind load docker-image kind-local/wavefront-operator:${OPERATOR_VERSION}
+make deploy IMG=kind-local/wavefront-operator:${OPERATOR_VERSION}
+```
+
+Finally, create the **instance** of the **Custom Resource**,
+which Kubernetes will validate against the schema in the Custom Resource **Definition**:
+```
 kubectl apply -f config/samples/
 ```
+
 # Contributing
 
 This is a work in progress repository.
 Currently, active contribution is not supported.
-
