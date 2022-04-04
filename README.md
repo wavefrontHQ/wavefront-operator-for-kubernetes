@@ -22,6 +22,7 @@ and apply it to the current cluster (`install`)
 ```
 make manifests install
 ```
+**NOTE**: Currently Kubebuilder requires **go 1.17**. If the above step fails please verify that the go version is set to 1.17 in your environment.
 
 Build the controller manager binary from the go code:
 ```
