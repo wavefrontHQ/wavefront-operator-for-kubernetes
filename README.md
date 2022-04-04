@@ -9,8 +9,8 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 See the below steps to build and deploy the operator on your local kind cluster.
 
 (Optional) Recreate your kind cluster **conveniently** from within this current repo.
+You're welcome!
 ```
-# You're welcome.
 pushd ~/workspace/wavefront-collector-for-kubernetes
     make nuke-kind
 popd
