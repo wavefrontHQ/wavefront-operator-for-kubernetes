@@ -19,6 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"io/fs"
+	"path/filepath"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,6 +30,8 @@ import (
 
 	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 )
+
+const DEPLOY_DIR = "./deploy"
 
 // WavefrontOperatorReconciler reconciles a WavefrontOperator object
 type WavefrontOperatorReconciler struct {
@@ -67,5 +72,23 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *WavefrontOperatorReconciler) provisionProxy(ctx context.Context, req ctrl.Request) error {
+	return nil
+}
 
+func KubernetesFilePaths(dir string) ([]string, error) {
+	var files []string
+
+	err := filepath.Walk(dir,
+		func(path string, info fs.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if strings.HasSuffix(path, ".yaml") && !strings.HasSuffix(path, ".yml") {
+				files = append(files, path)
+			}
+			return nil
+		},
+	)
+
+	return files, err
 }
