@@ -82,4 +82,8 @@ func TestReadAndInterpolateResources(t *testing.T) {
 		assert.Equal(t, yamz[1], "whatIsNameConfig: fake-cluster-name")
 		assert.Equal(t, yamz[2], "whatIsNameCollector: fake-cluster-name")
 	})
+
+	t.Run("TODO: test errors", func(t *testing.T) {
+		t.Fail()
+	})
 }
