@@ -1,52 +1,18 @@
-package controllers
+package controllers_test
 
 import (
-	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
+	"io/fs"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/runtime"
 	"log"
 	"os"
-	controllerruntime "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
+	"testing/fstest"
+	"time"
 )
-
-func TestWavefrontOperatorReconciler_provisionProxy(t *testing.T) {
-	type fields struct {
-		Client client.Client
-		Scheme *runtime.Scheme
-	}
-	type args struct {
-		ctx context.Context
-		req controllerruntime.Request
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name:    "provision fails if",
-			fields:  fields{},
-			args:    args{},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &WavefrontOperatorReconciler{
-				Client: tt.fields.Client,
-				Scheme: tt.fields.Scheme,
-			}
-			if err := r.provisionProxy(tt.args.ctx, tt.args.req); (err != nil) != tt.wantErr {
-				t.Errorf("provisionProxy() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
 func TestKubernetesFilePaths(t *testing.T) {
 	emptyDir, err := ioutil.TempDir("", "")
@@ -76,11 +42,44 @@ func TestKubernetesFilePaths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := KubernetesFilePaths(tt.dir)
+			got, err := controllers.ResourceFiles(tt.dir)
 			assert.Equal(t, tt.want, len(got))
 			if err != nil {
 				assert.Contains(t, err.Error(), tt.err.Error())
 			}
 		})
 	}
+}
+
+func TestReadAndInterpolateResources(t *testing.T) {
+	t.Run("Interpolate multiple files", func(t *testing.T) {
+		spec := wavefrontcomv1.WavefrontOperatorSpec{
+			ClusterName:    "fake-cluster-name",
+			WavefrontToken: "fake-token",
+		}
+		fakeFiles := fstest.MapFS{
+			"proxy.yaml": &fstest.MapFile{
+				Data:    []byte("whatIsNameProxy: {{.ClusterName}}"),
+				Mode:    fs.ModePerm,
+				ModTime: time.Now(),
+				Sys:     nil,
+			},
+			"config-map.yaml": &fstest.MapFile{
+				Data:    []byte("whatIsNameConfig: {{.ClusterName}}"),
+				Mode:    fs.ModePerm,
+				ModTime: time.Now(),
+				Sys:     nil,
+			},
+			"collector.yaml": &fstest.MapFile{
+				Data:    []byte("whatIsNameCollector: {{.ClusterName}}"),
+				Mode:    fs.ModePerm,
+				ModTime: time.Now(),
+				Sys:     nil,
+			},
+		}
+		yamz := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"proxy.yaml", "config-map.yaml", "collector.yaml"})
+		assert.Equal(t, yamz[0], "whatIsNameProxy: fake-cluster-name")
+		assert.Equal(t, yamz[1], "whatIsNameConfig: fake-cluster-name")
+		assert.Equal(t, yamz[2], "whatIsNameCollector: fake-cluster-name")
+	})
 }

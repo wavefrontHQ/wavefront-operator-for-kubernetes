@@ -36,6 +36,8 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
+const DeployDir = "./deploy"
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -81,6 +83,7 @@ func main() {
 	if err = (&controllers.WavefrontOperatorReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		FS:     os.DirFS(DeployDir),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WavefrontOperator")
 		os.Exit(1)

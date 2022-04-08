@@ -17,11 +17,13 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -31,12 +33,11 @@ import (
 	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 )
 
-const DEPLOY_DIR = "./deploy"
-
 // WavefrontOperatorReconciler reconciles a WavefrontOperator object
 type WavefrontOperatorReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	FS     fs.FS
 }
 
 //+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators,verbs=get;list;watch;create;update;patch;delete
@@ -55,7 +56,13 @@ type WavefrontOperatorReconciler struct {
 func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	err := r.provisionProxy(ctx, req)
+	// read in collector and proxy
+	// read in specific config from Operator CRD instance,
+	// pass in all vars as template variables to list of template files (.templ?) being filled
+	// generically create or update them to the API
+	// shut down collector and proxy if Operator is being shut down?
+
+	err := r.provisionProxy(req)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -71,11 +78,30 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *WavefrontOperatorReconciler) provisionProxy(ctx context.Context, req ctrl.Request) error {
+func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
+	// get proxy resources (as files)
+	// turn those resources into valid k8s objects
+	// call k8s api to provision proxy resources using k8s objects
+	spec := wavefrontcomv1.WavefrontOperatorSpec{
+		ClusterName:    "fake-cluster-name",
+		WavefrontToken: "fake-token",
+	}
+	resourceFiles, _ := ResourceFiles("./deploy")
+	ReadAndInterpolateResources(r.FS, spec, resourceFiles)
 	return nil
 }
 
-func KubernetesFilePaths(dir string) ([]string, error) {
+func ReadAndInterpolateResources(f fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) (resourceYamls []string) {
+	for _, resourceFile := range resourceFiles {
+		buffer := bytes.NewBuffer(nil)
+		resourceTemplate, _ := template.ParseFS(f, resourceFile)
+		_ = resourceTemplate.Execute(buffer, spec)
+		resourceYamls = append(resourceYamls, buffer.String())
+	}
+	return resourceYamls
+}
+
+func ResourceFiles(dir string) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(dir,
