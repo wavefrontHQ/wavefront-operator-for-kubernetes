@@ -79,15 +79,15 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
-	// get proxy resources (as files)
-	// turn those resources into valid k8s objects
-	// call k8s api to provision proxy resources using k8s objects
 	spec := wavefrontcomv1.WavefrontOperatorSpec{
 		ClusterName:    "fake-cluster-name",
 		WavefrontToken: "fake-token",
 	}
 	resourceFiles, _ := ResourceFiles("./deploy")
 	ReadAndInterpolateResources(r.FS, spec, resourceFiles)
+
+	// TODO turn those resources into valid k8s objects
+	// TODO call k8s api to provision proxy resources using k8s objects
 	return nil
 }
 
@@ -101,6 +101,7 @@ func ReadAndInterpolateResources(f fs.FS, spec wavefrontcomv1.WavefrontOperatorS
 	return resourceYamls
 }
 
+// TODO: Change ResourceFiles to take fs.FS instead of the dir name
 func ResourceFiles(dir string) ([]string, error) {
 	var files []string
 
