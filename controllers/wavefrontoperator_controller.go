@@ -21,16 +21,18 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 )
 
 // WavefrontOperatorReconciler reconciles a WavefrontOperator object
@@ -84,9 +86,14 @@ func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
 		WavefrontToken: "fake-token",
 	}
 	resourceFiles, _ := ResourceFiles("./deploy")
-	ReadAndInterpolateResources(r.FS, spec, resourceFiles)
-
-	// TODO turn those resources into valid k8s objects
+	resources, err := ReadAndInterpolateResources(r.FS, spec, resourceFiles)
+	if err != nil {
+		return err
+	}
+	_, err = CreateKubernetesObjects(resources)
+	if err != nil {
+		return err
+	}
 	// TODO call k8s api to provision proxy resources using k8s objects
 	return nil
 }
@@ -106,6 +113,18 @@ func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.Wavefront
 		resources = append(resources, buffer.String())
 	}
 	return resources, nil
+}
+
+var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+func CreateKubernetesObjects(resources []string) ([]unstructured.Unstructured, error) {
+	var objects []unstructured.Unstructured
+	for _, resource := range resources {
+		object := &unstructured.Unstructured{}
+		resourceDecoder.Decode([]byte(resource), nil, object)
+		objects = append(objects, *object)
+	}
+	return objects, nil
 }
 
 // TODO: Change ResourceFiles to take fs.FS instead of the dir name

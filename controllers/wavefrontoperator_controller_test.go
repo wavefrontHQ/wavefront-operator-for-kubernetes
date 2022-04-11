@@ -7,6 +7,7 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
 	"io/fs"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"log"
 	"os"
 	"testing"
@@ -108,5 +109,28 @@ func TestReadAndInterpolateResources(t *testing.T) {
 		}
 		_, err := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"some.yaml"})
 		assert.Error(t, err, "Expected execution error")
+	})
+}
+
+func TestCreateKubernetesObjects(t *testing.T) {
+	t.Run("Create multiple Kubernetes objects from multiple resources", func(t *testing.T) {
+		resources := []string{"resourceName: resource-one", "resourceName: resource-two"}
+		resourceOneObject := unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"resourceName": "resource-one",
+			},
+		}
+		resourceTwoObject := unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"resourceName": "resource-two",
+			},
+		}
+		actualObjects, _ := controllers.CreateKubernetesObjects(resources)
+		assert.Contains(t, actualObjects, resourceOneObject)
+		assert.Contains(t, actualObjects, resourceTwoObject)
+	})
+	t.Run("TODO Figure out what type of errors could be seen", func(t *testing.T) {
+		_, err := controllers.CreateKubernetesObjects([]string{})
+		assert.Error(t, err, "Expecting some error")
 	})
 }
