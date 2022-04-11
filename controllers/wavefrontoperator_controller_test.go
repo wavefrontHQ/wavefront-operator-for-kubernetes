@@ -77,10 +77,10 @@ func TestReadAndInterpolateResources(t *testing.T) {
 				Sys:     nil,
 			},
 		}
-		yamz, _ := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"proxy.yaml", "config-map.yaml", "collector.yaml"})
-		assert.Equal(t, yamz[0], "whatIsNameProxy: fake-cluster-name")
-		assert.Equal(t, yamz[1], "whatIsNameConfig: fake-cluster-name")
-		assert.Equal(t, yamz[2], "whatIsNameCollector: fake-cluster-name")
+		resources, _ := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"proxy.yaml", "config-map.yaml", "collector.yaml"})
+		assert.Equal(t, resources[0], "whatIsNameProxy: fake-cluster-name")
+		assert.Equal(t, resources[1], "whatIsNameConfig: fake-cluster-name")
+		assert.Equal(t, resources[2], "whatIsNameCollector: fake-cluster-name")
 	})
 
 	t.Run("Handles non-parsable templates", func(t *testing.T) {
