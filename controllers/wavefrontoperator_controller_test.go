@@ -77,13 +77,36 @@ func TestReadAndInterpolateResources(t *testing.T) {
 				Sys:     nil,
 			},
 		}
-		yamz := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"proxy.yaml", "config-map.yaml", "collector.yaml"})
+		yamz, _ := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"proxy.yaml", "config-map.yaml", "collector.yaml"})
 		assert.Equal(t, yamz[0], "whatIsNameProxy: fake-cluster-name")
 		assert.Equal(t, yamz[1], "whatIsNameConfig: fake-cluster-name")
 		assert.Equal(t, yamz[2], "whatIsNameCollector: fake-cluster-name")
 	})
 
-	t.Run("TODO: test errors", func(t *testing.T) {
-		t.Fail()
+	t.Run("Handles non-parsable templates", func(t *testing.T) {
+		spec := wavefrontcomv1.WavefrontOperatorSpec{
+			ClusterName:    "fake-cluster-name",
+			WavefrontToken: "fake-token",
+		}
+		emptyFS := fstest.MapFS{}
+		_, err := controllers.ReadAndInterpolateResources(emptyFS, spec, []string{"some.yaml"})
+		assert.Error(t, err, "Expected template error")
+	})
+
+	t.Run("Handles non-executable templates", func(t *testing.T) {
+		spec := wavefrontcomv1.WavefrontOperatorSpec{
+			ClusterName:    "fake-cluster-name",
+			WavefrontToken: "fake-token",
+		}
+		fakeFiles := fstest.MapFS{
+			"some.yaml": &fstest.MapFile{
+				Data:    []byte("someKey: {{.NonExistentField}}"),
+				Mode:    fs.ModePerm,
+				ModTime: time.Now(),
+				Sys:     nil,
+			},
+		}
+		_, err := controllers.ReadAndInterpolateResources(fakeFiles, spec, []string{"some.yaml"})
+		assert.Error(t, err, "Expected execution error")
 	})
 }

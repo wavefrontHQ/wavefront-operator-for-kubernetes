@@ -91,14 +91,21 @@ func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
 	return nil
 }
 
-func ReadAndInterpolateResources(f fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) (resourceYamls []string) {
+func ReadAndInterpolateResources(f fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) ([]string, error) {
+	var resourceYamls []string
 	for _, resourceFile := range resourceFiles {
+		resourceTemplate, err := template.ParseFS(f, resourceFile)
+		if err != nil {
+			return nil, err
+		}
 		buffer := bytes.NewBuffer(nil)
-		resourceTemplate, _ := template.ParseFS(f, resourceFile)
-		_ = resourceTemplate.Execute(buffer, spec)
+		err = resourceTemplate.Execute(buffer, spec)
+		if err != nil {
+			return nil, err
+		}
 		resourceYamls = append(resourceYamls, buffer.String())
 	}
-	return resourceYamls
+	return resourceYamls, nil
 }
 
 // TODO: Change ResourceFiles to take fs.FS instead of the dir name
