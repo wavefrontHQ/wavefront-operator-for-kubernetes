@@ -114,23 +114,28 @@ func TestReadAndInterpolateResources(t *testing.T) {
 
 func TestCreateKubernetesObjects(t *testing.T) {
 	t.Run("Create multiple Kubernetes objects from multiple resources", func(t *testing.T) {
-		resources := []string{"resourceName: resource-one", "resourceName: resource-two"}
+		resources := []string{"{\"kind\": \"Deployment\", \"resource\": \"resource-one\"}",
+			"{\"kind\": \"Deployment\", \"resource\": \"resource-two\"}"}
 		resourceOneObject := unstructured.Unstructured{
 			Object: map[string]interface{}{
-				"resourceName": "resource-one",
+				"kind":     "Deployment",
+				"resource": "resource-one",
 			},
 		}
 		resourceTwoObject := unstructured.Unstructured{
 			Object: map[string]interface{}{
-				"resourceName": "resource-two",
+				"kind":     "Deployment",
+				"resource": "resource-two",
 			},
 		}
 		actualObjects, _ := controllers.CreateKubernetesObjects(resources)
 		assert.Contains(t, actualObjects, resourceOneObject)
 		assert.Contains(t, actualObjects, resourceTwoObject)
 	})
-	t.Run("TODO Figure out what type of errors could be seen", func(t *testing.T) {
-		_, err := controllers.CreateKubernetesObjects([]string{})
-		assert.Error(t, err, "Expecting some error")
+	t.Run("Invalid resource json errors", func(t *testing.T) {
+		resources := []string{"{\"kind\":: \"Deployment\"}"}
+		_, err := controllers.CreateKubernetesObjects(resources)
+		assert.Error(t, err, "Expecting json error")
+		t.Log(err)
 	})
 }

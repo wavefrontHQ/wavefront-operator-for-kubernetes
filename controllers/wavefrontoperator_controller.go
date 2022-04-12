@@ -81,6 +81,7 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
+	// TODO How to get spec information
 	spec := wavefrontcomv1.WavefrontOperatorSpec{
 		ClusterName:    "fake-cluster-name",
 		WavefrontToken: "fake-token",
@@ -101,6 +102,7 @@ func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
 func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) ([]string, error) {
 	var resources []string
 	for _, resourceFile := range resourceFiles {
+		// TODO Templatize the content deploy
 		resourceTemplate, err := template.ParseFS(fileSystem, resourceFile)
 		if err != nil {
 			return nil, err
@@ -121,7 +123,11 @@ func CreateKubernetesObjects(resources []string) ([]unstructured.Unstructured, e
 	var objects []unstructured.Unstructured
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
-		resourceDecoder.Decode([]byte(resource), nil, object)
+		_, _, err := resourceDecoder.Decode([]byte(resource), nil, object)
+		if err != nil {
+			// TODO Update status of resource and not error out when a single resource failed while others passed
+			return nil, err
+		}
 		objects = append(objects, *object)
 	}
 	return objects, nil
