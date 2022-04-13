@@ -56,9 +56,8 @@ type WavefrontOperatorReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 
-// TODO: Functional e2e test manually for now to check operator deploying proxy on kind.
+// TODO: Functional e2e test "manually" for now to check operator deploying proxy on kind.
 func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	//TODO : Use the below logger
 	_ = log.FromContext(ctx)
 
 	// read in collector and proxy
@@ -67,10 +66,16 @@ func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	// generically create or update them to the API
 	// shut down collector and proxy if Operator is being shut down?
 
-	err := r.provisionProxy(req)
+	wavefrontOperator := &wavefrontcomv1.WavefrontOperator{}
+	err1 := r.Client.Get(ctx, req.NamespacedName, wavefrontOperator)
+	if err1 != nil {
+		panic(err1.Error())
+	}
+
+	err := r.ProvisionProxy(wavefrontOperator.Spec, CreateResources)
 
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err.Error())
 	}
 
 	return ctrl.Result{}, nil
@@ -83,16 +88,11 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
-	// TODO: Get desired spec from CRD
-	spec := wavefrontcomv1.WavefrontOperatorSpec{
-		ClusterName:    "fake-cluster-name",
-		WavefrontToken: "fake-token",
+func (r *WavefrontOperatorReconciler) ProvisionProxy(spec wavefrontcomv1.WavefrontOperatorSpec, createResource func([]unstructured.Unstructured) (error) ) error {
+	resourceFiles, err := ResourceFiles("../deploy")
+	if err != nil {
+		return err
 	}
-	// TODO: Handle error below.
-	resourceFiles, err := ResourceFiles("./deploy")
-	// TODO: Templatize yaml in ./deploy directory.
-	// TODO: Don't return early, when a single resource failed.
 	resources, err := ReadAndInterpolateResources(r.FS, spec, resourceFiles)
 	if err != nil {
 		return err
@@ -101,11 +101,12 @@ func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
 	//TODO:  we believe that the below code needs to be refactored to return unstructured
 	// object and gvk to be able to create it using a RESTMapper.
 	// Refer to https://gitlab.eng.vmware.com/tobs-k8s-group/tmc-wavefront-operator/-/blob/master/actions.go#L248
-	_, err = CreateKubernetesObjects(resources)
+	objects, err := InitializeKubernetesObjects(resources)
 	if err != nil {
 		return err
 	}
-
+	createResource(objects)
+	//err = CreateResources(objects)
 	// TODO: Create k8s objects using RESTMapper client
 	return nil
 }
@@ -113,6 +114,8 @@ func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
 func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) ([]string, error) {
 	var resources []string
 	for _, resourceFile := range resourceFiles {
+		fmt.Printf("resourceFile %+v \n", resourceFile)
+		fmt.Printf("fileSystem %+v", fileSystem)
 		resourceTemplate, err := template.ParseFS(fileSystem, resourceFile)
 		if err != nil {
 			return nil, err
@@ -127,7 +130,7 @@ func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.Wavefront
 	return resources, nil
 }
 
-func CreateKubernetesObjects(resources []string) ([]unstructured.Unstructured, error) {
+func InitializeKubernetesObjects(resources []string) ([]unstructured.Unstructured, error) {
 	var objects []unstructured.Unstructured
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
@@ -141,6 +144,11 @@ func CreateKubernetesObjects(resources []string) ([]unstructured.Unstructured, e
 	return objects, nil
 }
 
+func CreateResources(objects []unstructured.Unstructured) (error) {
+	//TODO Rest mapping
+	return nil
+}
+
 // TODO: Change ResourceFiles to take fs.FS instead of the dir name
 func ResourceFiles(dir string) ([]string, error) {
 	var files []string
@@ -151,7 +159,7 @@ func ResourceFiles(dir string) ([]string, error) {
 				return err
 			}
 			if strings.HasSuffix(path, ".yaml") && !strings.HasSuffix(path, ".yml") {
-				files = append(files, path)
+				files = append(files, info.Name())
 			}
 			return nil
 		},

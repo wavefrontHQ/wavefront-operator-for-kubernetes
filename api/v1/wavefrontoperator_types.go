@@ -30,7 +30,7 @@ type WavefrontOperatorSpec struct {
 
 	// ClusterName is a unique name for the Kubernetes cluster to be
 	// identified via a metric tag on Wavefront.
-	ClusterName string `json:"clusterName,required"`
+	WavefrontUrl string `json:"wavefrontUrl,required"`
 
 	// Wavefront API Token.
 	WavefrontToken string `json:"wavefrontToken,required"`

@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
@@ -55,7 +56,7 @@ func TestKubernetesFilePaths(t *testing.T) {
 func TestReadAndInterpolateResources(t *testing.T) {
 	t.Run("Interpolate multiple files", func(t *testing.T) {
 		spec := wavefrontcomv1.WavefrontOperatorSpec{
-			ClusterName:    "fake-cluster-name",
+			WavefrontUrl:    "fake-cluster-name",
 			WavefrontToken: "fake-token",
 		}
 		fakeFiles := fstest.MapFS{
@@ -86,7 +87,7 @@ func TestReadAndInterpolateResources(t *testing.T) {
 
 	t.Run("Handles non-parsable templates", func(t *testing.T) {
 		spec := wavefrontcomv1.WavefrontOperatorSpec{
-			ClusterName:    "fake-cluster-name",
+			WavefrontUrl:    "fake-cluster-name",
 			WavefrontToken: "fake-token",
 		}
 		emptyFS := fstest.MapFS{}
@@ -96,7 +97,7 @@ func TestReadAndInterpolateResources(t *testing.T) {
 
 	t.Run("Handles non-executable templates", func(t *testing.T) {
 		spec := wavefrontcomv1.WavefrontOperatorSpec{
-			ClusterName:    "fake-cluster-name",
+			WavefrontUrl:    "fake-cluster-name",
 			WavefrontToken: "fake-token",
 		}
 		fakeFiles := fstest.MapFS{
@@ -128,14 +129,47 @@ func TestCreateKubernetesObjects(t *testing.T) {
 				"resource": "resource-two",
 			},
 		}
-		actualObjects, _ := controllers.CreateKubernetesObjects(resources)
+		actualObjects, _ := controllers.InitializeKubernetesObjects(resources)
 		assert.Contains(t, actualObjects, resourceOneObject)
 		assert.Contains(t, actualObjects, resourceTwoObject)
 	})
 	t.Run("Invalid resource json errors", func(t *testing.T) {
 		resources := []string{"{\"kind\":: \"Deployment\"}"}
-		_, err := controllers.CreateKubernetesObjects(resources)
+		_, err := controllers.InitializeKubernetesObjects(resources)
 		assert.Error(t, err, "Expecting json error")
 		t.Log(err)
 	})
 }
+
+func TestProvisionProxy(t *testing.T) {
+	createResource := func(objects []unstructured.Unstructured) (error) {
+		fmt.Printf("k8s objects :: %+v", objects)
+		assert.Equal(t,"wavefront-proxy", objects[0].GetName())
+		assert.Equal(t,"Deployment", objects[0].GetKind())
+		//TODO: Downcast object into deployment inorder to verify templatized spec
+		return nil
+	}
+	t.Run("Test wavefront proxy spec templating", func(t *testing.T) {
+		spec := wavefrontcomv1.WavefrontOperatorSpec{
+			WavefrontUrl:    "fake-cluster-name",
+			WavefrontToken: "fake-token",
+		}
+		r := controllers.WavefrontOperatorReconciler{FS:     os.DirFS("../deploy")}
+		err := r.ProvisionProxy(spec, createResource)
+		assert.NoError(t, err, "Expected no error")
+		t.Log(err)
+	})
+
+	t.Run("Test initializing kubernetes objects", func(t *testing.T) {
+		spec := wavefrontcomv1.WavefrontOperatorSpec{
+			WavefrontUrl:    "fake-cluster-name",
+			WavefrontToken: "fake-token",
+		}
+		r := controllers.WavefrontOperatorReconciler{FS:     os.DirFS("../deploy")}
+		err := r.ProvisionProxy(spec, createResource)
+		assert.NoError(t, err, "Expected no error")
+		t.Log(err)
+	})
+}
+
+
