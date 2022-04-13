@@ -55,7 +55,10 @@ type WavefrontOperatorReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
+
+// TODO: Functional e2e test manually for now to check operator deploying proxy on kind.
 func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	//TODO : Use the below logger
 	_ = log.FromContext(ctx)
 
 	// read in collector and proxy
@@ -81,28 +84,35 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *WavefrontOperatorReconciler) provisionProxy(req ctrl.Request) error {
-	// TODO How to get spec information
+	// TODO: Get desired spec from CRD
 	spec := wavefrontcomv1.WavefrontOperatorSpec{
 		ClusterName:    "fake-cluster-name",
 		WavefrontToken: "fake-token",
 	}
-	resourceFiles, _ := ResourceFiles("./deploy")
+	// TODO: Handle error below.
+	resourceFiles, err := ResourceFiles("./deploy")
+	// TODO: Templatize yaml in ./deploy directory.
+	// TODO: Don't return early, when a single resource failed.
 	resources, err := ReadAndInterpolateResources(r.FS, spec, resourceFiles)
 	if err != nil {
 		return err
 	}
+
+	//TODO:  we believe that the below code needs to be refactored to return unstructured
+	// object and gvk to be able to create it using a RESTMapper.
+	// Refer to https://gitlab.eng.vmware.com/tobs-k8s-group/tmc-wavefront-operator/-/blob/master/actions.go#L248
 	_, err = CreateKubernetesObjects(resources)
 	if err != nil {
 		return err
 	}
-	// TODO call k8s api to provision proxy resources using k8s objects
+
+	// TODO: Create k8s objects using RESTMapper client
 	return nil
 }
 
 func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) ([]string, error) {
 	var resources []string
 	for _, resourceFile := range resourceFiles {
-		// TODO Templatize the content deploy
 		resourceTemplate, err := template.ParseFS(fileSystem, resourceFile)
 		if err != nil {
 			return nil, err
@@ -117,15 +127,13 @@ func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.Wavefront
 	return resources, nil
 }
 
-var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-
 func CreateKubernetesObjects(resources []string) ([]unstructured.Unstructured, error) {
 	var objects []unstructured.Unstructured
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
 		_, _, err := resourceDecoder.Decode([]byte(resource), nil, object)
 		if err != nil {
-			// TODO Update status of resource and not error out when a single resource failed while others passed
 			return nil, err
 		}
 		objects = append(objects, *object)
