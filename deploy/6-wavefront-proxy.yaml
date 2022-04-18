@@ -37,23 +37,3 @@ spec:
           #  protocol: TCP
           securityContext:
             privileged: false
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: wavefront-proxy
-  labels:
-    app: wavefront-proxy
-  namespace: wavefront
-spec:
-  ports:
-    - name: wavefront
-      port: 2878
-      protocol: TCP
-  # Uncomment the below lines to consume Zipkin/Istio traces
-  #- name: http
-  #  port: 9411
-  #  targetPort: 9411
-  #  protocol: TCP
-  selector:
-    app: wavefront-proxy

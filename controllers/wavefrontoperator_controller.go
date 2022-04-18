@@ -27,11 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/restmapper"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -152,6 +148,9 @@ func (r *WavefrontOperatorReconciler) InitializeKubernetesObjects(resources []st
 		}
 
 		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		if err != nil {
+			return err
+		}
 
 		err = r.CreateResources(mapping, object)
 		if err != nil {
@@ -201,11 +200,4 @@ func ResourceFiles(dir string) ([]string, error) {
 	)
 
 	return files, err
-}
-func NewRESTMapper(cfg *rest.Config) (*restmapper.DeferredDiscoveryRESTMapper, error) {
-	dc, err := discovery.NewDiscoveryClientForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc)), nil
 }

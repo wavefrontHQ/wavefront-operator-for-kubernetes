@@ -185,12 +185,7 @@ func TestWavefrontOperatorReconciler_Reconcile(t *testing.T) {
 	}
 	s := scheme.Scheme
 	s.AddKnownTypes(wavefrontcomv1.GroupVersion, wf)
-	//proxy := &v1.Deployment{
-	//	TypeMeta:   metav1.TypeMeta{},
-	//	ObjectMeta: metav1.ObjectMeta{},
-	//	Spec:       v1.DeploymentSpec{},
-	//	Status:     v1.DeploymentStatus{},
-	//}
+
 	testRestMapper := meta.NewDefaultRESTMapper(
 		[]schema.GroupVersion{
 			{Group: "apps", Version: "v1"},
@@ -200,12 +195,19 @@ func TestWavefrontOperatorReconciler_Reconcile(t *testing.T) {
 		Version: "v1",
 		Kind:    "Deployment",
 	}, meta.RESTScopeNamespace)
+	testRestMapper.Add(schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "Service",
+	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wf).WithRESTMapper(testRestMapper)
 	client := clientBuilder.Build()
 
-	dynamicClient := dynamicfake.NewSimpleDynamicClient(runtime.NewScheme(), &unstructured.Unstructured{
+	dynamicClient := dynamicfake.NewSimpleDynamicClient(
+		runtime.NewScheme(),
+		&unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "apps/v1",
 			"kind":       "Deployment",
@@ -217,7 +219,21 @@ func TestWavefrontOperatorReconciler_Reconcile(t *testing.T) {
 				"testSpec": "3",
 			},
 		},
-	})
+	},
+		&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "v1",
+				"kind":       "Service",
+				"metadata": map[string]interface{}{
+					"name":      "testName",
+					"namespace": "testNamespace",
+				},
+				"spec": map[string]interface{}{
+					"testSpec": "3",
+				},
+			},
+		},
+	)
 
 	t.Run("basic", func(t *testing.T) {
 		r := &controllers.WavefrontOperatorReconciler{
@@ -228,7 +244,27 @@ func TestWavefrontOperatorReconciler_Reconcile(t *testing.T) {
 			RestMapper:    client.RESTMapper(),
 		}
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
 		assert.Nil(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, 4, len(dynamicClient.Actions()))
+		assert.Equal(t, "service", dynamicClient.Actions()[1].GetResource().Resource)
+		assert.Equal(t, "deployments", dynamicClient.Actions()[3].GetResource().Resource)
+
+		// TODO: add test specific for wavefront_token and wavefront_URL
+		//assert.Equal(t, []testing2.Action{
+		//	testing2.NewGetAction(schema.GroupVersionResource{
+		//		Group:   "apps",
+		//		Version: "v1",
+		//		Resource: "deployments",
+		//	}, "wavefront", "wavefront-proxy"),
+		//	testing2.NewCreateAction(schema.GroupVersionResource{
+		//		Group:   "apps",
+		//		Version: "v1",
+		//		Resource: "deployments",
+		//	}, "wavefront", &unstructured.Unstructured{Object: map[string]interface{}{
+		//
+		//	}}),
+		//}, dynamicClient.Actions())
 	})
 }
