@@ -18,6 +18,11 @@ package main
 
 import (
 	"flag"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/memory"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -80,10 +85,30 @@ func main() {
 		os.Exit(1)
 	}
 
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		setupLog.Error(err, "unable to set up InClusterConfig")
+		os.Exit(1)
+	}
+
+	mapper, err := NewRESTMapper(config)
+	if err != nil {
+		setupLog.Error(err, "unable to set up restMapper")
+		os.Exit(1)
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		setupLog.Error(err, "unable to set up dynamicClient")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.WavefrontOperatorReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		FS:     os.DirFS(DeployDir),
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		FS:            os.DirFS(DeployDir),
+		DynamicClient: dynamicClient,
+		RestMapper:    mapper,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "WavefrontOperator")
 		os.Exit(1)
@@ -104,4 +129,12 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func NewRESTMapper(cfg *rest.Config) (*restmapper.DeferredDiscoveryRESTMapper, error) {
+	dc, err := discovery.NewDiscoveryClientForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc)), nil
 }
