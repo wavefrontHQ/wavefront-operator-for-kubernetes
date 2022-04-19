@@ -21,16 +21,22 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
-	"path/filepath"
-	"strings"
-	"text/template"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
 
 	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,6 +46,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+const DeployDir = "./deploy"
 
 // WavefrontOperatorReconciler reconciles a WavefrontOperator object
 type WavefrontOperatorReconciler struct {
@@ -64,15 +72,10 @@ type WavefrontOperatorReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 
-// TODO: Functional e2e test "manually" for now to check operator deploying proxy on kind.
 func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// read in collector and proxy
-	// read in specific config from Operator CRD instance,
-	// pass in all vars as template variables to list of template files (.templ?) being filled
-	// generically create or update them to the API
-	// shut down collector and proxy if Operator is being shut down?
+	// TODO: write separate story shut down collector and proxy if Operator is being shut down?
 
 	wavefrontOperator := &wavefrontcomv1.WavefrontOperator{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefrontOperator)
@@ -80,7 +83,7 @@ func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	err = r.ProvisionProxy(wavefrontOperator.Spec)
+	err = r.readAndCreateResources(wavefrontOperator.Spec)
 
 	if err != nil {
 		return ctrl.Result{}, err
@@ -96,36 +99,64 @@ func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *WavefrontOperatorReconciler) ProvisionProxy(spec wavefrontcomv1.WavefrontOperatorSpec) error {
-	resourceFiles, err := ResourceFiles("../deploy")
+func NewWavefrontOperatorReconciler(client client.Client, scheme *runtime.Scheme) (operator *WavefrontOperatorReconciler, err error) {
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resources, err := ReadAndInterpolateResources(r.FS, spec, resourceFiles)
+
+
+	dc, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
+
+
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &WavefrontOperatorReconciler{
+		Client:       client,
+		Scheme:        scheme,
+		FS:            os.DirFS(DeployDir),
+		DynamicClient: dynamicClient,
+		RestMapper:    mapper,
+		}, nil
+}
+
+
+func (r *WavefrontOperatorReconciler) readAndCreateResources(spec wavefrontcomv1.WavefrontOperatorSpec) error {
+
+	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
 		return err
 	}
 
-	//TODO:  we believe that the below code needs to be refactored to return unstructured
-	// object and gvk to be able to create it using a RESTMapper.
-	// Refer to https://gitlab.eng.vmware.com/tobs-k8s-group/tmc-wavefront-operator/-/blob/master/actions.go#L248
-	err = r.InitializeKubernetesObjects(resources)
+	err = r.createKubernetesObjects(resources)
 	if err != nil {
 		return err
 	}
-
-	// TODO: Create k8s objects using RESTMapper client
 	return nil
 }
 
-func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.WavefrontOperatorSpec, resourceFiles []string) ([]string, error) {
+func (r *WavefrontOperatorReconciler) readAndInterpolateResources(spec wavefrontcomv1.WavefrontOperatorSpec) ([]string, error) {
 	var resources []string
+
+	resourceFiles, err := ResourceFiles("../deploy")
+	if err != nil {
+		return nil, err
+	}
+
 	for _, resourceFile := range resourceFiles {
 		fmt.Printf("resourceFile %+v \n", resourceFile)
-		fmt.Printf("fileSystem %+v", fileSystem)
-		resourceTemplate, err := template.ParseFS(fileSystem, resourceFile)
+		fmt.Printf("fileSystem %+v", r.FS)
+		resourceTemplate, err := template.ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
+
 		}
 		buffer := bytes.NewBuffer(nil)
 		err = resourceTemplate.Execute(buffer, spec)
@@ -137,7 +168,7 @@ func ReadAndInterpolateResources(fileSystem fs.FS, spec wavefrontcomv1.Wavefront
 	return resources, nil
 }
 
-func (r *WavefrontOperatorReconciler) InitializeKubernetesObjects(resources []string) error {
+func (r *WavefrontOperatorReconciler) createKubernetesObjects(resources []string) error {
 
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
@@ -163,27 +194,27 @@ func (r *WavefrontOperatorReconciler) InitializeKubernetesObjects(resources []st
 func (r *WavefrontOperatorReconciler) CreateResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	//TODO Rest mapping
 
-	var client dynamic.ResourceInterface
+	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		client = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
 	} else {
-		client = r.DynamicClient.Resource(mapping.Resource)
+		dynamicClient = r.DynamicClient.Resource(mapping.Resource)
 	}
 
-	_, err := client.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
+	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
-		_, err = client.Create(context.TODO(), obj, v1.CreateOptions{})
+		_, err = dynamicClient.Create(context.TODO(), obj, v1.CreateOptions{})
 	} else if err == nil {
+
 		data, err := json.Marshal(obj)
 		if err != nil {
 			return err
 		}
-		_, err = client.Patch(context.TODO(), obj.GetName(), types.StrategicMergePatchType, data, v1.PatchOptions{})
+		_, err = dynamicClient.Patch(context.TODO(), obj.GetName(), types.StrategicMergePatchType, data, v1.PatchOptions{})
 	}
 	return err
 }
 
-// TODO: Change ResourceFiles to take fs.FS instead of the dir name
 func ResourceFiles(dir string) ([]string, error) {
 	var files []string
 
