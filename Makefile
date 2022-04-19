@@ -128,3 +128,7 @@ GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
+
+nuke-kind:
+	kind delete cluster
+	kind create cluster

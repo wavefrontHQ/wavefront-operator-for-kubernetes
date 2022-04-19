@@ -36,7 +36,6 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -79,15 +78,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	var controller  *controllers.WavefrontOperatorReconciler
-	controller, err =  controllers.NewWavefrontOperatorReconciler(mgr.GetClient(), mgr.GetScheme())
+	var controller *controllers.WavefrontOperatorReconciler
+	controller, err = controllers.NewWavefrontOperatorReconciler(mgr.GetClient(), mgr.GetScheme())
 	if err != nil {
-		setupLog.Error(err, "Error creating WavefrontOperatorReconciler")
+		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)
 	}
 
 	if err = (controller).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "WavefrontOperator")
+		setupLog.Error(err, "unable to setup manager", "controller", "WavefrontOperator")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

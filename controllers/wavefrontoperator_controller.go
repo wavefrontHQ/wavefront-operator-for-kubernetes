@@ -19,7 +19,6 @@ package controllers
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -47,7 +46,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const DeployDir = "./deploy"
+const DeployDir = "../deploy"
 
 // WavefrontOperatorReconciler reconciles a WavefrontOperator object
 type WavefrontOperatorReconciler struct {
@@ -84,7 +83,6 @@ func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}
 
 	err = r.readAndCreateResources(wavefrontOperator.Spec)
-
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -105,13 +103,11 @@ func NewWavefrontOperatorReconciler(client client.Client, scheme *runtime.Scheme
 		return nil, err
 	}
 
-
 	dc, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return nil, err
 	}
 	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
-
 
 	dynamicClient, err := dynamic.NewForConfig(config)
 	if err != nil {
@@ -119,14 +115,13 @@ func NewWavefrontOperatorReconciler(client client.Client, scheme *runtime.Scheme
 	}
 
 	return &WavefrontOperatorReconciler{
-		Client:       client,
+		Client:        client,
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
 		DynamicClient: dynamicClient,
 		RestMapper:    mapper,
-		}, nil
+	}, nil
 }
-
 
 func (r *WavefrontOperatorReconciler) readAndCreateResources(spec wavefrontcomv1.WavefrontOperatorSpec) error {
 
@@ -145,18 +140,15 @@ func (r *WavefrontOperatorReconciler) readAndCreateResources(spec wavefrontcomv1
 func (r *WavefrontOperatorReconciler) readAndInterpolateResources(spec wavefrontcomv1.WavefrontOperatorSpec) ([]string, error) {
 	var resources []string
 
-	resourceFiles, err := ResourceFiles("../deploy")
+	resourceFiles, err := r.resourceFiles()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, resourceFile := range resourceFiles {
-		fmt.Printf("resourceFile %+v \n", resourceFile)
-		fmt.Printf("fileSystem %+v", r.FS)
 		resourceTemplate, err := template.ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
-
 		}
 		buffer := bytes.NewBuffer(nil)
 		err = resourceTemplate.Execute(buffer, spec)
@@ -169,7 +161,6 @@ func (r *WavefrontOperatorReconciler) readAndInterpolateResources(spec wavefront
 }
 
 func (r *WavefrontOperatorReconciler) createKubernetesObjects(resources []string) error {
-
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
@@ -183,7 +174,7 @@ func (r *WavefrontOperatorReconciler) createKubernetesObjects(resources []string
 			return err
 		}
 
-		err = r.CreateResources(mapping, object)
+		err = r.createResources(mapping, object)
 		if err != nil {
 			return err
 		}
@@ -191,9 +182,7 @@ func (r *WavefrontOperatorReconciler) createKubernetesObjects(resources []string
 	return nil
 }
 
-func (r *WavefrontOperatorReconciler) CreateResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
-	//TODO Rest mapping
-
+func (r *WavefrontOperatorReconciler) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
@@ -204,21 +193,26 @@ func (r *WavefrontOperatorReconciler) CreateResources(mapping *meta.RESTMapping,
 	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
 		_, err = dynamicClient.Create(context.TODO(), obj, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	} else if err == nil {
-
 		data, err := json.Marshal(obj)
 		if err != nil {
 			return err
 		}
 		_, err = dynamicClient.Patch(context.TODO(), obj.GetName(), types.StrategicMergePatchType, data, v1.PatchOptions{})
+		if err != nil {
+			return err
+		}
 	}
 	return err
 }
 
-func ResourceFiles(dir string) ([]string, error) {
+func (r *WavefrontOperatorReconciler) resourceFiles() ([]string, error) {
 	var files []string
 
-	err := filepath.Walk(dir,
+	err := filepath.Walk(DeployDir,
 		func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				return err

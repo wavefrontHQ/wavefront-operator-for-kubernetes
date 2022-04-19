@@ -54,18 +54,18 @@ func TestReconcile(t *testing.T) {
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(
 		runtime.NewScheme(),
 		&unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name":      "testProxy",
-				"namespace": "testNamespace",
-			},
-			"spec": map[string]interface{}{
-				"testSpec": "3",
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name":      "testProxy",
+					"namespace": "testNamespace",
+				},
+				"spec": map[string]interface{}{
+					"testSpec": "3",
+				},
 			},
 		},
-	},
 		&unstructured.Unstructured{
 			Object: map[string]interface{}{
 				"apiVersion": "v1",
@@ -97,8 +97,7 @@ func TestReconcile(t *testing.T) {
 		assert.Equal(t, "services", dynamicClient.Actions()[1].GetResource().Resource)
 		assert.Equal(t, "deployments", dynamicClient.Actions()[3].GetResource().Resource)
 
-
-		deploymentObject :=  dynamicClient.Actions()[3].(testing2.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		deploymentObject := dynamicClient.Actions()[3].(testing2.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 		var deployment v1.Deployment
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
 
