@@ -2,9 +2,13 @@ package controllers_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
+	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -12,11 +16,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
-	"os"
+	testing2 "k8s.io/client-go/testing"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 //
@@ -245,26 +248,19 @@ func TestWavefrontOperatorReconciler_Reconcile(t *testing.T) {
 		}
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
 
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 4, len(dynamicClient.Actions()))
-		assert.Equal(t, "service", dynamicClient.Actions()[1].GetResource().Resource)
+		assert.Equal(t, "services", dynamicClient.Actions()[1].GetResource().Resource)
 		assert.Equal(t, "deployments", dynamicClient.Actions()[3].GetResource().Resource)
 
-		// TODO: add test specific for wavefront_token and wavefront_URL
-		//assert.Equal(t, []testing2.Action{
-		//	testing2.NewGetAction(schema.GroupVersionResource{
-		//		Group:   "apps",
-		//		Version: "v1",
-		//		Resource: "deployments",
-		//	}, "wavefront", "wavefront-proxy"),
-		//	testing2.NewCreateAction(schema.GroupVersionResource{
-		//		Group:   "apps",
-		//		Version: "v1",
-		//		Resource: "deployments",
-		//	}, "wavefront", &unstructured.Unstructured{Object: map[string]interface{}{
-		//
-		//	}}),
-		//}, dynamicClient.Actions())
+
+		deploymentObject :=  dynamicClient.Actions()[3].(testing2.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var deployment v1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "testUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
 	})
 }
