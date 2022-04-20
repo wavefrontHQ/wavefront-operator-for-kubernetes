@@ -1,7 +1,7 @@
 domain: wavefront.com
 layout:
 - go.kubebuilder.io/v3
-projectName: wavefront-operator-for-kubernetes
+projectName: wavefront-operator
 repo: github.com/wavefrontHQ/wavefront-operator-for-kubernetes
 resources:
 - api:

@@ -1,4 +1,5 @@
 # Adds namespace to all resources.
+
 namespace: wavefront
 
 # Value of this field is prepended to the
