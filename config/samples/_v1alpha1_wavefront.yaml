@@ -3,5 +3,5 @@ kind: Wavefront
 metadata:
   name: wavefront-sample
 spec:
-  wavefrontToken: "f69f2511-e9d3-4479-800a-27db490758a0"
+  wavefrontToken: "WAVEFRONT_TOKEN"
   wavefrontUrl: "https://nimba.wavefront.com/"

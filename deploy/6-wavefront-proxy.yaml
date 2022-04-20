@@ -3,37 +3,40 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: wavefront-proxy
-    name: wavefront-proxy
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/name: wavefront-proxy
   name: wavefront-proxy
   namespace: wavefront
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: wavefront-proxy
+      app.kubernetes.io/name : wavefront-proxy
+      app.kubernetes.io/component: proxy
   template:
     metadata:
       labels:
-        app: wavefront-proxy
+        app.kubernetes.io/name : wavefront-proxy
+        app.kubernetes.io/component: proxy
     spec:
       containers:
         - name: wavefront-proxy
-          image: projects.registry.vmware.com/tanzu_observability/proxy:10.14
+          image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
           imagePullPolicy: IfNotPresent
           env:
             - name: WAVEFRONT_URL
               value: {{.WavefrontUrl}}/api/
             - name: WAVEFRONT_TOKEN
               value: {{.WavefrontToken}}
-          # Uncomment the below lines to consume Zipkin/Istio traces
-          #- name: WAVEFRONT_PROXY_ARGS
-          #  value: --traceZipkinListenerPorts 9411
           ports:
             - containerPort: 2878
               protocol: TCP
-          # Uncomment the below lines to consume Zipkin/Istio traces
-          #- containerPort: 9411
-          #  protocol: TCP
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 4Gi
+            requests:
+              cpu: 100m
+              memory: 1Gi
           securityContext:
             privileged: false

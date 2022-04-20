@@ -129,6 +129,11 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
+build-kind: docker-build
+	@kind load docker-image ${IMG}
+
+deploy-kind: build-kind deploy
+
 nuke-kind:
 	kind delete cluster
 	kind create cluster
