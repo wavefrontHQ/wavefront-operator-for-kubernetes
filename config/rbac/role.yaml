@@ -6,9 +6,21 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - wavefront.com
+  - ""
   resources:
-  - wavefrontoperators
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
   verbs:
   - create
   - delete
@@ -20,13 +32,25 @@ rules:
 - apiGroups:
   - wavefront.com
   resources:
-  - wavefrontoperators/finalizers
+  - wavefronts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - wavefront.com
+  resources:
+  - wavefronts/finalizers
   verbs:
   - update
 - apiGroups:
   - wavefront.com
   resources:
-  - wavefrontoperators/status
+  - wavefronts/status
   verbs:
   - get
   - patch

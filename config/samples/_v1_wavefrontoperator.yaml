@@ -1,6 +1,0 @@
-apiVersion: wavefront.com/v1
-kind: WavefrontOperator
-metadata:
-  name: wavefrontoperator-sample
-spec:
-  # TODO(user): Add fields here

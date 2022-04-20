@@ -1,0 +1,42 @@
+# Need to change YOUR_CLUSTER and YOUR_API_TOKEN accordingly
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/name: wavefront-proxy
+  name: wavefront-proxy
+  namespace: wavefront
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name : wavefront-proxy
+      app.kubernetes.io/component: proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name : wavefront-proxy
+        app.kubernetes.io/component: proxy
+    spec:
+      containers:
+        - name: wavefront-proxy
+          image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WAVEFRONT_URL
+              value: {{.WavefrontUrl}}/api/
+            - name: WAVEFRONT_TOKEN
+              value: {{.WavefrontToken}}
+          ports:
+            - containerPort: 2878
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 4Gi
+            requests:
+              cpu: 100m
+              memory: 1Gi
+          securityContext:
+            privileged: false

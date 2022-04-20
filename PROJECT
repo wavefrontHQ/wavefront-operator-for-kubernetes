@@ -9,7 +9,7 @@ resources:
     namespaced: true
   controller: true
   domain: wavefront.com
-  kind: WavefrontOperator
-  path: github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1
-  version: v1
+  kind: Wavefront
+  path: github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1
+  version: v1alpha1
 version: "3"
