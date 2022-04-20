@@ -1,13 +1,13 @@
-# permissions for end users to edit wavefrontoperators.
+# permissions for end users to edit wavefronts.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: wavefrontoperator-editor-role
+  name: wavefront-editor-role
 rules:
 - apiGroups:
   - wavefront.com
   resources:
-  - wavefrontoperators
+  - wavefronts
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - wavefront.com
   resources:
-  - wavefrontoperators/status
+  - wavefronts/status
   verbs:
   - get

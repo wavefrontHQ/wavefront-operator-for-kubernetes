@@ -5,20 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: wavefrontoperators.wavefront.com
+  name: wavefronts.wavefront.com
 spec:
   group: wavefront.com
   names:
-    kind: WavefrontOperator
-    listKind: WavefrontOperatorList
-    plural: wavefrontoperators
-    singular: wavefrontoperator
+    kind: Wavefront
+    listKind: WavefrontList
+    plural: wavefronts
+    singular: wavefront
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: WavefrontOperator is the Schema for the wavefrontoperators API
+        description: Wavefront is the Schema for the wavefronts API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,7 +33,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: WavefrontOperatorSpec defines the desired state of WavefrontOperator
+            description: WavefrontSpec defines the desired state of Wavefront
             properties:
               wavefrontToken:
                 description: Wavefront API Token.
@@ -47,7 +47,7 @@ spec:
             - wavefrontUrl
             type: object
           status:
-            description: WavefrontOperatorStatus defines the observed state of WavefrontOperator
+            description: WavefrontStatus defines the observed state of Wavefront
             type: object
         type: object
     served: true

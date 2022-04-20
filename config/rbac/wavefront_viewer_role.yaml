@@ -1,13 +1,13 @@
-# permissions for end users to view wavefrontoperators.
+# permissions for end users to view wavefronts.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: wavefrontoperator-viewer-role
+  name: wavefront-viewer-role
 rules:
 - apiGroups:
   - wavefront.com
   resources:
-  - wavefrontoperators
+  - wavefronts
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - wavefront.com
   resources:
-  - wavefrontoperators/status
+  - wavefronts/status
   verbs:
   - get

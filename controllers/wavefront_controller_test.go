@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
+	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -23,14 +23,14 @@ import (
 )
 
 func TestReconcile(t *testing.T) {
-	wf := &wavefrontcomv1.WavefrontOperator{
+	wf := &wavefrontcomv1alpha1.Wavefront{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
-		Spec:       wavefrontcomv1.WavefrontOperatorSpec{WavefrontUrl: "testUrl", WavefrontToken: "testToken"},
-		Status:     wavefrontcomv1.WavefrontOperatorStatus{},
+		Spec:       wavefrontcomv1alpha1.WavefrontSpec{WavefrontUrl: "testUrl", WavefrontToken: "testToken"},
+		Status:     wavefrontcomv1alpha1.WavefrontStatus{},
 	}
 	s := scheme.Scheme
-	s.AddKnownTypes(wavefrontcomv1.GroupVersion, wf)
+	s.AddKnownTypes(wavefrontcomv1alpha1.GroupVersion, wf)
 
 	testRestMapper := meta.NewDefaultRESTMapper(
 		[]schema.GroupVersion{
@@ -82,7 +82,7 @@ func TestReconcile(t *testing.T) {
 	)
 
 	t.Run("creates proxy and service", func(t *testing.T) {
-		r := &controllers.WavefrontOperatorReconciler{
+		r := &controllers.WavefrontReconciler{
 			Client:        client,
 			Scheme:        nil,
 			FS:            os.DirFS("../deploy"),

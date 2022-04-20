@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
+	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -44,7 +44,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(wavefrontcomv1.AddToScheme(scheme))
+	utilruntime.Must(wavefrontcomv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -78,17 +78,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	var controller *controllers.WavefrontOperatorReconciler
-	controller, err = controllers.NewWavefrontOperatorReconciler(mgr.GetClient(), mgr.GetScheme())
+	var controller *controllers.WavefrontReconciler
+	controller, err = controllers.NewWavefrontReconciler(mgr.GetClient(), mgr.GetScheme())
 	if err != nil {
 		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)
 	}
 
 	if err = (controller).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to setup manager", "controller", "WavefrontOperator")
+		setupLog.Error(err, "unable to setup manager", "controller", "wavefront")
 		os.Exit(1)
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -37,7 +37,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 
-	wavefrontcomv1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1"
+	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 
@@ -48,8 +48,8 @@ import (
 
 const DeployDir = "../deploy"
 
-// WavefrontOperatorReconciler reconciles a WavefrontOperator object
-type WavefrontOperatorReconciler struct {
+// WavefrontReconciler reconciles a Wavefront object
+type WavefrontReconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
 	FS            fs.FS
@@ -57,35 +57,35 @@ type WavefrontOperatorReconciler struct {
 	RestMapper    meta.RESTMapper
 }
 
-//+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators/finalizers,verbs=update
+//+kubebuilder:rbac:groups=wavefront.com,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=wavefront.com,resources=wavefronts/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=wavefront.com,resources=wavefronts/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the WavefrontOperator object against the actual cluster state, and then
+// the Wavefront object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 
-func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	// TODO: write separate story shut down collector and proxy if Operator is being shut down?
 
-	wavefrontOperator := &wavefrontcomv1.WavefrontOperator{}
-	err := r.Client.Get(ctx, req.NamespacedName, wavefrontOperator)
+	wavefront := &wavefrontcomv1alpha1.Wavefront{}
+	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil {
 		log.Log.Error(err, "error getting wavefront operator crd")
 		return ctrl.Result{}, err
 	}
 
-	err = r.readAndCreateResources(wavefrontOperator.Spec)
+	err = r.readAndCreateResources(wavefront.Spec)
 	if err != nil {
 		log.Log.Error(err, "error creating resources")
 		return ctrl.Result{}, err
@@ -95,13 +95,13 @@ func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *WavefrontOperatorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&wavefrontcomv1.WavefrontOperator{}).
+		For(&wavefrontcomv1alpha1.Wavefront{}).
 		Complete(r)
 }
 
-func NewWavefrontOperatorReconciler(client client.Client, scheme *runtime.Scheme) (operator *WavefrontOperatorReconciler, err error) {
+func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func NewWavefrontOperatorReconciler(client client.Client, scheme *runtime.Scheme
 		return nil, err
 	}
 
-	return &WavefrontOperatorReconciler{
+	return &WavefrontReconciler{
 		Client:        client,
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
@@ -127,7 +127,7 @@ func NewWavefrontOperatorReconciler(client client.Client, scheme *runtime.Scheme
 	}, nil
 }
 
-func (r *WavefrontOperatorReconciler) readAndCreateResources(spec wavefrontcomv1.WavefrontOperatorSpec) error {
+func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.WavefrontSpec) error {
 
 	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
@@ -141,7 +141,7 @@ func (r *WavefrontOperatorReconciler) readAndCreateResources(spec wavefrontcomv1
 	return nil
 }
 
-func (r *WavefrontOperatorReconciler) readAndInterpolateResources(spec wavefrontcomv1.WavefrontOperatorSpec) ([]string, error) {
+func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alpha1.WavefrontSpec) ([]string, error) {
 	var resources []string
 
 	resourceFiles, err := r.resourceFiles()
@@ -164,7 +164,7 @@ func (r *WavefrontOperatorReconciler) readAndInterpolateResources(spec wavefront
 	return resources, nil
 }
 
-func (r *WavefrontOperatorReconciler) createKubernetesObjects(resources []string) error {
+func (r *WavefrontReconciler) createKubernetesObjects(resources []string) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
@@ -186,7 +186,7 @@ func (r *WavefrontOperatorReconciler) createKubernetesObjects(resources []string
 	return nil
 }
 
-func (r *WavefrontOperatorReconciler) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
+func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
@@ -213,7 +213,7 @@ func (r *WavefrontOperatorReconciler) createResources(mapping *meta.RESTMapping,
 	return err
 }
 
-func (r *WavefrontOperatorReconciler) resourceFiles() ([]string, error) {
+func (r *WavefrontReconciler) resourceFiles() ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(DeployDir,

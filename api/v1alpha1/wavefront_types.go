@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,8 +23,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// WavefrontOperatorSpec defines the desired state of WavefrontOperator
-type WavefrontOperatorSpec struct {
+// WavefrontSpec defines the desired state of Wavefront
+type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -36,8 +36,8 @@ type WavefrontOperatorSpec struct {
 	WavefrontToken string `json:"wavefrontToken,required"`
 }
 
-// WavefrontOperatorStatus defines the observed state of WavefrontOperator
-type WavefrontOperatorStatus struct {
+// WavefrontStatus defines the observed state of Wavefront
+type WavefrontStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -45,24 +45,24 @@ type WavefrontOperatorStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// WavefrontOperator is the Schema for the wavefrontoperators API
-type WavefrontOperator struct {
+// Wavefront is the Schema for the wavefronts API
+type Wavefront struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   WavefrontOperatorSpec   `json:"spec,omitempty"`
-	Status WavefrontOperatorStatus `json:"status,omitempty"`
+	Spec   WavefrontSpec   `json:"spec,omitempty"`
+	Status WavefrontStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// WavefrontOperatorList contains a list of WavefrontOperator
-type WavefrontOperatorList struct {
+// WavefrontList contains a list of Wavefront
+type WavefrontList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []WavefrontOperator `json:"items"`
+	Items           []Wavefront `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&WavefrontOperator{}, &WavefrontOperatorList{})
+	SchemeBuilder.Register(&Wavefront{}, &WavefrontList{})
 }

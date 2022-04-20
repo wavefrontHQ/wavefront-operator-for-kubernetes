@@ -1,0 +1,7 @@
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront-sample
+spec:
+  wavefrontToken: "f69f2511-e9d3-4479-800a-27db490758a0"
+  wavefrontUrl: "https://nimba.wavefront.com/"
