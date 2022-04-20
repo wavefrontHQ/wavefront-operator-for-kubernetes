@@ -60,6 +60,8 @@ type WavefrontOperatorReconciler struct {
 //+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=wavefront.com,resources=wavefrontoperators/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -79,11 +81,13 @@ func (r *WavefrontOperatorReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	wavefrontOperator := &wavefrontcomv1.WavefrontOperator{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefrontOperator)
 	if err != nil {
+		log.Log.Error(err, "error getting wavefront operator crd")
 		return ctrl.Result{}, err
 	}
 
 	err = r.readAndCreateResources(wavefrontOperator.Spec)
 	if err != nil {
+		log.Log.Error(err, "error creating resources")
 		return ctrl.Result{}, err
 	}
 

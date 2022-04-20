@@ -1,12 +1,12 @@
 # Adds namespace to all resources.
-namespace: wavefront-operator-for-kubernetes-system
+namespace: wavefront-operator-system
 
 # Value of this field is prepended to the
 # names of all resources, e.g. a deployment named
 # "wordpress" becomes "alices-wordpress".
 # Note that it should also match with the prefix (text before '-') of the namespace
 # field above.
-namePrefix: wavefront-operator-for-kubernetes-
+namePrefix: wavefront-operator-
 
 # Labels to add to all resources and selectors.
 #commonLabels:

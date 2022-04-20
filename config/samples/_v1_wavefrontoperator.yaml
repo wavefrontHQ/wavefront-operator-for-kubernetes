@@ -3,4 +3,5 @@ kind: WavefrontOperator
 metadata:
   name: wavefrontoperator-sample
 spec:
-  # TODO(user): Add fields here
+  wavefrontToken: "WAVEFRONT_TOKEN"
+  wavefrontUrl: "https://nimba.wavefront.com/"
