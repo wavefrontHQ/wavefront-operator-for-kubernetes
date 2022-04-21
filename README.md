@@ -37,6 +37,17 @@ kind load docker-image kind-local/wavefront-operator:${OPERATOR_VERSION}
 make deploy IMG=kind-local/wavefront-operator:${OPERATOR_VERSION}
 ```
 
+or 
+
+```
+# Create new local kind cluster
+make nuke-kind
+# Build and Deploy local operator image
+make deploy-kind
+# Deploy Proxy
+kubectl apply -f config/samples/_v1alpha1_wavefront.yaml 
+```
+
 Finally, create the **instance** of the **Custom Resource**,
 which Kubernetes will validate against the schema in the Custom Resource **Definition**:
 ```
