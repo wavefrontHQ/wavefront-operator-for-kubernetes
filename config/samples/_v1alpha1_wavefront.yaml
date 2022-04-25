@@ -4,4 +4,4 @@ metadata:
   name: wavefront-sample
 spec:
   wavefrontToken: "WAVEFRONT_TOKEN"
-  wavefrontUrl: "https://nimba.wavefront.com/"
+  wavefrontUrl: "https://nimba.wavefront.com"

@@ -105,4 +105,39 @@ func TestReconcile(t *testing.T) {
 		assert.Equal(t, "testUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
 	})
+	t.Run("updates proxy and service", func(t *testing.T) {
+		wfUpdated := &wavefrontcomv1alpha1.Wavefront{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec:       wavefrontcomv1alpha1.WavefrontSpec{WavefrontUrl: "testUrl", WavefrontToken: "updatedToken"},
+			Status:     wavefrontcomv1alpha1.WavefrontStatus{},
+		}
+
+		clientBuilder := fake.NewClientBuilder()
+		clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfUpdated).WithRESTMapper(testRestMapper)
+		client = clientBuilder.Build()
+
+		r := &controllers.WavefrontReconciler{
+			Client:        client,
+			Scheme:        nil,
+			FS:            os.DirFS("../deploy"),
+			DynamicClient: dynamicClient,
+			RestMapper:    client.RESTMapper(),
+		}
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, 4, len(dynamicClient.Actions()))
+		assert.Equal(t, "services", dynamicClient.Actions()[1].GetResource().Resource)
+		assert.Equal(t, "deployments", dynamicClient.Actions()[3].GetResource().Resource)
+
+		deploymentObject := dynamicClient.Actions()[3].(testing2.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var deployment v1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "testUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		assert.Equal(t, "updatedToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
+	})
 }
