@@ -2,24 +2,24 @@ package controllers_test
 
 import (
 	"context"
-	"os"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	testing2 "k8s.io/client-go/testing"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"testing"
 )
 
 func TestReconcile(t *testing.T) {
@@ -61,18 +61,23 @@ func TestReconcile(t *testing.T) {
 			DynamicClient: dynamicClient,
 			RestMapper:    client.RESTMapper(),
 		}
+		// TODO change the plan XOR change the actual resource so that there's something to diff
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
 
+		// see that it's updated
 		assert.NoError(t, err)
+		//fmt.Println(err.Error())
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 2, len(dynamicClient.Actions()))
-		//assert.Equal(t, "services", dynamicClient.Actions()[0].GetResource().Resource)
-		//assert.Equal(t, "deployments", dynamicClient.Actions()[1].GetResource().Resource)
+		assert.Equal(t, 4, len(dynamicClient.Actions()))
+		assert.Equal(t, "services", dynamicClient.Actions()[0].GetResource().Resource)
+		assert.Equal(t, "services", dynamicClient.Actions()[1].GetResource().Resource)
 
 		deploymentObject := dynamicClient.Actions()[3].(testing2.PatchActionImpl).Patch
+
 		//var deployment v1.Deployment
-		//err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-		assert.Contains(t,  string(deploymentObject), "updatedToken")
+		//err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject., &deployment)
+		assert.Contains(t, string(deploymentObject), "updatedToken")
+		assert.Contains(t, string(deploymentObject), "testUrl/api/")
 
 		assert.NoError(t, err)
 		//assert.Equal(t, "testUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
@@ -97,6 +102,8 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, namespace string) (
 	}
 
 	s := scheme.Scheme
+	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Service{})
+	s.AddKnownTypes(appsv1.SchemeGroupVersion, &appsv1.Deployment{})
 	s.AddKnownTypes(wavefrontcomv1alpha1.GroupVersion, wf)
 
 	testRestMapper := meta.NewDefaultRESTMapper(
@@ -118,34 +125,73 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, namespace string) (
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wf).WithRESTMapper(testRestMapper)
 	client := clientBuilder.Build()
 
+	deployment := &unstructured.Unstructured{}
+	deployment.SetUnstructuredContent(map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      wavefrontProxyName,
+			"namespace": namespace,
+		},
+		"spec": map[string]interface{}{
+			"testSpec": "3",
+		},
+	})
+	//service := &unstructured.Unstructured{}
+
+	//jsontext := `
+	//{
+	//	"apiVersion": "v1",
+	//	"kind": "Service",
+	//	"metadata": {
+	//	"labels": {
+	//		"app.kubernetes.io/name": "wavefront-proxy",
+	//			"app.kubernetes.io/component": "proxy"
+	//	},
+	//	"name": "wavefront-proxy",
+	//	"namespace": "wavefront"
+	//},
+	//	"spec": {
+	//	"ports": [
+	//{
+	//"name": "wavefront",
+	//"port": 2878,
+	//"protocol": "TCP"
+	//}
+	//],
+	//"selector": {
+	//"app.kubernetes.io/name": "wavefront-proxy",
+	//"app.kubernetes.io/component": "proxy"
+	//},
+	//"type": "ClusterIP"
+	//}
+	//}
+	//`
+	//bytes := []byte(jsontext)
+	//service.UnmarshalJSON(bytes)
+
+	service := &v1.Service{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Service",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      wavefrontProxyName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":      "wavefront-proxy",
+				"app.kubernetes.io/component": "proxy",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: "CLusterIP",
+		},
+	}
+
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(
-		runtime.NewScheme(),
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name":      wavefrontProxyName,
-					"namespace": namespace,
-				},
-				"spec": map[string]interface{}{
-					"testSpec": "3",
-				},
-			},
-		},
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name":      wavefrontProxyName,
-					"namespace": namespace,
-				},
-				"spec": map[string]interface{}{
-					"testSpec": "3",
-				},
-			},
-		},
+		s,
+		deployment,
+		service,
 	)
 	return client, dynamicClient
 }
