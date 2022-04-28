@@ -134,6 +134,8 @@ build-kind: docker-build
 
 deploy-kind: build-kind deploy
 
+redeploy-kind: undeploy build-kind deploy
+
 nuke-kind:
 	kind delete cluster
 	kind create cluster
