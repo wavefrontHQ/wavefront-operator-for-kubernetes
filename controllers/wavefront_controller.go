@@ -205,7 +205,7 @@ func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *un
 		if err != nil {
 			return err
 		}
-		_, err = dynamicClient.Patch(context.TODO(), obj.GetName(), types.StrategicMergePatchType, data, v1.PatchOptions{})
+		_, err = dynamicClient.Patch(context.TODO(), obj.GetName(), types.MergePatchType, data, v1.PatchOptions{})
 		if err != nil {
 			return err
 		}
