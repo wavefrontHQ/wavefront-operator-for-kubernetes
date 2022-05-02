@@ -41,13 +41,15 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 8, len(dynamicClient.Actions()))
+		assert.Equal(t, 10, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
 		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
+		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
+		assert.True(t, hasAction(dynamicClient, "create", "daemonsets"), "create DaemonSet")
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
@@ -149,23 +151,30 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, clusterName, namesp
 		Version: "v1",
 		Kind:    "ServiceAccount",
 	}, meta.RESTScopeNamespace)
+	testRestMapper.Add(schema.GroupVersionKind{
+		Group:   "apps",
+		Version: "v1",
+		Kind:    "DaemonSet",
+	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wf).WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
-	deployment := &unstructured.Unstructured{}
-	deployment.SetUnstructuredContent(map[string]interface{}{
-		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
-		"metadata": map[string]interface{}{
-			"name":      wavefrontProxyName,
-			"namespace": namespace,
+	deployment := &appsv1.Deployment{
+		TypeMeta:   metav1.TypeMeta{
+			Kind: "Deployment",
+			APIVersion: "v1",
 		},
-		"spec": map[string]interface{}{
-			"testSpec": "3",
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "testDeployment",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":      "wavefront",
+				"app.kubernetes.io/component": "proxy",
+			},
 		},
-	})
+	}
 
 	service := &v1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -182,6 +191,21 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, clusterName, namesp
 		},
 		Spec: v1.ServiceSpec{
 			Type: "CLusterIP",
+		},
+	}
+
+	daemonSet := &appsv1.DaemonSet{
+		TypeMeta:   metav1.TypeMeta{
+			Kind: "DaemonSet",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "testDaemonSet",
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/name":      "wavefront",
+				"app.kubernetes.io/component": "collector",
+			},
 		},
 	}
 
@@ -222,6 +246,7 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, clusterName, namesp
 		s,
 		deployment,
 		configMap,
+		daemonSet,
 		service,
 		serviceAccount,
 	)
