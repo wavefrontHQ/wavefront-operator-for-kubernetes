@@ -3,20 +3,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/component: proxy
     app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: proxy
   name: wavefront-proxy
   namespace: wavefront
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name : wavefront-proxy
+      app.kubernetes.io/name : wavefront
       app.kubernetes.io/component: proxy
   template:
     metadata:
       labels:
-        app.kubernetes.io/name : wavefront-proxy
+        app.kubernetes.io/name : wavefront
         app.kubernetes.io/component: proxy
     spec:
       containers:

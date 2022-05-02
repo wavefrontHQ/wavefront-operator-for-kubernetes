@@ -3,6 +3,6 @@ kind: Wavefront
 metadata:
   name: wavefront-sample
 spec:
-  clusterName: "shaoh-operator"
-  wavefrontToken: "0602ce24-9e70-41dd-9b32-711ca33cc73c"
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontToken: YOUR_WAVEFRONT_TOKEN
   wavefrontUrl: "https://nimba.wavefront.com"
