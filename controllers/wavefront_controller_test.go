@@ -230,7 +230,7 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, clusterName, namesp
 			Name:      "wavefront-collector",
 			Namespace: namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/name":      "wavefront-collector",
+				"app.kubernetes.io/name":      "wavefront",
 				"app.kubernetes.io/component": "collector",
 			},
 		},
