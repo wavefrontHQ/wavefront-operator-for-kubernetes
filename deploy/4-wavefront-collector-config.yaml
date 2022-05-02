@@ -6,6 +6,7 @@ metadata:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: collector
   name: wavefront-collector-config
+  namespace: wavefront
 data:
   config.yaml: |
     clusterName:  {{.ClusterName}}
@@ -16,7 +17,7 @@ data:
     sinkExportDataTimeout: 20s
 
     sinks:
-    - proxyAddress: RELEASE-NAME-wavefront-proxy:2878
+    - proxyAddress: wavefront-proxy:2878
       filters:
         metricDenyList:
         - kubernetes.sys_container.*

@@ -5,6 +5,7 @@ metadata:
     app.kubernetes.io/component: collector
     app.kubernetes.io/name : wavefront
   name: wavefront-collector
+  namespace: wavefront
 spec:
   selector:
     matchLabels:
@@ -15,8 +16,8 @@ spec:
       labels:
         app.kubernetes.io/name : wavefront
         app.kubernetes.io/component: collector
-    annotations:
-      installation-method: operator
+      annotations:
+        installation-method: operator
     spec:
       tolerations:
         - effect: NoSchedule
