@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/component: proxy
-    app.kubernetes.io/name: wavefront-proxy
+    app.kubernetes.io/name: wavefront
   name: wavefront-proxy
   namespace: wavefront
 spec:
