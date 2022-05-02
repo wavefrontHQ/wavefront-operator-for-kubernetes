@@ -3,5 +3,6 @@ kind: Wavefront
 metadata:
   name: wavefront-sample
 spec:
-  wavefrontToken: "WAVEFRONT_TOKEN"
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontToken: YOUR_WAVEFRONT_TOKEN
   wavefrontUrl: "https://nimba.wavefront.com"

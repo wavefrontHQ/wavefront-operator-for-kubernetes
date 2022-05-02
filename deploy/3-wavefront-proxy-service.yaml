@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name : wavefront-proxy
+    app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy
   name: wavefront-proxy
   namespace: wavefront
@@ -12,6 +12,6 @@ spec:
       port: 2878
       protocol: TCP
   selector:
-    app.kubernetes.io/name : wavefront-proxy
+    app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy
   type: ClusterIP

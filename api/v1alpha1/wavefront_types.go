@@ -34,6 +34,9 @@ type WavefrontSpec struct {
 
 	// Wavefront API Token.
 	WavefrontToken string `json:"wavefrontToken,required"`
+
+	// clusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
+	ClusterName string `json:"clusterName,required"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
