@@ -27,7 +27,7 @@ import (
 func TestReconcile(t *testing.T) {
 
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
-		apiClient, dynamicClient := setup("testUrl", "testToken", "proxyName", "testClusterName","testNameSpace")
+		apiClient, dynamicClient := setup("testUrl", "testToken", "proxyName", "testClusterName", "testNameSpace")
 
 		r := &controllers.WavefrontReconciler{
 
@@ -72,7 +72,7 @@ func TestReconcile(t *testing.T) {
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		apiClient, dynamicClient := setup("testUrl", "updatedToken", "wavefront-proxy","testClusterName", "wavefront")
+		apiClient, dynamicClient := setup("testUrl", "updatedToken", "wavefront-proxy", "testClusterName", "wavefront")
 
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
@@ -86,10 +86,9 @@ func TestReconcile(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 8, len(dynamicClient.Actions()))
+		assert.Equal(t, 10, len(dynamicClient.Actions()))
 
 		deploymentObject := getAction(dynamicClient, "patch", "deployments").(testing2.PatchActionImpl).Patch
-
 
 		assert.Contains(t, string(deploymentObject), "updatedToken")
 		assert.Contains(t, string(deploymentObject), "testUrl/api/")
@@ -161,20 +160,15 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, clusterName, namesp
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wf).WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
-	deployment := &appsv1.Deployment{
-		TypeMeta:   metav1.TypeMeta{
-			Kind: "Deployment",
-			APIVersion: "v1",
+	deployment := &unstructured.Unstructured{}
+	deployment.SetUnstructuredContent(map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name":      wavefrontProxyName,
+			"namespace": namespace,
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "testDeployment",
-			Namespace: namespace,
-			Labels: map[string]string{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "proxy",
-			},
-		},
-	}
+	})
 
 	service := &v1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -195,12 +189,12 @@ func setup(wavefrontUrl, wavefrontToken, wavefrontProxyName, clusterName, namesp
 	}
 
 	daemonSet := &appsv1.DaemonSet{
-		TypeMeta:   metav1.TypeMeta{
-			Kind: "DaemonSet",
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "DaemonSet",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "testDaemonSet",
+			Name:      "testDaemonSet",
 			Namespace: namespace,
 			Labels: map[string]string{
 				"app.kubernetes.io/name":      "wavefront",
