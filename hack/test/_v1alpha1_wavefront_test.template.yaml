@@ -1,0 +1,8 @@
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront-sample
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontToken: YOUR_WAVEFRONT_TOKEN
+  wavefrontUrl: "https://nimba.wavefront.com"

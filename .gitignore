@@ -8,6 +8,7 @@
 bin
 testbin/*
 config/samples/*.yaml
+hack/test/_v1alpha1_wavefront_test.yaml
 
 # Test binary, build with `go test -c`
 *.test
