@@ -83,9 +83,18 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	wavefront := &wavefrontcomv1alpha1.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		log.Log.Error(err, "error getting wavefront operator crd")
 		return ctrl.Result{}, err
+	}
+
+	if errors.IsNotFound(err) {
+		err = r.readAndDeleteResources()
+		//if err != nil {
+		//	log.Log.Error(err, "error creating resources")
+		//	return ctrl.Result{}, err
+		//}
+		return ctrl.Result{}, nil
 	}
 
 	err = r.readAndCreateResources(wavefront.Spec)
@@ -233,3 +242,60 @@ func (r *WavefrontReconciler) resourceFiles() ([]string, error) {
 
 	return files, err
 }
+
+func (r *WavefrontReconciler) readAndDeleteResources() error {
+	resources, err := r.readAndInterpolateResources(wavefrontcomv1alpha1.WavefrontSpec{
+		WavefrontUrl:   "https://delete.wavefront.com",
+		WavefrontToken: "DELETE",
+		ClusterName:    "DELETE",
+	})
+	if err != nil {
+		return err
+	}
+
+	err = r.deleteKubernetesObjects(resources)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error {
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	for _, resource := range resources {
+		object := &unstructured.Unstructured{}
+		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+		if err != nil {
+			return err
+		}
+
+		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		if err != nil {
+			return err
+		}
+
+		err = r.deleteResources(mapping, object)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
+	var dynamicClient dynamic.ResourceInterface
+	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+	} else {
+		dynamicClient = r.DynamicClient.Resource(mapping.Resource)
+	}
+	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil  {
+		return err
+	}
+	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
+}
+
