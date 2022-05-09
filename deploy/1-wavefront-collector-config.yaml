@@ -7,6 +7,11 @@ metadata:
     app.kubernetes.io/component: collector
   name: wavefront-collector-config
   namespace: wavefront
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
 data:
   config.yaml: |
     clusterName:  {{.ClusterName}}

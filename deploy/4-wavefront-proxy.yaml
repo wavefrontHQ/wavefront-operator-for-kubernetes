@@ -7,6 +7,11 @@ metadata:
     app.kubernetes.io/component: proxy
   name: wavefront-proxy
   namespace: wavefront
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
 spec:
   replicas: 1
   selector:

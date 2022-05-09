@@ -2,10 +2,6 @@ package controllers_test
 
 import (
 	"context"
-	"k8s.io/client-go/kubernetes/scheme"
-	"os"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
@@ -17,17 +13,22 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
-	testing2 "k8s.io/client-go/testing"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/kubernetes/scheme"
+	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	clientgotesting "k8s.io/client-go/testing"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"testing"
 )
 
 func TestReconcile(t *testing.T) {
 
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
-		_, apiClient, dynamicClient := setupForCreate("testUrl", "testToken", "testClusterName")
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate("testUrl", "testToken", "testClusterName")
 
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
@@ -35,6 +36,7 @@ func TestReconcile(t *testing.T) {
 			FS:            os.DirFS("../deploy"),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
 		}
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
 
@@ -52,7 +54,7 @@ func TestReconcile(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deploymentObject := getAction(dynamicClient, "create", "deployments").(testing2.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 		var deployment appsv1.Deployment
 
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
@@ -61,7 +63,7 @@ func TestReconcile(t *testing.T) {
 		assert.Equal(t, "testUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
 
-		configMapObject := getAction(dynamicClient, "create", "configmaps").(testing2.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 		var configMap v1.ConfigMap
 
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
@@ -71,7 +73,7 @@ func TestReconcile(t *testing.T) {
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		_, apiClient, dynamicClient := setup("testUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+		_, apiClient, dynamicClient, fakesAppsV1 := setup("testUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
@@ -79,6 +81,7 @@ func TestReconcile(t *testing.T) {
 			FS:            os.DirFS("../deploy"),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakesAppsV1,
 		}
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
 
@@ -87,7 +90,7 @@ func TestReconcile(t *testing.T) {
 		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 10, len(dynamicClient.Actions()))
 
-		deploymentObject := getAction(dynamicClient, "patch", "deployments").(testing2.PatchActionImpl).Patch
+		deploymentObject := getAction(dynamicClient, "patch", "deployments").(clientgotesting.PatchActionImpl).Patch
 
 		assert.Contains(t, string(deploymentObject), "updatedToken")
 		assert.Contains(t, string(deploymentObject), "testUrl/api/")
@@ -96,7 +99,7 @@ func TestReconcile(t *testing.T) {
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		wf, apiClient, dynamicClient := setup("testUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+		wf, apiClient, dynamicClient, fakesAppsV1 := setup("testUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 		apiClient.Delete(context.Background(), wf)
 
 		r := &controllers.WavefrontReconciler{
@@ -105,6 +108,7 @@ func TestReconcile(t *testing.T) {
 			FS:            os.DirFS("../deploy"),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakesAppsV1,
 		}
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
@@ -131,7 +135,7 @@ func hasAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return false
 }
 
-func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (action testing2.Action) {
+func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (action clientgotesting.Action) {
 	for _, action := range dynamicClient.Actions() {
 		if action.GetVerb() == verb && action.GetResource().Resource == resource {
 			return action
@@ -140,7 +144,7 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
-func setupForCreate(wavefrontUrl, wavefrontToken, clusterName string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient) {
+func setupForCreate(wavefrontUrl, wavefrontToken, clusterName string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	var wf = &wavefrontcomv1alpha1.Wavefront{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
@@ -192,11 +196,26 @@ func setupForCreate(wavefrontUrl, wavefrontToken, clusterName string) (*wavefron
 	apiClient := clientBuilder.Build()
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
-	return wf, apiClient, dynamicClient
+
+	fakesAppsV1 := k8sfake.NewSimpleClientset(&appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "wavefront-controller-manager",
+			Namespace: "wavefront",
+			UID:       "testUID",
+		},
+		Spec:   appsv1.DeploymentSpec{},
+		Status: appsv1.DeploymentStatus{},
+	}).AppsV1()
+
+	return wf, apiClient, dynamicClient, fakesAppsV1
 }
 
-func setup(wavefrontUrl, wavefrontToken, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient) {
-	wf, apiClient, dynamicClient := setupForCreate(wavefrontUrl, wavefrontToken, clusterName)
+func setup(wavefrontUrl, wavefrontToken, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+	wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wavefrontUrl, wavefrontToken, clusterName)
 
 	dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
 		"apiVersion": "apps/v1",
@@ -261,5 +280,5 @@ func setup(wavefrontUrl, wavefrontToken, proxyName, collectorConfigName, collect
 		},
 	}})
 
-	return wf, apiClient, dynamicClient
+	return wf, apiClient, dynamicClient, fakesAppsV1
 }

@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"context"
 	"io/fs"
+	"k8s.io/client-go/kubernetes"
+	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +56,8 @@ type WavefrontReconciler struct {
 	Scheme        *runtime.Scheme
 	FS            fs.FS
 	DynamicClient dynamic.Interface
-	RestMapper    meta.RESTMapper
+	RestMapper meta.RESTMapper
+	Appsv1     typedappsv1.AppsV1Interface
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -130,17 +133,32 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 		return nil, err
 	}
 
+	clientSet, err := kubernetes.NewForConfig(config)
+
 	return &WavefrontReconciler{
 		Client:        client,
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
 		DynamicClient: dynamicClient,
 		RestMapper:    mapper,
+		Appsv1:        clientSet.AppsV1(),
 	}, nil
 }
 
-func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.WavefrontSpec) error {
+func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
+	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	return deployment.UID, nil
+}
 
+func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.WavefrontSpec) error {
+	controllerManagerUID, err := r.getControllerManagerUID()
+	if err != nil {
+		return err
+	}
+	spec.ControllerManagerUID = string(controllerManagerUID)
 	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
 		return err
@@ -156,7 +174,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alpha1.WavefrontSpec) ([]string, error) {
 	var resources []string
 
-	resourceFiles, err := r.resourceFiles()
+	resourceFiles, err := r.resourceFiles("yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +243,7 @@ func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *un
 	return err
 }
 
-func (r *WavefrontReconciler) resourceFiles() ([]string, error) {
+func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(DeployDir,
@@ -233,7 +251,7 @@ func (r *WavefrontReconciler) resourceFiles() ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if strings.HasSuffix(path, ".yaml") && !strings.HasSuffix(path, ".yml") {
+			if strings.HasSuffix(path, suffix) {
 				files = append(files, info.Name())
 			}
 			return nil

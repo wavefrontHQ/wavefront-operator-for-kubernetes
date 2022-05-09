@@ -6,6 +6,11 @@ metadata:
     app.kubernetes.io/name : wavefront
   name: wavefront-collector
   namespace: wavefront
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
 spec:
   selector:
     matchLabels:

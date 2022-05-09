@@ -28,15 +28,16 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ClusterName is a unique name for the Kubernetes cluster to be
-	// identified via a metric tag on Wavefront.
+	// WavefrontUrl is the wavefront instance.
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
-	// Wavefront API Token.
+	// WavefrontToken is the wavefront API Token.
 	WavefrontToken string `json:"wavefrontToken,required"`
 
-	// clusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
+	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
 	ClusterName string `json:"clusterName,required"`
+
+	ControllerManagerUID string `json:"controllerManagerUID,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront

@@ -36,15 +36,16 @@ spec:
             description: WavefrontSpec defines the desired state of Wavefront
             properties:
               clusterName:
-                description: clusterName is a unique name for the Kubernetes cluster
-                  to be identified via a metric tag on Wavefront.
-                type: string
-              wavefrontToken:
-                description: Wavefront API Token.
-                type: string
-              wavefrontUrl:
                 description: ClusterName is a unique name for the Kubernetes cluster
                   to be identified via a metric tag on Wavefront.
+                type: string
+              controllerManagerUID:
+                type: string
+              wavefrontToken:
+                description: WavefrontToken is the wavefront API Token.
+                type: string
+              wavefrontUrl:
+                description: WavefrontUrl is the wavefront instance.
                 type: string
             required:
             - clusterName
