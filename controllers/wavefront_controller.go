@@ -293,9 +293,8 @@ func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *un
 	if err != nil && errors.IsNotFound(err) {
 		return nil
 	}
-	if err != nil  {
+	if err != nil {
 		return err
 	}
 	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
 }
-
