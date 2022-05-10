@@ -56,8 +56,8 @@ type WavefrontReconciler struct {
 	Scheme        *runtime.Scheme
 	FS            fs.FS
 	DynamicClient dynamic.Interface
-	RestMapper meta.RESTMapper
-	Appsv1     typedappsv1.AppsV1Interface
+	RestMapper    meta.RESTMapper
+	Appsv1        typedappsv1.AppsV1Interface
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete

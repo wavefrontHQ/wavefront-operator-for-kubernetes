@@ -37,7 +37,8 @@ type WavefrontSpec struct {
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
 	ClusterName string `json:"clusterName,required"`
 
-	ControllerManagerUID string `json:"controllerManagerUID,omitempty"`
+	// ControllerManagerUID is for internal use of deletion delegation
+	ControllerManagerUID string `json:"-"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
