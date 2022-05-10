@@ -39,6 +39,17 @@ spec:
                 description: ClusterName is a unique name for the Kubernetes cluster
                   to be identified via a metric tag on Wavefront.
                 type: string
+              collectorEnabled:
+                description: CollectorEnabled is whether to enable the collector.
+                type: boolean
+              proxyUrl:
+                description: ProxyUrl is the proxy URL that the collector sends metrics
+                  to.
+                type: string
+              wavefrontProxyEnabled:
+                description: WavefrontProxyEnabled is whether to enable the wavefront
+                  proxy.
+                type: boolean
               wavefrontToken:
                 description: WavefrontToken is the wavefront API Token.
                 type: string
@@ -47,6 +58,9 @@ spec:
                 type: string
             required:
             - clusterName
+            - collectorEnabled
+            - proxyUrl
+            - wavefrontProxyEnabled
             - wavefrontToken
             - wavefrontUrl
             type: object

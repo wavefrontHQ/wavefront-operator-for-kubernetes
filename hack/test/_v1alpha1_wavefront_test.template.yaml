@@ -6,3 +6,6 @@ spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontToken: YOUR_WAVEFRONT_TOKEN
   wavefrontUrl: "https://nimba.wavefront.com"
+  collectorEnabled: true
+  wavefrontProxyEnabled: true
+  proxyUrl: "https://fakeproxy.com"
