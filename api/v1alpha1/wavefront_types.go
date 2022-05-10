@@ -28,6 +28,15 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// CollectorEnabled is whether to enable the collector.
+	CollectorEnabled bool `json:"collectorEnabled,required"`
+
+	// ProxyUrl is the proxy URL that the collector sends metrics to.
+	ProxyUrl string `json:"proxyUrl,required"`
+
+	// WavefrontProxyEnabled is whether to enable the wavefront proxy.
+	WavefrontProxyEnabled bool `json:"wavefrontProxyEnabled,required"`
+
 	// WavefrontUrl is the wavefront instance.
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 

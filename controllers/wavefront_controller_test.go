@@ -28,7 +28,15 @@ import (
 func TestReconcile(t *testing.T) {
 
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
-		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate("testUrl", "testToken", "testClusterName")
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontToken:        "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+		})
 
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
@@ -56,11 +64,9 @@ func TestReconcile(t *testing.T) {
 
 		deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 		var deployment appsv1.Deployment
-
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-
 		assert.NoError(t, err)
-		assert.Equal(t, "testUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
 
 		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
@@ -70,10 +76,12 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
+		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:2878")
+
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		_, apiClient, dynamicClient, fakesAppsV1 := setup("testUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
@@ -93,13 +101,13 @@ func TestReconcile(t *testing.T) {
 		deploymentObject := getAction(dynamicClient, "patch", "deployments").(clientgotesting.PatchActionImpl).Patch
 
 		assert.Contains(t, string(deploymentObject), "updatedToken")
-		assert.Contains(t, string(deploymentObject), "testUrl/api/")
+		assert.Contains(t, string(deploymentObject), "testWavefrontUrl/api/")
 
 		assert.NoError(t, err)
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		wf, apiClient, dynamicClient, fakesAppsV1 := setup("testUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+		wf, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 		apiClient.Delete(context.Background(), wf)
 
 		r := &controllers.WavefrontReconciler{
@@ -126,6 +134,86 @@ func TestReconcile(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "delete", "deployments"), "delete Deployment")
 	})
+
+	t.Run("Skip creating collector if collectorEnabled is set to false", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      false,
+			ProxyUrl:              "",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontToken:        "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS("../deploy"),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, 4, len(dynamicClient.Actions()))
+		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
+		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
+		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
+		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
+
+		deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var deployment appsv1.Deployment
+
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
+
+	})
+
+	t.Run("Skip creating proxy if WavefrontProxyEnabled is set to false", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: false,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontToken:        "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS("../deploy"),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+		assert.Equal(t, 6, len(dynamicClient.Actions()))
+
+		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
+		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
+		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
+		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
+		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
+		assert.True(t, hasAction(dynamicClient, "create", "daemonsets"), "create DaemonSet")
+
+		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var configMap v1.ConfigMap
+
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
+
+		assert.NoError(t, err)
+		assert.Contains(t, configMap.Data["config.yaml"], "testProxyUrl")
+	})
 }
 
 func hasAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (result bool) {
@@ -144,11 +232,11 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
-func setupForCreate(wavefrontUrl, wavefrontToken, clusterName string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setupForCreate(spec wavefrontcomv1alpha1.WavefrontSpec) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	var wf = &wavefrontcomv1alpha1.Wavefront{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
-		Spec:       wavefrontcomv1alpha1.WavefrontSpec{WavefrontUrl: wavefrontUrl, WavefrontToken: wavefrontToken, ClusterName: clusterName},
+		Spec:       spec,
 		Status:     wavefrontcomv1alpha1.WavefrontStatus{},
 	}
 
@@ -215,7 +303,15 @@ func setupForCreate(wavefrontUrl, wavefrontToken, clusterName string) (*wavefron
 }
 
 func setup(wavefrontUrl, wavefrontToken, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
-	wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wavefrontUrl, wavefrontToken, clusterName)
+	wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+		CollectorEnabled:      true,
+		ProxyUrl:              "",
+		WavefrontProxyEnabled: true,
+		WavefrontUrl:          wavefrontUrl,
+		WavefrontToken:        wavefrontToken,
+		ClusterName:           clusterName,
+		ControllerManagerUID:  "",
+	})
 
 	dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
 		"apiVersion": "apps/v1",

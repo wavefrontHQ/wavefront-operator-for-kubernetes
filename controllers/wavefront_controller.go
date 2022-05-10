@@ -159,12 +159,17 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 		return err
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
+
+	if spec.WavefrontProxyEnabled {
+		spec.ProxyUrl = "wavefront-proxy:2878"
+	}
+
 	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
 		return err
 	}
 
-	err = r.createKubernetesObjects(resources)
+	err = r.createKubernetesObjects(resources, spec)
 	if err != nil {
 		return err
 	}
@@ -194,7 +199,7 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alp
 	return resources, nil
 }
 
-func (r *WavefrontReconciler) createKubernetesObjects(resources []string) error {
+func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefrontSpec wavefrontcomv1alpha1.WavefrontSpec) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
@@ -206,6 +211,14 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string) error 
 		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return err
+		}
+
+		objLabels := object.GetLabels()
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.CollectorEnabled {
+			continue
+		}
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.WavefrontProxyEnabled {
+			continue
 		}
 
 		err = r.createResources(mapping, object)
