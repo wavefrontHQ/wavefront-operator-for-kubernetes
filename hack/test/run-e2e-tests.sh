@@ -43,17 +43,20 @@ function main() {
     esac
   done
 
-#  if [[ -z ${WAVEFRONT_TOKEN} ]]; then
-#    print_usage_and_exit "wavefront token required"
-#  fi
+  if [[ -z ${WAVEFRONT_TOKEN} ]]; then
+    print_usage_and_exit "wavefront token required"
+  fi
 
   cd $REPO_ROOT
   sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  hack/test/_v1alpha1_wavefront_test.template.yaml  |
     sed "s/YOUR_WAVEFRONT_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
-  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
-  echo "Running test-wavefront-metrics"
+  wait_for_cluster_ready
 
+  echo "Applying Custom Resource config"
+  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
+
+  echo "Running test-wavefront-metrics"
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME}
   green "Success!"
 }

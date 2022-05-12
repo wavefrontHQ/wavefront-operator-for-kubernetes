@@ -44,8 +44,8 @@ var _ webhook.Defaulter = &Wavefront{}
 func (r *Wavefront) Default() {
 	wavefrontlog.Info("default", "name", r.Name)
 
-	if r.ClusterName == "" {
-		r.ClusterName = "k8s-cluster"
+	if r.Spec.ClusterName == "" {
+		r.Spec.ClusterName = "k8s-cluster"
 	}
 }
 
@@ -97,6 +97,9 @@ func (r *Wavefront) validateWavefrontSpec() []error {
 	var allErrors []error
 	if r.Spec.WavefrontUrl == "" {
 		allErrors = append(allErrors, errors.New("WavefrontUrl cannot be empty."))
+	}
+	if r.Spec.ClusterName == "" {
+		allErrors = append(allErrors, errors.New("ClusterName cannot be empty."))
 	}
 	if r.Spec.WavefrontToken == "" {
 		allErrors = append(allErrors, errors.New("WavefrontToken cannot be empty."))

@@ -116,13 +116,13 @@ function main() {
     esac
   done
 
-#  if [[ -z ${WAVEFRONT_TOKEN} ]]; then
-#    print_msg_and_exit "wavefront token required"
-#  fi
-#
-#  if [[ -z ${CONFIG_CLUSTER_NAME} ]]; then
-#    print_msg_and_exit "config cluster name required"
-#  fi
+  if [[ -z ${WAVEFRONT_TOKEN} ]]; then
+    print_msg_and_exit "wavefront token required"
+  fi
+
+  if [[ -z ${CONFIG_CLUSTER_NAME} ]]; then
+    print_msg_and_exit "config cluster name required"
+  fi
 
   local VERSION_IN_DECIMAL="${EXPECTED_VERSION%.*}"
   local VERSION_IN_DECIMAL+="$(echo "${EXPECTED_VERSION}" | cut -d '.' -f3)"
