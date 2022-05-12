@@ -34,7 +34,7 @@ func (r *Wavefront) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 //+kubebuilder:webhook:path=/mutate-wavefront-com-v1alpha1-wavefront,mutating=true,failurePolicy=fail,sideEffects=None,groups=wavefront.com,resources=wavefronts,verbs=create;update,versions=v1alpha1,name=mwavefront.kb.io,admissionReviewVersions=v1
 
@@ -49,7 +49,7 @@ func (r *Wavefront) Default() {
 	}
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
+// Today we only do create and update validation, change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-wavefront-com-v1alpha1-wavefront,mutating=false,failurePolicy=fail,sideEffects=None,groups=wavefront.com,resources=wavefronts,verbs=create;update,versions=v1alpha1,name=vwavefront.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Wavefront{}
@@ -57,25 +57,19 @@ var _ webhook.Validator = &Wavefront{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Wavefront) ValidateCreate() error {
 	wavefrontlog.Info("validate create", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object creation.
 	return r.validateWavefront()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Wavefront) ValidateUpdate(old runtime.Object) error {
 	wavefrontlog.Info("validate update", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object update.
 	return r.validateWavefront()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *Wavefront) ValidateDelete() error {
 	wavefrontlog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
-	return r.validateWavefront()
+	return nil
 }
 
 func (r *Wavefront) validateWavefront() error {
