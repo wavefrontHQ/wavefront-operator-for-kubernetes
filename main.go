@@ -86,6 +86,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&wavefrontcomv1alpha1.Wavefront{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Wavefront")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
