@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
@@ -23,15 +24,10 @@ func TestDefault(t *testing.T) {
 	}
 	expectedClusterName := "k8s-cluster"
 	r.Default()
-	if r.Spec.ClusterName == "" {
-		t.Errorf("Expected spec ClusterName to not be empty.")
-	}
-	if r.Spec.ClusterName != expectedClusterName {
-		t.Errorf("Expected default clusterName :: %s, but got %s", expectedClusterName, r.Spec.ClusterName)
-	}
+	assert.Equal(t, expectedClusterName, r.Spec.ClusterName)
 }
 
-func TestValidateWavefront(t *testing.T) {
+func TestValidateCreate(t *testing.T) {
 	spec := WavefrontSpec{
 		WavefrontUrl:          "",
 		WavefrontToken:        "",
@@ -47,9 +43,28 @@ func TestValidateWavefront(t *testing.T) {
 		Spec:       spec,
 		Status:     WavefrontStatus{},
 	}
-	err := r.validateWavefront()
+	err := r.ValidateCreate()
 	expectedErr := "WavefrontUrl cannot be empty.\nWavefrontToken cannot be empty.\nClusterName cannot be empty.\n"
-	if err == nil || err.Error() != expectedErr {
-		t.Errorf("Expected validation error :: \n %s , but got :: \n %s.", expectedErr, err.Error())
+	assert.Equal(t, expectedErr, err.Error())
+}
+
+func TestValidateUpdate(t *testing.T) {
+	spec := WavefrontSpec{
+		WavefrontUrl:          "",
+		WavefrontToken:        "",
+		ClusterName:           "",
+		CollectorEnabled:      true,
+		WavefrontProxyEnabled: true,
+		ProxyUrl:              "",
+		ControllerManagerUID:  "",
 	}
+	var r = Wavefront{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec:       spec,
+		Status:     WavefrontStatus{},
+	}
+	err := r.ValidateUpdate(&r)
+	expectedErr := "WavefrontUrl cannot be empty.\nWavefrontToken cannot be empty.\nClusterName cannot be empty.\n"
+	assert.Equal(t, expectedErr, err.Error())
 }
