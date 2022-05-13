@@ -92,14 +92,24 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
+.PHONE: install-cert-manager
+install-cert-manager:
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+	sh $(REPO_DIR)/hack/test/wait-for-pods-running.sh
+
+.PHONE: uninstall-cert-manager
+uninstall-cert-manager:
+	kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml || true
+
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+undeploy: uninstall-cert-manager ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
+
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 .PHONY: controller-gen
@@ -133,15 +143,15 @@ endef
 build-kind: docker-build
 	@kind load docker-image ${IMG}
 
-deploy-kind: build-kind deploy
+deploy-kind: install-cert-manager build-kind deploy
 
-redeploy-kind: undeploy build-kind deploy
+redeploy-kind: undeploy install-cert-manager build-kind deploy
 
 nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: undeploy build-kind deploy
+integration-test: undeploy install-cert-manager build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test
