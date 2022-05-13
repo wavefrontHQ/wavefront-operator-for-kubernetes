@@ -92,11 +92,11 @@ func (r *Wavefront) validateWavefrontSpec() []error {
 	if r.Spec.WavefrontUrl == "" {
 		allErrors = append(allErrors, errors.New("WavefrontUrl cannot be empty."))
 	}
-	if r.Spec.ClusterName == "" {
-		allErrors = append(allErrors, errors.New("ClusterName cannot be empty."))
-	}
 	if r.Spec.WavefrontToken == "" {
 		allErrors = append(allErrors, errors.New("WavefrontToken cannot be empty."))
+	}
+	if r.Spec.ClusterName == "" {
+		allErrors = append(allErrors, errors.New("ClusterName cannot be empty."))
 	}
 	return allErrors
 }
