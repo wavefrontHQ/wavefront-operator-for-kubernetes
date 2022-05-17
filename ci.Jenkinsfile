@@ -18,7 +18,7 @@ pipeline {
       }
       steps {
         withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
-          sh 'make checkfmt vet tests'
+          sh 'make fmt vet tests'
         }
       }
     }
