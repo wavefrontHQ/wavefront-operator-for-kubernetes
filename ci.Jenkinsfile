@@ -16,7 +16,6 @@ pipeline {
         }
       }
     }
-  }
     stage("Publish") {
       tools {
         go 'Go 1.17'
@@ -37,6 +36,7 @@ pipeline {
         }
       }
     }
+  }
   post {
     // Notify only on null->failure or success->failure or failure->success
     failure {
