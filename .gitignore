@@ -25,3 +25,5 @@ hack/test/_v1alpha1_wavefront_test.yaml
 *.swp
 *.swo
 *~
+
+.DS_Store
