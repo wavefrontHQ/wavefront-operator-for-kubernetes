@@ -31,7 +31,7 @@ pipeline {
         withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
           sh 'make docker-build'
           sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-          sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make publish'
+          sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-push'
         }
       }
     }
