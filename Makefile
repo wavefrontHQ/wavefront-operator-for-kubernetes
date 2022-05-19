@@ -101,7 +101,7 @@ docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
- 	docker tag ${IMG} ${PUSH_IMG}
+	docker tag ${IMG} ${PUSH_IMG}
 	docker push ${PUSH_IMG}
 
 ##@ Deployment
