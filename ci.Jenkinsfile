@@ -73,7 +73,7 @@ pipeline {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
           lock("integration-test-gke") {
             sh 'make gke-connect-to-cluster'
-            sh 'make integration-test'
+            sh 'make integration-test-ci'
           }
         }
       }
