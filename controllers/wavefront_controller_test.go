@@ -2,6 +2,9 @@ package controllers_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
@@ -17,12 +20,10 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	clientgotesting "k8s.io/client-go/testing"
-	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 func TestReconcile(t *testing.T) {

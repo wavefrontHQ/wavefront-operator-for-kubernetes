@@ -1,6 +1,16 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:0.1
+PREFIX?=projects.registry.vmware.com/tanzu_observability_keights_saas
+DOCKER_IMAGE?=kubernetes-operator-snapshot
+
+GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
+SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
+
+VERSION_POSTFIX?=-dev-$(shell whoami)-$(shell git rev-parse --short HEAD)
+RELEASE_VERSION?=$(shell cat ./release/VERSION)
+VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
+IMG ?= $(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
 REPO_DIR=$(shell git rev-parse --show-toplevel)
@@ -39,6 +49,11 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Development
+$(GO_IMPORTS_BIN):
+	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install golang.org/x/tools/cmd/goimports@latest)
+
+$(SEMVER_CLI_BIN):
+	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install github.com/davidrjonas/semver-cli@latest)
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
@@ -49,8 +64,16 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
-fmt: ## Run go fmt against code.
-	go fmt ./...
+fmt: $(GO_IMPORTS_BIN)
+	find . -type f -name "*.go" | grep -v "./vendor*" | xargs goimports -w
+
+.PHONY: checkfmt
+checkfmt: $(GO_IMPORTS_BIN)
+	@if [ $$(goimports -d $$(find . -type f -name '*.go' -not -path "./vendor/*") | wc -l) -gt 0 ]; then \
+		echo $$'\e[31mgoimports FAILED!!!\e[0m'; \
+		goimports -d $$(find . -type f -name '*.go' -not -path "./vendor/*"); \
+		exit 1; \
+	fi
 
 .PHONY: vet
 vet: ## Run go vet against code.
@@ -71,7 +94,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
+docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
@@ -151,7 +174,7 @@ nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: undeploy install-cert-manager build-kind deploy
+integration-test: undeploy test install-cert-manager build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test
