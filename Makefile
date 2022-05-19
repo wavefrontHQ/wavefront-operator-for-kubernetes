@@ -2,7 +2,6 @@
 # Image URL to use all building/pushing image targets
 PREFIX?=projects.registry.vmware.com/tanzu_observability_keights_saas
 DOCKER_IMAGE?=kubernetes-operator-snapshot
-IMG?=controller:0.1
 
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
@@ -10,8 +9,7 @@ SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semve
 VERSION_POSTFIX?=-dev-$(shell whoami)-$(shell git rev-parse --short HEAD)
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
-
-PUSH_IMG ?= $(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
+IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
@@ -101,8 +99,7 @@ docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	docker tag ${IMG} ${PUSH_IMG}
-	docker push ${PUSH_IMG}
+	docker push ${IMG}
 
 ##@ Deployment
 
@@ -180,7 +177,7 @@ nuke-kind:
 integration-test: undeploy test install-cert-manager build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
-integration-test-ci: undeploy test install-cert-manager docker-build deploy
+integration-test-ci: undeploy test install-cert-manager deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test
