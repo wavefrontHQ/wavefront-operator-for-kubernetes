@@ -6,7 +6,7 @@ DOCKER_IMAGE?=kubernetes-operator-snapshot
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
 
-VERSION_POSTFIX?=-dev-$(shell whoami)-$(shell git rev-parse --short HEAD)
+VERSION_POSTFIX?=-alpha-$(shell git rev-parse --short HEAD)
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
