@@ -6,16 +6,16 @@ pipeline {
   }
 
   stages {
-    stage("Test with Go 1.17") {
-      tools {
-        go 'Go 1.17'
-      }
-      steps {
-        withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
-          sh 'make checkfmt vet test'
-        }
-      }
-    }
+//     stage("Test with Go 1.17") {
+//       tools {
+//         go 'Go 1.17'
+//       }
+//       steps {
+//         withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
+//           sh 'make checkfmt vet test'
+//         }
+//       }
+//     }
     stage("Setup Integration Test") {
         tools {
             go 'Go 1.17'
