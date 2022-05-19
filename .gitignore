@@ -5,6 +5,7 @@
 *.dll
 *.so
 *.dylib
+bin
 testbin/*
 config/samples/*.yaml
 hack/test/_v1alpha1_wavefront_test.yaml
