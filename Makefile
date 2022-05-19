@@ -8,7 +8,7 @@ GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimpor
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
 
 VERSION_POSTFIX?=-dev-$(shell whoami)-$(shell git rev-parse --short HEAD)
-RELEASE_VERSION?=$(shell cat ./release/VERSION)
+RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 
 PUSH_IMG ?= $(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
