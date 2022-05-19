@@ -67,6 +67,7 @@ pipeline {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         DOCKER_IMAGE = "kubernetes-operator-snapshot"
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+        GCP_PROJECT = "wavefront-gcp-dev"
       }
       steps {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
