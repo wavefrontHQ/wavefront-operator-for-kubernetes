@@ -16,6 +16,24 @@ pipeline {
         }
       }
     }
+    stage("Setup Integration Test") {
+        tools {
+            go 'Go 1.17'
+        }
+        environment {
+            GCP_CREDS = credentials("GCP_CREDS")
+            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+            DOCKER_IMAGE = "wavefront-operator-for-kubernetes"
+          }
+        steps {
+            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+                sh './hack/jenkins/setup-for-integration-test.sh'
+            }
+        }
+    }
     stage("Publish") {
       tools {
         go 'Go 1.17'
@@ -32,6 +50,30 @@ pipeline {
           sh 'make docker-build'
           sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
           sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-push'
+        }
+      }
+    }
+    stage("GKE Integration Test") {
+      options {
+        timeout(time: 15, unit: 'MINUTES')
+      }
+      tools {
+        go 'Go 1.17'
+      }
+      environment {
+        GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+        DOCKER_IMAGE = "wavefront-operator-for-kubernetes"
+        WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+      }
+      steps {
+        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+          lock("integration-test-gke") {
+            sh 'make gke-connect-to-cluster'
+            sh 'make integration-test'
+          }
         }
       }
     }

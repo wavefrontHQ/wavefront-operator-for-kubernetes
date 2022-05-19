@@ -182,3 +182,9 @@ integration-test: undeploy test install-cert-manager build-kind deploy
 
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
+
+gke-connect-to-cluster: gke-cluster-name-check
+	gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --zone us-central1-c --project $(GCP_PROJECT)
+
+gke-cluster-name-check:
+	@if [ -z ${GKE_CLUSTER_NAME} ]; then echo "Need to set GKE_CLUSTER_NAME" && exit 1; fi
