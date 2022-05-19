@@ -26,7 +26,7 @@ pipeline {
             WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-            DOCKER_IMAGE = "wavefront-operator-for-kubernetes"
+            DOCKER_IMAGE = "kubernetes-operator-snapshot"
           }
         steps {
             withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
@@ -65,7 +65,7 @@ pipeline {
         VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
         PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-        DOCKER_IMAGE = "wavefront-operator-for-kubernetes"
+        DOCKER_IMAGE = "kubernetes-operator-snapshot"
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
       }
       steps {
