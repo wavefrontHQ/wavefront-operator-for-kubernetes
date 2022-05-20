@@ -12,4 +12,36 @@ spec:
         - containerPort: 9443
           name: webhook-server
           protocol: TCP
+#        volumeMounts:
+#          - mountPath: /tmp/k8s-webhook-server/serving-certs
+#            name: cert
+#            readOnly: true
+#      volumes:
+#        - name: cert
+#          secret:
+#            defaultMode: 420
+#            secretName: webhook-server-cert
 
+
+#---
+#apiVersion: v1
+#data:
+#  username: YWRtaW4=
+#  password: MWYyZDFlMmU2N2Rm
+#kind: Secret
+#metadata:
+#  annotations:
+#    kubectl.kubernetes.io/last-applied-configuration: { ... }
+#  creationTimestamp: 2020-01-22T18:41:56Z
+#  name: mysecret
+#  namespace: default
+#  resourceVersion: "164619"
+#  uid: cfee02d6-c137-11e5-8d73-42010af00002
+#type: Opaque
+#
+#
+#  kubectl create secret tls custom-webhook-secret \
+#  --cert=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+#  --key=path/to/key/file
+
+#

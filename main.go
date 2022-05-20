@@ -68,6 +68,7 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "8117294a.wavefront.com",
+		CertDir:                "/var/run/secrets/kubernetes.io/serviceaccount",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

@@ -171,7 +171,7 @@ build-kind: docker-build
 
 deploy-kind: build-kind deploy
 
-redeploy-kind: undeploy install-cert-manager build-kind deploy
+redeploy-kind: undeploy build-kind deploy
 
 nuke-kind:
 	kind delete cluster
