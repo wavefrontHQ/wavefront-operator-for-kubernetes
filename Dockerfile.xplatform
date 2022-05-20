@@ -1,0 +1,6 @@
+FROM --platform=$BUILDPLATFORM gcr.io/distroless/static:latest
+ARG BUILDPLATFORM
+USER nonroot:nonroot
+WORKDIR /
+COPY $BUILDPLATFORM .
+ENTRYPOINT ["/manager"]

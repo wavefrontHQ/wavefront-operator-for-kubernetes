@@ -6,6 +6,7 @@
 *.so
 *.dylib
 bin
+build
 testbin/*
 config/samples/*.yaml
 hack/test/_v1alpha1_wavefront_test.yaml
