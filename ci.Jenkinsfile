@@ -78,6 +78,30 @@ pipeline {
         }
       }
     }
+    stage("EKS Integration Test") {
+      options {
+        timeout(time: 15, unit: 'MINUTES')
+      }
+      tools {
+        go 'Go 1.17'
+      }
+      environment {
+        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+        DOCKER_IMAGE = "kubernetes-operator-snapshot"
+        AWS_SHARED_CREDENTIALS_FILE = credentials("k8po-ci-aws-creds")
+        AWS_CONFIG_FILE = credentials("k8po-ci-aws-profile")
+        WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+      }
+      steps {
+        withEnv(["PATH+GO=${HOME}/go/bin") {
+          lock("integration-test-eks") {
+            sh 'make target-eks'
+            sh 'VERSION_POSTFIX=$VERSION_POSTFIX make integration-test-ci'
+          }
+        }
+      }
+    }
   }
   post {
     // Notify only on null->failure or success->failure or failure->success
