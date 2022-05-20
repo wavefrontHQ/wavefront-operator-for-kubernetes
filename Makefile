@@ -95,7 +95,7 @@ build: generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-.PHONY: docker-build
+.PHONY: test docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
@@ -169,7 +169,7 @@ endef
 build-kind: docker-build
 	@kind load docker-image ${IMG}
 
-deploy-kind: install-cert-manager build-kind deploy
+deploy-kind: build-kind deploy
 
 redeploy-kind: undeploy install-cert-manager build-kind deploy
 
