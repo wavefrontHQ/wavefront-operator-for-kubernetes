@@ -2,16 +2,14 @@
 # Image URL to use all building/pushing image targets
 PREFIX?=projects.registry.vmware.com/tanzu_observability_keights_saas
 DOCKER_IMAGE?=kubernetes-operator-snapshot
-IMG?=controller:0.1
 
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
 
-VERSION_POSTFIX?=-dev-$(shell whoami)-$(shell git rev-parse --short HEAD)
-RELEASE_VERSION?=$(shell cat ./release/VERSION)
+VERSION_POSTFIX?=-alpha-$(shell git rev-parse --short HEAD)
+RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
-
-PUSH_IMG ?= $(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
+IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
@@ -101,8 +99,7 @@ docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	docker tag ${IMG} ${PUSH_IMG}
-	docker push ${PUSH_IMG}
+	docker push ${IMG}
 
 ##@ Deployment
 
@@ -180,5 +177,35 @@ nuke-kind:
 integration-test: undeploy test install-cert-manager build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
+integration-test-ci: undeploy install-cert-manager deploy
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
+
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
+
+
+#----- GKE -----#
+gke-connect-to-cluster: gke-cluster-name-check
+	gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --zone us-central1-c --project $(GCP_PROJECT)
+
+gke-cluster-name-check:
+	@if [ -z ${GKE_CLUSTER_NAME} ]; then echo "Need to set GKE_CLUSTER_NAME" && exit 1; fi
+
+
+#----- EKS -----#
+ECR_REPO_PREFIX=tobs/k8s/saas
+WAVEFRONT_DEV_AWS_ACC_ID=095415062695
+AWS_PROFILE=wavefront-dev
+AWS_REGION=us-west-2
+ECR_ENDPOINT=$(WAVEFRONT_DEV_AWS_ACC_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+COLLECTOR_ECR_REPO=$(ECR_REPO_PREFIX)/wavefront-kubernetes-collector
+TEST_PROXY_ECR_REPO=$(ECR_REPO_PREFIX)/test-proxy
+
+ecr-host:
+	echo $(ECR_ENDPOINT)/$(ECR_REPO_PREFIX)/wavefront-kubernetes-collector
+
+docker-login-eks:
+	@aws ecr get-login-password --region $(AWS_REGION) --profile $(AWS_PROFILE) |  docker login --username AWS --password-stdin $(ECR_ENDPOINT)
+
+target-eks: docker-login-eks
+	@aws eks --region $(AWS_REGION) update-kubeconfig --name k8s-saas-team-dev --profile $(AWS_PROFILE)

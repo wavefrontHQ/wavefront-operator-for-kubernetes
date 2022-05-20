@@ -16,6 +16,24 @@ pipeline {
         }
       }
     }
+    stage("Setup Integration Test") {
+        tools {
+            go 'Go 1.17'
+        }
+        environment {
+            GCP_CREDS = credentials("GCP_CREDS")
+            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+            DOCKER_IMAGE = "kubernetes-operator-snapshot"
+          }
+        steps {
+            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+                sh './hack/jenkins/setup-for-integration-test.sh'
+            }
+        }
+    }
     stage("Publish") {
       tools {
         go 'Go 1.17'
@@ -35,6 +53,55 @@ pipeline {
         }
       }
     }
+    stage("GKE Integration Test") {
+      options {
+        timeout(time: 15, unit: 'MINUTES')
+      }
+      tools {
+        go 'Go 1.17'
+      }
+      environment {
+        GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+        DOCKER_IMAGE = "kubernetes-operator-snapshot"
+        WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+        GCP_PROJECT = "wavefront-gcp-dev"
+      }
+      steps {
+        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+          lock("integration-test-gke") {
+            sh 'make gke-connect-to-cluster'
+            sh 'make integration-test-ci'
+          }
+        }
+      }
+    }
+//     stage("EKS Integration Test") {
+//       options {
+//         timeout(time: 15, unit: 'MINUTES')
+//       }
+//       tools {
+//         go 'Go 1.17'
+//       }
+//       environment {
+//         VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+//         PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+//         DOCKER_IMAGE = "kubernetes-operator-snapshot"
+//         AWS_SHARED_CREDENTIALS_FILE = credentials("k8po-ci-aws-creds")
+//         AWS_CONFIG_FILE = credentials("k8po-ci-aws-profile")
+//         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+//       }
+//       steps {
+//         withEnv(["PATH+GO=${HOME}/go/bin"]) {
+//           lock("integration-test-eks") {
+//             sh 'make target-eks'
+//             sh 'VERSION_POSTFIX=$VERSION_POSTFIX make integration-test-ci'
+//           }
+//         }
+//       }
+//     }
   }
   post {
     // Notify only on null->failure or success->failure or failure->success

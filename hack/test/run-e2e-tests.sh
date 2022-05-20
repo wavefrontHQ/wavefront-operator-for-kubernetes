@@ -2,7 +2,6 @@
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 source ${REPO_ROOT}/hack/test/k8s-utils.sh
-source ${REPO_ROOT}/release/VERSION
 
 function print_usage_and_exit() {
   echo "Failure: $1"
@@ -19,7 +18,8 @@ function main() {
   local WAVEFRONT_TOKEN=
 
   local WF_CLUSTER=nimba
-  local VERSION=$(shell cat ./release/VERSION)
+  local VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
+  local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   local CONFIG_CLUSTER_NAME=$(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")
 
@@ -57,7 +57,7 @@ function main() {
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
   echo "Running test-wavefront-metrics"
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME}
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${COLLECTOR_VERSION}
   green "Success!"
 }
 
