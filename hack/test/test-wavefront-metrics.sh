@@ -95,6 +95,8 @@ function main() {
   local WF_CLUSTER=nimba
   local EXPECTED_VERSION=${COLLECTOR_VERSION}
 
+  echo "EXPECTED_VERSION from COLLECTOR_VERSION: ${EXPECTED_VERSION} <- ${COLLECTOR_VERSION}"
+
   while getopts ":c:t:n:v:" opt; do
     case $opt in
     c)
@@ -114,6 +116,7 @@ function main() {
       ;;
     esac
   done
+  echo "EXPECTED_VERSION after options: ${EXPECTED_VERSION}"
 
   if [[ -z ${WAVEFRONT_TOKEN} ]]; then
     print_msg_and_exit "wavefront token required"

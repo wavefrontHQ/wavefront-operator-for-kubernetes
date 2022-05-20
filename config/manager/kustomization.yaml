@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot
-  newTag: 0.1.1-alpha-a559420
+  newTag: 0.1.1-alpha-ddba424

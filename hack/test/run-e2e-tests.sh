@@ -57,7 +57,7 @@ function main() {
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
   echo "Running test-wavefront-metrics"
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME}
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${COLLECTOR_VERSION}
   green "Success!"
 }
 
