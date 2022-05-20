@@ -177,7 +177,7 @@ nuke-kind:
 integration-test: undeploy test install-cert-manager build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
-integration-test-ci: undeploy test install-cert-manager deploy
+integration-test-ci: undeploy install-cert-manager deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test
