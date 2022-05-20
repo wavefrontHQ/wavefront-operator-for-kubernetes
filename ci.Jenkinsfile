@@ -94,7 +94,7 @@ pipeline {
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
       }
       steps {
-        withEnv(["PATH+GO=${HOME}/go/bin") {
+        withEnv(["PATH+GO=${HOME}/go/bin"]) {
           lock("integration-test-eks") {
             sh 'make target-eks'
             sh 'VERSION_POSTFIX=$VERSION_POSTFIX make integration-test-ci'
