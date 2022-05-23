@@ -32,6 +32,7 @@ pipeline {
           withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
             sh './hack/jenkins/setup-for-integration-test.sh'
             sh './hack/jenkins/install_docker_buildx.sh'
+            sh 'make semver-cli'
           }
         }
     }
