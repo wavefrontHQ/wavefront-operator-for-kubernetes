@@ -52,6 +52,8 @@ help: ## Display this help.
 $(GO_IMPORTS_BIN):
 	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install golang.org/x/tools/cmd/goimports@latest)
 
+semver-cli: $(SEMVER_CLI_BIN)
+
 $(SEMVER_CLI_BIN):
 	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install github.com/davidrjonas/semver-cli@latest)
 
@@ -85,9 +87,13 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 ##@ Build
 
+GOOS?=$(go env GOOS)
+GOARCH?=$(go env GOARCH)
+
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
+	cp -r deploy build/$(GOOS)/$(GOARCH)
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -95,7 +101,16 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
-	docker build -t ${IMG} .
+	docker build --no-cache -t ${IMG} .
+
+BUILDER_SUFFIX=$(shell echo $(PREFIX) | cut -d '/' -f1)
+
+.PHONY: docker-xplatform-build
+docker-xplatform-build:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 make build -o fmt -o vet
+	docker buildx create --use --node wavefront_operator_builder_$(BUILDER_SUFFIX)
+	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${IMG} -f Dockerfile.xplatform build
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
