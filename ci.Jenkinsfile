@@ -21,17 +21,18 @@ pipeline {
             go 'Go 1.17'
         }
         environment {
-            GCP_CREDS = credentials("GCP_CREDS")
-            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
-            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-            DOCKER_IMAGE = "kubernetes-operator-snapshot"
-          }
+          GCP_CREDS = credentials("GCP_CREDS")
+          GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+          WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+          VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+          PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+          DOCKER_IMAGE = "kubernetes-operator-snapshot"
+        }
         steps {
-            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-                sh './hack/jenkins/setup-for-integration-test.sh'
-            }
+          withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+            sh './hack/jenkins/setup-for-integration-test.sh'
+            sh './hack/jenkins/install_docker_buildx.sh'
+          }
         }
     }
     stage("Publish") {
@@ -73,6 +74,7 @@ pipeline {
           lock("integration-test-gke") {
             sh 'make gke-connect-to-cluster'
             sh 'make integration-test-ci'
+            sh 'make undeploy'
           }
         }
       }
