@@ -75,7 +75,7 @@ pipeline {
           lock("integration-test-gke") {
             sh 'make gke-connect-to-cluster'
             sh 'make integration-test-ci'
-            sh 'make undeploy'
+            sh 'make uninstall undeploy'
           }
         }
       }
