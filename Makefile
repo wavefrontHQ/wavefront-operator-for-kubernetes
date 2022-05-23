@@ -108,7 +108,7 @@ docker-xplatform-build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 make build -o fmt -o vet
 	docker buildx create --use --node wavefront_operator_builder_$(BUILDER_SUFFIX)
-	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${PUSH_IMG} -f Dockerfile.xplatform build
+	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${IMG} -f Dockerfile.xplatform build
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
