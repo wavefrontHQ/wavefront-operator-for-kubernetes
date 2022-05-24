@@ -50,8 +50,9 @@ spec:
                 description: WavefrontProxyEnabled is whether to enable the wavefront
                   proxy.
                 type: boolean
-              wavefrontToken:
-                description: WavefrontToken is the wavefront API Token.
+              wavefrontTokenSecret:
+                description: WavefrontTokenSecret is the name of the secret that contains
+                  a wavefront API Token.
                 type: string
               wavefrontUrl:
                 description: WavefrontUrl is the wavefront instance.
@@ -60,7 +61,7 @@ spec:
             - clusterName
             - collectorEnabled
             - wavefrontProxyEnabled
-            - wavefrontToken
+            - wavefrontTokenSecret
             - wavefrontUrl
             type: object
           status:

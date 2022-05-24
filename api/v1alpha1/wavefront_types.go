@@ -40,8 +40,8 @@ type WavefrontSpec struct {
 	// WavefrontUrl is the wavefront instance.
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
-	// WavefrontToken is the wavefront API Token.
-	WavefrontToken string `json:"wavefrontToken,required"`
+	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
+	WavefrontTokenSecret string `json:"wavefrontTokenSecret,required"`
 
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
 	ClusterName string `json:"clusterName,required"`

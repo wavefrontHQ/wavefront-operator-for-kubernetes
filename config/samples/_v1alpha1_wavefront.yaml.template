@@ -7,5 +7,5 @@ spec:
   clusterName: YOUR_CLUSTER_NAME
   proxyUrl: "https://fakeproxy.com"
   wavefrontProxyEnabled: true
-  wavefrontToken: YOUR_WAVEFRONT_TOKEN
+  wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: "https://nimba.wavefront.com"
