@@ -189,6 +189,9 @@ integration-test-ci: undeploy deploy
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
 
+generate-kubernetes-yaml: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/kubernetes.yaml
 
 #----- GKE -----#
 gke-connect-to-cluster: gke-cluster-name-check
