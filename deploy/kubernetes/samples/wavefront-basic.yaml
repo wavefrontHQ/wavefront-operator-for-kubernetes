@@ -1,0 +1,10 @@
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront-sample
+spec:
+  collectorEnabled: true
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontProxyEnabled: true
+  wavefrontToken: YOUR_TOKEN
+  wavefrontUrl: YOUR_WAVEFRONT_URL

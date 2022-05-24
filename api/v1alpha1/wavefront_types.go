@@ -32,7 +32,7 @@ type WavefrontSpec struct {
 	CollectorEnabled bool `json:"collectorEnabled,required"`
 
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
-	ProxyUrl string `json:"proxyUrl,required"`
+	ProxyUrl string `json:"proxyUrl,omitempty"`
 
 	// WavefrontProxyEnabled is whether to enable the wavefront proxy.
 	WavefrontProxyEnabled bool `json:"wavefrontProxyEnabled,required"`

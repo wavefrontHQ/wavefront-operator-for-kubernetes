@@ -49,7 +49,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const DeployDir = "../deploy"
+const DeployDir = "../deploy/internal"
 
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
