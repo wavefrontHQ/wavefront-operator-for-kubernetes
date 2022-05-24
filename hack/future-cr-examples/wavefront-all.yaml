@@ -1,0 +1,95 @@
+# Need to change YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+spec:
+  # Secret containing your Wavefront API Token
+  apiToken:
+    secretName: wavefront-secret
+    keyName: token
+
+  # Image repository defaults to projects.registry.vmware.com/tanzu_observability
+  imageRepository: projects.registry.vmware.com/tanzu_observability
+
+  # Enable Wavefront proxy and collector to pull from private image repositories. Specify secret name.
+  # imagePullSecrets: secret-name
+
+  # Log Level for all components, defaults to info
+  logLevel: info
+
+  metrics:
+    # Users detailed configuration config map name. Create a configmap and supply name below if you want to override the default configuration
+    configMap: default
+
+    # Enter tag name to override the default collector image tag.
+    # imageTag:
+
+    # Node metric configuration
+    node:
+      enabled: true
+      config:
+        # Defaults to 60s
+        collectionInterval: 60s
+        # CPU/Memory resource requests/limits.
+        resources:
+          requests:
+            cpu: 200m
+            memory: 10Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+    # Cluster metric configuration
+    cluster:
+      enabled: true
+      config:
+        # Defaults to 60s
+        collectionInterval: 60s
+        # CPU/Memory resource requests/limits.
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 400m
+            memory: 512Mi
+        # Number of cluster metric replicas, defaults to 1
+        replicas: 1
+
+  dataExport:
+    # Internal proxy configuration
+    proxy:
+      enabled: true
+      config:
+        # Enter tag name to override the default collector image tag.
+        #imageTag:
+
+        #Wavefront URL
+        url:
+        # CPU/Memory resource requests/limits.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 4Gi
+        # Number of proxy replicas, defaults to 1
+        replicas: 1
+        # Proxy port, defaults to 2878
+        port: 2878
+        ## Advanced configuration
+
+        # Enable HTTP proxy with CA cert. Must be used with httpProxyHost and httpProxyPort if set to true
+        # httpProxyCAcert:
+        #   enabled: true
+        #   http-proxy-ca:
+        #     secretName: http-proxy-secret
+        #     keyName: tls-root-ca-bundle
+
+        # Additional Wavefront proxy properties to be passed as command line arguments in the --<property_name> <value> format. Multiple properties can be specified.
+        #args:
+
+        # Preprocessor configmap name
+        # preprocessorName:

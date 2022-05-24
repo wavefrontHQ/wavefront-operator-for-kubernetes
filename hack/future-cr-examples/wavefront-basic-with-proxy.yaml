@@ -1,0 +1,11 @@
+# Need to change YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+spec:
+  dataExport:
+    proxy:
+      config:
+        #Wavefront URL
+        url:
