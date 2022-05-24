@@ -63,7 +63,7 @@ Create a directory named wavefront-operator-dir and download the following files
 kubectl apply -f kubernetes.yaml
 ```
 
-Create a wavefront secret
+Create a wavefront secret by providing YOUR_WAVEFRONT_TOKEN
 ```
 kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
 ```
