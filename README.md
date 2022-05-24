@@ -56,15 +56,15 @@ kubectl apply -f config/samples/
 
 # Manual Deploy
 Create a directory named wavefront-operator-dir and download the following files to that directory:
-* [kubernetes.yaml](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/kubernetes.yaml)
-* [wavefront-basic.yaml](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/samples/wavefront-basic.yaml)
+* [kubernetes.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/kubernetes.yaml)
+* [wavefront-basic.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-basic.yaml)
 
 ```
-kubectl apply -f wavefront-operator-dir/kubernetes.yaml
+kubectl apply -f kubernetes.yaml
 ```
 Edit the wavefront-basic.yaml replacing YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly.
 ```
-kubectl apply -f wavefront-operator-dir/wavefront-basic.yaml
+kubectl apply -f wavefront-basic.yaml
 ```
 
 # Contributing
