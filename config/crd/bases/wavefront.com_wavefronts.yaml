@@ -59,7 +59,6 @@ spec:
             required:
             - clusterName
             - collectorEnabled
-            - proxyUrl
             - wavefrontProxyEnabled
             - wavefrontToken
             - wavefrontUrl

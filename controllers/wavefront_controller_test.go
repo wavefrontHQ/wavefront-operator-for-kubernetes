@@ -42,7 +42,7 @@ func TestReconcile(t *testing.T) {
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
 			Scheme:        nil,
-			FS:            os.DirFS("../deploy"),
+			FS:            os.DirFS(controllers.DeployDir),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakeAppsV1,
@@ -87,7 +87,7 @@ func TestReconcile(t *testing.T) {
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
 			Scheme:        nil,
-			FS:            os.DirFS("../deploy"),
+			FS:            os.DirFS(controllers.DeployDir),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakesAppsV1,
@@ -114,7 +114,7 @@ func TestReconcile(t *testing.T) {
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
 			Scheme:        nil,
-			FS:            os.DirFS("../deploy"),
+			FS:            os.DirFS(controllers.DeployDir),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakesAppsV1,
@@ -150,7 +150,7 @@ func TestReconcile(t *testing.T) {
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
 			Scheme:        nil,
-			FS:            os.DirFS("../deploy"),
+			FS:            os.DirFS(controllers.DeployDir),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakeAppsV1,
@@ -190,7 +190,7 @@ func TestReconcile(t *testing.T) {
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
 			Scheme:        nil,
-			FS:            os.DirFS("../deploy"),
+			FS:            os.DirFS(controllers.DeployDir),
 			DynamicClient: dynamicClient,
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakeAppsV1,
