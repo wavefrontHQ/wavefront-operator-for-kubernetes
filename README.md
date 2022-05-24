@@ -54,6 +54,19 @@ which Kubernetes will validate against the schema in the Custom Resource **Defin
 kubectl apply -f config/samples/
 ```
 
+# Manual Deploy
+Create a directory named wavefront-operator-dir and download the following files to that directory:
+* [kubernetes.yaml](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/kubernetes.yaml)
+* [wavefront-basic.yaml](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/samples/wavefront-basic.yaml)
+
+```
+kubectl apply -f wavefront-operator-dir/kubernetes.yaml
+```
+Edit the wavefront-basic.yaml replacing YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly.
+```
+kubectl apply -f wavefront-operator-dir/wavefront-basic.yaml
+```
+
 # Contributing
 
 This is a work in progress repository.
