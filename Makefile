@@ -172,9 +172,9 @@ endef
 build-kind: docker-build
 	@kind load docker-image ${IMG}
 
-deploy-kind:  build-kind deploy
+deploy-kind: build-kind deploy
 
-redeploy-kind: undeploy  build-kind deploy
+redeploy-kind: undeploy build-kind deploy
 
 nuke-kind:
 	kind delete cluster
