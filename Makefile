@@ -183,7 +183,7 @@ nuke-kind:
 integration-test: undeploy test build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
-integration-test-ci: undeploy deploy
+integration-test-ci: deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test
