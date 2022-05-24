@@ -62,7 +62,13 @@ Create a directory named wavefront-operator-dir and download the following files
 ```
 kubectl apply -f kubernetes.yaml
 ```
-Edit the wavefront-basic.yaml replacing YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly.
+
+Create a wavefront secret by providing YOUR_WAVEFRONT_TOKEN
+```
+kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
+```
+
+Edit the wavefront-basic.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
 ```
 kubectl apply -f wavefront-basic.yaml
 ```

@@ -31,7 +31,10 @@ spec:
             - name: WAVEFRONT_URL
               value: {{.WavefrontUrl}}/api/
             - name: WAVEFRONT_TOKEN
-              value: {{.WavefrontToken}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{.WavefrontTokenSecret}}
+                  key: token
           ports:
             - containerPort: 2878
               protocol: TCP

@@ -34,7 +34,7 @@ func TestReconcile(t *testing.T) {
 			ProxyUrl:              "testProxyUrl",
 			WavefrontProxyEnabled: true,
 			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontToken:        "testToken",
+			WavefrontTokenSecret:  "testToken",
 			ClusterName:           "testClusterName",
 			ControllerManagerUID:  "",
 		})
@@ -68,7 +68,7 @@ func TestReconcile(t *testing.T) {
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
 		assert.NoError(t, err)
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
+		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 
 		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 		var configMap v1.ConfigMap
@@ -142,7 +142,7 @@ func TestReconcile(t *testing.T) {
 			ProxyUrl:              "",
 			WavefrontProxyEnabled: true,
 			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontToken:        "testToken",
+			WavefrontTokenSecret:  "testToken",
 			ClusterName:           "testClusterName",
 			ControllerManagerUID:  "",
 		})
@@ -172,7 +172,7 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].Value)
+		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 
 	})
 
@@ -182,7 +182,7 @@ func TestReconcile(t *testing.T) {
 			ProxyUrl:              "testProxyUrl",
 			WavefrontProxyEnabled: false,
 			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontToken:        "testToken",
+			WavefrontTokenSecret:  "testToken",
 			ClusterName:           "testClusterName",
 			ControllerManagerUID:  "",
 		})
@@ -303,13 +303,13 @@ func setupForCreate(spec wavefrontcomv1alpha1.WavefrontSpec) (*wavefrontcomv1alp
 	return wf, apiClient, dynamicClient, fakesAppsV1
 }
 
-func setup(wavefrontUrl, wavefrontToken, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
 		CollectorEnabled:      true,
 		ProxyUrl:              "",
 		WavefrontProxyEnabled: true,
 		WavefrontUrl:          wavefrontUrl,
-		WavefrontToken:        wavefrontToken,
+		WavefrontTokenSecret:  wavefrontTokenSecret,
 		ClusterName:           clusterName,
 		ControllerManagerUID:  "",
 	})

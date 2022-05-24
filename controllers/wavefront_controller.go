@@ -277,9 +277,9 @@ func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
 	resources, err := r.readAndInterpolateResources(wavefrontcomv1alpha1.WavefrontSpec{
-		WavefrontUrl:   "https://delete.wavefront.com",
-		WavefrontToken: "DELETE",
-		ClusterName:    "DELETE",
+		WavefrontUrl:         "https://delete.wavefront.com",
+		WavefrontTokenSecret: "DELETE",
+		ClusterName:          "DELETE",
 	})
 	if err != nil {
 		return err

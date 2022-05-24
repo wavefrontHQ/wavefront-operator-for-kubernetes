@@ -7,5 +7,5 @@ spec:
   collectorEnabled: true
   clusterName: YOUR_CLUSTER_NAME
   wavefrontProxyEnabled: true
-  wavefrontToken: YOUR_TOKEN
+  wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL
