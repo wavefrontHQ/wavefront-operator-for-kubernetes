@@ -25,6 +25,8 @@ import (
 	"strings"
 	"text/template"
 
+	baseYaml "gopkg.in/yaml.v2"
+
 	"k8s.io/client-go/kubernetes"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 
@@ -179,14 +181,31 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 
 func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alpha1.WavefrontSpec) ([]string, error) {
 	var resources []string
+	var templ *template.Template
 
 	resourceFiles, err := r.resourceFiles("yaml")
 	if err != nil {
 		return nil, err
 	}
 
+	fMap := template.FuncMap{
+		"toYaml": func(v interface{}) string {
+			data, err := baseYaml.Marshal(v)
+			if err != nil {
+				// Swallow errors inside of a template.
+				return ""
+			}
+			return strings.TrimSuffix(string(data), "\n")
+		},
+		"indent": func(spaces int, v string) string {
+			pad := strings.Repeat(" ", spaces)
+			return pad + strings.Replace(v, "\n", "\n"+pad, -1)
+		},
+	}
+
 	for _, resourceFile := range resourceFiles {
-		resourceTemplate, err := template.ParseFS(r.FS, resourceFile)
+		templ = template.New(resourceFile).Funcs(fMap)
+		resourceTemplate, err := templ.ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
 		}

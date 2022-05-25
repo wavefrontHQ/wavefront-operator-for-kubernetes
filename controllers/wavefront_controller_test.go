@@ -81,6 +81,50 @@ func TestReconcile(t *testing.T) {
 
 	})
 
+	t.Run("resources set for cluster collector", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+			Metrics: wavefrontcomv1alpha1.Metrics{
+				Cluster: wavefrontcomv1alpha1.Collector{
+					Resources: wavefrontcomv1alpha1.Resources{
+						Requests: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "10Mi",
+						},
+						Limits: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "256Mi",
+						},
+					},
+				},
+			},
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-collector")
+		var deployment appsv1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+		assert.NoError(t, err)
+		assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+	})
+
 	t.Run("updates proxy and service", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 

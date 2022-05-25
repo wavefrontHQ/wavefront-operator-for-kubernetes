@@ -42,6 +42,34 @@ spec:
               collectorEnabled:
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
+              metrics:
+                description: Metrics has resource configuration for node- and cluster-deployed
+                  collectors
+                properties:
+                  cluster:
+                    description: Node is for resource configuration for collector
+                      deployed on node.
+                    properties:
+                      resources:
+                        description: Compute resources required by the Collector containers.
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                type: string
+                              memory:
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                type: string
+                              memory:
+                                type: string
+                            type: object
+                        type: object
+                    type: object
+                type: object
               proxyUrl:
                 description: ProxyUrl is the proxy URL that the collector sends metrics
                   to.

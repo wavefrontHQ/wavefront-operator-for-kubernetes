@@ -48,6 +48,30 @@ type WavefrontSpec struct {
 
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
+
+	// Metrics has resource configuration for node- and cluster-deployed collectors
+	Metrics Metrics `json:"metrics,omitempty"`
+}
+
+type Metrics struct {
+	// Node is for resource configuration for collector deployed on node.
+	Cluster Collector `json:"cluster,omitempty"`
+	// TODO: Node NodeCollector `json:"node,omitempty"`
+}
+
+type Resource struct {
+	CPU    string `json:"cpu,omitempty"`
+	Memory string `json:"memory,omitempty"`
+}
+
+type Resources struct {
+	Requests Resource `json:"requests,omitempty"`
+	Limits   Resource `json:"limits,omitempty"`
+}
+
+type Collector struct {
+	// Compute resources required by the Collector containers.
+	Resources Resources `json:"resources,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
