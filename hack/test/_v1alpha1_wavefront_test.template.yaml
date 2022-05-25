@@ -9,4 +9,10 @@ spec:
   wavefrontProxyEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: "https://nimba.wavefront.com"
+  metrics:
+    cluster:
+      resources:
+        limits:
+          cpu: 277m
+          memory: 45Mi
 
