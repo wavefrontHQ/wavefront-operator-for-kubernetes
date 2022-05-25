@@ -54,19 +54,24 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
-	// Node is for resource configuration for collector deployed on node.
+	// Cluster is for resource configuration for the cluster collector
 	Cluster Collector `json:"cluster,omitempty"`
-	// TODO: Node NodeCollector `json:"node,omitempty"`
+	// Node is for resource configuration for the node collector
+	Node Collector `json:"node,omitempty"`
 }
 
 type Resource struct {
-	CPU    string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	// CPU is for specifying CPU requirements
+	CPU string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	// Memory is for specifying Memory requirements
 	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
 }
 
 type Resources struct {
+	// Request CPU and Memory requirements
 	Requests Resource `json:"requests,omitempty" yaml:"requests,omitempty"`
-	Limits   Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
+	// Limit CPU and Memory requirements
+	Limits Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
 }
 
 type Collector struct {

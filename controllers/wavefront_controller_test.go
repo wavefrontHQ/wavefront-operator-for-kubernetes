@@ -118,7 +118,7 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-collector")
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-cluster-collector")
 		var deployment appsv1.Deployment
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
 		assert.NoError(t, err)

@@ -47,24 +47,58 @@ spec:
                   collectors
                 properties:
                   cluster:
-                    description: Node is for resource configuration for collector
-                      deployed on node.
+                    description: Cluster is for resource configuration for the cluster
+                      collector
                     properties:
                       resources:
                         description: Compute resources required by the Collector containers.
                         properties:
                           limits:
+                            description: Limit CPU and Memory requirements
                             properties:
                               cpu:
+                                description: CPU is for specifying CPU requirements
                                 type: string
                               memory:
+                                description: Memory is for specifying Memory requirements
                                 type: string
                             type: object
                           requests:
+                            description: Request CPU and Memory requirements
                             properties:
                               cpu:
+                                description: CPU is for specifying CPU requirements
                                 type: string
                               memory:
+                                description: Memory is for specifying Memory requirements
+                                type: string
+                            type: object
+                        type: object
+                    type: object
+                  node:
+                    description: Node is for resource configuration for the node collector
+                    properties:
+                      resources:
+                        description: Compute resources required by the Collector containers.
+                        properties:
+                          limits:
+                            description: Limit CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                type: string
+                            type: object
+                          requests:
+                            description: Request CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
                                 type: string
                             type: object
                         type: object

@@ -63,12 +63,7 @@ spec:
             - containerPort: 8088
               protocol: TCP
           resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 200m
-              memory: 10Mi
+{{ .Metrics.Node.Resources | toYaml | indent 12 }}
           volumeMounts:
             - name: procfs
               mountPath: /host/proc

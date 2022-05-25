@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: collector
     app.kubernetes.io/name : wavefront
-  name: wavefront-collector
+  name: wavefront-cluster-collector
   namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
@@ -27,7 +27,7 @@ spec:
     spec:
       serviceAccountName: wavefront-collector
       containers:
-        - name: wavefront-collector
+        - name: wavefront-cluster-collector
           image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector:1.12.0-rc-2
           imagePullPolicy: Always
           command:
