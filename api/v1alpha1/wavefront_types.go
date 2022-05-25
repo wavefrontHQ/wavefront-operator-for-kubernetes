@@ -60,13 +60,13 @@ type Metrics struct {
 }
 
 type Resource struct {
-	CPU    string `json:"cpu,omitempty"`
-	Memory string `json:"memory,omitempty"`
+	CPU    string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
 }
 
 type Resources struct {
-	Requests Resource `json:"requests,omitempty"`
-	Limits   Resource `json:"limits,omitempty"`
+	Requests Resource `json:"requests,omitempty" yaml:"requests,omitempty"`
+	Limits   Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
 }
 
 type Collector struct {

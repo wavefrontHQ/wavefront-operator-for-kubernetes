@@ -181,31 +181,14 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 
 func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alpha1.WavefrontSpec) ([]string, error) {
 	var resources []string
-	var templ *template.Template
 
 	resourceFiles, err := r.resourceFiles("yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	fMap := template.FuncMap{
-		"toYaml": func(v interface{}) string {
-			data, err := baseYaml.Marshal(v)
-			if err != nil {
-				// Swallow errors inside of a template.
-				return ""
-			}
-			return strings.TrimSuffix(string(data), "\n")
-		},
-		"indent": func(spaces int, v string) string {
-			pad := strings.Repeat(" ", spaces)
-			return pad + strings.Replace(v, "\n", "\n"+pad, -1)
-		},
-	}
-
 	for _, resourceFile := range resourceFiles {
-		templ = template.New(resourceFile).Funcs(fMap)
-		resourceTemplate, err := templ.ParseFS(r.FS, resourceFile)
+		resourceTemplate, err := newTemplate(resourceFile).ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
 		}
@@ -348,4 +331,22 @@ func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *un
 		return err
 	}
 	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
+}
+
+func newTemplate(resourceFile string) *template.Template {
+	fMap := template.FuncMap{
+		"toYaml": func(v interface{}) string {
+			data, err := baseYaml.Marshal(v)
+			if err != nil {
+				log.Log.Error(err, "error in toYaml")
+				return ""
+			}
+			return strings.TrimSuffix(string(data), "\n")
+		},
+		"indent": func(spaces int, v string) string {
+			pad := strings.Repeat(" ", spaces)
+			return pad + strings.Replace(v, "\n", "\n"+pad, -1)
+		},
+	}
+	return template.New(resourceFile).Funcs(fMap)
 }

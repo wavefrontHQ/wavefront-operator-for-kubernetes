@@ -12,7 +12,7 @@ spec:
   metrics:
     cluster:
       resources:
+        requests:
+          memory: 10Mi
         limits:
-          cpu: 277m
-          memory: 45Mi
-
+          cpu: 400m
