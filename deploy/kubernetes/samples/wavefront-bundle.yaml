@@ -1,4 +1,4 @@
-# Need to change YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly
+# Need to change YOUR_WAVEFRONT_URL accordingly
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -117,7 +117,6 @@ metadata:
   name: wavefront
 spec:
   collectorEnabled: true
-  clusterName: YOUR_CLUSTER_NAME
   wavefrontProxyEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL

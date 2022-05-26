@@ -44,7 +44,7 @@ type WavefrontSpec struct {
 	WavefrontTokenSecret string `json:"wavefrontTokenSecret,required"`
 
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
-	ClusterName string `json:"clusterName,required"`
+	ClusterName string `json:"clusterName,omitempty"`
 
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
