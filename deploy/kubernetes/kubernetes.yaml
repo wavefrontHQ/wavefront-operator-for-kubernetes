@@ -49,8 +49,8 @@ spec:
               wavefrontProxyEnabled:
                 description: WavefrontProxyEnabled is whether to enable the wavefront proxy.
                 type: boolean
-              wavefrontToken:
-                description: WavefrontToken is the wavefront API Token.
+              wavefrontTokenSecret:
+                description: WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
                 type: string
               wavefrontUrl:
                 description: WavefrontUrl is the wavefront instance.
@@ -59,7 +59,7 @@ spec:
             - clusterName
             - collectorEnabled
             - wavefrontProxyEnabled
-            - wavefrontToken
+            - wavefrontTokenSecret
             - wavefrontUrl
             type: object
           status:
@@ -424,7 +424,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-1
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-2
         livenessProbe:
           httpGet:
             path: /healthz
