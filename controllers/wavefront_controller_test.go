@@ -125,6 +125,88 @@ func TestReconcile(t *testing.T) {
 		assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 	})
 
+	t.Run("resources set for node collector", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+			Metrics: wavefrontcomv1alpha1.Metrics{
+				Node: wavefrontcomv1alpha1.Collector{
+					Resources: wavefrontcomv1alpha1.Resources{
+						Requests: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "10Mi",
+						},
+						Limits: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "256Mi",
+						},
+					},
+				},
+			},
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+		var ds appsv1.DaemonSet
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
+		assert.NoError(t, err)
+		assert.Equal(t, "10Mi", ds.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+	})
+
+	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+		var ds appsv1.DaemonSet
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
+		assert.NoError(t, err)
+		assert.Nil(t, ds.Spec.Template.Spec.Containers[0].Resources.Limits)
+		assert.Nil(t, ds.Spec.Template.Spec.Containers[0].Resources.Requests)
+
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-cluster-collector")
+		var deployment appsv1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+		assert.NoError(t, err)
+		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
+		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
+	})
+
 	t.Run("updates proxy and service", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 
