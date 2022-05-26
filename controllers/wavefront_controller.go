@@ -25,6 +25,8 @@ import (
 	"strings"
 	"text/template"
 
+	baseYaml "gopkg.in/yaml.v2"
+
 	"k8s.io/client-go/kubernetes"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 
@@ -186,7 +188,7 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alp
 	}
 
 	for _, resourceFile := range resourceFiles {
-		resourceTemplate, err := template.ParseFS(r.FS, resourceFile)
+		resourceTemplate, err := newTemplate(resourceFile).ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
 		}
@@ -329,4 +331,22 @@ func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *un
 		return err
 	}
 	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
+}
+
+func newTemplate(resourceFile string) *template.Template {
+	fMap := template.FuncMap{
+		"toYaml": func(v interface{}) string {
+			data, err := baseYaml.Marshal(v)
+			if err != nil {
+				log.Log.Error(err, "error in toYaml")
+				return ""
+			}
+			return strings.TrimSuffix(string(data), "\n")
+		},
+		"indent": func(spaces int, v string) string {
+			pad := strings.Repeat(" ", spaces)
+			return pad + strings.Replace(v, "\n", "\n"+pad, -1)
+		},
+	}
+	return template.New(resourceFile).Funcs(fMap)
 }

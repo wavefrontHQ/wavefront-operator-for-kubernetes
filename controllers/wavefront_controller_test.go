@@ -51,7 +51,7 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 10, len(dynamicClient.Actions()))
+		assert.Equal(t, 12, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
@@ -63,7 +63,7 @@ func TestReconcile(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-proxy")
 		var deployment appsv1.Deployment
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
 		assert.NoError(t, err)
@@ -79,6 +79,132 @@ func TestReconcile(t *testing.T) {
 		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:2878")
 
+	})
+
+	t.Run("resources set for cluster collector", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+			Metrics: wavefrontcomv1alpha1.Metrics{
+				Cluster: wavefrontcomv1alpha1.Collector{
+					Resources: wavefrontcomv1alpha1.Resources{
+						Requests: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "10Mi",
+						},
+						Limits: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "256Mi",
+						},
+					},
+				},
+			},
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-cluster-collector")
+		var deployment appsv1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+		assert.NoError(t, err)
+		assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+	})
+
+	t.Run("resources set for node collector", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+			Metrics: wavefrontcomv1alpha1.Metrics{
+				Node: wavefrontcomv1alpha1.Collector{
+					Resources: wavefrontcomv1alpha1.Resources{
+						Requests: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "10Mi",
+						},
+						Limits: wavefrontcomv1alpha1.Resource{
+							CPU:    "200m",
+							Memory: "256Mi",
+						},
+					},
+				},
+			},
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+		var ds appsv1.DaemonSet
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
+		assert.NoError(t, err)
+		assert.Equal(t, "10Mi", ds.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+	})
+
+	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+		var ds appsv1.DaemonSet
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
+		assert.NoError(t, err)
+		assert.Nil(t, ds.Spec.Template.Spec.Containers[0].Resources.Limits)
+		assert.Nil(t, ds.Spec.Template.Spec.Containers[0].Resources.Requests)
+
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-cluster-collector")
+		var deployment appsv1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+		assert.NoError(t, err)
+		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
+		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
@@ -97,7 +223,7 @@ func TestReconcile(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 10, len(dynamicClient.Actions()))
+		assert.Equal(t, 12, len(dynamicClient.Actions()))
 
 		deploymentObject := getAction(dynamicClient, "patch", "deployments").(clientgotesting.PatchActionImpl).Patch
 
@@ -122,7 +248,7 @@ func TestReconcile(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, 10, len(dynamicClient.Actions()))
+		assert.Equal(t, 11, len(dynamicClient.Actions()))
 
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "delete", "serviceaccounts"), "delete ServiceAccount")
@@ -198,7 +324,7 @@ func TestReconcile(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, 6, len(dynamicClient.Actions()))
+		assert.Equal(t, 8, len(dynamicClient.Actions()))
 
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
@@ -215,6 +341,19 @@ func TestReconcile(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, configMap.Data["config.yaml"], "testProxyUrl")
 	})
+}
+
+func getCreateObject(dynamicClient *dynamicfake.FakeDynamicClient, resource string, metadataName string) *unstructured.Unstructured {
+	//deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+	for _, action := range dynamicClient.Actions() {
+		if action.GetVerb() == "create" && action.GetResource().Resource == resource {
+			resourceObj := action.(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+			if resourceObj.GetName() == metadataName {
+				return resourceObj
+			}
+		}
+	}
+	return nil
 }
 
 func hasAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (result bool) {

@@ -1,10 +1,10 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/component: collector
     app.kubernetes.io/name : wavefront
-  name: wavefront-collector
+  name: wavefront-cluster-collector
   namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
@@ -12,6 +12,7 @@ metadata:
       name: wavefront-controller-manager
       uid: {{ .ControllerManagerUID }}
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name : wavefront
@@ -24,22 +25,15 @@ spec:
       annotations:
         installation-method: operator
     spec:
-      tolerations:
-        - effect: NoSchedule
-          key: node.alpha.kubernetes.io/role
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
       serviceAccountName: wavefront-collector
       containers:
-        - name: wavefront-collector
+        - name: wavefront-cluster-collector
           image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector:1.12.0-rc-2
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command:
             - /wavefront-collector
-            - --scrape-cluster=false
-            - --scrape-nodes=own
+            - --scrape-cluster=true
+            - --scrape-nodes=none
             - --config-file=/etc/collector/config.yaml
           env:
             - name: HOST_PROC
@@ -63,7 +57,7 @@ spec:
             - containerPort: 8088
               protocol: TCP
           resources:
-{{ .Metrics.Node.Resources | toYaml | indent 12 }}
+{{ .Metrics.Cluster.Resources | toYaml | indent 12 }}
           volumeMounts:
             - name: procfs
               mountPath: /host/proc
