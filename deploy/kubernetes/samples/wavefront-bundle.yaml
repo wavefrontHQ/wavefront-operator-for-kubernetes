@@ -1,27 +1,23 @@
+# Need to change YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: collector
-  name: default-wavefront-collector-config
+  name: wavefront-collector-config
   namespace: wavefront
-  ownerReferences:
-    - apiVersion: apps/v1
-      kind: Deployment
-      name: wavefront-controller-manager
-      uid: {{ .ControllerManagerUID }}
 data:
   config.yaml: |
-    clusterName:  {{.ClusterName}}
+    clusterName: MyCluster
     enableDiscovery: true
     enableEvents: false
-    defaultCollectionInterval: 60s
+    defaultCollectionInterval: 30s
     flushInterval: 10s
     sinkExportDataTimeout: 20s
 
     sinks:
-    - proxyAddress: {{.ProxyUrl}}
+    - proxyAddress: wavefront-proxy:2878
       filters:
         metricDenyList:
         - kubernetes.sys_container.*
@@ -114,3 +110,14 @@ data:
           - 'kube.coredns.coredns.dns.response.rcode.count.total.counter'
           - 'kube.coredns.coredns.dns.response.size.bytes'
           - 'kube.coredns.process.*'
+---
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+spec:
+  collectorEnabled: true
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontProxyEnabled: true
+  wavefrontTokenSecret: wavefront-secret
+  wavefrontUrl: YOUR_WAVEFRONT_URL

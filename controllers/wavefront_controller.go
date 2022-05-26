@@ -94,6 +94,9 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	if len(wavefront.Spec.Metrics.CollectorConfig) == 0 {
+		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
+	}
 	if errors.IsNotFound(err) {
 		err = r.readAndDeleteResources()
 		//if err != nil {

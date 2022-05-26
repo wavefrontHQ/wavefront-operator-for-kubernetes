@@ -208,7 +208,7 @@ func TestReconcile(t *testing.T) {
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "default-wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 
 		r := &controllers.WavefrontReconciler{
 			Client:        apiClient,
@@ -234,7 +234,7 @@ func TestReconcile(t *testing.T) {
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		wf, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+		wf, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "default-wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
 		apiClient.Delete(context.Background(), wf)
 
 		r := &controllers.WavefrontReconciler{
