@@ -120,3 +120,5 @@ spec:
   wavefrontProxyEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL
+  metrics:
+    collectorConfig: wavefront-collector-config
