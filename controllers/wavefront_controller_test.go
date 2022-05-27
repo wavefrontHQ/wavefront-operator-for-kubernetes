@@ -28,6 +28,37 @@ import (
 
 func TestReconcile(t *testing.T) {
 
+	t.Run("does not create configmap if user specified one", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled:      true,
+			ProxyUrl:              "testProxyUrl",
+			WavefrontProxyEnabled: true,
+			WavefrontUrl:          "testWavefrontUrl",
+			WavefrontTokenSecret:  "testToken",
+			ClusterName:           "testClusterName",
+			ControllerManagerUID:  "",
+			Metrics: wavefrontcomv1alpha1.Metrics{
+				CollectorConfig: "myconfig",
+			},
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, 10, len(dynamicClient.Actions()))
+		assert.False(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
+		assert.False(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
+	})
+
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
 			CollectorEnabled:      true,

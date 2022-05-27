@@ -114,8 +114,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
-
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -166,7 +164,6 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 		return err
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
-
 
 	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
@@ -222,6 +219,9 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 			continue
 		}
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.WavefrontProxyEnabled {
+			continue
+		}
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.Metrics.CollectorConfig != object.GetName() {
 			continue
 		}
 
