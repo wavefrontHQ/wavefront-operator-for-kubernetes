@@ -114,8 +114,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 
-
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -166,7 +164,6 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 		return err
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
-
 
 	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
@@ -363,5 +360,10 @@ func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
 
 	if len(wavefront.Spec.ClusterName) == 0 {
 		wavefront.Spec.ProxyUrl = "k8s-cluster"
+	}
+
+	// DataExport defaults.
+	if len(wavefront.Spec.DataExport.ProxyConfig) == 0 {
+		wavefront.Spec.DataExport.ProxyConfig = "default-wavefront-proxy-config"
 	}
 }

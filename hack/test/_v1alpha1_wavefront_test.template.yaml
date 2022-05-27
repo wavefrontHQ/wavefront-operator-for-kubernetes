@@ -17,3 +17,5 @@ spec:
           memory: 10Mi
         limits:
           cpu: 400m
+  dataExport:
+

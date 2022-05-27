@@ -51,7 +51,7 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 12, len(dynamicClient.Actions()))
+		assert.Equal(t, 14, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
@@ -223,7 +223,7 @@ func TestReconcile(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 12, len(dynamicClient.Actions()))
+		assert.Equal(t, 14, len(dynamicClient.Actions()))
 
 		deploymentObject := getAction(dynamicClient, "patch", "deployments").(clientgotesting.PatchActionImpl).Patch
 
@@ -248,7 +248,7 @@ func TestReconcile(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, 11, len(dynamicClient.Actions()))
+		assert.Equal(t, 13, len(dynamicClient.Actions()))
 
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "delete", "serviceaccounts"), "delete ServiceAccount")
@@ -285,7 +285,7 @@ func TestReconcile(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 4, len(dynamicClient.Actions()))
+		assert.Equal(t, 6, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
@@ -515,6 +515,20 @@ func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, c
 			},
 		},
 	}})
-
+	dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      "default-" + proxyName + "-config",
+			"namespace": namespace,
+			"labels": map[string]interface{}{
+				"app.kubernetes.io/name":      "wavefront",
+				"app.kubernetes.io/component": "collector",
+			},
+		},
+		"data": map[string]interface{}{
+			"config.yaml": "foo",
+		},
+	}})
 	return wf, apiClient, dynamicClient, fakesAppsV1
 }

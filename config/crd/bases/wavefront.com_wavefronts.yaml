@@ -42,6 +42,14 @@ spec:
               collectorEnabled:
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
+              dataExport:
+                description: Metrics has resource configuration for node- and cluster-deployed
+                  collectors
+                properties:
+                  proxyConfig:
+                    description: Proxy ConfigMap name. Leave blank to use defaults
+                    type: string
+                type: object
               metrics:
                 description: Metrics has resource configuration for node- and cluster-deployed
                   collectors
@@ -123,7 +131,6 @@ spec:
                 description: WavefrontUrl is the wavefront instance.
                 type: string
             required:
-            - clusterName
             - collectorEnabled
             - wavefrontProxyEnabled
             - wavefrontTokenSecret
