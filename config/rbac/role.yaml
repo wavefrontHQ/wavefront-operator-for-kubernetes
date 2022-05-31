@@ -13,7 +13,6 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
 - apiGroups:
@@ -24,7 +23,6 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
 - apiGroups:
@@ -35,7 +33,6 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
 - apiGroups:
@@ -46,7 +43,6 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
 - apiGroups:
@@ -57,7 +53,6 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
 - apiGroups:
