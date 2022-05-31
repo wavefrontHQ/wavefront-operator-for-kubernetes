@@ -122,3 +122,19 @@ spec:
   wavefrontUrl: YOUR_WAVEFRONT_URL
   metrics:
     collectorConfig: wavefront-collector-config
+    cluster:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 10Mi
+        limits:
+          cpu: 200m
+          memory: 512Mi
+    node:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 10Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
