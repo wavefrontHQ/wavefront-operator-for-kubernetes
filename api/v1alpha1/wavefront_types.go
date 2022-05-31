@@ -51,6 +51,14 @@ type WavefrontSpec struct {
 
 	// Metrics has resource configuration for node- and cluster-deployed collectors
 	Metrics Metrics `json:"metrics,omitempty"`
+
+	// DataExport has configuration for proxy to export metric data
+	DataExport DataExport `json:"dataExport,omitempty"`
+}
+
+type DataExport struct {
+	// Proxy ConfigMap name. Leave blank to use defaults
+	ProxyConfig string `json:"proxyConfig,omitempty"`
 }
 
 type Metrics struct {

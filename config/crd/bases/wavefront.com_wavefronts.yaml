@@ -42,6 +42,14 @@ spec:
               collectorEnabled:
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
+              dataExport:
+                description: DataExport has configuration for proxy to export metric
+                  data
+                properties:
+                  proxyConfig:
+                    description: Proxy ConfigMap name. Leave blank to use defaults
+                    type: string
+                type: object
               metrics:
                 description: Metrics has resource configuration for node- and cluster-deployed
                   collectors
