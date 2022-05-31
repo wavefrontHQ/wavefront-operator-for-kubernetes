@@ -44,7 +44,7 @@ type WavefrontSpec struct {
 	WavefrontTokenSecret string `json:"wavefrontTokenSecret,required"`
 
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
-	ClusterName string `json:"clusterName,required"`
+	ClusterName string `json:"clusterName,omitempty"`
 
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
@@ -54,8 +54,12 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
+	// Collector ConfigMap name. Leave blank to use defaults
+	CollectorConfig string `json:"collectorConfig,omitempty"`
+
 	// Cluster is for resource configuration for the cluster collector
 	Cluster Collector `json:"cluster,omitempty"`
+
 	// Node is for resource configuration for the node collector
 	Node Collector `json:"node,omitempty"`
 }
@@ -63,6 +67,7 @@ type Metrics struct {
 type Resource struct {
 	// CPU is for specifying CPU requirements
 	CPU string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+
 	// Memory is for specifying Memory requirements
 	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
 }
@@ -70,6 +75,7 @@ type Resource struct {
 type Resources struct {
 	// Request CPU and Memory requirements
 	Requests Resource `json:"requests,omitempty" yaml:"requests,omitempty"`
+
 	// Limit CPU and Memory requirements
 	Limits Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
 }

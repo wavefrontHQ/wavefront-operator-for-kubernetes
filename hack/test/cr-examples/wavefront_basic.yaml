@@ -1,11 +1,10 @@
 apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
-  name: wavefront-sample
+  name: wavefront
 spec:
   collectorEnabled: true
   clusterName: YOUR_CLUSTER_NAME
-  proxyUrl: "https://fakeproxy.com"
   wavefrontProxyEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: "https://nimba.wavefront.com"

@@ -48,13 +48,33 @@ function main() {
   fi
 
   cd $REPO_ROOT
-  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  hack/test/_v1alpha1_wavefront_test.template.yaml  |
+
+  echo "Running Advanced CR"
+
+  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  hack/test/cr-examples/wavefront_advanced.yaml  |
     sed "s/YOUR_WAVEFRONT_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+
+  echo "Applying Advanced CR"
+  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
   wait_for_cluster_ready
 
-  echo "Applying Custom Resource config"
+  echo "Running test-wavefront-metrics"
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${COLLECTOR_VERSION}
+  green "Success!"
+
+  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+
+  wait_for_cluster_ready
+  echo "Running Basic CR"
+
+  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  hack/test/cr-examples/wavefront_basic.yaml  |
+    sed "s/YOUR_WAVEFRONT_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+
+  echo "Applying Basic CR"
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
+
+  wait_for_cluster_ready
 
   echo "Running test-wavefront-metrics"
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${COLLECTOR_VERSION}

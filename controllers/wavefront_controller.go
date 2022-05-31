@@ -94,6 +94,8 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	setWavefrontSpecDefaults(wavefront)
+
 	if errors.IsNotFound(err) {
 		err = r.readAndDeleteResources()
 		//if err != nil {
@@ -163,10 +165,6 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	if spec.WavefrontProxyEnabled {
-		spec.ProxyUrl = "wavefront-proxy:2878"
-	}
-
 	resources, err := r.readAndInterpolateResources(spec)
 	if err != nil {
 		return err
@@ -221,6 +219,9 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 			continue
 		}
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.WavefrontProxyEnabled {
+			continue
+		}
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.Metrics.CollectorConfig != object.GetName() {
 			continue
 		}
 
@@ -349,4 +350,18 @@ func newTemplate(resourceFile string) *template.Template {
 		},
 	}
 	return template.New(resourceFile).Funcs(fMap)
+}
+
+func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
+	if len(wavefront.Spec.Metrics.CollectorConfig) == 0 {
+		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
+	}
+
+	if wavefront.Spec.WavefrontProxyEnabled {
+		wavefront.Spec.ProxyUrl = "wavefront-proxy:2878"
+	}
+
+	if len(wavefront.Spec.ClusterName) == 0 {
+		wavefront.Spec.ProxyUrl = "k8s-cluster"
+	}
 }

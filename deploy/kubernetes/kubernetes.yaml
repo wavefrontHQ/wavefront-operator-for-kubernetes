@@ -74,6 +74,9 @@ spec:
                             type: object
                         type: object
                     type: object
+                  collectorConfig:
+                    description: Collector ConfigMap name. Leave blank to use defaults
+                    type: string
                   node:
                     description: Node is for resource configuration for the node collector
                     properties:
@@ -116,7 +119,6 @@ spec:
                 description: WavefrontUrl is the wavefront instance.
                 type: string
             required:
-            - clusterName
             - collectorEnabled
             - wavefrontProxyEnabled
             - wavefrontTokenSecret
@@ -484,7 +486,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-3
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-4
         livenessProbe:
           httpGet:
             path: /healthz

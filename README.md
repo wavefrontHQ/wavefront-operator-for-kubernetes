@@ -68,11 +68,18 @@ Create a wavefront secret by providing YOUR_WAVEFRONT_TOKEN
 kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
 ```
 
-Edit the wavefront-basic.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
+Edit the wavefront-basic.yaml or wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
+
+Basic CR:
 ```
 kubectl apply -f wavefront-basic.yaml
 ```
+Advanced CR:
+```
+kubectl apply -f wavefront-advanced.yaml
+```
 
+```
 # Contributing
 
 This is a work in progress repository.
