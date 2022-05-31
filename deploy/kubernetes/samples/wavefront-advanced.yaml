@@ -12,9 +12,6 @@ data:
     clusterName: YOUR_CLUSTER_NAME
     enableDiscovery: true
     enableEvents: false
-    defaultCollectionInterval: 30s
-    flushInterval: 10s
-    sinkExportDataTimeout: 20s
 
     sinks:
     - proxyAddress: wavefront-proxy:2878
@@ -128,7 +125,7 @@ spec:
           cpu: 200m
           memory: 10Mi
         limits:
-          cpu: 200m
+          cpu: 400m
           memory: 512Mi
     node:
       resources:
