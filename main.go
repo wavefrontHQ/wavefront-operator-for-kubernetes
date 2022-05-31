@@ -79,7 +79,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (controller).SetupWithManager(mgr); err != nil {
+	if err = controller.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to setup manager", "controller", "wavefront")
 		os.Exit(1)
 	}
