@@ -63,21 +63,21 @@ type WavefrontReconciler struct {
 	Appsv1        typedappsv1.AppsV1Interface
 }
 
-// +kubebuilder:rbac:groups=wavefront.com,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=wavefront.com,resources=wavefronts/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=wavefront.com,resources=wavefronts/finalizers,verbs=update
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts/finalizers,verbs=update
+
+// Permissions for creating Kubernetes resources from internal files.
+// Possible point of confusion: the collector itself watches resources,
+// but the operator doesn't need to... yet?
+// +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=deployments,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups="",namespace=wavefront,resources=services,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=daemonsets,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups="",namespace=wavefront,resources=serviceaccounts,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups="",namespace=wavefront,resources=configmaps,verbs=get;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Wavefront object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
