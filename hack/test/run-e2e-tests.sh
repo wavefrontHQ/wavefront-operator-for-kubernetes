@@ -16,7 +16,7 @@ function main() {
 
   # REQUIRED
   local WAVEFRONT_TOKEN=
-
+  local WAVEFRONT_URL="https:\/\/nimba.wavefront.com"
   local WF_CLUSTER=nimba
   local VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
   local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
@@ -51,8 +51,8 @@ function main() {
 
   echo "Running Advanced CR"
 
-  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  hack/test/cr-examples/wavefront_advanced.yaml  |
-    sed "s/YOUR_WAVEFRONT_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  ${REPO_ROOT}/deploy/kubernetes/samples/wavefront-advanced.yaml  |
+    sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   echo "Applying Advanced CR"
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
@@ -68,8 +68,8 @@ function main() {
   wait_for_cluster_ready
   echo "Running Basic CR"
 
-  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  hack/test/cr-examples/wavefront_basic.yaml  |
-    sed "s/YOUR_WAVEFRONT_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  ${REPO_ROOT}/deploy/kubernetes/samples/wavefront-basic.yaml  |
+    sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   echo "Applying Basic CR"
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
