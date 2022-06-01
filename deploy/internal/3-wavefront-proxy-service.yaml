@@ -14,7 +14,7 @@ metadata:
 spec:
   ports:
     - name: wavefront
-      port: 2878
+      port: {{ .DataExport.Proxy.Port }}
       protocol: TCP
   selector:
     app.kubernetes.io/name : wavefront

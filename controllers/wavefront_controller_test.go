@@ -108,6 +108,7 @@ func TestReconcile(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
 
 		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 		var configMap v1.ConfigMap
@@ -118,6 +119,66 @@ func TestReconcile(t *testing.T) {
 		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:2878")
 
+		serviceObject := getAction(dynamicClient, "create", "services").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var service v1.Service
+
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
+		assert.NoError(t, err)
+		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
+	})
+
+	t.Run("can create proxy with a user defined port", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+					Port:    1234,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
+		})
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakeAppsV1,
+		}
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{}, results)
+		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "Create ConfigMap")
+		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "Create Deployment")
+		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
+
+		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-proxy")
+		var deployment appsv1.Deployment
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+		assert.NoError(t, err)
+		assert.Equal(t, int32(1234), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
+
+		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var configMap v1.ConfigMap
+
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
+
+		assert.NoError(t, err)
+		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
+
+		serviceObject := getAction(dynamicClient, "create", "services").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+		var service v1.Service
+
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
+		assert.NoError(t, err)
+		assert.Equal(t, int32(1234), service.Spec.Ports[0].Port)
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
