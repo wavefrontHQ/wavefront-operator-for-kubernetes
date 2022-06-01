@@ -55,31 +55,40 @@ kubectl apply -f config/samples/
 ```
 
 # Manual Deploy
-Create a directory named wavefront-operator-dir and download the following files to that directory:
-* [kubernetes.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/kubernetes.yaml)
-* [wavefront-basic.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-basic.yaml)
+Create a directory named wavefront-operator-dir and download the [kubernetes.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/kubernetes.yaml)
+to that directory.
 
 ```
 kubectl apply -f kubernetes.yaml
 ```
-
 Create a wavefront secret by providing YOUR_WAVEFRONT_TOKEN
 ```
 kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
 ```
 
-Edit the wavefront-basic.yaml or wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
+Choose between default or advanced deployment options.  
 
-Basic CR:
+### Default option
+If you're just getting started and want to advantage our experienced based default configuration, download the
+[wavefront-basic.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-basic.yaml) file.
+
+
+Edit the wavefront-basic.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
+
 ```
 kubectl apply -f wavefront-basic.yaml
 ```
-Advanced CR:
+
+### Advanced option
+
+If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced.yaml) file.
+
+Edit the wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
+
 ```
 kubectl apply -f wavefront-advanced.yaml
 ```
 
-```
 # Contributing
 
 This is a work in progress repository.
