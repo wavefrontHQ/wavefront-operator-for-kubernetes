@@ -108,18 +108,6 @@ data:
           - 'kube.coredns.coredns.dns.response.size.bytes'
           - 'kube.coredns.process.*'
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    app.kubernetes.io/name : wavefront
-    app.kubernetes.io/component: proxy
-  name: wavefront-proxy-config
-  namespace: wavefront
-data:
-  wavefront.conf: |
-    prefix = dev
----
 apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
@@ -147,5 +135,3 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
-  dataExport:
-    proxyConfig: wavefront-proxy-config

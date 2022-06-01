@@ -47,11 +47,3 @@ spec:
               memory: 1Gi
           securityContext:
             privileged: false
-          volumeMounts:
-            - name: config
-              mountPath: /etc/wavefront/wavefront-proxy
-              readOnly: true
-      volumes:
-        - name: config
-          configMap:
-            name: {{.DataExport.ProxyConfig}}

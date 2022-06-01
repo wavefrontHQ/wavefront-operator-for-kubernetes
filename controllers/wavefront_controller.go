@@ -221,7 +221,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.WavefrontProxyEnabled {
 			continue
 		}
-		if object.GetKind() == "ConfigMap" && !(wavefrontSpec.Metrics.CollectorConfig == object.GetName() || wavefrontSpec.DataExport.ProxyConfig == object.GetName()) {
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.Metrics.CollectorConfig != object.GetName() {
 			continue
 		}
 
@@ -363,9 +363,5 @@ func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
 
 	if len(wavefront.Spec.ClusterName) == 0 {
 		wavefront.Spec.ProxyUrl = "k8s-cluster"
-	}
-
-	if len(wavefront.Spec.DataExport.ProxyConfig) == 0 {
-		wavefront.Spec.DataExport.ProxyConfig = "default-wavefront-proxy-config"
 	}
 }
