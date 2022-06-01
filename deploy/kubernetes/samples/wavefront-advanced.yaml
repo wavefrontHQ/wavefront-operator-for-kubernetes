@@ -114,9 +114,11 @@ metadata:
   name: wavefront
 spec:
   collectorEnabled: true
-  wavefrontProxyEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataExport:
+    proxy:
+      enabled: true
   metrics:
     collectorConfig: wavefront-collector-config
     cluster:

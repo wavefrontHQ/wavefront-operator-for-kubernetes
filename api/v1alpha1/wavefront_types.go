@@ -34,9 +34,6 @@ type WavefrontSpec struct {
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
 	ProxyUrl string `json:"proxyUrl,omitempty"`
 
-	// WavefrontProxyEnabled is whether to enable the wavefront proxy.
-	WavefrontProxyEnabled bool `json:"wavefrontProxyEnabled,required"`
-
 	// WavefrontUrl is the wavefront instance.
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
@@ -51,6 +48,9 @@ type WavefrontSpec struct {
 
 	// Metrics has resource configuration for node- and cluster-deployed collectors
 	Metrics Metrics `json:"metrics,omitempty"`
+
+	// DataExport options
+	DataExport DataExport `json:"dataExport,omitempty"`
 }
 
 type Metrics struct {
@@ -62,6 +62,23 @@ type Metrics struct {
 
 	// Node is for resource configuration for the node collector
 	Node Collector `json:"node,omitempty"`
+}
+
+type DataExport struct {
+	// Proxy configuration options
+	Proxy Proxy `json:"proxy,omitempty"`
+}
+
+type Proxy struct {
+	// Enabled is whether to enable the wavefront proxy.
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Port is the primary port for Wavefront data format metrics. Defaults to 2878.
+	Port int `json:"port,omitempty"`
+
+	// Args is additional Wavefront proxy properties to be passed as command line arguments
+	// in the --<property_name> <value> format. Multiple properties can be specified.
+	Args string `json:"args,omitempty"`
 }
 
 type Resource struct {

@@ -6,6 +6,8 @@ metadata:
 spec:
   collectorEnabled: true
   clusterName: YOUR_CLUSTER_NAME
-  wavefrontProxyEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataExport:
+    proxy:
+      enabled: true

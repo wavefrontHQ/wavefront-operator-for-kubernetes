@@ -43,6 +43,23 @@ spec:
               collectorEnabled:
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
+              dataExport:
+                description: DataExport options
+                properties:
+                  proxy:
+                    description: Proxy configuration options
+                    properties:
+                      args:
+                        description: Args is additional Wavefront proxy properties to be passed as command line arguments in the --<property_name> <value> format. Multiple properties can be specified.
+                        type: string
+                      enabled:
+                        description: Enabled is whether to enable the wavefront proxy.
+                        type: boolean
+                      port:
+                        description: Port is the primary port for Wavefront data format metrics. Defaults to 2878.
+                        type: integer
+                    type: object
+                type: object
               metrics:
                 description: Metrics has resource configuration for node- and cluster-deployed collectors
                 properties:
@@ -109,9 +126,6 @@ spec:
               proxyUrl:
                 description: ProxyUrl is the proxy URL that the collector sends metrics to.
                 type: string
-              wavefrontProxyEnabled:
-                description: WavefrontProxyEnabled is whether to enable the wavefront proxy.
-                type: boolean
               wavefrontTokenSecret:
                 description: WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
                 type: string
@@ -120,7 +134,6 @@ spec:
                 type: string
             required:
             - collectorEnabled
-            - wavefrontProxyEnabled
             - wavefrontTokenSecret
             - wavefrontUrl
             type: object

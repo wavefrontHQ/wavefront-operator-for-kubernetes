@@ -30,13 +30,17 @@ func TestReconcile(t *testing.T) {
 
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      true,
-			ProxyUrl:              "testProxyUrl",
-			WavefrontProxyEnabled: true,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 			Metrics: wavefrontcomv1alpha1.Metrics{
 				CollectorConfig: "myconfig",
 			},
@@ -61,13 +65,17 @@ func TestReconcile(t *testing.T) {
 
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      true,
-			ProxyUrl:              "testProxyUrl",
-			WavefrontProxyEnabled: true,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 		})
 
 		r := &controllers.WavefrontReconciler{
@@ -114,13 +122,17 @@ func TestReconcile(t *testing.T) {
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      true,
-			ProxyUrl:              "testProxyUrl",
-			WavefrontProxyEnabled: true,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 			Metrics: wavefrontcomv1alpha1.Metrics{
 				Cluster: wavefrontcomv1alpha1.Collector{
 					Resources: wavefrontcomv1alpha1.Resources{
@@ -158,13 +170,17 @@ func TestReconcile(t *testing.T) {
 
 	t.Run("resources set for node collector", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      true,
-			ProxyUrl:              "testProxyUrl",
-			WavefrontProxyEnabled: true,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 			Metrics: wavefrontcomv1alpha1.Metrics{
 				Node: wavefrontcomv1alpha1.Collector{
 					Resources: wavefrontcomv1alpha1.Resources{
@@ -202,13 +218,17 @@ func TestReconcile(t *testing.T) {
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      true,
-			ProxyUrl:              "testProxyUrl",
-			WavefrontProxyEnabled: true,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 		})
 
 		r := &controllers.WavefrontReconciler{
@@ -295,13 +315,17 @@ func TestReconcile(t *testing.T) {
 
 	t.Run("Skip creating collector if collectorEnabled is set to false", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      false,
-			ProxyUrl:              "",
-			WavefrontProxyEnabled: true,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: false,
+			ProxyUrl:         "",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: true,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 		})
 
 		r := &controllers.WavefrontReconciler{
@@ -333,15 +357,19 @@ func TestReconcile(t *testing.T) {
 
 	})
 
-	t.Run("Skip creating proxy if WavefrontProxyEnabled is set to false", func(t *testing.T) {
+	t.Run("Skip creating proxy if DataExport.Proxy.Enabled is set to false", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakeAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-			CollectorEnabled:      true,
-			ProxyUrl:              "testProxyUrl",
-			WavefrontProxyEnabled: false,
-			WavefrontUrl:          "testWavefrontUrl",
-			WavefrontTokenSecret:  "testToken",
-			ClusterName:           "testClusterName",
-			ControllerManagerUID:  "",
+			CollectorEnabled: true,
+			ProxyUrl:         "testProxyUrl",
+			DataExport: wavefrontcomv1alpha1.DataExport{
+				Proxy: wavefrontcomv1alpha1.Proxy{
+					Enabled: false,
+				},
+			},
+			WavefrontUrl:         "testWavefrontUrl",
+			WavefrontTokenSecret: "testToken",
+			ClusterName:          "testClusterName",
+			ControllerManagerUID: "",
 		})
 
 		r := &controllers.WavefrontReconciler{
@@ -475,13 +503,17 @@ func setupForCreate(spec wavefrontcomv1alpha1.WavefrontSpec) (*wavefrontcomv1alp
 
 func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wavefrontcomv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wavefrontcomv1alpha1.WavefrontSpec{
-		CollectorEnabled:      true,
-		ProxyUrl:              "",
-		WavefrontProxyEnabled: true,
-		WavefrontUrl:          wavefrontUrl,
-		WavefrontTokenSecret:  wavefrontTokenSecret,
-		ClusterName:           clusterName,
-		ControllerManagerUID:  "",
+		CollectorEnabled: true,
+		ProxyUrl:         "",
+		DataExport: wavefrontcomv1alpha1.DataExport{
+			Proxy: wavefrontcomv1alpha1.Proxy{
+				Enabled: true,
+			},
+		},
+		WavefrontUrl:         wavefrontUrl,
+		WavefrontTokenSecret: wavefrontTokenSecret,
+		ClusterName:          clusterName,
+		ControllerManagerUID: "",
 	})
 
 	dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{

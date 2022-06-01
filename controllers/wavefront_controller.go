@@ -218,7 +218,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.CollectorEnabled {
 			continue
 		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.WavefrontProxyEnabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.Proxy.Enabled {
 			continue
 		}
 		if object.GetKind() == "ConfigMap" && wavefrontSpec.Metrics.CollectorConfig != object.GetName() {
@@ -357,7 +357,7 @@ func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
 		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
 	}
 
-	if wavefront.Spec.WavefrontProxyEnabled {
+	if wavefront.Spec.DataExport.Proxy.Enabled {
 		wavefront.Spec.ProxyUrl = "wavefront-proxy:2878"
 	}
 
