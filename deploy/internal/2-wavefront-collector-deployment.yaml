@@ -71,4 +71,4 @@ spec:
             path: /proc
         - name: config
           configMap:
-            name: wavefront-collector-config
+            name: {{ .Metrics.CollectorConfig }}

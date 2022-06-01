@@ -75,6 +75,9 @@ spec:
                             type: object
                         type: object
                     type: object
+                  collectorConfig:
+                    description: Collector ConfigMap name. Leave blank to use defaults
+                    type: string
                   node:
                     description: Node is for resource configuration for the node collector
                     properties:
@@ -120,7 +123,6 @@ spec:
                 description: WavefrontUrl is the wavefront instance.
                 type: string
             required:
-            - clusterName
             - collectorEnabled
             - wavefrontProxyEnabled
             - wavefrontTokenSecret

@@ -1,4 +1,4 @@
-# Need to change YOUR_CLUSTER, YOUR_API_TOKEN and YOUR_WAVEFRONT_URL accordingly
+# Need to change YOUR_CLUSTER, YOUR_WAVEFRONT_URL accordingly
 apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
