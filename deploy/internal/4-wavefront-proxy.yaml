@@ -35,6 +35,8 @@ spec:
                 secretKeyRef:
                   name: {{.WavefrontTokenSecret}}
                   key: token
+            - name: WAVEFRONT_PROXY_ARGS
+              value: --pushListenerPorts {{ .DataExport.Proxy.Port }}
           ports:
             - containerPort: {{ .DataExport.Proxy.Port }}
               protocol: TCP
