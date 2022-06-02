@@ -76,9 +76,30 @@ type Proxy struct {
 	// Port is the primary port for Wavefront data format metrics. Defaults to 2878.
 	Port int `json:"port,omitempty"`
 
-	// Args is additional Wavefront proxy properties to be passed as command line arguments
-	// in the --<property_name> <value> format. Multiple properties can be specified.
+	// Args is additional Wavefront proxy properties to be passed as command line arguments in the
+	// --<property_name> <value> format. Multiple properties can be specified.
 	Args string `json:"args,omitempty"`
+
+	// HttpProxy is used in configurations when direct HTTP connections to Wavefront servers are not possible.
+	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
+}
+
+type HttpProxy struct {
+
+	// Host must be used with httpProxy.port.
+	Host string `json:"host,omitempty"`
+
+	// Port must be used with httpProxy.host.
+	Port int `json:"port,omitempty"`
+
+	// Enable HTTP proxy with CA cert. Must be used with httpProxy.host and httpProxy.port if set to true.
+	CAcert bool `json:"cacert,omitempty"`
+
+	// When used with httpProxy.password, sets credentials to use with the HTTP proxy if the proxy requires authentication.
+	User string `json:"user,omitempty"`
+
+	// When used with httpProxy.user, sets credentials to use with the HTTP proxy if the proxy requires authentication.
+	Password string `json:"password,omitempty"`
 }
 
 type Resource struct {

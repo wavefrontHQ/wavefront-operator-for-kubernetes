@@ -170,14 +170,6 @@ func TestReconcileCollector(t *testing.T) {
 
 }
 
-func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) appsv1.DaemonSet {
-	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
-	var ds appsv1.DaemonSet
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
-	assert.NoError(t, err)
-	return ds
-}
-
 func TestReconcileProxy(t *testing.T) {
 	t.Run("can create proxy with a user defined port", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
@@ -192,17 +184,37 @@ func TestReconcileProxy(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "Create Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
 
-		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-proxy")
-		var deployment appsv1.Deployment
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-		assert.NoError(t, err)
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, int32(1234), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
+		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
+		assert.Contains(t, value, "--pushListenerPorts 1234")
+		assert.NotContains(t, value, "--proxyPort")
 
 		configMap := getCreatedConfigMap(t, dynamicClient)
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
 
 		service := getCreatedService(t, dynamicClient)
 		assert.Equal(t, int32(1234), service.Spec.Ports[0].Port)
+	})
+
+	t.Run("can create proxy with a user defined HTTP configurations", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.HttpProxy.User = "testUser"
+		wfSpec.DataExport.Proxy.HttpProxy.Password = "testPassword"
+		wfSpec.DataExport.Proxy.HttpProxy.Port = 8080
+		wfSpec.DataExport.Proxy.HttpProxy.Host = "testHost"
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{}, results)
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
+		assert.Contains(t, value, "--proxyPort 8080")
+		assert.Contains(t, value, "--proxyHost testHost")
+		assert.Contains(t, value, "--proxyUser testUser")
+		assert.Contains(t, value, "--proxyPassword testPassword")
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
@@ -217,7 +229,6 @@ func TestReconcileProxy(t *testing.T) {
 			Appsv1:        fakesAppsV1,
 		}
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
-
 		assert.NoError(t, err)
 
 		assert.Equal(t, ctrl.Result{}, results)
@@ -234,10 +245,9 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("Skip creating proxy if DataExport.Proxy.Enabled is set to false", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.Proxy.Enabled = false
+
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
-
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{}, results)
 
@@ -247,6 +257,15 @@ func TestReconcileProxy(t *testing.T) {
 		assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
 	})
 
+}
+
+func getEnvValueForName(envs []v1.EnvVar, name string) string {
+	for _, envVar := range envs {
+		if envVar.Name == name {
+			return envVar.Value
+		}
+	}
+	return ""
 }
 
 func getCreatedConfigMap(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) v1.ConfigMap {
@@ -272,6 +291,14 @@ func getCreatedService(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClien
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
 	assert.NoError(t, err)
 	return service
+}
+
+func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) appsv1.DaemonSet {
+	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+	var ds appsv1.DaemonSet
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
+	assert.NoError(t, err)
+	return ds
 }
 
 func defaultWFSpec() wfv1alpha1.WavefrontSpec {

@@ -56,6 +56,29 @@ spec:
                       enabled:
                         description: Enabled is whether to enable the wavefront proxy.
                         type: boolean
+                      httpProxy:
+                        description: HttpProxy is used in configurations when direct
+                          HTTP connections to Wavefront servers are not possible.
+                        properties:
+                          cacert:
+                            description: Enable HTTP proxy with CA cert. Must be used
+                              with httpProxy.host and httpProxy.port if set to true.
+                            type: boolean
+                          host:
+                            description: Host must be used with httpProxy.port.
+                            type: string
+                          password:
+                            description: When used with httpProxy.user, sets credentials
+                              to use with the HTTP proxy if the proxy requires authentication.
+                            type: string
+                          port:
+                            description: Port must be used with httpProxy.host.
+                            type: integer
+                          user:
+                            description: When used with httpProxy.password, sets credentials
+                              to use with the HTTP proxy if the proxy requires authentication.
+                            type: string
+                        type: object
                       port:
                         description: Port is the primary port for Wavefront data format
                           metrics. Defaults to 2878.
