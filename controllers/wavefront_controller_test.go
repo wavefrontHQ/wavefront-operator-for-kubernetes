@@ -46,28 +46,16 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-proxy")
-		var deployment appsv1.Deployment
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-		assert.NoError(t, err)
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
 
-		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-		var configMap v1.ConfigMap
-
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
-
-		assert.NoError(t, err)
+		configMap := getCreatedConfigMap(t, dynamicClient)
 		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:2878")
 
-		serviceObject := getAction(dynamicClient, "create", "services").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-		var service v1.Service
-
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
-		assert.NoError(t, err)
+		service := getCreatedService(t, dynamicClient)
 		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
 	})
 
@@ -100,6 +88,7 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "delete", "deployments"), "delete Deployment")
 	})
 }
+
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
@@ -126,10 +115,7 @@ func TestReconcileCollector(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-cluster-collector")
-		var deployment appsv1.Deployment
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-		assert.NoError(t, err)
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-cluster-collector")
 		assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 	})
 
@@ -143,11 +129,8 @@ func TestReconcileCollector(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
 
-		daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
-		var ds appsv1.DaemonSet
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
-		assert.NoError(t, err)
-		assert.Equal(t, "10Mi", ds.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+		daemonSet := getCreatedDaemonSet(t, dynamicClient)
+		assert.Equal(t, "10Mi", daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 	})
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
@@ -156,17 +139,11 @@ func TestReconcileCollector(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
 
-		daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
-		var ds appsv1.DaemonSet
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
-		assert.NoError(t, err)
-		assert.Nil(t, ds.Spec.Template.Spec.Containers[0].Resources.Limits)
-		assert.Nil(t, ds.Spec.Template.Spec.Containers[0].Resources.Requests)
+		daemonSet := getCreatedDaemonSet(t, dynamicClient)
+		assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Limits)
+		assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests)
 
-		deploymentObject := getCreateObject(dynamicClient, "deployments", "wavefront-cluster-collector")
-		var deployment appsv1.Deployment
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-		assert.NoError(t, err)
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-cluster-collector")
 		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
 		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
 	})
@@ -185,17 +162,20 @@ func TestReconcileCollector(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-		var deployment appsv1.Deployment
-
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-
-		assert.NoError(t, err)
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 
 	})
 
+}
+
+func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) appsv1.DaemonSet {
+	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+	var ds appsv1.DaemonSet
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
+	assert.NoError(t, err)
+	return ds
 }
 
 func TestReconcileProxy(t *testing.T) {
@@ -218,19 +198,10 @@ func TestReconcileProxy(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int32(1234), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
 
-		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-		var configMap v1.ConfigMap
-
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
-
-		assert.NoError(t, err)
+		configMap := getCreatedConfigMap(t, dynamicClient)
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
 
-		serviceObject := getAction(dynamicClient, "create", "services").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-		var service v1.Service
-
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
-		assert.NoError(t, err)
+		service := getCreatedService(t, dynamicClient)
 		assert.Equal(t, int32(1234), service.Spec.Ports[0].Port)
 	})
 
@@ -272,28 +243,41 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.Equal(t, 8, len(dynamicClient.Actions()))
 
-		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
-		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
-		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
-		assert.True(t, hasAction(dynamicClient, "create", "daemonsets"), "create DaemonSet")
-
-		configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-		var configMap v1.ConfigMap
-
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
-
-		assert.NoError(t, err)
-		assert.Contains(t, configMap.Data["config.yaml"], "testProxyUrl")
+		configMap := getCreatedConfigMap(t, dynamicClient)
+		assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
 	})
 
+}
+
+func getCreatedConfigMap(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) v1.ConfigMap {
+	configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+	var configMap v1.ConfigMap
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
+	assert.NoError(t, err)
+	return configMap
+}
+
+func getCreatedDeployment(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient, deploymentName string) appsv1.Deployment {
+	deploymentObject := getCreateObject(dynamicClient, "deployments", deploymentName)
+	var deployment appsv1.Deployment
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
+	assert.NoError(t, err)
+	return deployment
+}
+
+func getCreatedService(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) v1.Service {
+	serviceObject := getAction(dynamicClient, "create", "services").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
+	var service v1.Service
+
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
+	assert.NoError(t, err)
+	return service
 }
 
 func defaultWFSpec() wfv1alpha1.WavefrontSpec {
 	return wfv1alpha1.WavefrontSpec{
 		CollectorEnabled: true,
-		ProxyUrl:         "testProxyUrl",
+		ProxyUrl:         "externalProxyUrl",
 		DataExport: wfv1alpha1.DataExport{
 			Proxy: wfv1alpha1.Proxy{
 				Enabled: true,
