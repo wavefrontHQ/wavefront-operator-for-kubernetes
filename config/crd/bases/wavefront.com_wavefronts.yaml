@@ -79,9 +79,9 @@ spec:
                               to use with the HTTP proxy if the proxy requires authentication.
                             type: string
                         type: object
-                      port:
-                        description: Port is the primary port for Wavefront data format
-                          metrics. Defaults to 2878.
+                      metricPort:
+                        description: MetricPort is the primary port for Wavefront
+                          data format metrics. Defaults to 2878.
                         type: integer
                     type: object
                 type: object

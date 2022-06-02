@@ -358,12 +358,12 @@ func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
 		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
 	}
 
-	if wavefront.Spec.DataExport.Proxy.Port == 0 {
-		wavefront.Spec.DataExport.Proxy.Port = 2878
+	if wavefront.Spec.DataExport.Proxy.MetricPort == 0 {
+		wavefront.Spec.DataExport.Proxy.MetricPort = 2878
 	}
 
 	if wavefront.Spec.DataExport.Proxy.Enabled {
-		wavefront.Spec.ProxyUrl = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.Proxy.Port)
+		wavefront.Spec.ProxyUrl = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.Proxy.MetricPort)
 	}
 
 	if len(wavefront.Spec.ClusterName) == 0 {

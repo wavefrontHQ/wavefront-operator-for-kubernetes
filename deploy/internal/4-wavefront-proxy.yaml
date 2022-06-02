@@ -36,13 +36,13 @@ spec:
                   name: {{.WavefrontTokenSecret}}
                   key: token
             - name: WAVEFRONT_PROXY_ARGS
-              value: --pushListenerPorts {{ .DataExport.Proxy.Port }}
+              value: --pushListenerPorts {{ .DataExport.Proxy.MetricPort }}
               {{if .DataExport.Proxy.HttpProxy.Host}} --proxyHost {{ .DataExport.Proxy.HttpProxy.Host }} {{end}}
               {{if .DataExport.Proxy.HttpProxy.Port}} --proxyPort {{ .DataExport.Proxy.HttpProxy.Port }} {{end}}
               {{if .DataExport.Proxy.HttpProxy.User}} --proxyUser {{ .DataExport.Proxy.HttpProxy.User }} {{end}}
               {{if .DataExport.Proxy.HttpProxy.Password}} --proxyPassword {{ .DataExport.Proxy.HttpProxy.Password }} {{end}}
           ports:
-            - containerPort: {{ .DataExport.Proxy.Port }}
+            - containerPort: {{ .DataExport.Proxy.MetricPort }}
               protocol: TCP
           resources:
             limits:

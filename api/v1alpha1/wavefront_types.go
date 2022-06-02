@@ -73,8 +73,8 @@ type Proxy struct {
 	// Enabled is whether to enable the wavefront proxy.
 	Enabled bool `json:"enabled,omitempty"`
 
-	// Port is the primary port for Wavefront data format metrics. Defaults to 2878.
-	Port int `json:"port,omitempty"`
+	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
+	MetricPort int `json:"metricPort,omitempty"`
 
 	// Args is additional Wavefront proxy properties to be passed as command line arguments in the
 	// --<property_name> <value> format. Multiple properties can be specified.

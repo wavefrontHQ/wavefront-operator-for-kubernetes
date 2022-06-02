@@ -173,7 +173,7 @@ func TestReconcileCollector(t *testing.T) {
 func TestReconcileProxy(t *testing.T) {
 	t.Run("can create proxy with a user defined port", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Port = 1234
+		wfSpec.DataExport.Proxy.MetricPort = 1234
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
