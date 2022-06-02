@@ -76,12 +76,21 @@ type Proxy struct {
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	MetricPort int `json:"metricPort,omitempty"`
 
+	// DeltaCounterPort accumulates 1-minute delta counters on Wavefront data format (usually 50000)
+	DeltaCounterPort int `json:"deltaCounterPort,omitempty"`
+
 	// Args is additional Wavefront proxy properties to be passed as command line arguments in the
 	// --<property_name> <value> format. Multiple properties can be specified.
 	Args string `json:"args,omitempty"`
 
 	// HttpProxy is used in configurations when direct HTTP connections to Wavefront servers are not possible.
 	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
+
+	// Distributed tracing configuration
+	Tracing Tracing `json:"tracing,omitempty"`
+
+	// Histogram distribution configuration
+	Histogram Histogram `json:"histogram,omitempty"`
 }
 
 type HttpProxy struct {
@@ -100,6 +109,65 @@ type HttpProxy struct {
 
 	// When used with httpProxy.user, sets credentials to use with the HTTP proxy if the proxy requires authentication.
 	Password string `json:"password,omitempty"`
+}
+
+type Tracing struct {
+
+	// Wavefront distributed tracing configurations
+	Wavefront WavefrontTracing `json:"wavefront,omitempty"`
+
+	// Jaeger distributed tracing configurations
+	Jaeger JaegerTracing `json:"jaeger,omitempty"`
+
+	// Zipkin distributed tracing configurations
+	Zipkin ZipkinTracing `json:"zipkin,omitempty"`
+}
+
+type WavefrontTracing struct {
+	// Port for distributed tracing data (usually 30000)
+	Port int `json:"port,omitempty"`
+
+	// Distributed tracing data sampling rate (0 to 1)
+	SamplingRate int `json:"samplingRate,omitempty"`
+
+	// When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)
+	SamplingDuration int `json:"samplingDuration,omitempty"`
+}
+
+type JaegerTracing struct {
+	// Port for Jaeger format distributed tracing data (usually 30001)
+	Port int `json:"port,omitempty"`
+
+	// Port for Jaeger Thrift format data (usually 30080)
+	HttpPort int `json:"httpPort,omitempty"`
+
+	// Port for Jaeger GRPC format data (usually 14250)
+	GprcPort int `json:"gprcPort,omitempty"`
+
+	// Custom application name for traces received on Jaeger's Http or Gprc port.
+	ApplicationName int `json:"applicationName,omitempty"`
+}
+
+type ZipkinTracing struct {
+	// Port for Zipkin format distributed tracing data (usually 9411)
+	Port int `json:"port,omitempty"`
+
+	// Custom application name for traces received on Zipkin's port.
+	ApplicationName int `json:"applicationName,omitempty"`
+}
+
+type Histogram struct {
+	// Port for histogram distribution format data (usually 40000)
+	Port int `json:"port,omitempty"`
+
+	// Port to accumulate 1-minute based histograms on Wavefront data format (usually 40001)
+	MinutePort int `json:"minutePort,omitempty"`
+
+	// Port to accumulate 1-hour based histograms on Wavefront data format (usually 40002)
+	HourPort int `json:"hourPort,omitempty"`
+
+	// Port to accumulate 1-day based histograms on Wavefront data format (usually 40003)
+	DayPort int `json:"dayPort,omitempty"`
 }
 
 type Resource struct {
