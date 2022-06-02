@@ -128,7 +128,7 @@ type WavefrontTracing struct {
 	Port int `json:"port,omitempty"`
 
 	// Distributed tracing data sampling rate (0 to 1)
-	SamplingRate int `json:"samplingRate,omitempty"`
+	SamplingRate string `json:"samplingRate,omitempty"`
 
 	// When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)
 	SamplingDuration int `json:"samplingDuration,omitempty"`

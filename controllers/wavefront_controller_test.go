@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -171,30 +172,46 @@ func TestReconcileCollector(t *testing.T) {
 }
 
 func TestReconcileProxy(t *testing.T) {
-	t.Run("can create proxy with a user defined port", func(t *testing.T) {
+	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.Proxy.MetricPort = 1234
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
-
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
-		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "Create ConfigMap")
-		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "Create Deployment")
-		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
 
-		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
-		assert.Equal(t, int32(1234), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
-		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-		assert.Contains(t, value, "--pushListenerPorts 1234")
-		assert.NotContains(t, value, "--proxyPort")
+		containsPortInContainers(t, 1234, "pushListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 1234, dynamicClient)
 
 		configMap := getCreatedConfigMap(t, dynamicClient)
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
+	})
 
-		service := getCreatedService(t, dynamicClient)
-		assert.Equal(t, int32(1234), service.Spec.Ports[0].Port)
+	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.DeltaCounterPort = 50000
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsPortInContainers(t, 50000, "deltaCounterPorts", dynamicClient)
+		containsPortInServicePort(t, 50000, dynamicClient)
+	})
+
+	t.Run("can create proxy with a user defined Wavefront tracing", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.Tracing.Wavefront.Port = 30000
+		wfSpec.DataExport.Proxy.Tracing.Wavefront.SamplingRate = ".1"
+		wfSpec.DataExport.Proxy.Tracing.Wavefront.SamplingDuration = 45
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsPortInContainers(t, 30000, "traceListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 30000, dynamicClient)
+		containsProxyArg(t, "--traceSamplingRate .1", dynamicClient)
+		containsProxyArg(t, "--traceSamplingDuration 45", dynamicClient)
 	})
 
 	t.Run("can create proxy with a user defined HTTP configurations", func(t *testing.T) {
@@ -259,6 +276,29 @@ func TestReconcileProxy(t *testing.T) {
 
 }
 
+func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
+	service := getCreatedService(t, dynamicClient)
+	for _, servicePort := range service.Spec.Ports {
+		if servicePort.Port == port {
+			return
+		}
+	}
+	assert.Fail(t, fmt.Sprintf("Did not find the port: %d", port))
+}
+
+func containsPortInContainers(t *testing.T, port int32, proxyArgName string, dynamicClient *dynamicfake.FakeDynamicClient) {
+	deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+	foundPort := false
+	for _, containerPort := range deployment.Spec.Template.Spec.Containers[0].Ports {
+		if containerPort.ContainerPort == port {
+			foundPort = true
+		}
+	}
+	assert.True(t, foundPort, fmt.Sprintf("Did not find the port: %d", port))
+	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
+	assert.Contains(t, value, fmt.Sprintf("--%s %d", proxyArgName, port))
+}
+
 func getEnvValueForName(envs []v1.EnvVar, name string) string {
 	for _, envVar := range envs {
 		if envVar.Name == name {
@@ -266,6 +306,12 @@ func getEnvValueForName(envs []v1.EnvVar, name string) string {
 		}
 	}
 	return ""
+}
+
+func containsProxyArg(t *testing.T, proxyArg string, dynamicClient *dynamicfake.FakeDynamicClient) {
+	deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
+	assert.Contains(t, value, fmt.Sprintf("%s", proxyArg))
 }
 
 func getCreatedConfigMap(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) v1.ConfigMap {

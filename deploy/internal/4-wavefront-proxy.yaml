@@ -37,13 +37,25 @@ spec:
                   key: token
             - name: WAVEFRONT_PROXY_ARGS
               value: --pushListenerPorts {{ .DataExport.Proxy.MetricPort }}
-              {{if .DataExport.Proxy.HttpProxy.Host}} --proxyHost {{ .DataExport.Proxy.HttpProxy.Host }} {{end}}
-              {{if .DataExport.Proxy.HttpProxy.Port}} --proxyPort {{ .DataExport.Proxy.HttpProxy.Port }} {{end}}
-              {{if .DataExport.Proxy.HttpProxy.User}} --proxyUser {{ .DataExport.Proxy.HttpProxy.User }} {{end}}
-              {{if .DataExport.Proxy.HttpProxy.Password}} --proxyPassword {{ .DataExport.Proxy.HttpProxy.Password }} {{end}}
+              {{- if .DataExport.Proxy.HttpProxy.Host }} --proxyHost {{ .DataExport.Proxy.HttpProxy.Host }} {{- end -}}
+              {{- if .DataExport.Proxy.HttpProxy.Port }} --proxyPort {{ .DataExport.Proxy.HttpProxy.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.HttpProxy.User }} --proxyUser {{ .DataExport.Proxy.HttpProxy.User }} {{- end -}}
+              {{- if .DataExport.Proxy.HttpProxy.Password }} --proxyPassword {{ .DataExport.Proxy.HttpProxy.Password }} {{- end -}}
+              {{- if .DataExport.Proxy.DeltaCounterPort }} --deltaCounterPorts {{ .DataExport.Proxy.DeltaCounterPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.Port }} --traceListenerPorts {{ .DataExport.Proxy.Tracing.Wavefront.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingRate }} --traceSamplingRate {{ .DataExport.Proxy.Tracing.Wavefront.SamplingRate }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} --traceSamplingDuration {{ .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} {{- end }}
           ports:
             - containerPort: {{ .DataExport.Proxy.MetricPort }}
               protocol: TCP
+            {{- if .DataExport.Proxy.DeltaCounterPort}}
+            - containerPort: {{ .DataExport.Proxy.DeltaCounterPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Wavefront.Port}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
+              protocol: TCP
+            {{- end }}
           resources:
             limits:
               cpu: 1000m

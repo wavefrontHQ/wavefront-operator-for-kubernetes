@@ -145,7 +145,7 @@ spec:
                               samplingRate:
                                 description: Distributed tracing data sampling rate
                                   (0 to 1)
-                                type: integer
+                                type: string
                             type: object
                           zipkin:
                             description: Zipkin distributed tracing configurations

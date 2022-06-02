@@ -16,6 +16,16 @@ spec:
     - name: wavefront
       port: {{ .DataExport.Proxy.MetricPort }}
       protocol: TCP
+    {{if .DataExport.Proxy.DeltaCounterPort}}
+    - name: delta-counter
+      port: {{ .DataExport.Proxy.DeltaCounterPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Wavefront.Port}}
+    - name: wavefront-trace
+      port: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
+      protocol: TCP
+    {{end}}
   selector:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy
