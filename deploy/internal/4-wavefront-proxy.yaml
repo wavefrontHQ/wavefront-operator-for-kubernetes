@@ -44,7 +44,11 @@ spec:
               {{- if .DataExport.Proxy.DeltaCounterPort }} --deltaCounterPorts {{ .DataExport.Proxy.DeltaCounterPort }} {{- end -}}
               {{- if .DataExport.Proxy.Tracing.Wavefront.Port }} --traceListenerPorts {{ .DataExport.Proxy.Tracing.Wavefront.Port }} {{- end -}}
               {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingRate }} --traceSamplingRate {{ .DataExport.Proxy.Tracing.Wavefront.SamplingRate }} {{- end -}}
-              {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} --traceSamplingDuration {{ .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} {{- end }}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} --traceSamplingDuration {{ .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.Port }} --traceJaegerListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.GrpcPort }} --traceJaegerGrpcListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort }} --traceJaegerHttpListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} --traceJaegerApplicationName {{ .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} {{- end }}
           ports:
             - containerPort: {{ .DataExport.Proxy.MetricPort }}
               protocol: TCP
@@ -54,6 +58,18 @@ spec:
             {{- end }}
             {{- if .DataExport.Proxy.Tracing.Wavefront.Port}}
             - containerPort: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Jaeger.Port}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Jaeger.GrpcPort}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
               protocol: TCP
             {{- end }}
           resources:

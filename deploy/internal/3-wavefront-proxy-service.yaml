@@ -26,6 +26,21 @@ spec:
       port: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
       protocol: TCP
     {{end}}
+    {{if .DataExport.Proxy.Tracing.Jaeger.Port}}
+    - name: jaeger
+      port: {{ .DataExport.Proxy.Tracing.Jaeger.Port }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Jaeger.GrpcPort}}
+    - name: jaeger-grpc
+      port: {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Jaeger.HttpPort}}
+    - name: jaeger-http
+      port: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
+      protocol: TCP
+    {{end}}
   selector:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy

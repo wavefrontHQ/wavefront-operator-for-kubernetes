@@ -214,6 +214,26 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--traceSamplingDuration 45", dynamicClient)
 	})
 
+	t.Run("can create proxy with a user defined Jaeger distributed tracing", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.Tracing.Jaeger.Port = 30001
+		wfSpec.DataExport.Proxy.Tracing.Jaeger.GrpcPort = 14250
+		wfSpec.DataExport.Proxy.Tracing.Jaeger.HttpPort = 30080
+		wfSpec.DataExport.Proxy.Tracing.Jaeger.ApplicationName = "foo"
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsPortInContainers(t, 30001, "traceJaegerListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 30001, dynamicClient)
+		containsPortInContainers(t, 14250, "traceJaegerGrpcListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 14250, dynamicClient)
+		containsPortInContainers(t, 30080, "traceJaegerHttpListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 30080, dynamicClient)
+		containsProxyArg(t, "--traceJaegerApplicationName foo", dynamicClient)
+	})
+
 	t.Run("can create proxy with a user defined HTTP configurations", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.Proxy.HttpProxy.User = "testUser"

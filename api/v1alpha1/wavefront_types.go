@@ -146,10 +146,10 @@ type JaegerTracing struct {
 	HttpPort int `json:"httpPort,omitempty"`
 
 	// Port for Jaeger GRPC format data (usually 14250)
-	GprcPort int `json:"gprcPort,omitempty"`
+	GrpcPort int `json:"grpcPort,omitempty"`
 
 	// Custom application name for traces received on Jaeger's Http or Gprc port.
-	ApplicationName int `json:"applicationName,omitempty"`
+	ApplicationName string `json:"applicationName,omitempty"`
 }
 
 type ZipkinTracing struct {
@@ -157,7 +157,7 @@ type ZipkinTracing struct {
 	Port int `json:"port,omitempty"`
 
 	// Custom application name for traces received on Zipkin's port.
-	ApplicationName int `json:"applicationName,omitempty"`
+	ApplicationName string `json:"applicationName,omitempty"`
 }
 
 type Histogram struct {

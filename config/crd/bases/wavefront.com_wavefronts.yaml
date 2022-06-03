@@ -121,8 +121,8 @@ spec:
                               applicationName:
                                 description: Custom application name for traces received
                                   on Jaeger's Http or Gprc port.
-                                type: integer
-                              gprcPort:
+                                type: string
+                              grpcPort:
                                 description: Port for Jaeger GRPC format data (usually
                                   14250)
                                 type: integer
@@ -158,7 +158,7 @@ spec:
                               applicationName:
                                 description: Custom application name for traces received
                                   on Zipkin's port.
-                                type: integer
+                                type: string
                               port:
                                 description: Port for Zipkin format distributed tracing
                                   data (usually 9411)
