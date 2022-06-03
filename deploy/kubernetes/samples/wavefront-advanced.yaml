@@ -119,7 +119,7 @@ spec:
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataExport:
     proxy:
-      metricPort: 2879
+      metricPort: 2878
   metrics:
     collectorConfig: wavefront-collector-config
     cluster:
