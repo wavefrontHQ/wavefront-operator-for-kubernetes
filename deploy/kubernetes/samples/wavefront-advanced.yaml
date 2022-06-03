@@ -112,14 +112,14 @@ apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
+  namespace: wavefront
 spec:
   collectorEnabled: true
   wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataExport:
     proxy:
-      enabled: true
-      port: 2879
+      metricPort: 2879
   metrics:
     collectorConfig: wavefront-collector-config
     cluster:

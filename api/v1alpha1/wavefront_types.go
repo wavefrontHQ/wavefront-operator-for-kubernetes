@@ -29,7 +29,8 @@ type WavefrontSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// CollectorEnabled is whether to enable the collector.
-	CollectorEnabled bool `json:"collectorEnabled,required"`
+	// +kubebuilder:default:=true
+	CollectorEnabled bool `json:"collectorEnabled,omitempty"`
 
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
 	ProxyUrl string `json:"proxyUrl,omitempty"`
@@ -38,7 +39,8 @@ type WavefrontSpec struct {
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
 	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
-	WavefrontTokenSecret string `json:"wavefrontTokenSecret,required"`
+	// +kubebuilder:default:=wavefront-secret
+	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
 
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
 	ClusterName string `json:"clusterName,omitempty"`
@@ -50,6 +52,7 @@ type WavefrontSpec struct {
 	Metrics Metrics `json:"metrics,omitempty"`
 
 	// DataExport options
+	// +kubebuilder:default:={proxy:{enabled:true}}
 	DataExport DataExport `json:"dataExport,omitempty"`
 }
 
@@ -71,6 +74,7 @@ type DataExport struct {
 
 type Proxy struct {
 	// Enabled is whether to enable the wavefront proxy.
+	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.

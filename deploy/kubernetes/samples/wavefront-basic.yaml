@@ -3,11 +3,7 @@ apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
+  namespace: wavefront
 spec:
-  collectorEnabled: true
   clusterName: YOUR_CLUSTER_NAME
-  wavefrontTokenSecret: wavefront-secret
   wavefrontUrl: YOUR_WAVEFRONT_URL
-  dataExport:
-    proxy:
-      enabled: true

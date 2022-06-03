@@ -40,9 +40,13 @@ spec:
                   to be identified via a metric tag on Wavefront.
                 type: string
               collectorEnabled:
+                default: true
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
               dataExport:
+                default:
+                  proxy:
+                    enabled: true
                 description: DataExport options
                 properties:
                   proxy:
@@ -58,6 +62,7 @@ spec:
                           on Wavefront data format (usually 50000)
                         type: integer
                       enabled:
+                        default: true
                         description: Enabled is whether to enable the wavefront proxy.
                         type: boolean
                       histogram:
@@ -232,6 +237,7 @@ spec:
                   to.
                 type: string
               wavefrontTokenSecret:
+                default: wavefront-secret
                 description: WavefrontTokenSecret is the name of the secret that contains
                   a wavefront API Token.
                 type: string
@@ -239,8 +245,6 @@ spec:
                 description: WavefrontUrl is the wavefront instance.
                 type: string
             required:
-            - collectorEnabled
-            - wavefrontTokenSecret
             - wavefrontUrl
             type: object
           status:
