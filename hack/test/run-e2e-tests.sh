@@ -73,7 +73,7 @@ function main() {
 
   run_test "advanced-proxy"
 
-  run_test "advanced"
+  run_test "advanced-collector"
 
   run_test "basic"
 }

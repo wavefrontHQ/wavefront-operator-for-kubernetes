@@ -117,7 +117,6 @@ spec:
   collectorEnabled: true
   dataExport:
     proxy:
-      metricPort: 2878
       wavefrontUrl: YOUR_WAVEFRONT_URL
       wavefrontTokenSecret: wavefront-secret
   metrics:

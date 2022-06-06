@@ -29,14 +29,24 @@ Edit the wavefront-basic.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL acco
 kubectl apply -f wavefront-basic.yaml
 ```
 
-### Advanced option
+### Advanced Collector option
 
-If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced.yaml) file.
+If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-collector.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-collector.yaml) file.
 
 Edit the wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
 ```
-kubectl apply -f wavefront-advanced.yaml
+kubectl apply -f wavefront-advanced-collector.yaml
+```
+
+### Advanced Proxy option
+
+If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
+
+Edit the wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
+
+```
+kubectl apply -f wavefront-advanced-proxy.yaml
 ```
 
 # Release new version of the manual deploy
