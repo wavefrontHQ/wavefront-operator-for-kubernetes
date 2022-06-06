@@ -48,7 +48,9 @@ spec:
               {{- if .DataExport.Proxy.Tracing.Jaeger.Port }} --traceJaegerListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.Port }} {{- end -}}
               {{- if .DataExport.Proxy.Tracing.Jaeger.GrpcPort }} --traceJaegerGrpcListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }} {{- end -}}
               {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort }} --traceJaegerHttpListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }} {{- end -}}
-              {{- if .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} --traceJaegerApplicationName {{ .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} {{- end }}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} --traceJaegerApplicationName {{ .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Zipkin.Port }} --traceZipkinListenerPorts {{ .DataExport.Proxy.Tracing.Zipkin.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} --traceZipkinApplicationName {{ .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} {{- end }}
           ports:
             - containerPort: {{ .DataExport.Proxy.MetricPort }}
               protocol: TCP
@@ -70,6 +72,10 @@ spec:
             {{- end }}
             {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort}}
             - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Zipkin.Port}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Zipkin.Port }}
               protocol: TCP
             {{- end }}
           resources:

@@ -172,6 +172,46 @@ func TestReconcileCollector(t *testing.T) {
 }
 
 func TestReconcileProxy(t *testing.T) {
+	t.Run("updates proxy and service", func(t *testing.T) {
+		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "default-wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
+
+		r := &controllers.WavefrontReconciler{
+			Client:        apiClient,
+			Scheme:        nil,
+			FS:            os.DirFS(controllers.DeployDir),
+			DynamicClient: dynamicClient,
+			RestMapper:    apiClient.RESTMapper(),
+			Appsv1:        fakesAppsV1,
+		}
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, 12, len(dynamicClient.Actions()))
+
+		deploymentObject := getAction(dynamicClient, "patch", "deployments").(clientgotesting.PatchActionImpl).Patch
+
+		assert.Contains(t, string(deploymentObject), "updatedToken")
+		assert.Contains(t, string(deploymentObject), "testWavefrontUrl/api/")
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("Skip creating proxy if DataExport.Proxy.Enabled is set to false", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.Enabled = false
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{}, results)
+
+		assert.Equal(t, 8, len(dynamicClient.Actions()))
+
+		configMap := getCreatedConfigMap(t, dynamicClient)
+		assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
+	})
+
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.Proxy.MetricPort = 1234
@@ -219,7 +259,7 @@ func TestReconcileProxy(t *testing.T) {
 		wfSpec.DataExport.Proxy.Tracing.Jaeger.Port = 30001
 		wfSpec.DataExport.Proxy.Tracing.Jaeger.GrpcPort = 14250
 		wfSpec.DataExport.Proxy.Tracing.Jaeger.HttpPort = 30080
-		wfSpec.DataExport.Proxy.Tracing.Jaeger.ApplicationName = "foo"
+		wfSpec.DataExport.Proxy.Tracing.Jaeger.ApplicationName = "jaeger"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -231,7 +271,7 @@ func TestReconcileProxy(t *testing.T) {
 		containsPortInServicePort(t, 14250, dynamicClient)
 		containsPortInContainers(t, 30080, "traceJaegerHttpListenerPorts", dynamicClient)
 		containsPortInServicePort(t, 30080, dynamicClient)
-		containsProxyArg(t, "--traceJaegerApplicationName foo", dynamicClient)
+		containsProxyArg(t, "--traceJaegerApplicationName jaeger", dynamicClient)
 	})
 
 	t.Run("can create proxy with a user defined HTTP configurations", func(t *testing.T) {
@@ -254,46 +294,19 @@ func TestReconcileProxy(t *testing.T) {
 		assert.Contains(t, value, "--proxyPassword testPassword")
 	})
 
-	t.Run("updates proxy and service", func(t *testing.T) {
-		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "wavefront-proxy", "default-wavefront-collector-config", "wavefront-collector", "testClusterName", "wavefront")
-
-		r := &controllers.WavefrontReconciler{
-			Client:        apiClient,
-			Scheme:        nil,
-			FS:            os.DirFS(controllers.DeployDir),
-			DynamicClient: dynamicClient,
-			RestMapper:    apiClient.RESTMapper(),
-			Appsv1:        fakesAppsV1,
-		}
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
-		assert.NoError(t, err)
-
-		assert.Equal(t, ctrl.Result{}, results)
-		assert.Equal(t, 12, len(dynamicClient.Actions()))
-
-		deploymentObject := getAction(dynamicClient, "patch", "deployments").(clientgotesting.PatchActionImpl).Patch
-
-		assert.Contains(t, string(deploymentObject), "updatedToken")
-		assert.Contains(t, string(deploymentObject), "testWavefrontUrl/api/")
-
-		assert.NoError(t, err)
-	})
-
-	t.Run("Skip creating proxy if DataExport.Proxy.Enabled is set to false", func(t *testing.T) {
+	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Enabled = false
+		wfSpec.DataExport.Proxy.Tracing.Zipkin.Port = 9411
+		wfSpec.DataExport.Proxy.Tracing.Zipkin.ApplicationName = "zipkin"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 
-		assert.Equal(t, 8, len(dynamicClient.Actions()))
-
-		configMap := getCreatedConfigMap(t, dynamicClient)
-		assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
+		containsPortInContainers(t, 9411, "traceZipkinListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 9411, dynamicClient)
+		containsProxyArg(t, "--traceZipkinApplicationName zipkin", dynamicClient)
 	})
-
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {

@@ -41,6 +41,11 @@ spec:
       port: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
       protocol: TCP
     {{end}}
+    {{if .DataExport.Proxy.Tracing.Zipkin.Port}}
+    - name: zipkin
+      port: {{ .DataExport.Proxy.Tracing.Zipkin.Port }}
+      protocol: TCP
+    {{end}}
   selector:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy
