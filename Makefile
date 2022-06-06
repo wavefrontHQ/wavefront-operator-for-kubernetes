@@ -104,7 +104,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 .PHONY: docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
-	docker build -f Dockerfile.xplatform -t ${IMG} build
+	docker build -t ${IMG} build
 
 BUILDER_SUFFIX=$(shell echo $(PREFIX) | cut -d '/' -f1)
 
@@ -113,7 +113,7 @@ docker-xplatform-build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 make build -o fmt -o vet
 	docker buildx create --use --node wavefront_operator_builder_$(BUILDER_SUFFIX)
-	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${IMG} -f Dockerfile.xplatform build
+	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${IMG} build
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
