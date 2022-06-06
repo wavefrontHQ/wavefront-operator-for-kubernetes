@@ -58,7 +58,9 @@ $(SEMVER_CLI_BIN):
 	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install github.com/davidrjonas/semver-cli@latest)
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+manifests: controller-gen config/crd/bases/wavefront.com_wavefronts.yaml
+
+config/crd/bases/wavefront.com_wavefronts.yaml: $(shell find -f *.go api/v1alpha1)
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
@@ -91,7 +93,7 @@ GOOS?=$(go env GOOS)
 GOARCH?=$(go env GOARCH)
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: manifests generate fmt vet ## Build manager binary.
 	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
 	cp -r deploy build/$(GOOS)/$(GOARCH)
 
@@ -101,7 +103,8 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
-	docker build --no-cache -t ${IMG} .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
+	docker build -f Dockerfile.xplatform -t ${IMG} build
 
 BUILDER_SUFFIX=$(shell echo $(PREFIX) | cut -d '/' -f1)
 
@@ -144,7 +147,7 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 .PHONY: controller-gen
-controller-gen: ## Download controller-gen locally if necessary.
+controller-gen: $(CONTROLLER_GEN)
 	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
@@ -182,7 +185,7 @@ nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: undeploy test build-kind deploy
+integration-test: undeploy build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-test-ci: deploy

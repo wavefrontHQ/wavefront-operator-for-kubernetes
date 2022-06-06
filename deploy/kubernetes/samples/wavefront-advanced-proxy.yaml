@@ -31,5 +31,5 @@ spec:
         hourPort: 40002
         dayPort: 40003
       args: |
-       --prefix dev
+        --customSourceTags mySource
 

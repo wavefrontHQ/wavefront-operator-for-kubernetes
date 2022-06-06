@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	wfv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -331,7 +331,7 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Args = "--prefix dev \n --customSourceTags mySource"
+		wfSpec.DataExport.Proxy.Args = "--prefix dev \r\n --customSourceTags mySource"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -340,7 +340,6 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--prefix dev", dynamicClient)
 		containsProxyArg(t, "--customSourceTags mySource", dynamicClient)
 	})
-
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
@@ -414,12 +413,12 @@ func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicCli
 	return ds
 }
 
-func defaultWFSpec() wfv1alpha1.WavefrontSpec {
-	return wfv1alpha1.WavefrontSpec{
+func defaultWFSpec() wf.WavefrontSpec {
+	return wf.WavefrontSpec{
 		CollectorEnabled: true,
 		ProxyUrl:         "externalProxyUrl",
-		DataExport: wfv1alpha1.DataExport{
-			Proxy: wfv1alpha1.Proxy{
+		DataExport: wf.DataExport{
+			Proxy: wf.Proxy{
 				Enabled:              true,
 				WavefrontUrl:         "testWavefrontUrl",
 				WavefrontTokenSecret: "testToken",
@@ -458,17 +457,17 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
-func setupForCreate(spec wfv1alpha1.WavefrontSpec) (*controllers.WavefrontReconciler, *wfv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
-	var wf = &wfv1alpha1.Wavefront{
+func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+	var wfCR = &wf.Wavefront{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       spec,
-		Status:     wfv1alpha1.WavefrontStatus{},
+		Status:     wf.WavefrontStatus{},
 	}
 
 	s := scheme.Scheme
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Service{})
-	s.AddKnownTypes(wfv1alpha1.GroupVersion, wf)
+	s.AddKnownTypes(wf.GroupVersion, wfCR)
 
 	testRestMapper := meta.NewDefaultRESTMapper(
 		[]schema.GroupVersion{
@@ -506,7 +505,7 @@ func setupForCreate(spec wfv1alpha1.WavefrontSpec) (*controllers.WavefrontReconc
 	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
-	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wf).WithRESTMapper(testRestMapper)
+	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR).WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
@@ -533,10 +532,10 @@ func setupForCreate(spec wfv1alpha1.WavefrontSpec) (*controllers.WavefrontReconc
 		RestMapper:    apiClient.RESTMapper(),
 		Appsv1:        fakesAppsV1,
 	}
-	return r, wf, apiClient, dynamicClient, fakesAppsV1
+	return r, wfCR, apiClient, dynamicClient, fakesAppsV1
 }
 
-func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wfv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	wfSpec := defaultWFSpec()
 	wfSpec.DataExport.Proxy.WavefrontUrl = wavefrontUrl
 	wfSpec.DataExport.Proxy.WavefrontTokenSecret = wavefrontTokenSecret
