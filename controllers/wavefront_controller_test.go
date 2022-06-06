@@ -328,6 +328,19 @@ func TestReconcileProxy(t *testing.T) {
 		containsPortInContainers(t, 40003, "histogramDayListenerPorts", dynamicClient)
 		containsPortInServicePort(t, 40003, dynamicClient)
 	})
+
+	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.Args="--prefix dev --customSourceTags mySource"
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsProxyArg(t, "--prefix dev", dynamicClient)
+		containsProxyArg(t, "--customSourceTags mySource", dynamicClient)
+	})
+
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {

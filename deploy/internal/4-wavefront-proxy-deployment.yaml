@@ -37,6 +37,7 @@ spec:
                   key: token
             - name: WAVEFRONT_PROXY_ARGS
               value: --pushListenerPorts {{ .DataExport.Proxy.MetricPort }}
+              {{- if .DataExport.Proxy.Args }} {{ .DataExport.Proxy.Args }} {{- end -}}
               {{- if .DataExport.Proxy.HttpProxy.Host }} --proxyHost {{ .DataExport.Proxy.HttpProxy.Host }} {{- end -}}
               {{- if .DataExport.Proxy.HttpProxy.Port }} --proxyPort {{ .DataExport.Proxy.HttpProxy.Port }} {{- end -}}
               {{- if .DataExport.Proxy.HttpProxy.User }} --proxyUser {{ .DataExport.Proxy.HttpProxy.User }} {{- end -}}
