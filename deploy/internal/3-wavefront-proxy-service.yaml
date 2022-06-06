@@ -14,8 +14,58 @@ metadata:
 spec:
   ports:
     - name: wavefront
-      port: 2878
+      port: {{ .DataExport.Proxy.MetricPort }}
       protocol: TCP
+    {{if .DataExport.Proxy.DeltaCounterPort}}
+    - name: delta-counter
+      port: {{ .DataExport.Proxy.DeltaCounterPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Wavefront.Port}}
+    - name: wavefront-trace
+      port: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Jaeger.Port}}
+    - name: jaeger
+      port: {{ .DataExport.Proxy.Tracing.Jaeger.Port }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Jaeger.GrpcPort}}
+    - name: jaeger-grpc
+      port: {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Jaeger.HttpPort}}
+    - name: jaeger-http
+      port: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Tracing.Zipkin.Port}}
+    - name: zipkin
+      port: {{ .DataExport.Proxy.Tracing.Zipkin.Port }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Histogram.Port}}
+    - name: histogram
+      port: {{ .DataExport.Proxy.Histogram.Port }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Histogram.MinutePort}}
+    - name: histogram-minute
+      port: {{ .DataExport.Proxy.Histogram.MinutePort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Histogram.HourPort}}
+    - name: histogram-hour
+      port: {{ .DataExport.Proxy.Histogram.HourPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.Proxy.Histogram.DayPort}}
+    - name: histogram-day
+      port: {{ .DataExport.Proxy.Histogram.DayPort }}
+      protocol: TCP
+    {{end}}
   selector:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy

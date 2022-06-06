@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -42,7 +43,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 
-	wavefrontcomv1alpha1 "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 
@@ -87,14 +88,14 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// TODO: write separate story shut down collector and proxy if Operator is being shut down?
 
-	wavefront := &wavefrontcomv1alpha1.Wavefront{}
+	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
 		log.Log.Error(err, "error getting wavefront operator crd")
 		return ctrl.Result{}, err
 	}
 
-	setWavefrontSpecDefaults(wavefront)
+	preprocess(wavefront)
 
 	if errors.IsNotFound(err) {
 		err = r.readAndDeleteResources()
@@ -117,7 +118,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // SetupWithManager sets up the controller with the Manager.
 func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&wavefrontcomv1alpha1.Wavefront{}).
+		For(&wf.Wavefront{}).
 		Complete(r)
 }
 
@@ -158,7 +159,7 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 	return deployment.UID, nil
 }
 
-func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.WavefrontSpec) error {
+func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
 	controllerManagerUID, err := r.getControllerManagerUID()
 	if err != nil {
 		return err
@@ -177,7 +178,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wavefrontcomv1alpha1.W
 	return nil
 }
 
-func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alpha1.WavefrontSpec) ([]string, error) {
+func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec) ([]string, error) {
 	var resources []string
 
 	resourceFiles, err := r.resourceFiles("yaml")
@@ -200,7 +201,7 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wavefrontcomv1alp
 	return resources, nil
 }
 
-func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefrontSpec wavefrontcomv1alpha1.WavefrontSpec) error {
+func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefrontSpec wf.WavefrontSpec) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
@@ -218,7 +219,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.CollectorEnabled {
 			continue
 		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.WavefrontProxyEnabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.Proxy.Enabled {
 			continue
 		}
 		if object.GetKind() == "ConfigMap" && wavefrontSpec.Metrics.CollectorConfig != object.GetName() {
@@ -279,10 +280,8 @@ func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 }
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wavefrontcomv1alpha1.WavefrontSpec{
-		WavefrontUrl:         "https://delete.wavefront.com",
-		WavefrontTokenSecret: "DELETE",
-		ClusterName:          "DELETE",
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{
+		ClusterName: "DELETE",
 	})
 	if err != nil {
 		return err
@@ -352,16 +351,23 @@ func newTemplate(resourceFile string) *template.Template {
 	return template.New(resourceFile).Funcs(fMap)
 }
 
-func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
+func preprocess(wavefront *wf.Wavefront) {
 	if len(wavefront.Spec.Metrics.CollectorConfig) == 0 {
 		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
 	}
 
-	if wavefront.Spec.WavefrontProxyEnabled {
-		wavefront.Spec.ProxyUrl = "wavefront-proxy:2878"
+	if wavefront.Spec.DataExport.Proxy.MetricPort == 0 {
+		wavefront.Spec.DataExport.Proxy.MetricPort = 2878
+	}
+
+	if wavefront.Spec.DataExport.Proxy.Enabled {
+		wavefront.Spec.ProxyUrl = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.Proxy.MetricPort)
 	}
 
 	if len(wavefront.Spec.ClusterName) == 0 {
-		wavefront.Spec.ProxyUrl = "k8s-cluster"
+		wavefront.Spec.ClusterName = "k8s-cluster"
 	}
+
+	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\r", "")
+	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\n", "")
 }

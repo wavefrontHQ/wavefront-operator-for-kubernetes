@@ -41,8 +41,98 @@ spec:
                 description: ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
                 type: string
               collectorEnabled:
+                default: true
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
+              dataExport:
+                description: DataExport options
+                properties:
+                  proxy:
+                    description: Proxy configuration options
+                    properties:
+                      args:
+                        description: Args is additional Wavefront proxy properties to be passed as command line arguments in the --<property_name> <value> format. Multiple properties can be specified.
+                        type: string
+                      deltaCounterPort:
+                        description: DeltaCounterPort accumulates 1-minute delta counters on Wavefront data format (usually 50000)
+                        type: integer
+                      enabled:
+                        default: true
+                        description: Enabled is whether to enable the wavefront proxy.
+                        type: boolean
+                      histogram:
+                        description: Histogram distribution configuration
+                        properties:
+                          dayPort:
+                            description: Port to accumulate 1-day based histograms on Wavefront data format (usually 40003)
+                            type: integer
+                          hourPort:
+                            description: Port to accumulate 1-hour based histograms on Wavefront data format (usually 40002)
+                            type: integer
+                          minutePort:
+                            description: Port to accumulate 1-minute based histograms on Wavefront data format (usually 40001)
+                            type: integer
+                          port:
+                            description: Port for histogram distribution format data (usually 40000)
+                            type: integer
+                        type: object
+                      metricPort:
+                        description: MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
+                        type: integer
+                      tracing:
+                        description: Distributed tracing configuration
+                        properties:
+                          jaeger:
+                            description: Jaeger distributed tracing configurations
+                            properties:
+                              applicationName:
+                                description: Custom application name for traces received on Jaeger's Http or Gprc port.
+                                type: string
+                              grpcPort:
+                                description: Port for Jaeger GRPC format data (usually 14250)
+                                type: integer
+                              httpPort:
+                                description: Port for Jaeger Thrift format data (usually 30080)
+                                type: integer
+                              port:
+                                description: Port for Jaeger format distributed tracing data (usually 30001)
+                                type: integer
+                            type: object
+                          wavefront:
+                            description: Wavefront distributed tracing configurations
+                            properties:
+                              port:
+                                description: Port for distributed tracing data (usually 30000)
+                                type: integer
+                              samplingDuration:
+                                description: When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)
+                                type: integer
+                              samplingRate:
+                                description: Distributed tracing data sampling rate (0 to 1)
+                                type: string
+                            type: object
+                          zipkin:
+                            description: Zipkin distributed tracing configurations
+                            properties:
+                              applicationName:
+                                description: Custom application name for traces received on Zipkin's port.
+                                type: string
+                              port:
+                                description: Port for Zipkin format distributed tracing data (usually 9411)
+                                type: integer
+                            type: object
+                        type: object
+                      wavefrontTokenSecret:
+                        default: wavefront-secret
+                        description: WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
+                        type: string
+                      wavefrontUrl:
+                        description: WavefrontUrl is the wavefront instance.
+                        type: string
+                    required:
+                    - wavefrontUrl
+                    type: object
+                type: object
               metrics:
                 description: Metrics has resource configuration for node- and cluster-deployed collectors
                 properties:
@@ -109,20 +199,6 @@ spec:
               proxyUrl:
                 description: ProxyUrl is the proxy URL that the collector sends metrics to.
                 type: string
-              wavefrontProxyEnabled:
-                description: WavefrontProxyEnabled is whether to enable the wavefront proxy.
-                type: boolean
-              wavefrontTokenSecret:
-                description: WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
-                type: string
-              wavefrontUrl:
-                description: WavefrontUrl is the wavefront instance.
-                type: string
-            required:
-            - collectorEnabled
-            - wavefrontProxyEnabled
-            - wavefrontTokenSecret
-            - wavefrontUrl
             type: object
           status:
             description: WavefrontStatus defines the observed state of Wavefront
@@ -486,7 +562,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-4
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-6
         livenessProbe:
           httpGet:
             path: /healthz

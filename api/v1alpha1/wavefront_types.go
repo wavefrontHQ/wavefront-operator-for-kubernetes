@@ -29,19 +29,11 @@ type WavefrontSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// CollectorEnabled is whether to enable the collector.
-	CollectorEnabled bool `json:"collectorEnabled,required"`
+	// +kubebuilder:default:=true
+	CollectorEnabled bool `json:"collectorEnabled,omitempty"`
 
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
 	ProxyUrl string `json:"proxyUrl,omitempty"`
-
-	// WavefrontProxyEnabled is whether to enable the wavefront proxy.
-	WavefrontProxyEnabled bool `json:"wavefrontProxyEnabled,required"`
-
-	// WavefrontUrl is the wavefront instance.
-	WavefrontUrl string `json:"wavefrontUrl,required"`
-
-	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
-	WavefrontTokenSecret string `json:"wavefrontTokenSecret,required"`
 
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
 	ClusterName string `json:"clusterName,omitempty"`
@@ -51,6 +43,9 @@ type WavefrontSpec struct {
 
 	// Metrics has resource configuration for node- and cluster-deployed collectors
 	Metrics Metrics `json:"metrics,omitempty"`
+
+	// DataExport options
+	DataExport DataExport `json:"dataExport,omitempty"`
 }
 
 type Metrics struct {
@@ -62,6 +57,99 @@ type Metrics struct {
 
 	// Node is for resource configuration for the node collector
 	Node Collector `json:"node,omitempty"`
+}
+
+type DataExport struct {
+	// Proxy configuration options
+	Proxy Proxy `json:"proxy,omitempty"`
+}
+
+type Proxy struct {
+	// Enabled is whether to enable the wavefront proxy.
+	// +kubebuilder:default:=true
+	Enabled bool `json:"enabled,omitempty"`
+
+	// WavefrontUrl is the wavefront instance.
+	WavefrontUrl string `json:"wavefrontUrl,required"`
+
+	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
+	// +kubebuilder:default:=wavefront-secret
+	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
+
+	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
+	MetricPort int `json:"metricPort,omitempty"`
+
+	// DeltaCounterPort accumulates 1-minute delta counters on Wavefront data format (usually 50000)
+	DeltaCounterPort int `json:"deltaCounterPort,omitempty"`
+
+	// Args is additional Wavefront proxy properties to be passed as command line arguments in the
+	// --<property_name> <value> format. Multiple properties can be specified.
+	Args string `json:"args,omitempty"`
+
+	// Distributed tracing configuration
+	Tracing Tracing `json:"tracing,omitempty"`
+
+	// Histogram distribution configuration
+	Histogram Histogram `json:"histogram,omitempty"`
+}
+
+type Tracing struct {
+
+	// Wavefront distributed tracing configurations
+	Wavefront WavefrontTracing `json:"wavefront,omitempty"`
+
+	// Jaeger distributed tracing configurations
+	Jaeger JaegerTracing `json:"jaeger,omitempty"`
+
+	// Zipkin distributed tracing configurations
+	Zipkin ZipkinTracing `json:"zipkin,omitempty"`
+}
+
+type WavefrontTracing struct {
+	// Port for distributed tracing data (usually 30000)
+	Port int `json:"port,omitempty"`
+
+	// Distributed tracing data sampling rate (0 to 1)
+	SamplingRate string `json:"samplingRate,omitempty"`
+
+	// When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)
+	SamplingDuration int `json:"samplingDuration,omitempty"`
+}
+
+type JaegerTracing struct {
+	// Port for Jaeger format distributed tracing data (usually 30001)
+	Port int `json:"port,omitempty"`
+
+	// Port for Jaeger Thrift format data (usually 30080)
+	HttpPort int `json:"httpPort,omitempty"`
+
+	// Port for Jaeger GRPC format data (usually 14250)
+	GrpcPort int `json:"grpcPort,omitempty"`
+
+	// Custom application name for traces received on Jaeger's Http or Gprc port.
+	ApplicationName string `json:"applicationName,omitempty"`
+}
+
+type ZipkinTracing struct {
+	// Port for Zipkin format distributed tracing data (usually 9411)
+	Port int `json:"port,omitempty"`
+
+	// Custom application name for traces received on Zipkin's port.
+	ApplicationName string `json:"applicationName,omitempty"`
+}
+
+type Histogram struct {
+	// Port for histogram distribution format data (usually 40000)
+	Port int `json:"port,omitempty"`
+
+	// Port to accumulate 1-minute based histograms on Wavefront data format (usually 40001)
+	MinutePort int `json:"minutePort,omitempty"`
+
+	// Port to accumulate 1-hour based histograms on Wavefront data format (usually 40002)
+	HourPort int `json:"hourPort,omitempty"`
+
+	// Port to accumulate 1-day based histograms on Wavefront data format (usually 40003)
+	DayPort int `json:"dayPort,omitempty"`
 }
 
 type Resource struct {

@@ -22,6 +22,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+GOOS?=$(shell go env GOOS)
+GOARCH?=$(shell go env GOARCH)
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -58,11 +61,15 @@ $(SEMVER_CLI_BIN):
 	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install github.com/davidrjonas/semver-cli@latest)
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+manifests: controller-gen config/crd/bases/wavefront.com_wavefronts.yaml
+
+config/crd/bases/wavefront.com_wavefronts.yaml: api/v1alpha1/wavefront_types.go controllers/wavefront_controller.go
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: controller-gen api/v1alpha1/zz_generated.deepcopy.go
+
+api/v1alpha1/zz_generated.deepcopy.go: hack/boilerplate.go.txt api/v1alpha1/wavefront_types.go
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
@@ -101,7 +108,8 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
-	docker build --no-cache -t ${IMG} .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
+	docker build -t ${IMG} -f Dockerfile build
 
 BUILDER_SUFFIX=$(shell echo $(PREFIX) | cut -d '/' -f1)
 
@@ -110,7 +118,7 @@ docker-xplatform-build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 make build -o fmt -o vet
 	docker buildx create --use --node wavefront_operator_builder_$(BUILDER_SUFFIX)
-	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${IMG} -f Dockerfile.xplatform build
+	docker buildx build --platform linux/amd64,linux/arm64 --push --pull -t ${IMG} -f Dockerfile build
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
@@ -143,8 +151,9 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+
 .PHONY: controller-gen
-controller-gen: ## Download controller-gen locally if necessary.
+controller-gen:
 	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
@@ -182,10 +191,10 @@ nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: undeploy test build-kind deploy
+integration-test: undeploy manifests build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
-integration-test-ci: deploy
+integration-test-ci: undeploy deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test

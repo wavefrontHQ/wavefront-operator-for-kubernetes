@@ -12,6 +12,28 @@ function print_usage_and_exit() {
   exit 1
 }
 
+function run_test() {
+  local type=$1
+  local cluster_name=${CONFIG_CLUSTER_NAME}-$type
+
+  echo "Running $type CR"
+
+  wait_for_cluster_ready
+
+  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/deploy/kubernetes/samples/wavefront-$type.yaml  |
+   sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+
+  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
+
+  wait_for_cluster_ready
+
+  echo "Running test-wavefront-metrics"
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION}
+  green "Success!"
+
+  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+}
+
 function main() {
 
   # REQUIRED
@@ -49,36 +71,11 @@ function main() {
 
   cd $REPO_ROOT
 
-  echo "Running Advanced CR"
+  run_test "advanced-proxy"
 
-  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  ${REPO_ROOT}/deploy/kubernetes/samples/wavefront-advanced.yaml  |
-    sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+  run_test "advanced-collector"
 
-  echo "Applying Advanced CR"
-  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
-
-  wait_for_cluster_ready
-
-  echo "Running test-wavefront-metrics"
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${COLLECTOR_VERSION}
-  green "Success!"
-
-  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
-
-  wait_for_cluster_ready
-  echo "Running Basic CR"
-
-  sed "s/YOUR_CLUSTER_NAME/${CONFIG_CLUSTER_NAME}/g"  ${REPO_ROOT}/deploy/kubernetes/samples/wavefront-basic.yaml  |
-    sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
-
-  echo "Applying Basic CR"
-  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
-
-  wait_for_cluster_ready
-
-  echo "Running test-wavefront-metrics"
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${COLLECTOR_VERSION}
-  green "Success!"
+  run_test "basic"
 }
 
 main "$@"

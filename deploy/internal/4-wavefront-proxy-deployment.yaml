@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: proxy
+  name: wavefront-proxy
+  namespace: wavefront
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name : wavefront
+      app.kubernetes.io/component: proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name : wavefront
+        app.kubernetes.io/component: proxy
+    spec:
+      containers:
+        - name: wavefront-proxy
+          image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WAVEFRONT_URL
+              value: {{ .DataExport.Proxy.WavefrontUrl }}/api/
+            - name: WAVEFRONT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .DataExport.Proxy.WavefrontTokenSecret }}
+                  key: token
+            - name: WAVEFRONT_PROXY_ARGS
+              value: --pushListenerPorts {{ .DataExport.Proxy.MetricPort }}
+              {{- if .DataExport.Proxy.Args }} {{ .DataExport.Proxy.Args }} {{- end -}}
+              {{- if .DataExport.Proxy.DeltaCounterPort }} --deltaCounterPorts {{ .DataExport.Proxy.DeltaCounterPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.Port }} --traceListenerPorts {{ .DataExport.Proxy.Tracing.Wavefront.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingRate }} --traceSamplingRate {{ .DataExport.Proxy.Tracing.Wavefront.SamplingRate }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} --traceSamplingDuration {{ .DataExport.Proxy.Tracing.Wavefront.SamplingDuration }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.Port }} --traceJaegerListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.GrpcPort }} --traceJaegerGrpcListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort }} --traceJaegerHttpListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} --traceJaegerApplicationName {{ .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Zipkin.Port }} --traceZipkinListenerPorts {{ .DataExport.Proxy.Tracing.Zipkin.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} --traceZipkinApplicationName {{ .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.Port }} --histogramDistListenerPorts {{ .DataExport.Proxy.Histogram.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.MinutePort }} --histogramMinuteListenerPorts {{ .DataExport.Proxy.Histogram.MinutePort }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.HourPort }} --histogramHourListenerPorts {{ .DataExport.Proxy.Histogram.HourPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.DayPort }} --histogramDayListenerPorts {{ .DataExport.Proxy.Histogram.DayPort }} {{- end }}
+          ports:
+            - containerPort: {{ .DataExport.Proxy.MetricPort }}
+              protocol: TCP
+            {{- if .DataExport.Proxy.DeltaCounterPort}}
+            - containerPort: {{ .DataExport.Proxy.DeltaCounterPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Wavefront.Port}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Jaeger.Port}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Jaeger.GrpcPort}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Tracing.Zipkin.Port}}
+            - containerPort: {{ .DataExport.Proxy.Tracing.Zipkin.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.Port}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.MinutePort}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.MinutePort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.HourPort}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.HourPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.DayPort}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.DayPort }}
+              protocol: TCP
+            {{- end }}
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 4Gi
+            requests:
+              cpu: 100m
+              memory: 1Gi
+          securityContext:
+            privileged: false

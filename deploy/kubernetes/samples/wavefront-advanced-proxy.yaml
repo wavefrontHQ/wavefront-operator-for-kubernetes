@@ -1,0 +1,35 @@
+# Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: wavefront
+spec:
+  collectorEnabled: true
+  clusterName: YOUR_CLUSTER_NAME
+  dataExport:
+    proxy:
+      metricPort: 2878
+      wavefrontUrl: YOUR_WAVEFRONT_URL
+      wavefrontTokenSecret: wavefront-secret
+      tracing:
+        wavefront:
+          port: 30000
+          samplingRate: "0.1"
+          samplingDuration: 100
+        zipkin:
+          port: 9411
+          applicationName: "zipkin"
+        jaeger:
+          port: 30001
+          httpPort: 30080
+          grpcPort: 14250
+          applicationName: "jaeger"
+      histogram:
+        port: 40000
+        minutePort: 40001
+        hourPort: 40002
+        dayPort: 40003
+      args: |
+        --customSourceTags mySource
+
