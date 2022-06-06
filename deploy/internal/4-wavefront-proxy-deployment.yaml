@@ -50,7 +50,11 @@ spec:
               {{- if .DataExport.Proxy.Tracing.Jaeger.HttpPort }} --traceJaegerHttpListenerPorts {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }} {{- end -}}
               {{- if .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} --traceJaegerApplicationName {{ .DataExport.Proxy.Tracing.Jaeger.ApplicationName }} {{- end -}}
               {{- if .DataExport.Proxy.Tracing.Zipkin.Port }} --traceZipkinListenerPorts {{ .DataExport.Proxy.Tracing.Zipkin.Port }} {{- end -}}
-              {{- if .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} --traceZipkinApplicationName {{ .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} {{- end }}
+              {{- if .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} --traceZipkinApplicationName {{ .DataExport.Proxy.Tracing.Zipkin.ApplicationName }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.Port }} --histogramDistListenerPorts {{ .DataExport.Proxy.Histogram.Port }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.MinutePort }} --histogramMinuteListenerPorts {{ .DataExport.Proxy.Histogram.MinutePort }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.HourPort }} --histogramHourListenerPorts {{ .DataExport.Proxy.Histogram.HourPort }} {{- end -}}
+              {{- if .DataExport.Proxy.Histogram.DayPort }} --histogramDayListenerPorts {{ .DataExport.Proxy.Histogram.DayPort }} {{- end }}
           ports:
             - containerPort: {{ .DataExport.Proxy.MetricPort }}
               protocol: TCP
@@ -76,6 +80,22 @@ spec:
             {{- end }}
             {{- if .DataExport.Proxy.Tracing.Zipkin.Port}}
             - containerPort: {{ .DataExport.Proxy.Tracing.Zipkin.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.Port}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.Port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.MinutePort}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.MinutePort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.HourPort}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.HourPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.Proxy.Histogram.DayPort}}
+            - containerPort: {{ .DataExport.Proxy.Histogram.DayPort }}
               protocol: TCP
             {{- end }}
           resources:

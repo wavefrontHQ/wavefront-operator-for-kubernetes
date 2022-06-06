@@ -307,6 +307,27 @@ func TestReconcileProxy(t *testing.T) {
 		containsPortInServicePort(t, 9411, dynamicClient)
 		containsProxyArg(t, "--traceZipkinApplicationName zipkin", dynamicClient)
 	})
+
+	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.Histogram.Port = 40000
+		wfSpec.DataExport.Proxy.Histogram.MinutePort = 40001
+		wfSpec.DataExport.Proxy.Histogram.HourPort = 40002
+		wfSpec.DataExport.Proxy.Histogram.DayPort = 40003
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsPortInContainers(t, 40000, "histogramDistListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 40000, dynamicClient)
+		containsPortInContainers(t, 40001, "histogramMinuteListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 40001, dynamicClient)
+		containsPortInContainers(t, 40002, "histogramHourListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 40002, dynamicClient)
+		containsPortInContainers(t, 40003, "histogramDayListenerPorts", dynamicClient)
+		containsPortInServicePort(t, 40003, dynamicClient)
+	})
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
