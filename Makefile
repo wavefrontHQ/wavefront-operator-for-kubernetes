@@ -60,7 +60,7 @@ $(SEMVER_CLI_BIN):
 .PHONY: manifests
 manifests: controller-gen config/crd/bases/wavefront.com_wavefronts.yaml
 
-config/crd/bases/wavefront.com_wavefronts.yaml: $(shell find -f *.go api/v1alpha1)
+config/crd/bases/wavefront.com_wavefronts.yaml: api/v1alpha1/wavefront_types.go controllers/wavefront_controller.go
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
