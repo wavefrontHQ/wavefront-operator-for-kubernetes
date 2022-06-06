@@ -98,7 +98,7 @@ GOOS?=$(go env GOOS)
 GOARCH?=$(go env GOARCH)
 
 .PHONY: build
-build: manifests generate fmt vet ## Build manager binary.
+build: generate fmt vet ## Build manager binary.
 	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
 	cp -r deploy build/$(GOOS)/$(GOARCH)
 
@@ -191,7 +191,7 @@ nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: undeploy build-kind deploy
+integration-test: undeploy manifests build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-test-ci: deploy
