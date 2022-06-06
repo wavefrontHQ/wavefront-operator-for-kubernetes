@@ -33,7 +33,7 @@ kubectl apply -f wavefront-basic.yaml
 
 If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-collector.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-collector.yaml) file.
 
-Edit the wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
+Edit the wavefront-advanced-collector.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
 ```
 kubectl apply -f wavefront-advanced-collector.yaml
@@ -43,7 +43,7 @@ kubectl apply -f wavefront-advanced-collector.yaml
 
 If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
 
-Edit the wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
+Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
 ```
 kubectl apply -f wavefront-advanced-proxy.yaml
