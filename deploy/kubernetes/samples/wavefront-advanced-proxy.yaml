@@ -15,6 +15,21 @@ spec:
       tracing:
         wavefront:
           port: 30000
-          samplingRate: 0.1
+          samplingRate: "0.1"
           samplingDuration: 100
+        zipkin:
+          port: 9411
+          applicationName: "zipkin"
+        jaeger:
+          port: 30001
+          httpPort: 30080
+          grpcPort: 14250
+          applicationName: "jaeger"
+      histogram:
+        port: 40000
+        minutePort: 40001
+        hourPort: 40002
+        dayPort: 40003
+      args: |
+       --prefix dev
 

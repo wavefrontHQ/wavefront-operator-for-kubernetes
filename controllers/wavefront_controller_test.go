@@ -331,7 +331,7 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Args = "--prefix dev --customSourceTags mySource"
+		wfSpec.DataExport.Proxy.Args = "--prefix dev \n --customSourceTags mySource"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})

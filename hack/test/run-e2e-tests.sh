@@ -71,6 +71,8 @@ function main() {
 
   cd $REPO_ROOT
 
+  run_test "advanced-proxy"
+
   run_test "advanced"
 
   run_test "basic"
