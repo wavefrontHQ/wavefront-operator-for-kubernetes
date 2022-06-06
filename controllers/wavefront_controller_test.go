@@ -274,26 +274,6 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--traceJaegerApplicationName jaeger", dynamicClient)
 	})
 
-	t.Run("can create proxy with a user defined HTTP configurations", func(t *testing.T) {
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.HttpProxy.User = "testUser"
-		wfSpec.DataExport.Proxy.HttpProxy.Password = "testPassword"
-		wfSpec.DataExport.Proxy.HttpProxy.Port = 8080
-		wfSpec.DataExport.Proxy.HttpProxy.Host = "testHost"
-
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
-		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
-
-		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
-		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-		assert.Contains(t, value, "--proxyPort 8080")
-		assert.Contains(t, value, "--proxyHost testHost")
-		assert.Contains(t, value, "--proxyUser testUser")
-		assert.Contains(t, value, "--proxyPassword testPassword")
-	})
-
 	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.Proxy.Tracing.Zipkin.Port = 9411

@@ -86,32 +86,11 @@ type Proxy struct {
 	// --<property_name> <value> format. Multiple properties can be specified.
 	Args string `json:"args,omitempty"`
 
-	// HttpProxy is used in configurations when direct HTTP connections to Wavefront servers are not possible.
-	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
-
 	// Distributed tracing configuration
 	Tracing Tracing `json:"tracing,omitempty"`
 
 	// Histogram distribution configuration
 	Histogram Histogram `json:"histogram,omitempty"`
-}
-
-type HttpProxy struct {
-
-	// Host must be used with httpProxy.port.
-	Host string `json:"host,omitempty"`
-
-	// Port must be used with httpProxy.host.
-	Port int `json:"port,omitempty"`
-
-	// Enable HTTP proxy with CA cert. Must be used with httpProxy.host and httpProxy.port if set to true.
-	CAcert bool `json:"cacert,omitempty"`
-
-	// When used with httpProxy.password, sets credentials to use with the HTTP proxy if the proxy requires authentication.
-	User string `json:"user,omitempty"`
-
-	// When used with httpProxy.user, sets credentials to use with the HTTP proxy if the proxy requires authentication.
-	Password string `json:"password,omitempty"`
 }
 
 type Tracing struct {

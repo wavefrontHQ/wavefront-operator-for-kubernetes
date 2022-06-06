@@ -82,29 +82,6 @@ spec:
                               (usually 40000)
                             type: integer
                         type: object
-                      httpProxy:
-                        description: HttpProxy is used in configurations when direct
-                          HTTP connections to Wavefront servers are not possible.
-                        properties:
-                          cacert:
-                            description: Enable HTTP proxy with CA cert. Must be used
-                              with httpProxy.host and httpProxy.port if set to true.
-                            type: boolean
-                          host:
-                            description: Host must be used with httpProxy.port.
-                            type: string
-                          password:
-                            description: When used with httpProxy.user, sets credentials
-                              to use with the HTTP proxy if the proxy requires authentication.
-                            type: string
-                          port:
-                            description: Port must be used with httpProxy.host.
-                            type: integer
-                          user:
-                            description: When used with httpProxy.password, sets credentials
-                              to use with the HTTP proxy if the proxy requires authentication.
-                            type: string
-                        type: object
                       metricPort:
                         description: MetricPort is the primary port for Wavefront
                           data format metrics. Defaults to 2878.
