@@ -4,56 +4,6 @@ The Wavefront Operator for Kubernetes
 supports deploying the Wavefront Collector and the Wavefront Proxy in Kubernetes.
 This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
-# Installation
-
-See the below steps to build and deploy the operator on your local kind cluster.
-
-(Optional) Recreate your kind cluster **conveniently** from within this current repo.
-You're welcome!
-```
-pushd ~/workspace/wavefront-collector-for-kubernetes
-    make nuke-kind
-popd
-```
-
-Generate the Custom Resource **Definition** (`manifests`),
-and apply it to the current cluster (`install`)
-(see below to create an **instance** of the Custom Resource):
-```
-make manifests install
-```
-**NOTE**: Currently Kubebuilder requires **go 1.17**. If the above step fails please verify that the go version is set to 1.17 in your environment.
-
-Build the controller manager binary from the go code:
-```
-make build
-```
-
-Run the controller manager on the local cluster:
-```
-OPERATOR_VERSION=1
-make docker-build IMG=kind-local/wavefront-operator:${OPERATOR_VERSION}
-kind load docker-image kind-local/wavefront-operator:${OPERATOR_VERSION}
-make deploy IMG=kind-local/wavefront-operator:${OPERATOR_VERSION}
-```
-
-or 
-
-```
-# Create new local kind cluster
-make nuke-kind
-# Build and Deploy local operator image
-make deploy-kind
-# Deploy Proxy
-kubectl apply -f config/samples/_v1alpha1_wavefront.yaml 
-```
-
-Finally, create the **instance** of the **Custom Resource**,
-which Kubernetes will validate against the schema in the Custom Resource **Definition**:
-```
-kubectl apply -f config/samples/
-```
-
 # Manual Deploy
 Create a directory named wavefront-operator-dir and download the [kubernetes.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/kubernetes.yaml)
 to that directory.
@@ -88,6 +38,49 @@ Edit the wavefront-advanced.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL a
 ```
 kubectl apply -f wavefront-advanced.yaml
 ```
+
+# Release new version of the manual deploy
+Increment the version number before building
+```
+ PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.1.0-alpha-5 make docker-xplatform-build generate-kubernetes-yaml
+```
+# Build and install locally
+
+See the below steps to build and deploy the operator on your local kind cluster.
+
+(Optional) Recreate your kind cluster **conveniently** from within this current repo.
+You're welcome!
+```
+make nuke-kind
+```
+Run integration test
+```
+make integration-test 
+```
+
+Generate the Custom Resource **Definition** (`manifests`),
+and apply it to the current cluster (`install`)
+(see below to create an **instance** of the Custom Resource):
+```
+make manifests install
+```
+**NOTE**: Currently Kubebuilder requires **go 1.17**. If the above step fails please verify that the go version is set to 1.17 in your environment.
+
+Build the controller manager binary from the go code:
+```
+make build
+```
+
+Run the controller manager on the local cluster:
+```
+# Create new local kind cluster
+make nuke-kind
+# Build and Deploy local operator image
+make deploy-kind
+# Deploy Proxy
+kubectl apply -f deploy/kubernetes/samples/wavefront-basic.yaml
+```
+
 
 # Contributing
 
