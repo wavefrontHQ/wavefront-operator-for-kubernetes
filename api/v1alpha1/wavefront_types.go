@@ -35,10 +35,6 @@ type WavefrontSpec struct {
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
 	ProxyUrl string `json:"proxyUrl,omitempty"`
 
-	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
-	// +kubebuilder:default:=wavefront-secret
-	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
-
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
 	ClusterName string `json:"clusterName,omitempty"`
 
@@ -75,6 +71,10 @@ type Proxy struct {
 
 	// WavefrontUrl is the wavefront instance.
 	WavefrontUrl string `json:"wavefrontUrl,required"`
+
+	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
+	// +kubebuilder:default:=wavefront-secret
+	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	MetricPort int `json:"metricPort,omitempty"`

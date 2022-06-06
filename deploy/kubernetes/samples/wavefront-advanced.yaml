@@ -115,11 +115,11 @@ metadata:
   namespace: wavefront
 spec:
   collectorEnabled: true
-  wavefrontTokenSecret: wavefront-secret
   dataExport:
     proxy:
       metricPort: 2878
       wavefrontUrl: YOUR_WAVEFRONT_URL
+      wavefrontTokenSecret: wavefront-secret
   metrics:
     collectorConfig: wavefront-collector-config
     cluster:

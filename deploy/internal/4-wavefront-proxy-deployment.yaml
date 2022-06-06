@@ -33,7 +33,7 @@ spec:
             - name: WAVEFRONT_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{.WavefrontTokenSecret}}
+                  name: {{ .DataExport.Proxy.WavefrontTokenSecret }}
                   key: token
             - name: WAVEFRONT_PROXY_ARGS
               value: --pushListenerPorts {{ .DataExport.Proxy.MetricPort }}

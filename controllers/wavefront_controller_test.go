@@ -407,11 +407,11 @@ func defaultWFSpec() wfv1alpha1.WavefrontSpec {
 		ProxyUrl:         "externalProxyUrl",
 		DataExport: wfv1alpha1.DataExport{
 			Proxy: wfv1alpha1.Proxy{
-				Enabled:      true,
-				WavefrontUrl: "testWavefrontUrl",
+				Enabled:              true,
+				WavefrontUrl:         "testWavefrontUrl",
+				WavefrontTokenSecret: "testToken",
 			},
 		},
-		WavefrontTokenSecret: "testToken",
 		ClusterName:          "testClusterName",
 		ControllerManagerUID: "",
 	}
@@ -526,7 +526,7 @@ func setupForCreate(spec wfv1alpha1.WavefrontSpec) (*controllers.WavefrontReconc
 func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, collectorName, clusterName, namespace string) (*wfv1alpha1.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	wfSpec := defaultWFSpec()
 	wfSpec.DataExport.Proxy.WavefrontUrl = wavefrontUrl
-	wfSpec.WavefrontTokenSecret = wavefrontTokenSecret
+	wfSpec.DataExport.Proxy.WavefrontTokenSecret = wavefrontTokenSecret
 	wfSpec.ClusterName = clusterName
 
 	_, wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wfSpec)

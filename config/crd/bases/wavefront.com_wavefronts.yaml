@@ -162,6 +162,11 @@ spec:
                                 type: integer
                             type: object
                         type: object
+                      wavefrontTokenSecret:
+                        default: wavefront-secret
+                        description: WavefrontTokenSecret is the name of the secret
+                          that contains a wavefront API Token.
+                        type: string
                       wavefrontUrl:
                         description: WavefrontUrl is the wavefront instance.
                         type: string
@@ -237,11 +242,6 @@ spec:
               proxyUrl:
                 description: ProxyUrl is the proxy URL that the collector sends metrics
                   to.
-                type: string
-              wavefrontTokenSecret:
-                default: wavefront-secret
-                description: WavefrontTokenSecret is the name of the secret that contains
-                  a wavefront API Token.
                 type: string
             type: object
           status:

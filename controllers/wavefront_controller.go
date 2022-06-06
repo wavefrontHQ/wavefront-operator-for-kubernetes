@@ -281,8 +281,7 @@ func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
 	resources, err := r.readAndInterpolateResources(wavefrontcomv1alpha1.WavefrontSpec{
-		WavefrontTokenSecret: "DELETE",
-		ClusterName:          "DELETE",
+		ClusterName: "DELETE",
 	})
 	if err != nil {
 		return err
@@ -366,6 +365,6 @@ func setWavefrontSpecDefaults(wavefront *wavefrontcomv1alpha1.Wavefront) {
 	}
 
 	if len(wavefront.Spec.ClusterName) == 0 {
-		wavefront.Spec.ProxyUrl = "k8s-cluster"
+		wavefront.Spec.ClusterName = "k8s-cluster"
 	}
 }
