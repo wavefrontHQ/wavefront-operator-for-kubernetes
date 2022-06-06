@@ -35,9 +35,6 @@ type WavefrontSpec struct {
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
 	ProxyUrl string `json:"proxyUrl,omitempty"`
 
-	// WavefrontUrl is the wavefront instance.
-	WavefrontUrl string `json:"wavefrontUrl,required"`
-
 	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
 	// +kubebuilder:default:=wavefront-secret
 	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
@@ -52,7 +49,6 @@ type WavefrontSpec struct {
 	Metrics Metrics `json:"metrics,omitempty"`
 
 	// DataExport options
-	// +kubebuilder:default:={proxy:{enabled:true}}
 	DataExport DataExport `json:"dataExport,omitempty"`
 }
 
@@ -76,6 +72,9 @@ type Proxy struct {
 	// Enabled is whether to enable the wavefront proxy.
 	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`
+
+	// WavefrontUrl is the wavefront instance.
+	WavefrontUrl string `json:"wavefrontUrl,required"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	MetricPort int `json:"metricPort,omitempty"`

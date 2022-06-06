@@ -116,10 +116,10 @@ metadata:
 spec:
   collectorEnabled: true
   wavefrontTokenSecret: wavefront-secret
-  wavefrontUrl: YOUR_WAVEFRONT_URL
   dataExport:
     proxy:
       metricPort: 2878
+      wavefrontUrl: YOUR_WAVEFRONT_URL
   metrics:
     collectorConfig: wavefront-collector-config
     cluster:

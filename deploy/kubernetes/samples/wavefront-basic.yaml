@@ -1,9 +1,11 @@
-# Need to change YOUR_CLUSTER, YOUR_WAVEFRONT_URL accordingly
+# Need to change YOUR_K8S_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
 apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
   namespace: wavefront
 spec:
-  clusterName: YOUR_CLUSTER_NAME
-  wavefrontUrl: YOUR_WAVEFRONT_URL
+  clusterName: YOUR_K8S_CLUSTER_NAME
+  dataExport:
+    proxy:
+      wavefrontUrl: YOUR_WAVEFRONT_URL

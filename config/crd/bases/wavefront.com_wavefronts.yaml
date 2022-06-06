@@ -44,9 +44,6 @@ spec:
                 description: CollectorEnabled is whether to enable the collector.
                 type: boolean
               dataExport:
-                default:
-                  proxy:
-                    enabled: true
                 description: DataExport options
                 properties:
                   proxy:
@@ -165,6 +162,11 @@ spec:
                                 type: integer
                             type: object
                         type: object
+                      wavefrontUrl:
+                        description: WavefrontUrl is the wavefront instance.
+                        type: string
+                    required:
+                    - wavefrontUrl
                     type: object
                 type: object
               metrics:
@@ -241,11 +243,6 @@ spec:
                 description: WavefrontTokenSecret is the name of the secret that contains
                   a wavefront API Token.
                 type: string
-              wavefrontUrl:
-                description: WavefrontUrl is the wavefront instance.
-                type: string
-            required:
-            - wavefrontUrl
             type: object
           status:
             description: WavefrontStatus defines the observed state of Wavefront

@@ -29,7 +29,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: WAVEFRONT_URL
-              value: {{.WavefrontUrl}}/api/
+              value: {{ .DataExport.Proxy.WavefrontUrl }}/api/
             - name: WAVEFRONT_TOKEN
               valueFrom:
                 secretKeyRef:
