@@ -60,8 +60,7 @@ func main() {
 		MetricsBindAddress:     "0",
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         false,
-		LeaderElectionID:       "8117294a.wavefront.com",
+		Namespace:              "wavefront",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
