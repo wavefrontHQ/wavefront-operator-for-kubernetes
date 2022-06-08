@@ -329,13 +329,14 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
 
+		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", dynamicClient)
+
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, "preprocessor", deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 		assert.Equal(t, "/etc/wavefront/preprocessor", deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
 		assert.Equal(t, "preprocessor", deployment.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, "preprocessor-rules", deployment.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
 	})
-
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {

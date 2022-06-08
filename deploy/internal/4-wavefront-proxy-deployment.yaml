@@ -52,6 +52,7 @@ spec:
               {{- if .DataExport.Proxy.Histogram.MinutePort }} --histogramMinuteListenerPorts {{ .DataExport.Proxy.Histogram.MinutePort }} {{- end -}}
               {{- if .DataExport.Proxy.Histogram.HourPort }} --histogramHourListenerPorts {{ .DataExport.Proxy.Histogram.HourPort }} {{- end -}}
               {{- if .DataExport.Proxy.Histogram.DayPort }} --histogramDayListenerPorts {{ .DataExport.Proxy.Histogram.DayPort }} {{- end }}
+              {{- if .DataExport.Proxy.Preprocessor }} --preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml {{- end }}
           ports:
             - containerPort: {{ .DataExport.Proxy.MetricPort }}
               protocol: TCP
