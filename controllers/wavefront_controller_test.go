@@ -93,7 +93,7 @@ func TestReconcileAll(t *testing.T) {
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.Metrics.CollectorConfig = "myconfig"
+		wfSpec.Metrics.ExternalConfig.ConfigName = "myconfig"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})

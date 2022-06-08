@@ -352,8 +352,10 @@ func newTemplate(resourceFile string) *template.Template {
 }
 
 func preprocess(wavefront *wf.Wavefront) {
-	if len(wavefront.Spec.Metrics.CollectorConfig) == 0 {
+	if len(wavefront.Spec.Metrics.ExternalConfig.ConfigName) == 0 {
 		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
+	} else {
+		wavefront.Spec.Metrics.CollectorConfig = wavefront.Spec.Metrics.ExternalConfig.ConfigName
 	}
 
 	if wavefront.Spec.DataExport.Proxy.MetricPort == 0 {

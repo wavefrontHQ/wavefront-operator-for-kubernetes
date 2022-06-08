@@ -49,8 +49,11 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
-	// Collector ConfigMap name. Leave blank to use defaults
-	CollectorConfig string `json:"collectorConfig,omitempty"`
+	// CollectorConfig ConfigMap name that is used internally
+	CollectorConfig string `json:"-"`
+
+	// ExternalConfig for the collector. Leave blank to use defaults
+	ExternalConfig ExternalConfig `json:"externalConfig,omitempty"`
 
 	// Cluster is for resource configuration for the cluster collector
 	Cluster Collector `json:"cluster,omitempty"`
@@ -59,9 +62,19 @@ type Metrics struct {
 	Node Collector `json:"node,omitempty"`
 }
 
+type ExternalConfig struct {
+	// Collector ConfigMap name
+	ConfigName string `json:"configName,required"`
+}
+
 type DataExport struct {
 	// Proxy configuration options
 	Proxy Proxy `json:"proxy,omitempty"`
+}
+
+type DataCollection struct {
+	// Metrics has resource configuration for node- and cluster-deployed collectors
+	Metrics Metrics `json:"metrics,omitempty"`
 }
 
 type Proxy struct {
