@@ -120,7 +120,8 @@ spec:
       wavefrontUrl: YOUR_WAVEFRONT_URL
       wavefrontTokenSecret: wavefront-secret
   metrics:
-    collectorConfig: wavefront-collector-config
+    externalConfig:
+      configName: wavefront-collector-config
     cluster:
       resources:
         requests:

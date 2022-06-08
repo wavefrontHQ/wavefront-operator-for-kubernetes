@@ -188,9 +188,16 @@ spec:
                             type: object
                         type: object
                     type: object
-                  collectorConfig:
-                    description: Collector ConfigMap name. Leave blank to use defaults
-                    type: string
+                  externalConfig:
+                    description: ExternalConfig for the collector. Leave blank to
+                      use defaults
+                    properties:
+                      configName:
+                        description: Collector ConfigMap name
+                        type: string
+                    required:
+                    - configName
+                    type: object
                   node:
                     description: Node is for resource configuration for the node collector
                     properties:
