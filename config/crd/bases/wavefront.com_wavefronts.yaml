@@ -86,6 +86,10 @@ spec:
                         description: MetricPort is the primary port for Wavefront
                           data format metrics. Defaults to 2878.
                         type: integer
+                      preprocessor:
+                        description: Preprocessor is the name of the configmap containing
+                          a rules.yaml key with proxy preprocessing rules
+                        type: string
                       tracing:
                         description: Distributed tracing configuration
                         properties:
