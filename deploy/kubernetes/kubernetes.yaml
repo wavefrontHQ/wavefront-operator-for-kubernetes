@@ -79,6 +79,9 @@ spec:
                       metricPort:
                         description: MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
                         type: integer
+                      preprocessor:
+                        description: Preprocessor is the name of the configmap containing a rules.yaml key with proxy preprocessing rules
+                        type: string
                       tracing:
                         description: Distributed tracing configuration
                         properties:
@@ -224,7 +227,8 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: wavefront-leader-election-role
+  creationTimestamp: null
+  name: wavefront-manager-role
   namespace: wavefront
 rules:
 - apiGroups:
@@ -232,51 +236,11 @@ rules:
   resources:
   - configmaps
   verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  name: wavefront-manager-role
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -285,10 +249,8 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -297,10 +259,8 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - apps
   resources:
@@ -309,10 +269,8 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - apps
   resources:
@@ -321,10 +279,8 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - wavefront.com
   resources:
@@ -351,34 +307,6 @@ rules:
   - get
   - patch
   - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: wavefront-metrics-reader
-rules:
-- nonResourceURLs:
-  - /metrics
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: wavefront-proxy-role
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -453,38 +381,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: wavefront-leader-election-rolebinding
+  name: wavefront-manager-rolebinding
   namespace: wavefront
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: wavefront-leader-election-role
-subjects:
-- kind: ServiceAccount
-  name: wavefront-controller-manager
-  namespace: wavefront
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: wavefront-manager-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
   name: wavefront-manager-role
-subjects:
-- kind: ServiceAccount
-  name: wavefront-controller-manager
-  namespace: wavefront
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: wavefront-proxy-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: wavefront-proxy-role
 subjects:
 - kind: ServiceAccount
   name: wavefront-controller-manager
@@ -510,33 +412,10 @@ data:
     kind: ControllerManagerConfig
     health:
       healthProbeBindAddress: :8081
-    metrics:
-      bindAddress: 127.0.0.1:8080
-    webhook:
-      port: 9443
-    leaderElection:
-      leaderElect: true
-      resourceName: 8117294a.wavefront.com
 kind: ConfigMap
 metadata:
   name: wavefront-manager-config
   namespace: wavefront
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: wavefront-controller-manager-metrics-service
-  namespace: wavefront
-spec:
-  ports:
-  - name: https
-    port: 8443
-    protocol: TCP
-    targetPort: https
-  selector:
-    control-plane: controller-manager
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -558,11 +437,9 @@ spec:
         control-plane: controller-manager
     spec:
       containers:
-      - args:
-        - --leader-elect
-        command:
+      - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-6
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.1.0-alpha-7
         livenessProbe:
           httpGet:
             path: /healthz
