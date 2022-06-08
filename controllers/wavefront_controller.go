@@ -222,7 +222,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.Proxy.Enabled {
 			continue
 		}
-		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfig != object.GetName() {
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
 			continue
 		}
 
@@ -350,11 +350,11 @@ func newTemplate(resourceFile string) *template.Template {
 }
 
 func preprocess(wavefront *wf.Wavefront) {
-	if len(wavefront.Spec.DataCollection.Metrics.ExternalConfig.ConfigName) == 0 {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfig = "default-wavefront-collector-config"
-		wavefront.Spec.DataCollection.Metrics.Enabled = len(wavefront.Spec.DataCollection.Metrics.Config.ClusterName) != 0
+	if len(wavefront.Spec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName) == 0 {
+		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
+		wavefront.Spec.DataCollection.Metrics.Enabled = len(wavefront.Spec.DataCollection.Metrics.CollectorConfig.ClusterName) != 0
 	} else {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfig = wavefront.Spec.DataCollection.Metrics.ExternalConfig.ConfigName
+		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName
 		wavefront.Spec.DataCollection.Metrics.Enabled = true
 	}
 
