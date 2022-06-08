@@ -56,7 +56,7 @@ spec:
             - containerPort: 8088
               protocol: TCP
           resources:
-{{ .DataCollection.Metrics.Cluster.Resources | toYaml | indent 12 }}
+{{ .DataCollection.Metrics.ClusterCollector.Resources | toYaml | indent 12 }}
           volumeMounts:
             - name: procfs
               mountPath: /host/proc
@@ -70,4 +70,4 @@ spec:
             path: /proc
         - name: config
           configMap:
-            name: {{ .DataCollection.Metrics.CollectorConfig }}
+            name: {{ .DataCollection.Metrics.CollectorConfigName }}

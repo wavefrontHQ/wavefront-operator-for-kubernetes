@@ -42,31 +42,31 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
-	// ExternalConfig for the collector. Leave blank to use defaults
-	ExternalConfig ExternalConfig `json:"externalConfig,omitempty"`
+	// ExternalCollectorConfig for the collector. Leave blank to use defaults
+	ExternalCollectorConfig ExternalCollectorConfig `json:"externalConfig,omitempty"`
 
-	// Config for the internal collector
-	Config Config `json:"config,omitempty"`
+	// CollectorConfig for the internal collector
+	CollectorConfig CollectorConfig `json:"config,omitempty"`
 
-	// Cluster is for resource configuration for the cluster collector
-	Cluster Collector `json:"cluster,omitempty"`
+	// ClusterCollector is for resource configuration for the cluster collector
+	ClusterCollector Collector `json:"clusterCollector,omitempty"`
 
-	// Node is for resource configuration for the node collector
-	Node Collector `json:"node,omitempty"`
+	// NodeCollector is for resource configuration for the node collector
+	NodeCollector Collector `json:"nodeCollector,omitempty"`
 
-	// CollectorConfig ConfigMap name that is used internally
-	CollectorConfig string `json:"-"`
+	// CollectorConfigName ConfigMap name that is used internally
+	CollectorConfigName string `json:"-"`
 
 	// Enabled is for internal use only
 	Enabled bool `json:"-"`
 }
 
-type ExternalConfig struct {
+type ExternalCollectorConfig struct {
 	// Collector ConfigMap name
 	ConfigName string `json:"configName,required"`
 }
 
-type Config struct {
+type CollectorConfig struct {
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
 	ClusterName string `json:"clusterName,required"`
 

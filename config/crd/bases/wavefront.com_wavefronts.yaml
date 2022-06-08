@@ -42,9 +42,9 @@ spec:
                     description: Metrics has resource configuration for node- and
                       cluster-deployed collectors
                     properties:
-                      cluster:
-                        description: Cluster is for resource configuration for the
-                          cluster collector
+                      clusterCollector:
+                        description: ClusterCollector is for resource configuration
+                          for the cluster collector
                         properties:
                           resources:
                             description: Compute resources required by the Collector
@@ -73,7 +73,7 @@ spec:
                             type: object
                         type: object
                       config:
-                        description: Config for the internal collector
+                        description: CollectorConfig for the internal collector
                         properties:
                           clusterName:
                             description: ClusterName is a unique name for the Kubernetes
@@ -94,8 +94,8 @@ spec:
                         - clusterName
                         type: object
                       externalConfig:
-                        description: ExternalConfig for the collector. Leave blank
-                          to use defaults
+                        description: ExternalCollectorConfig for the collector. Leave
+                          blank to use defaults
                         properties:
                           configName:
                             description: Collector ConfigMap name
@@ -103,9 +103,9 @@ spec:
                         required:
                         - configName
                         type: object
-                      node:
-                        description: Node is for resource configuration for the node
-                          collector
+                      nodeCollector:
+                        description: NodeCollector is for resource configuration for
+                          the node collector
                         properties:
                           resources:
                             description: Compute resources required by the Collector

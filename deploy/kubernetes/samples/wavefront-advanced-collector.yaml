@@ -120,9 +120,9 @@ spec:
       wavefrontTokenSecret: wavefront-secret
   dataCollection:
     metrics:
-      externalConfig:
+      externalCollectorConfig:
         configName: wavefront-collector-config
-      cluster:
+      clusterCollector:
         resources:
           requests:
             cpu: 200m
@@ -130,7 +130,7 @@ spec:
           limits:
             cpu: 400m
             memory: 512Mi
-      node:
+      nodeCollector:
         resources:
           requests:
             cpu: 200m
