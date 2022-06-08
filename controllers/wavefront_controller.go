@@ -352,8 +352,10 @@ func newTemplate(resourceFile string) *template.Template {
 func preprocess(wavefront *wf.Wavefront) {
 	if len(wavefront.Spec.DataCollection.Metrics.ExternalConfig.ConfigName) == 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfig = "default-wavefront-collector-config"
+		wavefront.Spec.DataCollection.Metrics.Enabled = len(wavefront.Spec.DataCollection.Metrics.Config.ClusterName) != 0
 	} else {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfig = wavefront.Spec.DataCollection.Metrics.ExternalConfig.ConfigName
+		wavefront.Spec.DataCollection.Metrics.Enabled = true
 	}
 
 	if wavefront.Spec.DataExport.Proxy.MetricPort == 0 {
@@ -363,7 +365,7 @@ func preprocess(wavefront *wf.Wavefront) {
 	if wavefront.Spec.DataExport.Proxy.Enabled {
 		wavefront.Spec.ProxyUrl = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.Proxy.MetricPort)
 	}
-	wavefront.Spec.DataCollection.Metrics.Enabled = len(wavefront.Spec.DataCollection.Metrics.ClusterName) != 0
+
 	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\r", "")
 	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\n", "")
 }

@@ -72,10 +72,25 @@ spec:
                                 type: object
                             type: object
                         type: object
-                      clusterName:
-                        description: ClusterName is a unique name for the Kubernetes
-                          cluster to be identified via a metric tag on Wavefront (Required).
-                        type: string
+                      config:
+                        description: Config for the internal collector
+                        properties:
+                          clusterName:
+                            description: ClusterName is a unique name for the Kubernetes
+                              cluster to be identified via a metric tag on Wavefront
+                              (Required).
+                            type: string
+                          defaultCollectionInterval:
+                            description: Default metrics collection interval. Defaults
+                              to 60s.
+                            type: string
+                          enableDiscovery:
+                            description: Rules based and Prometheus endpoints auto-discovery.
+                              Defaults to true.
+                            type: boolean
+                        required:
+                        - clusterName
+                        type: object
                       externalConfig:
                         description: ExternalConfig for the collector. Leave blank
                           to use defaults
@@ -116,8 +131,6 @@ spec:
                                 type: object
                             type: object
                         type: object
-                    required:
-                    - clusterName
                     type: object
                 type: object
               dataExport:

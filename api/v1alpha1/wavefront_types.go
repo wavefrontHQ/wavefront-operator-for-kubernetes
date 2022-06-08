@@ -42,28 +42,39 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
-	// Enabled is for internal use only
-	Enabled bool `json:"-"`
-
-	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
-	ClusterName string `json:"clusterName,required"`
-
-	// CollectorConfig ConfigMap name that is used internally
-	CollectorConfig string `json:"-"`
-
 	// ExternalConfig for the collector. Leave blank to use defaults
 	ExternalConfig ExternalConfig `json:"externalConfig,omitempty"`
+
+	// Config for the internal collector
+	Config Config `json:"config,omitempty"`
 
 	// Cluster is for resource configuration for the cluster collector
 	Cluster Collector `json:"cluster,omitempty"`
 
 	// Node is for resource configuration for the node collector
 	Node Collector `json:"node,omitempty"`
+
+	// CollectorConfig ConfigMap name that is used internally
+	CollectorConfig string `json:"-"`
+
+	// Enabled is for internal use only
+	Enabled bool `json:"-"`
 }
 
 type ExternalConfig struct {
 	// Collector ConfigMap name
 	ConfigName string `json:"configName,required"`
+}
+
+type Config struct {
+	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
+	ClusterName string `json:"clusterName,required"`
+
+	// Default metrics collection interval. Defaults to 60s.
+	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
+
+	// Rules based and Prometheus endpoints auto-discovery. Defaults to true.
+	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
 }
 
 type DataExport struct {

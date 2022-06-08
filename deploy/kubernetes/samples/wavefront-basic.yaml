@@ -7,7 +7,8 @@ metadata:
 spec:
   dataCollection:
     metrics:
-      clusterName: YOUR_CLUSTER_NAME
+      config:
+        clusterName: YOUR_CLUSTER_NAME
   dataExport:
     proxy:
       wavefrontUrl: YOUR_WAVEFRONT_URL

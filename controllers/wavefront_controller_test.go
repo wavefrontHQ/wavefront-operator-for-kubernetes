@@ -149,7 +149,7 @@ func TestReconcileCollector(t *testing.T) {
 		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
 	})
 
-	t.Run("Skip creating collector if collectorEnabled is set to false", func(t *testing.T) {
+	t.Run("Skip creating collector if metrics.config.clusterName is not given", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
@@ -405,8 +405,10 @@ func defaultWFSpec() wf.WavefrontSpec {
 		},
 		DataCollection: wf.DataCollection{
 			Metrics: wf.Metrics{
-				Enabled:     true,
-				ClusterName: "testClusterName",
+				Enabled: true,
+				Config: wf.Config{
+					ClusterName: "testClusterName",
+				},
 			},
 		},
 		ControllerManagerUID: "",
@@ -523,7 +525,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, c
 	wfSpec := defaultWFSpec()
 	wfSpec.DataExport.Proxy.WavefrontUrl = wavefrontUrl
 	wfSpec.DataExport.Proxy.WavefrontTokenSecret = wavefrontTokenSecret
-	wfSpec.DataCollection.Metrics.ClusterName = clusterName
+	wfSpec.DataCollection.Metrics.Config.ClusterName = clusterName
 
 	_, wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wfSpec)
 
