@@ -138,6 +138,16 @@ spec:
               dataExport:
                 description: DataExport options
                 properties:
+                  externalWavefrontProxy:
+                    description: External Wavefront Proxy configuration
+                    properties:
+                      proxyUrl:
+                        description: Url is the proxy URL that the collector sends
+                          metrics to.
+                        type: string
+                    required:
+                    - proxyUrl
+                    type: object
                   proxy:
                     description: Proxy configuration options
                     properties:
@@ -247,10 +257,6 @@ spec:
                     - wavefrontUrl
                     type: object
                 type: object
-              proxyUrl:
-                description: ProxyUrl is the proxy URL that the collector sends metrics
-                  to.
-                type: string
             type: object
           status:
             description: WavefrontStatus defines the observed state of Wavefront

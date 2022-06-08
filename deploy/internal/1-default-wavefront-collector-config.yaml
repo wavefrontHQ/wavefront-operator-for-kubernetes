@@ -21,7 +21,7 @@ data:
     sinkExportDataTimeout: 20s
 
     sinks:
-    - proxyAddress: {{.ProxyUrl}}
+    - proxyAddress: {{.DataCollection.Metrics.CollectorConfig.ProxyAddress}}
       filters:
         metricDenyList:
         - kubernetes.sys_container.*

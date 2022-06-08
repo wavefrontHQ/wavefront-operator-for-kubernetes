@@ -28,9 +28,6 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ProxyUrl is the proxy URL that the collector sends metrics to.
-	ProxyUrl string `json:"proxyUrl,omitempty"`
-
 	// DataExport options
 	DataExport DataExport `json:"dataExport,omitempty"`
 
@@ -77,11 +74,22 @@ type CollectorConfig struct {
 	// Rules based and Prometheus endpoints auto-discovery. Defaults to true.
 	// +kubebuilder:default:=true
 	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
+
+	// ProxyAddress is for internal use only
+	ProxyAddress string `json:"-"`
 }
 
 type DataExport struct {
+	// External Wavefront Proxy configuration
+	ExternalWavefrontProxy ExternalWavefrontProxy `json:"externalWavefrontProxy,omitempty"`
+
 	// Proxy configuration options
 	Proxy Proxy `json:"proxy,omitempty"`
+}
+
+type ExternalWavefrontProxy struct {
+	// Url is the proxy URL that the collector sends metrics to.
+	Url string `json:"proxyUrl,required"`
 }
 
 type DataCollection struct {
@@ -94,7 +102,7 @@ type Proxy struct {
 	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`
 
-	// WavefrontUrl is the wavefront instance.
+	// Wavefront URL for your cluster
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
 	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.

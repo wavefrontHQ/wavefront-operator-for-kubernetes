@@ -434,7 +434,7 @@ func getCreatedService(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClien
 }
 
 func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) appsv1.DaemonSet {
-	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-collector")
+	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", "wavefront-node-collector")
 	var ds appsv1.DaemonSet
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
 	assert.NoError(t, err)
@@ -443,8 +443,10 @@ func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicCli
 
 func defaultWFSpec() wf.WavefrontSpec {
 	return wf.WavefrontSpec{
-		ProxyUrl: "externalProxyUrl",
 		DataExport: wf.DataExport{
+			ExternalWavefrontProxy: wf.ExternalWavefrontProxy{
+				Url: "externalProxyUrl",
+			},
 			Proxy: wf.Proxy{
 				Enabled:              true,
 				WavefrontUrl:         "testWavefrontUrl",
