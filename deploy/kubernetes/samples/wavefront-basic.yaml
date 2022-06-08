@@ -9,7 +9,8 @@ spec:
     metrics:
       collectorConfig:
         clusterName: YOUR_CLUSTER_NAME
-        defaultCollectionInterval: 90s
+        defaultCollectionInterval: 90s #defaults to 60s
+        #enableDiscovery = true # defaults to true
   dataExport:
     proxy:
       wavefrontUrl: YOUR_WAVEFRONT_URL

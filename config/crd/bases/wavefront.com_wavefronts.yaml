@@ -72,7 +72,7 @@ spec:
                                 type: object
                             type: object
                         type: object
-                      config:
+                      collectorConfig:
                         description: CollectorConfig for the internal collector
                         properties:
                           clusterName:
@@ -93,7 +93,7 @@ spec:
                         required:
                         - clusterName
                         type: object
-                      externalConfig:
+                      externalCollectorConfig:
                         description: ExternalCollectorConfig for the collector. Leave
                           blank to use defaults
                         properties:

@@ -43,10 +43,10 @@ type WavefrontSpec struct {
 
 type Metrics struct {
 	// ExternalCollectorConfig for the collector. Leave blank to use defaults
-	ExternalCollectorConfig ExternalCollectorConfig `json:"externalConfig,omitempty"`
+	ExternalCollectorConfig ExternalCollectorConfig `json:"externalCollectorConfig,omitempty"`
 
 	// CollectorConfig for the internal collector
-	CollectorConfig CollectorConfig `json:"config,omitempty"`
+	CollectorConfig CollectorConfig `json:"collectorConfig,omitempty"`
 
 	// ClusterCollector is for resource configuration for the cluster collector
 	ClusterCollector Collector `json:"clusterCollector,omitempty"`
