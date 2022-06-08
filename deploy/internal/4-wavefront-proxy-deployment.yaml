@@ -104,3 +104,15 @@ spec:
               memory: 1Gi
           securityContext:
             privileged: false
+          {{- if .DataExport.Proxy.Preprocessor}}
+          volumeMounts:
+          - name: preprocessor
+            mountPath: /etc/wavefront/preprocessor
+          {{- end }}
+      {{- if .DataExport.Proxy.Preprocessor }}
+      volumes:
+        - name: preprocessor
+          configMap:
+            name: {{ .DataExport.Proxy.Preprocessor }}
+      {{- end }}
+

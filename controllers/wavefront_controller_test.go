@@ -320,6 +320,22 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--prefix dev", dynamicClient)
 		containsProxyArg(t, "--customSourceTags mySource", dynamicClient)
 	})
+
+	t.Run("can create proxy with preprocessor rules", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.Proxy.Preprocessor = "preprocessor-rules"
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		assert.Equal(t, "preprocessor", deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, "/etc/wavefront/preprocessor", deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
+		assert.Equal(t, "preprocessor", deployment.Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, "preprocessor-rules", deployment.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
+	})
+
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
