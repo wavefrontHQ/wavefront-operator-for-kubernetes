@@ -81,10 +81,12 @@ spec:
                               (Required).
                             type: string
                           defaultCollectionInterval:
+                            default: 60s
                             description: Default metrics collection interval. Defaults
                               to 60s.
                             type: string
                           enableDiscovery:
+                            default: true
                             description: Rules based and Prometheus endpoints auto-discovery.
                               Defaults to true.
                             type: boolean
