@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: collector
     app.kubernetes.io/name : wavefront
-  name: wavefront-collector
+  name: wavefront-node-collector
   namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
