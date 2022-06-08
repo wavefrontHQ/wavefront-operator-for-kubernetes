@@ -35,14 +35,91 @@ spec:
           spec:
             description: WavefrontSpec defines the desired state of Wavefront
             properties:
-              clusterName:
-                description: ClusterName is a unique name for the Kubernetes cluster
-                  to be identified via a metric tag on Wavefront.
-                type: string
-              collectorEnabled:
-                default: true
-                description: CollectorEnabled is whether to enable the collector.
-                type: boolean
+              dataCollection:
+                description: DataCollection options
+                properties:
+                  metrics:
+                    description: Metrics has resource configuration for node- and
+                      cluster-deployed collectors
+                    properties:
+                      cluster:
+                        description: Cluster is for resource configuration for the
+                          cluster collector
+                        properties:
+                          resources:
+                            description: Compute resources required by the Collector
+                              containers.
+                            properties:
+                              limits:
+                                description: Limit CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                              requests:
+                                description: Request CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      clusterName:
+                        description: ClusterName is a unique name for the Kubernetes
+                          cluster to be identified via a metric tag on Wavefront (Required).
+                        type: string
+                      externalConfig:
+                        description: ExternalConfig for the collector. Leave blank
+                          to use defaults
+                        properties:
+                          configName:
+                            description: Collector ConfigMap name
+                            type: string
+                        required:
+                        - configName
+                        type: object
+                      node:
+                        description: Node is for resource configuration for the node
+                          collector
+                        properties:
+                          resources:
+                            description: Compute resources required by the Collector
+                              containers.
+                            properties:
+                              limits:
+                                description: Limit CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                              requests:
+                                description: Request CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                    required:
+                    - clusterName
+                    type: object
+                type: object
               dataExport:
                 description: DataExport options
                 properties:
@@ -153,78 +230,6 @@ spec:
                         type: string
                     required:
                     - wavefrontUrl
-                    type: object
-                type: object
-              metrics:
-                description: Metrics has resource configuration for node- and cluster-deployed
-                  collectors
-                properties:
-                  cluster:
-                    description: Cluster is for resource configuration for the cluster
-                      collector
-                    properties:
-                      resources:
-                        description: Compute resources required by the Collector containers.
-                        properties:
-                          limits:
-                            description: Limit CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                          requests:
-                            description: Request CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                        type: object
-                    type: object
-                  externalConfig:
-                    description: ExternalConfig for the collector. Leave blank to
-                      use defaults
-                    properties:
-                      configName:
-                        description: Collector ConfigMap name
-                        type: string
-                    required:
-                    - configName
-                    type: object
-                  node:
-                    description: Node is for resource configuration for the node collector
-                    properties:
-                      resources:
-                        description: Compute resources required by the Collector containers.
-                        properties:
-                          limits:
-                            description: Limit CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                          requests:
-                            description: Request CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                        type: object
                     type: object
                 type: object
               proxyUrl:

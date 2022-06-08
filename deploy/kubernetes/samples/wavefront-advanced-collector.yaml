@@ -119,22 +119,23 @@ spec:
     proxy:
       wavefrontUrl: YOUR_WAVEFRONT_URL
       wavefrontTokenSecret: wavefront-secret
-  metrics:
-    externalConfig:
-      configName: wavefront-collector-config
-    cluster:
-      resources:
-        requests:
-          cpu: 200m
-          memory: 10Mi
-        limits:
-          cpu: 400m
-          memory: 512Mi
-    node:
-      resources:
-        requests:
-          cpu: 200m
-          memory: 10Mi
-        limits:
-          cpu: 200m
-          memory: 256Mi
+  dataCollection:
+    metrics:
+      externalConfig:
+        configName: wavefront-collector-config
+      cluster:
+        resources:
+          requests:
+            cpu: 200m
+            memory: 10Mi
+          limits:
+            cpu: 400m
+            memory: 512Mi
+      node:
+        resources:
+          requests:
+            cpu: 200m
+            memory: 10Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi

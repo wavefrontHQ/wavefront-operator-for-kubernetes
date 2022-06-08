@@ -93,7 +93,7 @@ func TestReconcileAll(t *testing.T) {
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.Metrics.ExternalConfig.ConfigName = "myconfig"
+		wfSpec.DataCollection.Metrics.ExternalConfig.ConfigName = "myconfig"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -107,10 +107,10 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.Metrics.Cluster.Resources.Requests.CPU = "200m"
-		wfSpec.Metrics.Cluster.Resources.Requests.Memory = "10Mi"
-		wfSpec.Metrics.Cluster.Resources.Limits.CPU = "200m"
-		wfSpec.Metrics.Cluster.Resources.Limits.Memory = "256Mi"
+		wfSpec.DataCollection.Metrics.Cluster.Resources.Requests.CPU = "200m"
+		wfSpec.DataCollection.Metrics.Cluster.Resources.Requests.Memory = "10Mi"
+		wfSpec.DataCollection.Metrics.Cluster.Resources.Limits.CPU = "200m"
+		wfSpec.DataCollection.Metrics.Cluster.Resources.Limits.Memory = "256Mi"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
@@ -122,10 +122,10 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("resources set for node collector", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.Metrics.Node.Resources.Requests.CPU = "200m"
-		wfSpec.Metrics.Node.Resources.Requests.Memory = "10Mi"
-		wfSpec.Metrics.Node.Resources.Limits.CPU = "200m"
-		wfSpec.Metrics.Node.Resources.Limits.Memory = "256Mi"
+		wfSpec.DataCollection.Metrics.Node.Resources.Requests.CPU = "200m"
+		wfSpec.DataCollection.Metrics.Node.Resources.Requests.Memory = "10Mi"
+		wfSpec.DataCollection.Metrics.Node.Resources.Limits.CPU = "200m"
+		wfSpec.DataCollection.Metrics.Node.Resources.Limits.Memory = "256Mi"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
@@ -151,7 +151,7 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("Skip creating collector if collectorEnabled is set to false", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.CollectorEnabled = false
+		wfSpec.DataCollection.Metrics = wf.Metrics{}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -430,8 +430,7 @@ func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicCli
 
 func defaultWFSpec() wf.WavefrontSpec {
 	return wf.WavefrontSpec{
-		CollectorEnabled: true,
-		ProxyUrl:         "externalProxyUrl",
+		ProxyUrl: "externalProxyUrl",
 		DataExport: wf.DataExport{
 			Proxy: wf.Proxy{
 				Enabled:              true,
@@ -439,7 +438,12 @@ func defaultWFSpec() wf.WavefrontSpec {
 				WavefrontTokenSecret: "testToken",
 			},
 		},
-		ClusterName:          "testClusterName",
+		DataCollection: wf.DataCollection{
+			Metrics: wf.Metrics{
+				Enabled:     true,
+				ClusterName: "testClusterName",
+			},
+		},
 		ControllerManagerUID: "",
 	}
 }
@@ -554,7 +558,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, proxyName, collectorConfigName, c
 	wfSpec := defaultWFSpec()
 	wfSpec.DataExport.Proxy.WavefrontUrl = wavefrontUrl
 	wfSpec.DataExport.Proxy.WavefrontTokenSecret = wavefrontTokenSecret
-	wfSpec.ClusterName = clusterName
+	wfSpec.DataCollection.Metrics.ClusterName = clusterName
 
 	_, wf, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wfSpec)
 

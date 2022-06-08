@@ -6,7 +6,9 @@ metadata:
   namespace: wavefront
 spec:
   collectorEnabled: true
-  clusterName: YOUR_CLUSTER_NAME
+  dataCollection:
+    metrics:
+      clusterName: YOUR_CLUSTER_NAME
   dataExport:
     proxy:
       metricPort: 2878
