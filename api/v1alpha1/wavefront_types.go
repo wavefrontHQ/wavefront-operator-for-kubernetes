@@ -71,9 +71,11 @@ type Config struct {
 	ClusterName string `json:"clusterName,required"`
 
 	// Default metrics collection interval. Defaults to 60s.
+	// +kubebuilder:default:="60s"
 	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
 
 	// Rules based and Prometheus endpoints auto-discovery. Defaults to true.
+	// +kubebuilder:default:=true
 	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
 }
 

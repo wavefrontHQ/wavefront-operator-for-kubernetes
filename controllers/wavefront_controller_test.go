@@ -105,6 +105,19 @@ func TestReconcileCollector(t *testing.T) {
 		assert.False(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
 	})
 
+	t.Run("defaults values for default collector config", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		configMap := getCreatedConfigMap(t, dynamicClient)
+		assert.Contains(t, configMap.Data["config.yaml"], "clusterName: testClusterName")
+		assert.Contains(t, configMap.Data["config.yaml"], "defaultCollectionInterval: 60s")
+		assert.Contains(t, configMap.Data["config.yaml"], "enableDiscovery: true")
+	})
+
 	t.Run("resources set for cluster collector", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.Cluster.Resources.Requests.CPU = "200m"
@@ -442,7 +455,9 @@ func defaultWFSpec() wf.WavefrontSpec {
 			Metrics: wf.Metrics{
 				Enabled: true,
 				Config: wf.Config{
-					ClusterName: "testClusterName",
+					ClusterName:               "testClusterName",
+					EnableDiscovery:           true,
+					DefaultCollectionInterval: "60s",
 				},
 			},
 		},

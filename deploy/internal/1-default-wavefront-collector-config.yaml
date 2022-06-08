@@ -13,10 +13,10 @@ metadata:
       uid: {{ .ControllerManagerUID }}
 data:
   config.yaml: |
-    clusterName:  {{.DataCollection.Metrics.Config.ClusterName}}
-    enableDiscovery: true
+    clusterName: {{.DataCollection.Metrics.Config.ClusterName}}
+    enableDiscovery: {{.DataCollection.Metrics.Config.EnableDiscovery}}
     enableEvents: false
-    defaultCollectionInterval: 60s
+    defaultCollectionInterval: {{.DataCollection.Metrics.Config.DefaultCollectionInterval}}
     flushInterval: 10s
     sinkExportDataTimeout: 20s
 
