@@ -68,6 +68,7 @@ function print_usage_and_exit() {
   echo -e "\t-t wavefront token (required)"
   echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
   echo -e "\t-v collector version (default: load from 'release/VERSION')"
+  echo -e "\t-e name of a file containing any extra asserts that should be made as part of this test"
   exit 1
 }
 
@@ -83,7 +84,7 @@ function exit_on_fail() {
 }
 
 function main() {
-  cd "$(dirname "$0")" # hack/kustomize
+  cd "$(dirname "$0")" # hack/test
 
   local AFTER_UNIX_TS="$(date '+%s')000"
   local MAX_QUERY_TIMES=30
@@ -94,8 +95,9 @@ function main() {
 
   local WF_CLUSTER=nimba
   local EXPECTED_VERSION=${COLLECTOR_VERSION}
+  local EXTRA_TESTS=
 
-  while getopts ":c:t:n:v:" opt; do
+  while getopts ":c:t:n:v:e:" opt; do
     case $opt in
     c)
       WF_CLUSTER="$OPTARG"
@@ -108,6 +110,9 @@ function main() {
       ;;
     v)
       EXPECTED_VERSION="$OPTARG"
+      ;;
+    e)
+      EXTRA_TESTS="$OPTARG"
       ;;
     \?)
       print_usage_and_exit "Invalid option: -$OPTARG"
@@ -131,6 +136,12 @@ function main() {
 
   exit_on_fail wait_for_query_match_exact "ts(kubernetes.collector.version%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22%20AND%20installation_method%3D%22operator%22)" "${VERSION_IN_DECIMAL}"
   exit_on_fail wait_for_query_non_zero "ts(kubernetes.cluster.pod.count%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22)"
+
+  if [[ -f "${EXTRA_TESTS}" ]]; then
+    source "${EXTRA_TESTS}"
+  else
+    echo "no extra tests"
+  fi
 }
 
-main $@
+main "$@"

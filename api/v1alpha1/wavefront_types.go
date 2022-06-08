@@ -91,6 +91,9 @@ type Proxy struct {
 
 	// Histogram distribution configuration
 	Histogram Histogram `json:"histogram,omitempty"`
+
+	// Preprocessor is the name of the configmap containing a rules.yaml key with proxy preprocessing rules
+	Preprocessor string `json:"preprocessor,omitempty"`
 }
 
 type Tracing struct {

@@ -12,6 +12,7 @@ spec:
       metricPort: 2878
       wavefrontUrl: YOUR_WAVEFRONT_URL
       wavefrontTokenSecret: wavefront-secret
+      preprocessor: advanced-proxy-preprocessor-rules
       tracing:
         wavefront:
           port: 30000
@@ -32,4 +33,17 @@ spec:
         dayPort: 40003
       args: |
         --customSourceTags mySource
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: advanced-proxy-preprocessor-rules
+  namespace: wavefront
+data:
+  rules.yaml: |
+    '2878':
+      - rule: tag-all-metrics-processed
+        action: addTag
+        tag: processed
+        value: "true"
 
