@@ -28,27 +28,26 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// CollectorEnabled is whether to enable the collector.
-	// +kubebuilder:default:=true
-	CollectorEnabled bool `json:"collectorEnabled,omitempty"`
-
 	// ProxyUrl is the proxy URL that the collector sends metrics to.
 	ProxyUrl string `json:"proxyUrl,omitempty"`
 
-	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
-	ClusterName string `json:"clusterName,omitempty"`
+	// DataExport options
+	DataExport DataExport `json:"dataExport,omitempty"`
+
+	// DataCollection options
+	DataCollection DataCollection `json:"dataCollection,omitempty"`
 
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
-
-	// Metrics has resource configuration for node- and cluster-deployed collectors
-	Metrics Metrics `json:"metrics,omitempty"`
-
-	// DataExport options
-	DataExport DataExport `json:"dataExport,omitempty"`
 }
 
 type Metrics struct {
+	// Enabled is for internal use only
+	Enabled bool `json:"-"`
+
+	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
+	ClusterName string `json:"clusterName,required"`
+
 	// CollectorConfig ConfigMap name that is used internally
 	CollectorConfig string `json:"-"`
 
