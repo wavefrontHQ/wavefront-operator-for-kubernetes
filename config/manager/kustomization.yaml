@@ -14,3 +14,4 @@ images:
 - name: controller
   newName: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
   newTag: 0.1.0-alpha-7
+
