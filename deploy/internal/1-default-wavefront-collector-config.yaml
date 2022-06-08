@@ -13,7 +13,7 @@ metadata:
       uid: {{ .ControllerManagerUID }}
 data:
   config.yaml: |
-    clusterName:  {{.DataCollection.Metrics.ClusterName}}
+    clusterName:  {{.DataCollection.Metrics.Config.ClusterName}}
     enableDiscovery: true
     enableEvents: false
     defaultCollectionInterval: 60s
