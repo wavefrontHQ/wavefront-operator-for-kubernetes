@@ -332,11 +332,29 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", dynamicClient)
 
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
-		assert.Equal(t, "preprocessor", deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-		assert.Equal(t, "/etc/wavefront/preprocessor", deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
-		assert.Equal(t, "preprocessor", deployment.Spec.Template.Spec.Volumes[0].Name)
-		assert.Equal(t, "preprocessor-rules", deployment.Spec.Template.Spec.Volumes[0].ConfigMap.Name)
+		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
+		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
+}
+
+func volumeHasConfigMap(t *testing.T, deployment appsv1.Deployment, name string, configMapName string) {
+	for _, volume := range deployment.Spec.Template.Spec.Volumes {
+		if volume.Name == name {
+			assert.Equal(t, configMapName, volume.ConfigMap.Name)
+			return
+		}
+	}
+	assert.Failf(t, "could not find volume", "could not find volume named %s on deployment %s", name, deployment.Name)
+}
+
+func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
+	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if volumeMount.Name == name {
+			assert.Equal(t, path, volumeMount.MountPath)
+			return
+		}
+	}
+	assert.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
