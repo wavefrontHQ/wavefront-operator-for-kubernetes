@@ -5,13 +5,16 @@ metadata:
   name: wavefront
   namespace: wavefront
 spec:
-  collectorEnabled: true
   clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  wavefrontTokenSecret: wavefront-secret
+  dataCollection:
+    metrics:
+      enable: true
   dataExport:
-    proxy:
+    wavefrontProxy:
+      enable: true
       metricPort: 2878
-      wavefrontUrl: YOUR_WAVEFRONT_URL
-      wavefrontTokenSecret: wavefront-secret
       preprocessor: advanced-proxy-preprocessor-rules
       tracing:
         wavefront:

@@ -37,17 +37,111 @@ spec:
             properties:
               clusterName:
                 description: ClusterName is a unique name for the Kubernetes cluster
-                  to be identified via a metric tag on Wavefront.
+                  to be identified via a metric tag on Wavefront (Required).
                 type: string
-              collectorEnabled:
-                default: true
-                description: CollectorEnabled is whether to enable the collector.
-                type: boolean
+              dataCollection:
+                description: DataCollection options
+                properties:
+                  metrics:
+                    description: Metrics has resource configuration for node- and
+                      cluster-deployed collectors
+                    properties:
+                      clusterCollector:
+                        description: ClusterCollector is for resource configuration
+                          for the cluster collector.
+                        properties:
+                          resources:
+                            description: Compute resources required by the Collector
+                              containers.
+                            properties:
+                              limits:
+                                description: Limit CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                              requests:
+                                description: Request CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      customConfig:
+                        description: CustomConfig is the custom ConfigMap name for
+                          the collector. Leave blank to use defaults.
+                        type: string
+                      defaultCollectionInterval:
+                        default: 60s
+                        description: Default metrics collection interval. Defaults
+                          to 60s.
+                        type: string
+                      enable:
+                        default: true
+                        description: Enable is whether to enable the metrics. Defaults
+                          to true.
+                        type: boolean
+                      enableDiscovery:
+                        default: true
+                        description: Rules based and Prometheus endpoints auto-discovery.
+                          Defaults to true.
+                        type: boolean
+                      nodeCollector:
+                        description: NodeCollector is for resource configuration for
+                          the node collector.
+                        properties:
+                          resources:
+                            description: Compute resources required by the Collector
+                              containers.
+                            properties:
+                              limits:
+                                description: Limit CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                              requests:
+                                description: Request CPU and Memory requirements
+                                properties:
+                                  cpu:
+                                    description: CPU is for specifying CPU requirements
+                                    type: string
+                                  memory:
+                                    description: Memory is for specifying Memory requirements
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                    type: object
+                type: object
               dataExport:
                 description: DataExport options
                 properties:
-                  proxy:
-                    description: Proxy configuration options
+                  externalWavefrontProxy:
+                    description: External Wavefront WavefrontProxy configuration
+                    properties:
+                      proxyUrl:
+                        description: Url is the proxy URL that the collector sends
+                          metrics to.
+                        type: string
+                    required:
+                    - proxyUrl
+                    type: object
+                  wavefrontProxy:
+                    description: WavefrontProxy configuration options
                     properties:
                       args:
                         description: Args is additional Wavefront proxy properties
@@ -58,9 +152,10 @@ spec:
                         description: DeltaCounterPort accumulates 1-minute delta counters
                           on Wavefront data format (usually 50000)
                         type: integer
-                      enabled:
+                      enable:
                         default: true
-                        description: Enabled is whether to enable the wavefront proxy.
+                        description: Enable is whether to enable the wavefront proxy.
+                          Defaults to true.
                         type: boolean
                       histogram:
                         description: Histogram distribution configuration
@@ -143,87 +238,19 @@ spec:
                                 type: integer
                             type: object
                         type: object
-                      wavefrontTokenSecret:
-                        default: wavefront-secret
-                        description: WavefrontTokenSecret is the name of the secret
-                          that contains a wavefront API Token.
-                        type: string
-                      wavefrontUrl:
-                        description: WavefrontUrl is the wavefront instance.
-                        type: string
-                    required:
-                    - wavefrontUrl
                     type: object
                 type: object
-              metrics:
-                description: Metrics has resource configuration for node- and cluster-deployed
-                  collectors
-                properties:
-                  cluster:
-                    description: Cluster is for resource configuration for the cluster
-                      collector
-                    properties:
-                      resources:
-                        description: Compute resources required by the Collector containers.
-                        properties:
-                          limits:
-                            description: Limit CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                          requests:
-                            description: Request CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                        type: object
-                    type: object
-                  collectorConfig:
-                    description: Collector ConfigMap name. Leave blank to use defaults
-                    type: string
-                  node:
-                    description: Node is for resource configuration for the node collector
-                    properties:
-                      resources:
-                        description: Compute resources required by the Collector containers.
-                        properties:
-                          limits:
-                            description: Limit CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                          requests:
-                            description: Request CPU and Memory requirements
-                            properties:
-                              cpu:
-                                description: CPU is for specifying CPU requirements
-                                type: string
-                              memory:
-                                description: Memory is for specifying Memory requirements
-                                type: string
-                            type: object
-                        type: object
-                    type: object
-                type: object
-              proxyUrl:
-                description: ProxyUrl is the proxy URL that the collector sends metrics
-                  to.
+              wavefrontTokenSecret:
+                default: wavefront-secret
+                description: WavefrontTokenSecret is the name of the secret that contains
+                  a wavefront API Token.
                 type: string
+              wavefrontUrl:
+                description: Wavefront URL for your cluster
+                type: string
+            required:
+            - clusterName
+            - wavefrontUrl
             type: object
           status:
             description: WavefrontStatus defines the observed state of Wavefront

@@ -52,7 +52,7 @@ kubectl create -f wavefront-advanced-proxy.yaml
 # Release new version of the manual deploy
 Increment the version number before building
 ```
- PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.1.0-alpha-5 make docker-xplatform-build generate-kubernetes-yaml
+ PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.10.0-alpha-5 make docker-xplatform-build generate-kubernetes-yaml
 ```
 # Build and install locally
 

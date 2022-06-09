@@ -1,4 +1,37 @@
 # Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: wavefront
+spec:
+  clusterName: YOUT_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  wavefrontTokenSecret: wavefront-secret
+  dataExport:
+    wavefrontProxy:
+      enable: true
+  dataCollection:
+    metrics:
+      enable: true
+      customConfig: wavefront-collector-config
+      clusterCollector:
+        resources:
+          requests:
+            cpu: 200m
+            memory: 10Mi
+          limits:
+            cpu: 400m
+            memory: 512Mi
+      nodeCollector:
+        resources:
+          requests:
+            cpu: 200m
+            memory: 10Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,6 +45,7 @@ data:
     clusterName: YOUR_CLUSTER_NAME
     enableDiscovery: true
     enableEvents: false
+    defaultCollectionInterval: 60s
 
     sinks:
     - proxyAddress: wavefront-proxy:2878
@@ -107,33 +141,3 @@ data:
           - 'kube.coredns.coredns.dns.response.rcode.count.total.counter'
           - 'kube.coredns.coredns.dns.response.size.bytes'
           - 'kube.coredns.process.*'
----
-apiVersion: wavefront.com/v1alpha1
-kind: Wavefront
-metadata:
-  name: wavefront
-  namespace: wavefront
-spec:
-  collectorEnabled: true
-  dataExport:
-    proxy:
-      wavefrontUrl: YOUR_WAVEFRONT_URL
-      wavefrontTokenSecret: wavefront-secret
-  metrics:
-    collectorConfig: wavefront-collector-config
-    cluster:
-      resources:
-        requests:
-          cpu: 200m
-          memory: 10Mi
-        limits:
-          cpu: 400m
-          memory: 512Mi
-    node:
-      resources:
-        requests:
-          cpu: 200m
-          memory: 10Mi
-        limits:
-          cpu: 200m
-          memory: 256Mi

@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: collector
     app.kubernetes.io/name : wavefront
-  name: wavefront-collector
+  name: wavefront-node-collector
   namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
@@ -62,7 +62,7 @@ spec:
             - containerPort: 8088
               protocol: TCP
           resources:
-{{ .Metrics.Node.Resources | toYaml | indent 12 }}
+{{ .DataCollection.Metrics.NodeCollector.Resources | toYaml | indent 12 }}
           volumeMounts:
             - name: procfs
               mountPath: /host/proc
@@ -76,4 +76,4 @@ spec:
             path: /proc
         - name: config
           configMap:
-            name: {{ .Metrics.CollectorConfig }}
+            name: {{ .DataCollection.Metrics.CollectorConfigName }}

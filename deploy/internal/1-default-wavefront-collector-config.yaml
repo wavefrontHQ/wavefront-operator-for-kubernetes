@@ -13,15 +13,15 @@ metadata:
       uid: {{ .ControllerManagerUID }}
 data:
   config.yaml: |
-    clusterName:  {{.ClusterName}}
-    enableDiscovery: true
+    clusterName: {{.ClusterName}}
+    enableDiscovery: {{.DataCollection.Metrics.EnableDiscovery}}
     enableEvents: false
-    defaultCollectionInterval: 60s
+    defaultCollectionInterval: {{.DataCollection.Metrics.DefaultCollectionInterval}}
     flushInterval: 10s
     sinkExportDataTimeout: 20s
 
     sinks:
-    - proxyAddress: {{.ProxyUrl}}
+    - proxyAddress: {{.DataCollection.Metrics.ProxyAddress}}
       filters:
         metricDenyList:
         - kubernetes.sys_container.*

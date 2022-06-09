@@ -28,53 +28,77 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// CollectorEnabled is whether to enable the collector.
-	// +kubebuilder:default:=true
-	CollectorEnabled bool `json:"collectorEnabled,omitempty"`
+	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
+	ClusterName string `json:"clusterName,required"`
 
-	// ProxyUrl is the proxy URL that the collector sends metrics to.
-	ProxyUrl string `json:"proxyUrl,omitempty"`
-
-	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront.
-	ClusterName string `json:"clusterName,omitempty"`
-
-	// ControllerManagerUID is for internal use of deletion delegation
-	ControllerManagerUID string `json:"-"`
-
-	// Metrics has resource configuration for node- and cluster-deployed collectors
-	Metrics Metrics `json:"metrics,omitempty"`
-
-	// DataExport options
-	DataExport DataExport `json:"dataExport,omitempty"`
-}
-
-type Metrics struct {
-	// Collector ConfigMap name. Leave blank to use defaults
-	CollectorConfig string `json:"collectorConfig,omitempty"`
-
-	// Cluster is for resource configuration for the cluster collector
-	Cluster Collector `json:"cluster,omitempty"`
-
-	// Node is for resource configuration for the node collector
-	Node Collector `json:"node,omitempty"`
-}
-
-type DataExport struct {
-	// Proxy configuration options
-	Proxy Proxy `json:"proxy,omitempty"`
-}
-
-type Proxy struct {
-	// Enabled is whether to enable the wavefront proxy.
-	// +kubebuilder:default:=true
-	Enabled bool `json:"enabled,omitempty"`
-
-	// WavefrontUrl is the wavefront instance.
+	// Wavefront URL for your cluster
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
 	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
 	// +kubebuilder:default:=wavefront-secret
 	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
+
+	// DataExport options
+	DataExport DataExport `json:"dataExport,omitempty"`
+
+	// DataCollection options
+	DataCollection DataCollection `json:"dataCollection,omitempty"`
+
+	// ControllerManagerUID is for internal use of deletion delegation
+	ControllerManagerUID string `json:"-"`
+}
+
+type Metrics struct {
+	// Enable is whether to enable the metrics. Defaults to true.
+	// +kubebuilder:default:=true
+	Enable bool `json:"enable,omitempty"`
+
+	// CustomConfig is the custom ConfigMap name for the collector. Leave blank to use defaults.
+	CustomConfig string `json:"customConfig,omitempty"`
+
+	// Default metrics collection interval. Defaults to 60s.
+	// +kubebuilder:default:="60s"
+	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
+
+	// Rules based and Prometheus endpoints auto-discovery. Defaults to true.
+	// +kubebuilder:default:=true
+	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
+
+	// ClusterCollector is for resource configuration for the cluster collector.
+	ClusterCollector Collector `json:"clusterCollector,omitempty"`
+
+	// NodeCollector is for resource configuration for the node collector.
+	NodeCollector Collector `json:"nodeCollector,omitempty"`
+
+	// CollectorConfigName ConfigMap name that is used internally
+	CollectorConfigName string `json:"-"`
+
+	// ProxyAddress is for internal use only
+	ProxyAddress string `json:"-"`
+}
+
+type DataExport struct {
+	// External Wavefront WavefrontProxy configuration
+	ExternalWavefrontProxy ExternalWavefrontProxy `json:"externalWavefrontProxy,omitempty"`
+
+	// WavefrontProxy configuration options
+	WavefrontProxy WavefrontProxy `json:"wavefrontProxy,omitempty"`
+}
+
+type ExternalWavefrontProxy struct {
+	// Url is the proxy URL that the collector sends metrics to.
+	Url string `json:"proxyUrl,required"`
+}
+
+type DataCollection struct {
+	// Metrics has resource configuration for node- and cluster-deployed collectors
+	Metrics Metrics `json:"metrics,omitempty"`
+}
+
+type WavefrontProxy struct {
+	// Enable is whether to enable the wavefront proxy. Defaults to true.
+	// +kubebuilder:default:=true
+	Enable bool `json:"enable,omitempty"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	MetricPort int `json:"metricPort,omitempty"`

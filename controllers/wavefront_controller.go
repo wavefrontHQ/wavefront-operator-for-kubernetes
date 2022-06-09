@@ -216,13 +216,13 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		}
 
 		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.CollectorEnabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
 			continue
 		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.Proxy.Enabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
 			continue
 		}
-		if object.GetKind() == "ConfigMap" && wavefrontSpec.Metrics.CollectorConfig != object.GetName() {
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
 			continue
 		}
 
@@ -280,9 +280,7 @@ func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 }
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{
-		ClusterName: "DELETE",
-	})
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{})
 	if err != nil {
 		return err
 	}
@@ -352,22 +350,22 @@ func newTemplate(resourceFile string) *template.Template {
 }
 
 func preprocess(wavefront *wf.Wavefront) {
-	if len(wavefront.Spec.Metrics.CollectorConfig) == 0 {
-		wavefront.Spec.Metrics.CollectorConfig = "default-wavefront-collector-config"
+	if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
+		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
+	} else {
+		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.CustomConfig
 	}
 
-	if wavefront.Spec.DataExport.Proxy.MetricPort == 0 {
-		wavefront.Spec.DataExport.Proxy.MetricPort = 2878
+	if wavefront.Spec.DataExport.WavefrontProxy.MetricPort == 0 {
+		wavefront.Spec.DataExport.WavefrontProxy.MetricPort = 2878
 	}
 
-	if wavefront.Spec.DataExport.Proxy.Enabled {
-		wavefront.Spec.ProxyUrl = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.Proxy.MetricPort)
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
+		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
-	if len(wavefront.Spec.ClusterName) == 0 {
-		wavefront.Spec.ClusterName = "k8s-cluster"
-	}
-
-	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\r", "")
-	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\n", "")
+	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
+	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
 }
