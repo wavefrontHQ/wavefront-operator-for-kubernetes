@@ -9,7 +9,7 @@ Create a directory named wavefront-operator-dir and download the [kubernetes.yam
 to that directory.
 
 ```
-kubectl apply -f kubernetes.yaml
+kubectl create -f kubernetes.yaml
 ```
 Create a wavefront secret by providing YOUR_WAVEFRONT_TOKEN
 ```
@@ -26,7 +26,7 @@ If you're just getting started and want to advantage our experienced based defau
 Edit the wavefront-basic.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
 
 ```
-kubectl apply -f wavefront-basic.yaml
+kubectl create -f wavefront-basic.yaml
 ```
 
 ### Advanced Collector option
@@ -36,7 +36,7 @@ If you want more granular control over collector and proxy configuration use the
 Edit the wavefront-advanced-collector.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
 ```
-kubectl apply -f wavefront-advanced-collector.yaml
+kubectl create -f wavefront-advanced-collector.yaml
 ```
 
 ### Advanced Proxy option
@@ -46,7 +46,7 @@ If you want more granular control over collector and proxy configuration use the
 Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
 ```
-kubectl apply -f wavefront-advanced-proxy.yaml
+kubectl create -f wavefront-advanced-proxy.yaml
 ```
 
 # Release new version of the manual deploy
