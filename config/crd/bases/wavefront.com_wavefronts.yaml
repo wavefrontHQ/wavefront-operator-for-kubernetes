@@ -38,6 +38,7 @@ spec:
               clusterName:
                 description: ClusterName is a unique name for the Kubernetes cluster
                   to be identified via a metric tag on Wavefront (Required).
+                minLength: 3
                 type: string
               dataCollection:
                 description: DataCollection options
@@ -133,12 +134,14 @@ spec:
                   externalWavefrontProxy:
                     description: External Wavefront WavefrontProxy configuration
                     properties:
-                      proxyUrl:
+                      url:
                         description: Url is the proxy URL that the collector sends
                           metrics to.
+                        minLength: 10
+                        pattern: ^http*
                         type: string
                     required:
-                    - proxyUrl
+                    - url
                     type: object
                   wavefrontProxy:
                     description: WavefrontProxy configuration options
@@ -147,6 +150,7 @@ spec:
                         description: Args is additional Wavefront proxy properties
                           to be passed as command line arguments in the --<property_name>
                           <value> format. Multiple properties can be specified.
+                        pattern: --.* .*
                         type: string
                       deltaCounterPort:
                         description: DeltaCounterPort accumulates 1-minute delta counters
@@ -161,15 +165,15 @@ spec:
                         description: Histogram distribution configuration
                         properties:
                           dayPort:
-                            description: Port to accumulate 1-day based histograms
+                            description: DayPort to accumulate 1-day based histograms
                               on Wavefront data format (usually 40003)
                             type: integer
                           hourPort:
-                            description: Port to accumulate 1-hour based histograms
+                            description: HourPort to accumulate 1-hour based histograms
                               on Wavefront data format (usually 40002)
                             type: integer
                           minutePort:
-                            description: Port to accumulate 1-minute based histograms
+                            description: MinutePort to accumulate 1-minute based histograms
                               on Wavefront data format (usually 40001)
                             type: integer
                           port:
@@ -178,12 +182,14 @@ spec:
                             type: integer
                         type: object
                       metricPort:
+                        default: 2878
                         description: MetricPort is the primary port for Wavefront
                           data format metrics. Defaults to 2878.
                         type: integer
                       preprocessor:
                         description: Preprocessor is the name of the configmap containing
                           a rules.yaml key with proxy preprocessing rules
+                        minLength: 2
                         type: string
                       tracing:
                         description: Distributed tracing configuration
@@ -192,16 +198,17 @@ spec:
                             description: Jaeger distributed tracing configurations
                             properties:
                               applicationName:
-                                description: Custom application name for traces received
-                                  on Jaeger's Http or Gprc port.
+                                description: ApplicationName Custom application name
+                                  for traces received on Jaeger's Http or Gprc port.
+                                minLength: 3
                                 type: string
                               grpcPort:
-                                description: Port for Jaeger GRPC format data (usually
-                                  14250)
+                                description: GrpcPort for Jaeger GRPC format data
+                                  (usually 14250)
                                 type: integer
                               httpPort:
-                                description: Port for Jaeger Thrift format data (usually
-                                  30080)
+                                description: HttpPort for Jaeger Thrift format data
+                                  (usually 30080)
                                 type: integer
                               port:
                                 description: Port for Jaeger format distributed tracing
@@ -212,27 +219,31 @@ spec:
                             description: Wavefront distributed tracing configurations
                             properties:
                               port:
+                                default: 30000
                                 description: Port for distributed tracing data (usually
                                   30000)
                                 type: integer
                               samplingDuration:
-                                description: When set to greater than 0, spans that
-                                  exceed this duration will force trace to be sampled
-                                  (ms)
+                                description: SamplingDuration When set to greater
+                                  than 0, spans that exceed this duration will force
+                                  trace to be sampled (ms)
                                 type: integer
                               samplingRate:
-                                description: Distributed tracing data sampling rate
-                                  (0 to 1)
+                                description: SamplingRate Distributed tracing data
+                                  sampling rate (0 to 1)
+                                pattern: ^(0+\.?|0*\.\d+|0*1(\.0*)?)$
                                 type: string
                             type: object
                           zipkin:
                             description: Zipkin distributed tracing configurations
                             properties:
                               applicationName:
-                                description: Custom application name for traces received
-                                  on Zipkin's port.
+                                description: ApplicationName Custom application name
+                                  for traces received on Zipkin's port.
+                                minLength: 3
                                 type: string
                               port:
+                                default: 9411
                                 description: Port for Zipkin format distributed tracing
                                   data (usually 9411)
                                 type: integer
@@ -244,9 +255,12 @@ spec:
                 default: wavefront-secret
                 description: WavefrontTokenSecret is the name of the secret that contains
                   a wavefront API Token.
+                maxLength: 253
+                pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
                 type: string
               wavefrontUrl:
                 description: Wavefront URL for your cluster
+                pattern: ^https:\/\/.*.wavefront.com
                 type: string
             required:
             - clusterName
