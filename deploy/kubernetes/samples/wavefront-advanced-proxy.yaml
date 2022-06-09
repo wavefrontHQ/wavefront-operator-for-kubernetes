@@ -10,7 +10,7 @@ spec:
       collectorConfig:
         clusterName: YOUR_CLUSTER_NAME
   dataExport:
-    proxy:
+    wavefrontProxy:
       metricPort: 2878
       wavefrontUrl: YOUR_WAVEFRONT_URL
       wavefrontTokenSecret: wavefront-secret

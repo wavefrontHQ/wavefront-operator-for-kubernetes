@@ -219,7 +219,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enabled {
 			continue
 		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.Proxy.Enabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enabled {
 			continue
 		}
 		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
@@ -358,16 +358,16 @@ func preprocess(wavefront *wf.Wavefront) {
 		wavefront.Spec.DataCollection.Metrics.Enabled = true
 	}
 
-	if wavefront.Spec.DataExport.Proxy.MetricPort == 0 {
-		wavefront.Spec.DataExport.Proxy.MetricPort = 2878
+	if wavefront.Spec.DataExport.WavefrontProxy.MetricPort == 0 {
+		wavefront.Spec.DataExport.WavefrontProxy.MetricPort = 2878
 	}
 
-	if wavefront.Spec.DataExport.Proxy.Enabled {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfig.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.Proxy.MetricPort)
+	if wavefront.Spec.DataExport.WavefrontProxy.Enabled {
+		wavefront.Spec.DataCollection.Metrics.CollectorConfig.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfig.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
-	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\r", "")
-	wavefront.Spec.DataExport.Proxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.Proxy.Args, "\n", "")
+	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
+	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
 }

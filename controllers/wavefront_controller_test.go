@@ -210,9 +210,9 @@ func TestReconcileProxy(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("Skip creating proxy if DataExport.Proxy.Enabled is set to false", func(t *testing.T) {
+	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enabled is set to false", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Enabled = false
+		wfSpec.DataExport.WavefrontProxy.Enabled = false
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -227,7 +227,7 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.MetricPort = 1234
+		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -242,7 +242,7 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.DeltaCounterPort = 50000
+		wfSpec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
@@ -253,9 +253,9 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined Wavefront tracing", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Tracing.Wavefront.Port = 30000
-		wfSpec.DataExport.Proxy.Tracing.Wavefront.SamplingRate = ".1"
-		wfSpec.DataExport.Proxy.Tracing.Wavefront.SamplingDuration = 45
+		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.Port = 30000
+		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingRate = ".1"
+		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingDuration = 45
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -269,10 +269,10 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined Jaeger distributed tracing", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Tracing.Jaeger.Port = 30001
-		wfSpec.DataExport.Proxy.Tracing.Jaeger.GrpcPort = 14250
-		wfSpec.DataExport.Proxy.Tracing.Jaeger.HttpPort = 30080
-		wfSpec.DataExport.Proxy.Tracing.Jaeger.ApplicationName = "jaeger"
+		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.Port = 30001
+		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort = 14250
+		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort = 30080
+		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.ApplicationName = "jaeger"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -289,8 +289,8 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Tracing.Zipkin.Port = 9411
-		wfSpec.DataExport.Proxy.Tracing.Zipkin.ApplicationName = "zipkin"
+		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
+		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.ApplicationName = "zipkin"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -303,10 +303,10 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Histogram.Port = 40000
-		wfSpec.DataExport.Proxy.Histogram.MinutePort = 40001
-		wfSpec.DataExport.Proxy.Histogram.HourPort = 40002
-		wfSpec.DataExport.Proxy.Histogram.DayPort = 40003
+		wfSpec.DataExport.WavefrontProxy.Histogram.Port = 40000
+		wfSpec.DataExport.WavefrontProxy.Histogram.MinutePort = 40001
+		wfSpec.DataExport.WavefrontProxy.Histogram.HourPort = 40002
+		wfSpec.DataExport.WavefrontProxy.Histogram.DayPort = 40003
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -324,7 +324,7 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Args = "--prefix dev \r\n --customSourceTags mySource"
+		wfSpec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -336,7 +336,7 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with preprocessor rules", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.Proxy.Preprocessor = "preprocessor-rules"
+		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -447,7 +447,7 @@ func defaultWFSpec() wf.WavefrontSpec {
 			ExternalWavefrontProxy: wf.ExternalWavefrontProxy{
 				Url: "externalProxyUrl",
 			},
-			Proxy: wf.Proxy{
+			WavefrontProxy: wf.WavefrontProxy{
 				Enabled:              true,
 				WavefrontUrl:         "testWavefrontUrl",
 				WavefrontTokenSecret: "testToken",
@@ -491,9 +491,6 @@ func getPatch(dynamicClient *dynamicfake.FakeDynamicClient, resource string, met
 	}
 	return nil
 }
-
-
-
 
 func hasAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (result bool) {
 	if getAction(dynamicClient, verb, resource) != nil {
@@ -591,8 +588,8 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 
 func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	wfSpec := defaultWFSpec()
-	wfSpec.DataExport.Proxy.WavefrontUrl = wavefrontUrl
-	wfSpec.DataExport.Proxy.WavefrontTokenSecret = wavefrontTokenSecret
+	wfSpec.DataExport.WavefrontProxy.WavefrontUrl = wavefrontUrl
+	wfSpec.DataExport.WavefrontProxy.WavefrontTokenSecret = wavefrontTokenSecret
 	wfSpec.DataCollection.Metrics.CollectorConfig.ClusterName = clusterName
 	namespace := "wavefront"
 	_, wfCR, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wfSpec)

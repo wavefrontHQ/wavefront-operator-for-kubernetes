@@ -14,56 +14,56 @@ metadata:
 spec:
   ports:
     - name: wavefront
-      port: {{ .DataExport.Proxy.MetricPort }}
+      port: {{ .DataExport.WavefrontProxy.MetricPort }}
       protocol: TCP
-    {{if .DataExport.Proxy.DeltaCounterPort}}
+    {{if .DataExport.WavefrontProxy.DeltaCounterPort}}
     - name: delta-counter
-      port: {{ .DataExport.Proxy.DeltaCounterPort }}
+      port: {{ .DataExport.WavefrontProxy.DeltaCounterPort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Tracing.Wavefront.Port}}
+    {{if .DataExport.WavefrontProxy.Tracing.Wavefront.Port}}
     - name: wavefront-trace
-      port: {{ .DataExport.Proxy.Tracing.Wavefront.Port }}
+      port: {{ .DataExport.WavefrontProxy.Tracing.Wavefront.Port }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Tracing.Jaeger.Port}}
+    {{if .DataExport.WavefrontProxy.Tracing.Jaeger.Port}}
     - name: jaeger
-      port: {{ .DataExport.Proxy.Tracing.Jaeger.Port }}
+      port: {{ .DataExport.WavefrontProxy.Tracing.Jaeger.Port }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Tracing.Jaeger.GrpcPort}}
+    {{if .DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort}}
     - name: jaeger-grpc
-      port: {{ .DataExport.Proxy.Tracing.Jaeger.GrpcPort }}
+      port: {{ .DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Tracing.Jaeger.HttpPort}}
+    {{if .DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort}}
     - name: jaeger-http
-      port: {{ .DataExport.Proxy.Tracing.Jaeger.HttpPort }}
+      port: {{ .DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Tracing.Zipkin.Port}}
+    {{if .DataExport.WavefrontProxy.Tracing.Zipkin.Port}}
     - name: zipkin
-      port: {{ .DataExport.Proxy.Tracing.Zipkin.Port }}
+      port: {{ .DataExport.WavefrontProxy.Tracing.Zipkin.Port }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Histogram.Port}}
+    {{if .DataExport.WavefrontProxy.Histogram.Port}}
     - name: histogram
-      port: {{ .DataExport.Proxy.Histogram.Port }}
+      port: {{ .DataExport.WavefrontProxy.Histogram.Port }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Histogram.MinutePort}}
+    {{if .DataExport.WavefrontProxy.Histogram.MinutePort}}
     - name: histogram-minute
-      port: {{ .DataExport.Proxy.Histogram.MinutePort }}
+      port: {{ .DataExport.WavefrontProxy.Histogram.MinutePort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Histogram.HourPort}}
+    {{if .DataExport.WavefrontProxy.Histogram.HourPort}}
     - name: histogram-hour
-      port: {{ .DataExport.Proxy.Histogram.HourPort }}
+      port: {{ .DataExport.WavefrontProxy.Histogram.HourPort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.Proxy.Histogram.DayPort}}
+    {{if .DataExport.WavefrontProxy.Histogram.DayPort}}
     - name: histogram-day
-      port: {{ .DataExport.Proxy.Histogram.DayPort }}
+      port: {{ .DataExport.WavefrontProxy.Histogram.DayPort }}
       protocol: TCP
     {{end}}
   selector:

@@ -139,7 +139,7 @@ spec:
                 description: DataExport options
                 properties:
                   externalWavefrontProxy:
-                    description: External Wavefront Proxy configuration
+                    description: External Wavefront WavefrontProxy configuration
                     properties:
                       proxyUrl:
                         description: Url is the proxy URL that the collector sends
@@ -148,8 +148,8 @@ spec:
                     required:
                     - proxyUrl
                     type: object
-                  proxy:
-                    description: Proxy configuration options
+                  wavefrontProxy:
+                    description: WavefrontProxy configuration options
                     properties:
                       args:
                         description: Args is additional Wavefront proxy properties
@@ -251,7 +251,7 @@ spec:
                           that contains a wavefront API Token.
                         type: string
                       wavefrontUrl:
-                        description: WavefrontUrl is the wavefront instance.
+                        description: Wavefront URL for your cluster
                         type: string
                     required:
                     - wavefrontUrl

@@ -115,7 +115,7 @@ metadata:
   namespace: wavefront
 spec:
   dataExport:
-    proxy:
+    wavefrontProxy:
       wavefrontUrl: YOUR_WAVEFRONT_URL
       wavefrontTokenSecret: wavefront-secret
   dataCollection:

@@ -80,11 +80,11 @@ type CollectorConfig struct {
 }
 
 type DataExport struct {
-	// External Wavefront Proxy configuration
+	// External Wavefront WavefrontProxy configuration
 	ExternalWavefrontProxy ExternalWavefrontProxy `json:"externalWavefrontProxy,omitempty"`
 
-	// Proxy configuration options
-	Proxy Proxy `json:"proxy,omitempty"`
+	// WavefrontProxy configuration options
+	WavefrontProxy WavefrontProxy `json:"wavefrontProxy,omitempty"`
 }
 
 type ExternalWavefrontProxy struct {
@@ -97,7 +97,7 @@ type DataCollection struct {
 	Metrics Metrics `json:"metrics,omitempty"`
 }
 
-type Proxy struct {
+type WavefrontProxy struct {
 	// Enabled is whether to enable the wavefront proxy.
 	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`

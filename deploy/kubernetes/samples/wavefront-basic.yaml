@@ -12,5 +12,5 @@ spec:
         defaultCollectionInterval: 90s #defaults to 60s
         #enableDiscovery = true # defaults to true
   dataExport:
-    proxy:
+    wavefrontProxy:
       wavefrontUrl: YOUR_WAVEFRONT_URL
