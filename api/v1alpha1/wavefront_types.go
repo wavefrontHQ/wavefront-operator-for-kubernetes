@@ -28,6 +28,16 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
+	ClusterName string `json:"clusterName,required"`
+
+	// Wavefront URL for your cluster
+	WavefrontUrl string `json:"wavefrontUrl,required"`
+
+	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
+	// +kubebuilder:default:=wavefront-secret
+	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
+
 	// DataExport options
 	DataExport DataExport `json:"dataExport,omitempty"`
 
@@ -39,6 +49,10 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
+	// Enabled is whether to enable the metrics. Defaults to true.
+	// +kubebuilder:default:=true
+	Enabled bool `json:"enabled,omitempty"`
+
 	// ExternalCollectorConfig for the collector. Leave blank to use defaults
 	ExternalCollectorConfig ExternalCollectorConfig `json:"externalCollectorConfig,omitempty"`
 
@@ -53,9 +67,6 @@ type Metrics struct {
 
 	// CollectorConfigName ConfigMap name that is used internally
 	CollectorConfigName string `json:"-"`
-
-	// Enabled is for internal use only
-	Enabled bool `json:"-"`
 }
 
 type ExternalCollectorConfig struct {
@@ -64,9 +75,6 @@ type ExternalCollectorConfig struct {
 }
 
 type CollectorConfig struct {
-	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
-	ClusterName string `json:"clusterName,required"`
-
 	// Default metrics collection interval. Defaults to 60s.
 	// +kubebuilder:default:="60s"
 	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
@@ -98,16 +106,9 @@ type DataCollection struct {
 }
 
 type WavefrontProxy struct {
-	// Enabled is whether to enable the wavefront proxy.
+	// Enabled is whether to enable the wavefront proxy. Defaults to true.
 	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`
-
-	// Wavefront URL for your cluster
-	WavefrontUrl string `json:"wavefrontUrl,required"`
-
-	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
-	// +kubebuilder:default:=wavefront-secret
-	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	MetricPort int `json:"metricPort,omitempty"`

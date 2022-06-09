@@ -5,12 +5,14 @@ metadata:
   name: wavefront
   namespace: wavefront
 spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
     metrics:
+      enabled: true
       collectorConfig:
-        clusterName: YOUR_CLUSTER_NAME
         defaultCollectionInterval: 90s #defaults to 60s
         #enableDiscovery = true # defaults to true
   dataExport:
     wavefrontProxy:
-      wavefrontUrl: YOUR_WAVEFRONT_URL
+      enabled: true

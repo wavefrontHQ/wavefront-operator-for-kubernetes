@@ -352,10 +352,8 @@ func newTemplate(resourceFile string) *template.Template {
 func preprocess(wavefront *wf.Wavefront) {
 	if len(wavefront.Spec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName) == 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
-		wavefront.Spec.DataCollection.Metrics.Enabled = len(wavefront.Spec.DataCollection.Metrics.CollectorConfig.ClusterName) != 0
 	} else {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName
-		wavefront.Spec.DataCollection.Metrics.Enabled = true
 	}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.MetricPort == 0 {

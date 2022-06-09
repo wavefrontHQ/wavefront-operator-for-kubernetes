@@ -162,7 +162,7 @@ func TestReconcileCollector(t *testing.T) {
 		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
 	})
 
-	t.Run("Skip creating collector if metrics.config.clusterName is not given", func(t *testing.T) {
+	t.Run("Skip creating collector if metrics is not enabled", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
@@ -443,21 +443,21 @@ func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicCli
 
 func defaultWFSpec() wf.WavefrontSpec {
 	return wf.WavefrontSpec{
+		ClusterName:          "testClusterName",
+		WavefrontUrl:         "testWavefrontUrl",
+		WavefrontTokenSecret: "testToken",
 		DataExport: wf.DataExport{
 			ExternalWavefrontProxy: wf.ExternalWavefrontProxy{
 				Url: "externalProxyUrl",
 			},
 			WavefrontProxy: wf.WavefrontProxy{
-				Enabled:              true,
-				WavefrontUrl:         "testWavefrontUrl",
-				WavefrontTokenSecret: "testToken",
+				Enabled: true,
 			},
 		},
 		DataCollection: wf.DataCollection{
 			Metrics: wf.Metrics{
 				Enabled: true,
 				CollectorConfig: wf.CollectorConfig{
-					ClusterName:               "testClusterName",
 					EnableDiscovery:           true,
 					DefaultCollectionInterval: "60s",
 				},
@@ -588,9 +588,9 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 
 func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	wfSpec := defaultWFSpec()
-	wfSpec.DataExport.WavefrontProxy.WavefrontUrl = wavefrontUrl
-	wfSpec.DataExport.WavefrontProxy.WavefrontTokenSecret = wavefrontTokenSecret
-	wfSpec.DataCollection.Metrics.CollectorConfig.ClusterName = clusterName
+	wfSpec.WavefrontUrl = wavefrontUrl
+	wfSpec.WavefrontTokenSecret = wavefrontTokenSecret
+	wfSpec.ClusterName = clusterName
 	namespace := "wavefront"
 	_, wfCR, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wfSpec)
 
