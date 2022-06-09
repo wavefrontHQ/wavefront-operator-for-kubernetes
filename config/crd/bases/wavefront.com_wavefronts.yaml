@@ -52,27 +52,31 @@ spec:
                           for the cluster collector.
                         properties:
                           resources:
-                            description: Compute resources required by the Collector
-                              containers.
+                            description: Resources Compute resources required by the
+                              Collector containers.
                             properties:
                               limits:
-                                description: Limit CPU and Memory requirements
+                                description: Limits CPU and Memory requirements
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                 type: object
                               requests:
-                                description: Request CPU and Memory requirements
+                                description: Requests CPU and Memory requirements
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                 type: object
                             type: object
@@ -101,27 +105,31 @@ spec:
                           the node collector.
                         properties:
                           resources:
-                            description: Compute resources required by the Collector
-                              containers.
+                            description: Resources Compute resources required by the
+                              Collector containers.
                             properties:
                               limits:
-                                description: Limit CPU and Memory requirements
+                                description: Limits CPU and Memory requirements
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                 type: object
                               requests:
-                                description: Request CPU and Memory requirements
+                                description: Requests CPU and Memory requirements
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                 type: object
                             type: object
@@ -189,7 +197,8 @@ spec:
                       preprocessor:
                         description: Preprocessor is the name of the configmap containing
                           a rules.yaml key with proxy preprocessing rules
-                        minLength: 2
+                        maxLength: 253
+                        pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
                         type: string
                       tracing:
                         description: Distributed tracing configuration

@@ -196,22 +196,24 @@ type Histogram struct {
 
 type Resource struct {
 	// CPU is for specifying CPU requirements
+	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	CPU string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
 
 	// Memory is for specifying Memory requirements
+	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
 }
 
 type Resources struct {
-	// Request CPU and Memory requirements
+	// Requests CPU and Memory requirements
 	Requests Resource `json:"requests,omitempty" yaml:"requests,omitempty"`
 
-	// Limit CPU and Memory requirements
+	// Limits CPU and Memory requirements
 	Limits Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
 }
 
 type Collector struct {
-	// Compute resources required by the Collector containers.
+	// Resources Compute resources required by the Collector containers.
 	Resources Resources `json:"resources,omitempty"`
 }
 
