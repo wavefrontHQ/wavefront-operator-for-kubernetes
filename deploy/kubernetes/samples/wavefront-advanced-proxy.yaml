@@ -10,10 +10,10 @@ spec:
   wavefrontTokenSecret: wavefront-secret
   dataCollection:
     metrics:
-      enabled: true
+      enable: true
   dataExport:
     wavefrontProxy:
-      enabled: true
+      enable: true
       metricPort: 2878
       preprocessor: advanced-proxy-preprocessor-rules
       tracing:

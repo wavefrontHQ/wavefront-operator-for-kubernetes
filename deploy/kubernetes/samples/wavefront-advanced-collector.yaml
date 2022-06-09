@@ -10,12 +10,11 @@ spec:
   wavefrontTokenSecret: wavefront-secret
   dataExport:
     wavefrontProxy:
-      enabled: true
+      enable: true
   dataCollection:
     metrics:
-      enabled: true
-      externalCollectorConfig:
-        configName: wavefront-collector-config
+      enable: true
+      customConfig: wavefront-collector-config
       clusterCollector:
         resources:
           requests:
@@ -46,6 +45,7 @@ data:
     clusterName: YOUR_CLUSTER_NAME
     enableDiscovery: true
     enableEvents: false
+    defaultCollectionInterval: 60s
 
     sinks:
     - proxyAddress: wavefront-proxy:2878

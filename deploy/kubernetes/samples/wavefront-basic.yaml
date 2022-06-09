@@ -9,10 +9,9 @@ spec:
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
     metrics:
-      enabled: true
-      collectorConfig:
-        defaultCollectionInterval: 90s #defaults to 60s
-        #enableDiscovery = true # defaults to true
+      enable: true
+      defaultCollectionInterval: 90s #defaults to 60s
+      #enableDiscovery: true #defaults to true
   dataExport:
     wavefrontProxy:
-      enabled: true
+      enable: true

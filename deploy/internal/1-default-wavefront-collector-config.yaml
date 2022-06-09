@@ -14,14 +14,14 @@ metadata:
 data:
   config.yaml: |
     clusterName: {{.ClusterName}}
-    enableDiscovery: {{.DataCollection.Metrics.CollectorConfig.EnableDiscovery}}
+    enableDiscovery: {{.DataCollection.Metrics.EnableDiscovery}}
     enableEvents: false
-    defaultCollectionInterval: {{.DataCollection.Metrics.CollectorConfig.DefaultCollectionInterval}}
+    defaultCollectionInterval: {{.DataCollection.Metrics.DefaultCollectionInterval}}
     flushInterval: 10s
     sinkExportDataTimeout: 20s
 
     sinks:
-    - proxyAddress: {{.DataCollection.Metrics.CollectorConfig.ProxyAddress}}
+    - proxyAddress: {{.DataCollection.Metrics.ProxyAddress}}
       filters:
         metricDenyList:
         - kubernetes.sys_container.*

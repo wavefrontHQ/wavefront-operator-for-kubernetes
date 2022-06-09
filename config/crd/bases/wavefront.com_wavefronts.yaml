@@ -48,7 +48,7 @@ spec:
                     properties:
                       clusterCollector:
                         description: ClusterCollector is for resource configuration
-                          for the cluster collector
+                          for the cluster collector.
                         properties:
                           resources:
                             description: Compute resources required by the Collector
@@ -76,38 +76,28 @@ spec:
                                 type: object
                             type: object
                         type: object
-                      collectorConfig:
-                        description: CollectorConfig for the internal collector
-                        properties:
-                          defaultCollectionInterval:
-                            default: 60s
-                            description: Default metrics collection interval. Defaults
-                              to 60s.
-                            type: string
-                          enableDiscovery:
-                            default: true
-                            description: Rules based and Prometheus endpoints auto-discovery.
-                              Defaults to true.
-                            type: boolean
-                        type: object
-                      enabled:
+                      customConfig:
+                        description: CustomConfig is the custom ConfigMap name for
+                          the collector. Leave blank to use defaults.
+                        type: string
+                      defaultCollectionInterval:
+                        default: 60s
+                        description: Default metrics collection interval. Defaults
+                          to 60s.
+                        type: string
+                      enable:
                         default: true
-                        description: Enabled is whether to enable the metrics. Defaults
+                        description: Enable is whether to enable the metrics. Defaults
                           to true.
                         type: boolean
-                      externalCollectorConfig:
-                        description: ExternalCollectorConfig for the collector. Leave
-                          blank to use defaults
-                        properties:
-                          configName:
-                            description: Collector ConfigMap name
-                            type: string
-                        required:
-                        - configName
-                        type: object
+                      enableDiscovery:
+                        default: true
+                        description: Rules based and Prometheus endpoints auto-discovery.
+                          Defaults to true.
+                        type: boolean
                       nodeCollector:
                         description: NodeCollector is for resource configuration for
-                          the node collector
+                          the node collector.
                         properties:
                           resources:
                             description: Compute resources required by the Collector
@@ -162,9 +152,9 @@ spec:
                         description: DeltaCounterPort accumulates 1-minute delta counters
                           on Wavefront data format (usually 50000)
                         type: integer
-                      enabled:
+                      enable:
                         default: true
-                        description: Enabled is whether to enable the wavefront proxy.
+                        description: Enable is whether to enable the wavefront proxy.
                           Defaults to true.
                         type: boolean
                       histogram:

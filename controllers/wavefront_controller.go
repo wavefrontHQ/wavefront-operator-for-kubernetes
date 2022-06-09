@@ -216,10 +216,10 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 		}
 
 		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
 			continue
 		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enabled {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
 			continue
 		}
 		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
@@ -350,20 +350,20 @@ func newTemplate(resourceFile string) *template.Template {
 }
 
 func preprocess(wavefront *wf.Wavefront) {
-	if len(wavefront.Spec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName) == 0 {
+	if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
 	} else {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName
+		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.CustomConfig
 	}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.MetricPort == 0 {
 		wavefront.Spec.DataExport.WavefrontProxy.MetricPort = 2878
 	}
 
-	if wavefront.Spec.DataExport.WavefrontProxy.Enabled {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfig.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfig.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
+		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")

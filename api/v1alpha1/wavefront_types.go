@@ -49,32 +49,13 @@ type WavefrontSpec struct {
 }
 
 type Metrics struct {
-	// Enabled is whether to enable the metrics. Defaults to true.
+	// Enable is whether to enable the metrics. Defaults to true.
 	// +kubebuilder:default:=true
-	Enabled bool `json:"enabled,omitempty"`
+	Enable bool `json:"enable,omitempty"`
 
-	// ExternalCollectorConfig for the collector. Leave blank to use defaults
-	ExternalCollectorConfig ExternalCollectorConfig `json:"externalCollectorConfig,omitempty"`
+	// CustomConfig is the custom ConfigMap name for the collector. Leave blank to use defaults.
+	CustomConfig string `json:"customConfig,omitempty"`
 
-	// CollectorConfig for the internal collector
-	CollectorConfig CollectorConfig `json:"collectorConfig,omitempty"`
-
-	// ClusterCollector is for resource configuration for the cluster collector
-	ClusterCollector Collector `json:"clusterCollector,omitempty"`
-
-	// NodeCollector is for resource configuration for the node collector
-	NodeCollector Collector `json:"nodeCollector,omitempty"`
-
-	// CollectorConfigName ConfigMap name that is used internally
-	CollectorConfigName string `json:"-"`
-}
-
-type ExternalCollectorConfig struct {
-	// Collector ConfigMap name
-	ConfigName string `json:"configName,required"`
-}
-
-type CollectorConfig struct {
 	// Default metrics collection interval. Defaults to 60s.
 	// +kubebuilder:default:="60s"
 	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
@@ -82,6 +63,15 @@ type CollectorConfig struct {
 	// Rules based and Prometheus endpoints auto-discovery. Defaults to true.
 	// +kubebuilder:default:=true
 	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
+
+	// ClusterCollector is for resource configuration for the cluster collector.
+	ClusterCollector Collector `json:"clusterCollector,omitempty"`
+
+	// NodeCollector is for resource configuration for the node collector.
+	NodeCollector Collector `json:"nodeCollector,omitempty"`
+
+	// CollectorConfigName ConfigMap name that is used internally
+	CollectorConfigName string `json:"-"`
 
 	// ProxyAddress is for internal use only
 	ProxyAddress string `json:"-"`
@@ -106,9 +96,9 @@ type DataCollection struct {
 }
 
 type WavefrontProxy struct {
-	// Enabled is whether to enable the wavefront proxy. Defaults to true.
+	// Enable is whether to enable the wavefront proxy. Defaults to true.
 	// +kubebuilder:default:=true
-	Enabled bool `json:"enabled,omitempty"`
+	Enable bool `json:"enable,omitempty"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	MetricPort int `json:"metricPort,omitempty"`

@@ -93,7 +93,7 @@ func TestReconcileAll(t *testing.T) {
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.ExternalCollectorConfig.ConfigName = "myconfig"
+		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -210,9 +210,9 @@ func TestReconcileProxy(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enabled is set to false", func(t *testing.T) {
+	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Enabled = false
+		wfSpec.DataExport.WavefrontProxy.Enable = false
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -451,16 +451,14 @@ func defaultWFSpec() wf.WavefrontSpec {
 				Url: "externalProxyUrl",
 			},
 			WavefrontProxy: wf.WavefrontProxy{
-				Enabled: true,
+				Enable: true,
 			},
 		},
 		DataCollection: wf.DataCollection{
 			Metrics: wf.Metrics{
-				Enabled: true,
-				CollectorConfig: wf.CollectorConfig{
-					EnableDiscovery:           true,
-					DefaultCollectionInterval: "60s",
-				},
+				Enable:                    true,
+				EnableDiscovery:           true,
+				DefaultCollectionInterval: "60s",
 			},
 		},
 		ControllerManagerUID: "",
