@@ -2,5 +2,5 @@ resources:
 - service_account.yaml
 - role.yaml
 - role_binding.yaml
-- collector/1-cluster-role.yaml
-- collector/2-rbac.yaml
+- collector/1-collector-roles.yaml
+- collector/2-collector-rbac.yaml
