@@ -29,12 +29,16 @@ type WavefrontSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
+	// +kubebuilder:validation:MinLength:=3
 	ClusterName string `json:"clusterName,required"`
 
 	// Wavefront URL for your cluster
+	// +kubebuilder:validation:Pattern:=`^https:\/\/.*.wavefront.com`
 	WavefrontUrl string `json:"wavefrontUrl,required"`
 
 	// WavefrontTokenSecret is the name of the secret that contains a wavefront API Token.
+	// +kubebuilder:validation:MaxLength:=253
+	// +kubebuilder:validation:Pattern:=`^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$`
 	// +kubebuilder:default:=wavefront-secret
 	WavefrontTokenSecret string `json:"wavefrontTokenSecret,omitempty"`
 
@@ -87,7 +91,9 @@ type DataExport struct {
 
 type ExternalWavefrontProxy struct {
 	// Url is the proxy URL that the collector sends metrics to.
-	Url string `json:"proxyUrl,required"`
+	// +kubebuilder:validation:Pattern:=`^http*`
+	// +kubebuilder:validation:MinLength:=10
+	Url string `json:"url,required"`
 }
 
 type DataCollection struct {
@@ -101,6 +107,7 @@ type WavefrontProxy struct {
 	Enable bool `json:"enable,omitempty"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
+	// +kubebuilder:default:=2878
 	MetricPort int `json:"metricPort,omitempty"`
 
 	// DeltaCounterPort accumulates 1-minute delta counters on Wavefront data format (usually 50000)
@@ -108,6 +115,7 @@ type WavefrontProxy struct {
 
 	// Args is additional Wavefront proxy properties to be passed as command line arguments in the
 	// --<property_name> <value> format. Multiple properties can be specified.
+	// +kubebuilder:validation:Pattern:=`--.* .*`
 	Args string `json:"args,omitempty"`
 
 	// Distributed tracing configuration
@@ -117,6 +125,8 @@ type WavefrontProxy struct {
 	Histogram Histogram `json:"histogram,omitempty"`
 
 	// Preprocessor is the name of the configmap containing a rules.yaml key with proxy preprocessing rules
+	// +kubebuilder:validation:MaxLength:=253
+	// +kubebuilder:validation:Pattern:=`^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$`
 	Preprocessor string `json:"preprocessor,omitempty"`
 }
 
@@ -134,12 +144,14 @@ type Tracing struct {
 
 type WavefrontTracing struct {
 	// Port for distributed tracing data (usually 30000)
+	// +kubebuilder:default:=30000
 	Port int `json:"port,omitempty"`
 
-	// Distributed tracing data sampling rate (0 to 1)
+	// SamplingRate Distributed tracing data sampling rate (0 to 1)
+	// +kubebuilder:validation:Pattern:=`^(0+\.?|0*\.\d+|0*1(\.0*)?)$`
 	SamplingRate string `json:"samplingRate,omitempty"`
 
-	// When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)
+	// SamplingDuration When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)
 	SamplingDuration int `json:"samplingDuration,omitempty"`
 }
 
@@ -147,21 +159,24 @@ type JaegerTracing struct {
 	// Port for Jaeger format distributed tracing data (usually 30001)
 	Port int `json:"port,omitempty"`
 
-	// Port for Jaeger Thrift format data (usually 30080)
+	// HttpPort for Jaeger Thrift format data (usually 30080)
 	HttpPort int `json:"httpPort,omitempty"`
 
-	// Port for Jaeger GRPC format data (usually 14250)
+	// GrpcPort for Jaeger GRPC format data (usually 14250)
 	GrpcPort int `json:"grpcPort,omitempty"`
 
-	// Custom application name for traces received on Jaeger's Http or Gprc port.
+	// ApplicationName Custom application name for traces received on Jaeger's Http or Gprc port.
+	// +kubebuilder:validation:MinLength:=3
 	ApplicationName string `json:"applicationName,omitempty"`
 }
 
 type ZipkinTracing struct {
 	// Port for Zipkin format distributed tracing data (usually 9411)
+	// +kubebuilder:default:=9411
 	Port int `json:"port,omitempty"`
 
-	// Custom application name for traces received on Zipkin's port.
+	// ApplicationName Custom application name for traces received on Zipkin's port.
+	// +kubebuilder:validation:MinLength:=3
 	ApplicationName string `json:"applicationName,omitempty"`
 }
 
@@ -169,34 +184,36 @@ type Histogram struct {
 	// Port for histogram distribution format data (usually 40000)
 	Port int `json:"port,omitempty"`
 
-	// Port to accumulate 1-minute based histograms on Wavefront data format (usually 40001)
+	// MinutePort to accumulate 1-minute based histograms on Wavefront data format (usually 40001)
 	MinutePort int `json:"minutePort,omitempty"`
 
-	// Port to accumulate 1-hour based histograms on Wavefront data format (usually 40002)
+	// HourPort to accumulate 1-hour based histograms on Wavefront data format (usually 40002)
 	HourPort int `json:"hourPort,omitempty"`
 
-	// Port to accumulate 1-day based histograms on Wavefront data format (usually 40003)
+	// DayPort to accumulate 1-day based histograms on Wavefront data format (usually 40003)
 	DayPort int `json:"dayPort,omitempty"`
 }
 
 type Resource struct {
 	// CPU is for specifying CPU requirements
+	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	CPU string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
 
 	// Memory is for specifying Memory requirements
+	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
 }
 
 type Resources struct {
-	// Request CPU and Memory requirements
+	// Requests CPU and Memory requirements
 	Requests Resource `json:"requests,omitempty" yaml:"requests,omitempty"`
 
-	// Limit CPU and Memory requirements
+	// Limits CPU and Memory requirements
 	Limits Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
 }
 
 type Collector struct {
-	// Compute resources required by the Collector containers.
+	// Resources Compute resources required by the Collector containers.
 	Resources Resources `json:"resources,omitempty"`
 }
 

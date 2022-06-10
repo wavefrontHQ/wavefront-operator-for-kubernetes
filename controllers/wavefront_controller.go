@@ -356,10 +356,6 @@ func preprocess(wavefront *wf.Wavefront) {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.CustomConfig
 	}
 
-	if wavefront.Spec.DataExport.WavefrontProxy.MetricPort == 0 {
-		wavefront.Spec.DataExport.WavefrontProxy.MetricPort = 2878
-	}
-
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {

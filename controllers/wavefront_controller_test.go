@@ -451,7 +451,8 @@ func defaultWFSpec() wf.WavefrontSpec {
 				Url: "externalProxyUrl",
 			},
 			WavefrontProxy: wf.WavefrontProxy{
-				Enable: true,
+				Enable:     true,
+				MetricPort: 2878,
 			},
 		},
 		DataCollection: wf.DataCollection{
