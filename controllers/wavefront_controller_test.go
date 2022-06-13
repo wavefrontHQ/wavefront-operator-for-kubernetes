@@ -348,6 +348,36 @@ func TestReconcileProxy(t *testing.T) {
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
+
+	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+
+		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
+		fmt.Println("value" + value)
+		containsProxyArg(t, "--proxyHost 10.202.210.216", dynamicClient)
+		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
+		containsProxyArg(t, "--proxyUser validUser", dynamicClient)
+		containsProxyArg(t, "--proxyPassword validPassword123", dynamicClient)
+		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
+		volumeHasSecret(t, deployment, "http-proxy-ca", "http-proxy-secret")
+	})
+}
+
+func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
+	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if volumeMount.Name == name {
+			assert.Equal(t, path, volumeMount.MountPath)
+			return
+		}
+	}
+	assert.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
 }
 
 func volumeHasConfigMap(t *testing.T, deployment appsv1.Deployment, name string, configMapName string) {
@@ -360,14 +390,14 @@ func volumeHasConfigMap(t *testing.T, deployment appsv1.Deployment, name string,
 	assert.Failf(t, "could not find volume", "could not find volume named %s on deployment %s", name, deployment.Name)
 }
 
-func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
-	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
-		if volumeMount.Name == name {
-			assert.Equal(t, path, volumeMount.MountPath)
+func volumeHasSecret(t *testing.T, deployment appsv1.Deployment, name string, secretName string) {
+	for _, volume := range deployment.Spec.Template.Spec.Volumes {
+		if volume.Name == name {
+			assert.Equal(t, secretName, volume.Secret.SecretName)
 			return
 		}
 	}
-	assert.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
+	assert.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
@@ -541,6 +571,11 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 	testRestMapper.Add(schema.GroupVersionKind{
 		Group:   "",
 		Version: "v1",
+		Kind:    "Secret",
+	}, meta.RESTScopeNamespace)
+	testRestMapper.Add(schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
 		Kind:    "Service",
 	}, meta.RESTScopeNamespace)
 	testRestMapper.Add(schema.GroupVersionKind{
@@ -560,19 +595,38 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
 
-	fakesAppsV1 := k8sfake.NewSimpleClientset(&appsv1.Deployment{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
+	fakesAppsV1 := k8sfake.NewSimpleClientset(
+		&appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-controller-manager",
+				Namespace: "wavefront",
+				UID:       "testUID",
+			},
+			Spec:   appsv1.DeploymentSpec{},
+			Status: appsv1.DeploymentStatus{},
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "wavefront-controller-manager",
-			Namespace: "wavefront",
-			UID:       "testUID",
+		&v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "testHttpProxySecret",
+				Namespace: "wavefront",
+				UID:       "testUID",
+			},
+			StringData: map[string]string{
+				"http-url":            "https://myproxyhost_url:8080",
+				"basic-auth-username": "myUser",
+				"basic-auth-password": "myPassword",
+				"tls-root-ca-bundle":  "myCert",
+			},
 		},
-		Spec:   appsv1.DeploymentSpec{},
-		Status: appsv1.DeploymentStatus{},
-	}).AppsV1()
+	).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
 		Client:        apiClient,

@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,10 +32,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 
+	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/discovery"
@@ -42,10 +47,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
-
-	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -95,7 +96,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	preprocess(wavefront)
+	r.preprocess(wavefront, ctx, req)
 
 	if errors.IsNotFound(err) {
 		err = r.readAndDeleteResources()
@@ -349,7 +350,7 @@ func newTemplate(resourceFile string) *template.Template {
 	return template.New(resourceFile).Funcs(fMap)
 }
 
-func preprocess(wavefront *wf.Wavefront) {
+func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context, req ctrl.Request) error {
 	if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
 	} else {
@@ -358,10 +359,42 @@ func preprocess(wavefront *wf.Wavefront) {
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+		if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
+			httpProxySecret := &corev1.Secret{}
+
+			secret := client.ObjectKey{
+				Namespace: "wavefront",
+				Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
+			}
+			err := r.Client.Get(ctx, secret, httpProxySecret)
+			//err := r.Client.Get(ctx, req.NamespacedName, httpProxySecret)
+
+			if err != nil {
+				log.Log.Error(err, "error getting httpProxy Secret")
+				return err
+			}
+
+			// TODO: Do we really need to use a single http-url? Can they be http-host and http-port instead?
+			host, port, err := net.SplitHostPort(httpProxySecret.StringData["http-url"])
+			if err != nil && !errors.IsNotFound(err) {
+				log.Log.Error(err, "error extracting host and port from http-url")
+			}
+			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = host
+			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = port
+			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecret.StringData["basic-auth-username"]
+			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecret.StringData["basic-auth-password"]
+
+			if len(httpProxySecret.StringData["tls-root-ca-bundle"]) != 0 {
+				wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
+				// TODO: Use CA cert logic
+			}
+
+		}
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
+	return nil
 }

@@ -51,8 +51,13 @@ spec:
               {{- if .DataExport.WavefrontProxy.Histogram.Port }} --histogramDistListenerPorts {{ .DataExport.WavefrontProxy.Histogram.Port }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.Histogram.MinutePort }} --histogramMinuteListenerPorts {{ .DataExport.WavefrontProxy.Histogram.MinutePort }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.Histogram.HourPort }} --histogramHourListenerPorts {{ .DataExport.WavefrontProxy.Histogram.HourPort }} {{- end -}}
-              {{- if .DataExport.WavefrontProxy.Histogram.DayPort }} --histogramDayListenerPorts {{ .DataExport.WavefrontProxy.Histogram.DayPort }} {{- end }}
-              {{- if .DataExport.WavefrontProxy.Preprocessor }} --preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml {{- end }}
+              {{- if .DataExport.WavefrontProxy.Histogram.DayPort }} --histogramDayListenerPorts {{ .DataExport.WavefrontProxy.Histogram.DayPort }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.Preprocessor }} --preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml {{- end -}}
+              {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyHost }} --proxyHost {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyHost }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPort }} --proxyPort {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPort }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} --proxyUser {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} --proxyPassword {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} {{- end }}
+
           ports:
             - containerPort: {{ .DataExport.WavefrontProxy.MetricPort }}
               protocol: TCP

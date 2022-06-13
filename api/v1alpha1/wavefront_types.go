@@ -128,6 +128,9 @@ type WavefrontProxy struct {
 	// +kubebuilder:validation:MaxLength:=253
 	// +kubebuilder:validation:Pattern:=`^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$`
 	Preprocessor string `json:"preprocessor,omitempty"`
+
+	// HttpProxy configuration
+	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
 }
 
 type Tracing struct {
@@ -192,6 +195,20 @@ type Histogram struct {
 
 	// DayPort to accumulate 1-day based histograms on Wavefront data format (usually 40003)
 	DayPort int `json:"dayPort,omitempty"`
+}
+
+type HttpProxy struct {
+	// Name of the secret containing the HttpProxy configuration.
+	// +kubebuilder:validation:MaxLength:=253
+	// +kubebuilder:validation:Pattern:=`^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$`
+	Secret string `json:"secret,omitempty"`
+
+	// Used internally. Read in from HttpProxy Secret.
+	HttpProxyHost      string `json:"-"`
+	HttpProxyPort      string `json:"-"`
+	HttpProxyUser      string `json:"-"`
+	HttpProxyPassword  string `json:"-"`
+	UseHttpProxyCAcert bool   `json:"-"`
 }
 
 type Resource struct {
