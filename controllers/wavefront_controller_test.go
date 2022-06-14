@@ -545,6 +545,23 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 		Status:     wf.WavefrontStatus{},
 	}
 
+	var httpProxySecet = &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testHttpProxySecret",
+			Namespace: "wavefront",
+			UID:       "testUID",
+		},
+		StringData: map[string]string{
+			"http-url":            "https://myproxyhost_url:8080",
+			"basic-auth-username": "myUser",
+			"basic-auth-password": "myPassword",
+			"tls-root-ca-bundle":  "myCert",
+		},
+	}
 	s := scheme.Scheme
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Service{})
 	s.AddKnownTypes(wf.GroupVersion, wfCR)
@@ -590,43 +607,24 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
-	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR).WithRESTMapper(testRestMapper)
+	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR, httpProxySecet).WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
 
-	fakesAppsV1 := k8sfake.NewSimpleClientset(
-		&appsv1.Deployment{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Deployment",
-				APIVersion: "apps/v1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-controller-manager",
-				Namespace: "wavefront",
-				UID:       "testUID",
-			},
-			Spec:   appsv1.DeploymentSpec{},
-			Status: appsv1.DeploymentStatus{},
+	fakesAppsV1 := k8sfake.NewSimpleClientset(&appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
 		},
-		&v1.Secret{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Secret",
-				APIVersion: "v1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "testHttpProxySecret",
-				Namespace: "wavefront",
-				UID:       "testUID",
-			},
-			StringData: map[string]string{
-				"http-url":            "https://myproxyhost_url:8080",
-				"basic-auth-username": "myUser",
-				"basic-auth-password": "myPassword",
-				"tls-root-ca-bundle":  "myCert",
-			},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "wavefront-controller-manager",
+			Namespace: "wavefront",
+			UID:       "testUID",
 		},
-	).AppsV1()
+		Spec:   appsv1.DeploymentSpec{},
+		Status: appsv1.DeploymentStatus{},
+	}).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
 		Client:        apiClient,
