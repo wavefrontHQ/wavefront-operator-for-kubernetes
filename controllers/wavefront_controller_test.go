@@ -379,7 +379,7 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
 		containsProxyArg(t, "--proxyPassword myPassword", dynamicClient)
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
-		volumeHasSecret(t, deployment, "http-proxy-ca", "http-proxy-secret")
+		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
 	})
 }
 
@@ -604,9 +604,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...client.Object) (*controll
 
 	clientBuilder := fake.NewClientBuilder()
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR)
-	for _, initObj := range initObjs {
-		clientBuilder = clientBuilder.WithScheme(s).WithObjects(initObj)
-	}
+	clientBuilder = clientBuilder.WithScheme(s).WithObjects(initObjs...)
 	clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 

@@ -128,7 +128,7 @@ spec:
       {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
       - name: http-proxy-ca
         secret:
-          secretName: http-proxy-secret
+          secretName: {{ .DataExport.WavefrontProxy.HttpProxy.Secret }}
           items:
             - key: tls-root-ca-bundle
               path: ca.pem
