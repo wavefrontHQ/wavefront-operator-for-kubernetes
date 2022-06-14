@@ -352,16 +352,28 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
-		// TODO: Create secret under this test and not for all setups.
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-
+		var httpProxySecet = &v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "testHttpProxySecret",
+				Namespace: "wavefront",
+				UID:       "testUID",
+			},
+			StringData: map[string]string{
+				"http-url":            "https://myproxyhost_url:8080",
+				"basic-auth-username": "myUser",
+				"basic-auth-password": "myPassword",
+				"tls-root-ca-bundle":  "myCert",
+			},
+		}
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
 
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
-
-		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-		fmt.Println("value" + value)
 		containsProxyArg(t, "--proxyHost https://myproxyhost_url ", dynamicClient)
 		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
 		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
@@ -538,7 +550,7 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
-func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setupForCreate(spec wf.WavefrontSpec, initObjs ...client.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	var wfCR = &wf.Wavefront{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
@@ -546,23 +558,6 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 		Status:     wf.WavefrontStatus{},
 	}
 
-	var httpProxySecet = &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testHttpProxySecret",
-			Namespace: "wavefront",
-			UID:       "testUID",
-		},
-		StringData: map[string]string{
-			"http-url":            "https://myproxyhost_url:8080",
-			"basic-auth-username": "myUser",
-			"basic-auth-password": "myPassword",
-			"tls-root-ca-bundle":  "myCert",
-		},
-	}
 	s := scheme.Scheme
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Service{})
 	s.AddKnownTypes(wf.GroupVersion, wfCR)
@@ -608,7 +603,11 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
-	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR, httpProxySecet).WithRESTMapper(testRestMapper)
+	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR)
+	for _, initObj := range initObjs {
+		clientBuilder = clientBuilder.WithScheme(s).WithObjects(initObj)
+	}
+	clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
