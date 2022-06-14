@@ -395,15 +395,16 @@ func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx c
 	err := r.Client.Get(ctx, secret, httpProxySecret)
 	if err != nil {
 		log.Log.Error(err, "error getting httpProxy Secret")
-		return nil, nil
+		return nil, err
 	}
-	return httpProxySecret, err
+	return httpProxySecret, nil
 }
 
 func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront) error {
 	httpUrl, err := url.Parse(httpProxySecret.StringData["http-url"])
 	if err != nil {
 		log.Log.Error(err, "error parsing url")
+		return err
 	}
 	hostWithScheme := strings.Replace(httpUrl.String(), ":"+httpUrl.Port(), "", 1)
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = hostWithScheme
