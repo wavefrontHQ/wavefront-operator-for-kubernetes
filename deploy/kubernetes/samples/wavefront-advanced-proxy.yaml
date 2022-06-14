@@ -34,6 +34,8 @@ spec:
         minutePort: 40001
         hourPort: 40002
         dayPort: 40003
+#      httpProxy:
+#        secret: http-proxy-secret
       args: |
         --customSourceTags mySource
 ---
