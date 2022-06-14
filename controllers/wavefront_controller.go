@@ -77,6 +77,7 @@ type WavefrontReconciler struct {
 // +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=daemonsets,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=serviceaccounts,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=configmaps,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups="",namespace=wavefront,resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -361,6 +362,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err := r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
+			log.Log.Error(err, "error parsing http proxy configs")
 			return err
 		}
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
@@ -376,6 +378,7 @@ func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx
 	if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
 		httpProxySecret, err := r.findHttpProxySecret(wavefront, ctx)
 		if err != nil {
+			log.Log.Error(err, "error getting httpProxy Secret ")
 			return err
 		}
 		err = setHttpProxyConfigs(httpProxySecret, wavefront)
@@ -401,18 +404,23 @@ func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx c
 }
 
 func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront) error {
-	httpUrl, err := url.Parse(httpProxySecret.StringData["http-url"])
+
+	httpProxySecretData := map[string]string{}
+	for k, v := range httpProxySecret.Data {
+		httpProxySecretData[k] = string(v)
+	}
+
+	httpUrl, err := url.Parse(httpProxySecretData["http-url"])
 	if err != nil {
 		log.Log.Error(err, "error parsing url")
 		return err
 	}
-	hostWithScheme := strings.Replace(httpUrl.String(), ":"+httpUrl.Port(), "", 1)
-	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = hostWithScheme
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = httpUrl.Hostname()
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = httpUrl.Port()
-	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecret.StringData["basic-auth-username"]
-	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecret.StringData["basic-auth-password"]
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecretData["basic-auth-username"]
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecretData["basic-auth-password"]
 
-	if len(httpProxySecret.StringData["tls-root-ca-bundle"]) != 0 {
+	if len(httpProxySecretData["tls-root-ca-bundle"]) != 0 {
 		wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
 	}
 	return nil

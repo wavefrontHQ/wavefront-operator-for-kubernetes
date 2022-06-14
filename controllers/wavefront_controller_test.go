@@ -362,11 +362,11 @@ func TestReconcileProxy(t *testing.T) {
 				Namespace: "wavefront",
 				UID:       "testUID",
 			},
-			StringData: map[string]string{
-				"http-url":            "https://myproxyhost_url:8080",
-				"basic-auth-username": "myUser",
-				"basic-auth-password": "myPassword",
-				"tls-root-ca-bundle":  "myCert",
+			Data: map[string][]byte{
+				"http-url":            []byte("https://myproxyhost_url:8080"),
+				"basic-auth-username": []byte("myUser"),
+				"basic-auth-password": []byte("myPassword"),
+				"tls-root-ca-bundle":  []byte("myCert"),
 			},
 		}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
@@ -374,12 +374,37 @@ func TestReconcileProxy(t *testing.T) {
 		assert.NoError(t, err)
 
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
-		containsProxyArg(t, "--proxyHost https://myproxyhost_url ", dynamicClient)
+		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
 		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
 		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
 		containsProxyArg(t, "--proxyPassword myPassword", dynamicClient)
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
 		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
+	})
+
+	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		var httpProxySecet = &v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "testHttpProxySecret",
+				Namespace: "wavefront",
+				UID:       "testUID",
+			},
+			Data: map[string][]byte{
+				"http-url": []byte("https://myproxyhost_url:8080"),
+			},
+		}
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
+		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
 	})
 }
 

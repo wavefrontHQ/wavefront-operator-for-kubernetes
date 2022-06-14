@@ -5,7 +5,7 @@ metadata:
   name: wavefront
   namespace: wavefront
 spec:
-  clusterName: YOUT_CLUSTER_NAME
+  clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
   wavefrontTokenSecret: wavefront-secret
   dataExport:
