@@ -359,38 +359,9 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
-		// TODO: Extract and refactor the HttpProxy secret related code
-		if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
-			httpProxySecret := &corev1.Secret{}
-
-			secret := client.ObjectKey{
-				Namespace: "wavefront",
-				Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
-			}
-			err := r.Client.Get(ctx, secret, httpProxySecret)
-
-			if err != nil {
-				log.Log.Error(err, "error getting httpProxy Secret")
-				return err
-			}
-
-			var httpUrl *url.URL
-			httpUrl, err = url.Parse(httpProxySecret.StringData["http-url"])
-			if err != nil {
-				log.Log.Error(err, "error parsing url")
-			}
-
-			hostWithScheme := strings.Replace(httpUrl.String(), ":"+httpUrl.Port(), "", 1)
-			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = hostWithScheme
-
-			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = httpUrl.Port()
-			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecret.StringData["basic-auth-username"]
-			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecret.StringData["basic-auth-password"]
-
-			if len(httpProxySecret.StringData["tls-root-ca-bundle"]) != 0 {
-				wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
-			}
-
+		err := r.parseHttpProxyConfigs(wavefront, ctx)
+		if err != nil {
+			return err
 		}
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
@@ -398,5 +369,50 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
+	return nil
+}
+
+func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx context.Context) error {
+	if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
+		httpProxySecret, err := r.findHttpProxySecret(wavefront, ctx)
+		if err != nil {
+			return err
+		}
+		err = setHttpProxyConfigs(httpProxySecret, wavefront)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx context.Context) (*corev1.Secret, error) {
+	secret := client.ObjectKey{
+		Namespace: "wavefront",
+		Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
+	}
+	httpProxySecret := &corev1.Secret{}
+	err := r.Client.Get(ctx, secret, httpProxySecret)
+	if err != nil {
+		log.Log.Error(err, "error getting httpProxy Secret")
+		return nil, nil
+	}
+	return httpProxySecret, err
+}
+
+func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront) error {
+	httpUrl, err := url.Parse(httpProxySecret.StringData["http-url"])
+	if err != nil {
+		log.Log.Error(err, "error parsing url")
+	}
+	hostWithScheme := strings.Replace(httpUrl.String(), ":"+httpUrl.Port(), "", 1)
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = hostWithScheme
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = httpUrl.Port()
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecret.StringData["basic-auth-username"]
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecret.StringData["basic-auth-password"]
+
+	if len(httpProxySecret.StringData["tls-root-ca-bundle"]) != 0 {
+		wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
+	}
 	return nil
 }
