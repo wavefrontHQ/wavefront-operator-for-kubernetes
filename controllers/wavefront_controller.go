@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -359,6 +359,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+		// TODO: Extract and refactor the HttpProxy secret related code
 		if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
 			httpProxySecret := &corev1.Secret{}
 
@@ -367,26 +368,27 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 				Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
 			}
 			err := r.Client.Get(ctx, secret, httpProxySecret)
-			//err := r.Client.Get(ctx, req.NamespacedName, httpProxySecret)
 
 			if err != nil {
 				log.Log.Error(err, "error getting httpProxy Secret")
 				return err
 			}
 
-			// TODO: Do we really need to use a single http-url? Can they be http-host and http-port instead?
-			host, port, err := net.SplitHostPort(httpProxySecret.StringData["http-url"])
-			if err != nil && !errors.IsNotFound(err) {
-				log.Log.Error(err, "error extracting host and port from http-url")
+			var httpUrl *url.URL
+			httpUrl, err = url.Parse(httpProxySecret.StringData["http-url"])
+			if err != nil {
+				log.Log.Error(err, "error parsing url")
 			}
-			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = host
-			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = port
+
+			hostWithScheme := strings.Replace(httpUrl.String(), ":"+httpUrl.Port(), "", 1)
+			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = hostWithScheme
+
+			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = httpUrl.Port()
 			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecret.StringData["basic-auth-username"]
 			wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecret.StringData["basic-auth-password"]
 
 			if len(httpProxySecret.StringData["tls-root-ca-bundle"]) != 0 {
 				wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
-				// TODO: Use CA cert logic
 			}
 
 		}

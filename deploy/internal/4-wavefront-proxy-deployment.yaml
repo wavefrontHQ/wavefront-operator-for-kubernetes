@@ -110,15 +110,27 @@ spec:
               memory: 1Gi
           securityContext:
             privileged: false
-          {{- if .DataExport.WavefrontProxy.Preprocessor}}
           volumeMounts:
+          {{- if .DataExport.WavefrontProxy.Preprocessor}}
           - name: preprocessor
             mountPath: /etc/wavefront/preprocessor
           {{- end }}
-      {{- if .DataExport.WavefrontProxy.Preprocessor }}
+          {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert}}
+          - name: http-proxy-ca
+            mountPath: /tmp/ca
+          {{- end }}
       volumes:
-        - name: preprocessor
-          configMap:
-            name: {{ .DataExport.WavefrontProxy.Preprocessor }}
+      {{- if .DataExport.WavefrontProxy.Preprocessor }}
+      - name: preprocessor
+        configMap:
+          name: {{ .DataExport.WavefrontProxy.Preprocessor }}
+      {{- end }}
+      {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+      - name: http-proxy-ca
+        secret:
+          secretName: http-proxy-secret
+          items:
+            - key: tls-root-ca-bundle
+              path: ca.pem
       {{- end }}
 

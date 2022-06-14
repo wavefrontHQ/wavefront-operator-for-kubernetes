@@ -352,6 +352,7 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		// TODO: Create secret under this test and not for all setups.
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -361,10 +362,10 @@ func TestReconcileProxy(t *testing.T) {
 
 		value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
 		fmt.Println("value" + value)
-		containsProxyArg(t, "--proxyHost 10.202.210.216", dynamicClient)
+		containsProxyArg(t, "--proxyHost https://myproxyhost_url ", dynamicClient)
 		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
-		containsProxyArg(t, "--proxyUser validUser", dynamicClient)
-		containsProxyArg(t, "--proxyPassword validPassword123", dynamicClient)
+		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
+		containsProxyArg(t, "--proxyPassword myPassword", dynamicClient)
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
 		volumeHasSecret(t, deployment, "http-proxy-ca", "http-proxy-secret")
 	})
