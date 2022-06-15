@@ -201,6 +201,7 @@ type HttpProxy struct {
 	// Name of the secret containing the HttpProxy configuration.
 	// +kubebuilder:validation:MaxLength:=253
 	// +kubebuilder:validation:Pattern:=`^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$`
+	// +kubebuilder:default:=http-proxy-secret
 	Secret string `json:"secret,omitempty"`
 
 	// Used internally. Read in from HttpProxy Secret.

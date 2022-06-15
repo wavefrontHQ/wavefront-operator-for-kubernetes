@@ -193,6 +193,7 @@ spec:
                         description: HttpProxy configuration
                         properties:
                           secret:
+                            default: http-proxy-secret
                             description: Name of the secret containing the HttpProxy
                               configuration.
                             maxLength: 253

@@ -116,8 +116,8 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	return ctrl.Result{
-		Requeue: true,
-		RequeueAfter:  30 * time.Second,
+		Requeue:      true,
+		RequeueAfter: 30 * time.Second,
 	}, nil
 }
 

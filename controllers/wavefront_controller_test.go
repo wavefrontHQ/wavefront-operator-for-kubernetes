@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
@@ -34,7 +35,8 @@ func TestReconcileAll(t *testing.T) {
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
@@ -96,10 +98,9 @@ func TestReconcileCollector(t *testing.T) {
 		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 10, len(dynamicClient.Actions()))
 		assert.False(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.False(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
@@ -167,9 +168,9 @@ func TestReconcileCollector(t *testing.T) {
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 4, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
@@ -196,10 +197,9 @@ func TestReconcileProxy(t *testing.T) {
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakesAppsV1,
 		}
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
 
-		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 
 		deploymentObject := getPatch(dynamicClient, "deployments", "wavefront-proxy")
@@ -215,9 +215,9 @@ func TestReconcileProxy(t *testing.T) {
 		wfSpec.DataExport.WavefrontProxy.Enable = false
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 
 		assert.Equal(t, 8, len(dynamicClient.Actions()))
 

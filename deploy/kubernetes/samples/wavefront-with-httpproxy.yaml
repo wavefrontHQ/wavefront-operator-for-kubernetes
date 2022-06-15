@@ -1,4 +1,4 @@
-# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL, YOUR_HTTP_PROXY_URL, YOUR_HTTP_PROXY_BASIC_AUTH_USERNAME, YOUR_HTTP_PROXY__BASIC_AUTH_PASSWORD, YOUR_HTTP_PROXY_CA_CERTIFICATE   accordingly
 apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
@@ -10,8 +10,21 @@ spec:
   dataCollection:
     metrics:
       enable: true
-      defaultCollectionInterval: 90s #defaults to 60s
-      #enableDiscovery: true #defaults to true
   dataExport:
     wavefrontProxy:
       enable: true
+      httpProxy:
+        secret: http-proxy-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: http-proxy-secret
+  namespace: wavefront
+type: Opaque
+stringData:
+  http-url: YOUR_HTTP_PROXY_URL #i.e. http://10.96.179.49:8080
+  #  basic-auth-username: YOUR_HTTP_PROXY_BASIC_AUTH_USERNAME
+  #  basic-auth-password: YOUR_HTTP_PROXY__BASIC_AUTH_PASSWORD
+  tls-root-ca-bundle: |
+    YOUR_HTTP_PROXY_CA_CERTIFICATE
