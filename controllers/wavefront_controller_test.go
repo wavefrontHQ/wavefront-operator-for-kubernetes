@@ -186,6 +186,26 @@ func TestReconcileCollector(t *testing.T) {
 }
 
 func TestReconcileProxy(t *testing.T) {
+	t.Run("creates proxy and proxy service", func(t *testing.T) {
+		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
+
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
+		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
+		assert.Equal(t, "", deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+
+		service := getCreatedService(t, dynamicClient)
+		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
+	})
+
 	t.Run("updates proxy and service", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 
@@ -380,6 +400,7 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--proxyPassword myPassword", dynamicClient)
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
 		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
+		assert.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 	})
 
 	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {

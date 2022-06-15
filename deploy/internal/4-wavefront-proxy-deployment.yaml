@@ -22,6 +22,8 @@ spec:
       labels:
         app.kubernetes.io/name : wavefront
         app.kubernetes.io/component: proxy
+      annotations:
+        configHash: "{{ .DataExport.WavefrontProxy.ConfigHash }}"
     spec:
       containers:
         - name: wavefront-proxy

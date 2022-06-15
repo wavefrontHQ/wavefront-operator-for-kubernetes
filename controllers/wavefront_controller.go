@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -98,15 +99,15 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	r.preprocess(wavefront, ctx, req)
-
 	if errors.IsNotFound(err) {
 		err = r.readAndDeleteResources()
-		//if err != nil {
-		//	log.Log.Error(err, "error creating resources")
-		//	return ctrl.Result{}, err
-		//}
 		return ctrl.Result{}, nil
+	}
+
+	err = r.preprocess(wavefront, ctx)
+	if err != nil {
+		log.Log.Error(err, "error preprocessing Wavefront Spec")
+		return ctrl.Result{}, err
 	}
 
 	err = r.readAndCreateResources(wavefront.Spec)
@@ -355,7 +356,7 @@ func newTemplate(resourceFile string) *template.Template {
 	return template.New(resourceFile).Funcs(fMap)
 }
 
-func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context, req ctrl.Request) error {
+func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
 	if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
 	} else {
@@ -363,6 +364,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err := r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
@@ -415,7 +417,6 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 
 	httpUrl, err := url.Parse(httpProxySecretData["http-url"])
 	if err != nil {
-		log.Log.Error(err, "error parsing url")
 		return err
 	}
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = httpUrl.Hostname()
@@ -423,8 +424,20 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecretData["basic-auth-username"]
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecretData["basic-auth-password"]
 
+	h := sha1.New()
+	httpProxyJson, err := json.Marshal(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy)
+	if err != nil {
+		return err
+	}
+
+	h.Write(httpProxyJson)
+
 	if len(httpProxySecretData["tls-root-ca-bundle"]) != 0 {
 		wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
+		h.Write(httpProxySecret.Data["tls-root-ca-bundle"])
 	}
+
+	wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = fmt.Sprintf("%x", h.Sum(nil))
+
 	return nil
 }

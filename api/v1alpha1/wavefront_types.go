@@ -131,6 +131,9 @@ type WavefrontProxy struct {
 
 	// HttpProxy configuration
 	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
+
+	// ConfigHash is for internal use only
+	ConfigHash string `json:"-"`
 }
 
 type Tracing struct {
