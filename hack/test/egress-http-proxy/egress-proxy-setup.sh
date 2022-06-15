@@ -15,8 +15,8 @@ wait_for_cluster_ready
 
 #get httpproxy ip
 export MITM_IP="$(kubectl -n wavefront get services --selector=app=egress-proxy -o jsonpath='{.items[*].spec.clusterIP}')"
-green "HTTP Proxy CLUSTER IP:"
-echo ${MITM_IP}
+green "HTTP Proxy URL:"
+echo "http://${MITM_IP}:8080"
 
 # get the ca cert efor the mitmpproxy
 export MITM_POD="$(kubectl -n wavefront get pods --selector=app=egress-proxy -o jsonpath='{.items[*].metadata.name}')"
