@@ -16,6 +16,14 @@ spec:
       enable: true
       metricPort: 2878
       preprocessor: advanced-proxy-preprocessor-rules
+      resources:
+        requests:
+          cpu: 1500m
+          memory: 2Gi
+        limits:
+          cpu: 2500m
+          memory: 4Gi
+      replicas: 2
       tracing:
         wavefront:
           port: 30000

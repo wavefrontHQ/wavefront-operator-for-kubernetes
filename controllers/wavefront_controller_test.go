@@ -369,6 +369,25 @@ func TestReconcileProxy(t *testing.T) {
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
 
+	t.Run("resources and replicas set for the proxy", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
+		wfSpec.DataExport.WavefrontProxy.Resources.Requests.Memory = "1Gi"
+		wfSpec.DataExport.WavefrontProxy.Resources.Limits.CPU = "1000m"
+		wfSpec.DataExport.WavefrontProxy.Resources.Limits.Memory = "4Gi"
+		wfSpec.DataExport.WavefrontProxy.Replicas = 2
+
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		assert.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+		assert.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
+		assert.Equal(t, int32(2), *deployment.Spec.Replicas)
+	})
+
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
@@ -542,6 +561,7 @@ func defaultWFSpec() wf.WavefrontSpec {
 			WavefrontProxy: wf.WavefrontProxy{
 				Enable:     true,
 				MetricPort: 2878,
+				Replicas: 1,
 			},
 		},
 		DataCollection: wf.DataCollection{

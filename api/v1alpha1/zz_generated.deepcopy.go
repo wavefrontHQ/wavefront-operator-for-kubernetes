@@ -265,6 +265,7 @@ func (in *WavefrontProxy) DeepCopyInto(out *WavefrontProxy) {
 	*out = *in
 	out.Tracing = in.Tracing
 	out.Histogram = in.Histogram
+	out.Resources = in.Resources
 	out.HttpProxy = in.HttpProxy
 }
 
