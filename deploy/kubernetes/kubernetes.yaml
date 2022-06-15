@@ -172,6 +172,16 @@ spec:
                             description: Port for histogram distribution format data (usually 40000)
                             type: integer
                         type: object
+                      httpProxy:
+                        description: HttpProxy configuration
+                        properties:
+                          secret:
+                            default: http-proxy-secret
+                            description: Name of the secret containing the HttpProxy configuration.
+                            maxLength: 253
+                            pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
+                            type: string
+                        type: object
                       metricPort:
                         default: 2878
                         description: MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
@@ -283,6 +293,14 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -481,7 +499,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-2
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-3
         livenessProbe:
           httpGet:
             path: /healthz
