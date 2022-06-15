@@ -10,6 +10,7 @@ build
 testbin/*
 config/samples/*.yaml
 hack/test/_v1alpha1_wavefront_test.yaml
+hack/test/egress-http-proxy/mitmproxy-ca-cert.pem
 
 # Test binary, build with `go test -c`
 *.test
