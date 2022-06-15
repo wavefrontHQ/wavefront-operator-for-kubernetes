@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	baseYaml "gopkg.in/yaml.v2"
 
@@ -114,7 +115,10 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{
+		Requeue: true,
+		RequeueAfter:  30 * time.Second,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -362,7 +366,8 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err := r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
-			log.Log.Error(err, "error parsing http proxy configs")
+			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
+			log.Log.Info(errInfo)
 			return err
 		}
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
@@ -378,7 +383,6 @@ func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx
 	if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
 		httpProxySecret, err := r.findHttpProxySecret(wavefront, ctx)
 		if err != nil {
-			log.Log.Error(err, "error getting httpProxy Secret ")
 			return err
 		}
 		err = setHttpProxyConfigs(httpProxySecret, wavefront)
@@ -397,7 +401,6 @@ func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx c
 	httpProxySecret := &corev1.Secret{}
 	err := r.Client.Get(ctx, secret, httpProxySecret)
 	if err != nil {
-		log.Log.Error(err, "error getting httpProxy Secret")
 		return nil, err
 	}
 	return httpProxySecret, nil
