@@ -19,22 +19,29 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	baseYaml "gopkg.in/yaml.v2"
 
 	"k8s.io/client-go/kubernetes"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 
+	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/discovery"
@@ -42,10 +49,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
-
-	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -76,6 +79,7 @@ type WavefrontReconciler struct {
 // +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=daemonsets,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=serviceaccounts,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=configmaps,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups="",namespace=wavefront,resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -95,15 +99,15 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	preprocess(wavefront)
-
 	if errors.IsNotFound(err) {
 		err = r.readAndDeleteResources()
-		//if err != nil {
-		//	log.Log.Error(err, "error creating resources")
-		//	return ctrl.Result{}, err
-		//}
 		return ctrl.Result{}, nil
+	}
+
+	err = r.preprocess(wavefront, ctx)
+	if err != nil {
+		log.Log.Error(err, "error preprocessing Wavefront Spec")
+		return ctrl.Result{}, err
 	}
 
 	err = r.readAndCreateResources(wavefront.Spec)
@@ -112,7 +116,10 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{
+		Requeue:      true,
+		RequeueAfter: 30 * time.Second,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -349,7 +356,7 @@ func newTemplate(resourceFile string) *template.Template {
 	return template.New(resourceFile).Funcs(fMap)
 }
 
-func preprocess(wavefront *wf.Wavefront) {
+func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
 	if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
 	} else {
@@ -357,11 +364,80 @@ func preprocess(wavefront *wf.Wavefront) {
 	}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+		err := r.parseHttpProxyConfigs(wavefront, ctx)
+		if err != nil {
+			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
+			log.Log.Info(errInfo)
+			return err
+		}
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
+	return nil
+}
+
+func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx context.Context) error {
+	if len(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret) != 0 {
+		httpProxySecret, err := r.findHttpProxySecret(wavefront, ctx)
+		if err != nil {
+			return err
+		}
+		err = setHttpProxyConfigs(httpProxySecret, wavefront)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx context.Context) (*corev1.Secret, error) {
+	secret := client.ObjectKey{
+		Namespace: "wavefront",
+		Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
+	}
+	httpProxySecret := &corev1.Secret{}
+	err := r.Client.Get(ctx, secret, httpProxySecret)
+	if err != nil {
+		return nil, err
+	}
+	return httpProxySecret, nil
+}
+
+func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront) error {
+
+	httpProxySecretData := map[string]string{}
+	for k, v := range httpProxySecret.Data {
+		httpProxySecretData[k] = string(v)
+	}
+
+	httpUrl, err := url.Parse(httpProxySecretData["http-url"])
+	if err != nil {
+		return err
+	}
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyHost = httpUrl.Hostname()
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPort = httpUrl.Port()
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecretData["basic-auth-username"]
+	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecretData["basic-auth-password"]
+
+	h := sha1.New()
+	httpProxyJson, err := json.Marshal(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy)
+	if err != nil {
+		return err
+	}
+
+	h.Write(httpProxyJson)
+
+	if len(httpProxySecretData["tls-root-ca-bundle"]) != 0 {
+		wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
+		h.Write(httpProxySecret.Data["tls-root-ca-bundle"])
+	}
+
+	wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = fmt.Sprintf("%x", h.Sum(nil))
+
+	return nil
 }

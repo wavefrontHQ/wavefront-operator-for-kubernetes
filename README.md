@@ -5,11 +5,11 @@ supports deploying the Wavefront Collector and the Wavefront Proxy in Kubernetes
 This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 # Manual Deploy
-Create a directory named wavefront-operator-dir and download the [kubernetes.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/kubernetes.yaml)
+Create a directory named wavefront-operator-dir and download the [wavefront-operator.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml)
 to that directory.
 
 ```
-kubectl create -f kubernetes.yaml
+kubectl create -f wavefront-operator.yaml
 ```
 Create a wavefront secret by providing YOUR_WAVEFRONT_TOKEN
 ```
@@ -47,6 +47,16 @@ Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT
 
 ```
 kubectl create -f wavefront-advanced-proxy.yaml
+```
+
+### HTTP Proxy option
+
+If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-with-http-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-with-http-proxy.yaml) file.
+
+Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER, YOUR_WAVEFRONT_URL, YOUR_HTTP_PROXY_URL and YOUR_HTTP_PROXY_CA_CERTIFICATE along with any detailed configuration changes you'd like to make.
+
+```
+kubectl create -f wavefront-with-http-proxy.yaml
 ```
 
 # Release new version of the manual deploy

@@ -202,7 +202,7 @@ integration-cascade-delete-test: integration-test
 
 generate-kubernetes-yaml: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/kubernetes.yaml
+	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 
 #----- GKE -----#
 gke-connect-to-cluster: gke-cluster-name-check

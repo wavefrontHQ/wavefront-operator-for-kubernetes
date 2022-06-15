@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
@@ -34,7 +35,8 @@ func TestReconcileAll(t *testing.T) {
 		results, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
@@ -96,10 +98,9 @@ func TestReconcileCollector(t *testing.T) {
 		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 10, len(dynamicClient.Actions()))
 		assert.False(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.False(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
@@ -167,9 +168,9 @@ func TestReconcileCollector(t *testing.T) {
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 4, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
@@ -185,6 +186,26 @@ func TestReconcileCollector(t *testing.T) {
 }
 
 func TestReconcileProxy(t *testing.T) {
+	t.Run("creates proxy and proxy service", func(t *testing.T) {
+		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
+
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		assert.NoError(t, err)
+
+		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
+		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
+		assert.Equal(t, "", deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+
+		service := getCreatedService(t, dynamicClient)
+		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
+	})
+
 	t.Run("updates proxy and service", func(t *testing.T) {
 		_, apiClient, dynamicClient, fakesAppsV1 := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 
@@ -196,10 +217,9 @@ func TestReconcileProxy(t *testing.T) {
 			RestMapper:    apiClient.RESTMapper(),
 			Appsv1:        fakesAppsV1,
 		}
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
 
-		assert.Equal(t, ctrl.Result{}, results)
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 
 		deploymentObject := getPatch(dynamicClient, "deployments", "wavefront-proxy")
@@ -215,9 +235,9 @@ func TestReconcileProxy(t *testing.T) {
 		wfSpec.DataExport.WavefrontProxy.Enable = false
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		results, err := r.Reconcile(context.Background(), reconcile.Request{})
+
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{}, results)
 
 		assert.Equal(t, 8, len(dynamicClient.Actions()))
 
@@ -348,6 +368,75 @@ func TestReconcileProxy(t *testing.T) {
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
+
+	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		var httpProxySecet = &v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "testHttpProxySecret",
+				Namespace: "wavefront",
+				UID:       "testUID",
+			},
+			Data: map[string][]byte{
+				"http-url":            []byte("https://myproxyhost_url:8080"),
+				"basic-auth-username": []byte("myUser"),
+				"basic-auth-password": []byte("myPassword"),
+				"tls-root-ca-bundle":  []byte("myCert"),
+			},
+		}
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
+		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
+		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
+		containsProxyArg(t, "--proxyPassword myPassword", dynamicClient)
+		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
+		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
+		assert.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+	})
+
+	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		var httpProxySecet = &v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "testHttpProxySecret",
+				Namespace: "wavefront",
+				UID:       "testUID",
+			},
+			Data: map[string][]byte{
+				"http-url": []byte("https://myproxyhost_url:8080"),
+			},
+		}
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
+		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
+	})
+}
+
+func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
+	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
+		if volumeMount.Name == name {
+			assert.Equal(t, path, volumeMount.MountPath)
+			return
+		}
+	}
+	assert.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
 }
 
 func volumeHasConfigMap(t *testing.T, deployment appsv1.Deployment, name string, configMapName string) {
@@ -360,14 +449,14 @@ func volumeHasConfigMap(t *testing.T, deployment appsv1.Deployment, name string,
 	assert.Failf(t, "could not find volume", "could not find volume named %s on deployment %s", name, deployment.Name)
 }
 
-func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
-	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
-		if volumeMount.Name == name {
-			assert.Equal(t, path, volumeMount.MountPath)
+func volumeHasSecret(t *testing.T, deployment appsv1.Deployment, name string, secretName string) {
+	for _, volume := range deployment.Spec.Template.Spec.Volumes {
+		if volume.Name == name {
+			assert.Equal(t, secretName, volume.Secret.SecretName)
 			return
 		}
 	}
-	assert.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
+	assert.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
 }
 
 func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
@@ -507,7 +596,7 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
-func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setupForCreate(spec wf.WavefrontSpec, initObjs ...client.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	var wfCR = &wf.Wavefront{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
@@ -541,6 +630,11 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 	testRestMapper.Add(schema.GroupVersionKind{
 		Group:   "",
 		Version: "v1",
+		Kind:    "Secret",
+	}, meta.RESTScopeNamespace)
+	testRestMapper.Add(schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
 		Kind:    "Service",
 	}, meta.RESTScopeNamespace)
 	testRestMapper.Add(schema.GroupVersionKind{
@@ -555,7 +649,9 @@ func setupForCreate(spec wf.WavefrontSpec) (*controllers.WavefrontReconciler, *w
 	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
-	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR).WithRESTMapper(testRestMapper)
+	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR)
+	clientBuilder = clientBuilder.WithScheme(s).WithObjects(initObjs...)
+	clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
