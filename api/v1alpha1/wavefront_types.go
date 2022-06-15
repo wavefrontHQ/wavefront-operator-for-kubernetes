@@ -79,6 +79,9 @@ type Metrics struct {
 
 	// ProxyAddress is for internal use only
 	ProxyAddress string `json:"-"`
+
+	// ConfigHash is for internal use only
+	ConfigHash string `json:"-"`
 }
 
 type DataExport struct {

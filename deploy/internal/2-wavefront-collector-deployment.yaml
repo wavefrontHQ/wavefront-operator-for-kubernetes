@@ -24,6 +24,7 @@ spec:
         app.kubernetes.io/component: collector
       annotations:
         installation-method: operator
+        configHash: "{{ .DataCollection.Metrics.ConfigHash }}"
     spec:
       serviceAccountName: wavefront-collector
       containers:

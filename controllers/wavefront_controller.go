@@ -356,11 +356,20 @@ func newTemplate(resourceFile string) *template.Template {
 	return template.New(resourceFile).Funcs(fMap)
 }
 
+func hashValue(bytes []byte) string {
+	h := sha1.New()
+	h.Write(bytes)
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
-	if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
-	} else {
-		wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.CustomConfig
+	if wavefront.Spec.DataCollection.Metrics.Enable {
+		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
+			wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
+		} else {
+			wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.CustomConfig
+		}
+		wavefront.Spec.DataCollection.Metrics.ConfigHash = hashValue([]byte(string(rune(wavefront.Spec.DataExport.WavefrontProxy.Replicas))))
 	}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
@@ -424,20 +433,17 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyUser = httpProxySecretData["basic-auth-username"]
 	wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword = httpProxySecretData["basic-auth-password"]
 
-	h := sha1.New()
-	httpProxyJson, err := json.Marshal(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy)
+	configHashBytes, err := json.Marshal(wavefront.Spec.DataExport.WavefrontProxy.HttpProxy)
 	if err != nil {
 		return err
 	}
 
-	h.Write(httpProxyJson)
-
 	if len(httpProxySecretData["tls-root-ca-bundle"]) != 0 {
 		wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert = true
-		h.Write(httpProxySecret.Data["tls-root-ca-bundle"])
+		configHashBytes = append(configHashBytes, httpProxySecret.Data["tls-root-ca-bundle"]...)
 	}
 
-	wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = fmt.Sprintf("%x", h.Sum(nil))
+	wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = hashValue(configHashBytes)
 
 	return nil
 }
