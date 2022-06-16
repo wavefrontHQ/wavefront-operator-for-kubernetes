@@ -12,7 +12,6 @@ metadata:
       name: wavefront-controller-manager
       uid: {{ .ControllerManagerUID }}
 spec:
-  replicas: {{ .DataExport.WavefrontProxy.Replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name : wavefront

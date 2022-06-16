@@ -23,7 +23,6 @@ spec:
         app.kubernetes.io/component: collector
       annotations:
         installation-method: operator
-        configHash: "{{ .DataCollection.Metrics.ConfigHash }}"
     spec:
       tolerations:
         - effect: NoSchedule

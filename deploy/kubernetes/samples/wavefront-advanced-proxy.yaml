@@ -23,7 +23,6 @@ spec:
         limits:
           cpu: 1000m
           memory: 3Gi
-      replicas: 2
       tracing:
         wavefront:
           port: 30000

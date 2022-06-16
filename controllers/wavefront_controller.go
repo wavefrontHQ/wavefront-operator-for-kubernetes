@@ -369,7 +369,6 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		} else {
 			wavefront.Spec.DataCollection.Metrics.CollectorConfigName = wavefront.Spec.DataCollection.Metrics.CustomConfig
 		}
-		wavefront.Spec.DataCollection.Metrics.ConfigHash = hashValue([]byte(string(rune(wavefront.Spec.DataExport.WavefrontProxy.Replicas))))
 	}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {

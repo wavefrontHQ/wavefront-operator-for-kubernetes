@@ -2,7 +2,6 @@ package controllers_test
 
 import (
 	"context"
-	"crypto/sha1"
 	"fmt"
 	"os"
 	"testing"
@@ -118,26 +117,6 @@ func TestReconcileCollector(t *testing.T) {
 		assert.Contains(t, configMap.Data["config.yaml"], "clusterName: testClusterName")
 		assert.Contains(t, configMap.Data["config.yaml"], "defaultCollectionInterval: 60s")
 		assert.Contains(t, configMap.Data["config.yaml"], "enableDiscovery: true")
-		daemonSet := getCreatedDaemonSet(t, dynamicClient)
-		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-cluster-collector")
-		assert.NotEmpty(t, daemonSet.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
-		assert.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
-	})
-
-	t.Run("defaults values for default collector config", func(t *testing.T) {
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Replicas = 2
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		_, err := r.Reconcile(context.Background(), reconcile.Request{})
-
-		assert.NoError(t, err)
-		h := sha1.New()
-		h.Write([]byte(string(rune(wfSpec.DataExport.WavefrontProxy.Replicas))))
-		hashSum := fmt.Sprintf("%x", h.Sum(nil))
-		daemonSet := getCreatedDaemonSet(t, dynamicClient)
-		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-cluster-collector")
-		assert.Equal(t, hashSum, daemonSet.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
-		assert.Equal(t, hashSum, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
@@ -390,13 +369,12 @@ func TestReconcileProxy(t *testing.T) {
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
 
-	t.Run("resources and replicas set for the proxy", func(t *testing.T) {
+	t.Run("resources set for the proxy", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
 		wfSpec.DataExport.WavefrontProxy.Resources.Requests.Memory = "1Gi"
 		wfSpec.DataExport.WavefrontProxy.Resources.Limits.CPU = "1000m"
 		wfSpec.DataExport.WavefrontProxy.Resources.Limits.Memory = "4Gi"
-		wfSpec.DataExport.WavefrontProxy.Replicas = 2
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -406,7 +384,6 @@ func TestReconcileProxy(t *testing.T) {
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 		assert.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
-		assert.Equal(t, int32(2), *deployment.Spec.Replicas)
 	})
 
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
@@ -582,7 +559,6 @@ func defaultWFSpec() wf.WavefrontSpec {
 			WavefrontProxy: wf.WavefrontProxy{
 				Enable:     true,
 				MetricPort: 2878,
-				Replicas:   1,
 			},
 		},
 		DataCollection: wf.DataCollection{
