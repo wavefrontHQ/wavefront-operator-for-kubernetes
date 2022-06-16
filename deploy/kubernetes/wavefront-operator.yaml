@@ -191,6 +191,45 @@ spec:
                         maxLength: 253
                         pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
                         type: string
+                      replicas:
+                        default: 1
+                        description: Replicas number of proxy replicas
+                        type: integer
+                      resources:
+                        default:
+                          limits:
+                            cpu: 1000m
+                            memory: 4Gi
+                          requests:
+                            cpu: 100m
+                            memory: 1Gi
+                        description: Resources Compute resources required by the Proxy containers.
+                        properties:
+                          limits:
+                            description: Limits CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                          requests:
+                            description: Requests CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                        type: object
                       tracing:
                         description: Distributed tracing configuration
                         properties:
@@ -369,6 +408,36 @@ rules:
   - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: wavefront-wavefront-collector
+  namespace: wavefront
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - update
+  - create
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   annotations:
@@ -388,21 +457,10 @@ rules:
   - nodes/stats
   - nodes/metrics
   - pods
-  - replicationcontrollers
-  - secrets
   - services
+  - replicationcontrollers
   verbs:
   - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - update
-  - create
   - list
   - watch
 - apiGroups:
@@ -453,6 +511,20 @@ subjects:
   namespace: wavefront
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wavefront-wavefront-collector
+  namespace: wavefront
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: wavefront-wavefront-collector
+subjects:
+- kind: ServiceAccount
+  name: wavefront-collector
+  namespace: wavefront
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: wavefront-wavefront-collector
@@ -499,7 +571,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-4
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-5
         livenessProbe:
           httpGet:
             path: /healthz
