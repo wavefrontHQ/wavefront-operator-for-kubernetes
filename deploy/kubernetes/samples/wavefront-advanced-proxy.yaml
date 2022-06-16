@@ -18,11 +18,11 @@ spec:
       preprocessor: advanced-proxy-preprocessor-rules
       resources:
         requests:
-          cpu: 1500m
-          memory: 2Gi
+          cpu: 200m
+          memory: 1Gi
         limits:
-          cpu: 2500m
-          memory: 4Gi
+          cpu: 1000m
+          memory: 3Gi
       replicas: 2
       tracing:
         wavefront:
