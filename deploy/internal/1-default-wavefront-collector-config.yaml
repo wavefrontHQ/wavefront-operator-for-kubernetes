@@ -24,6 +24,9 @@ data:
     - proxyAddress: {{.DataCollection.Metrics.ProxyAddress}}
       filters:
         metricDenyList:
+        {{- if .DataCollection.Metrics.Filters.DenyList }}
+{{ .DataCollection.Metrics.Filters.DenyList | toYaml | indent 8 }}
+        {{- else }}
         - kubernetes.sys_container.*
         - kubernetes.collector.runtime.*
         - kubernetes.*.network.rx_rate
@@ -38,6 +41,11 @@ data:
         - kubernetes.*.filesystem.inodes_free
         - kubernetes.*.ephemeral_storage.request
         - kubernetes.*.ephemeral_storage.limit
+        {{- end }}
+        {{- if .DataCollection.Metrics.Filters.AllowList }}
+        metricAllowList:
+{{ .DataCollection.Metrics.Filters.AllowList | toYaml | indent 8 }}
+        {{- end }}
         tagExclude:
         - label?controller?revision*
         - label?pod?template*

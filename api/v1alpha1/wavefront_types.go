@@ -60,6 +60,9 @@ type Metrics struct {
 	// CustomConfig is the custom ConfigMap name for the collector. Leave blank to use defaults.
 	CustomConfig string `json:"customConfig,omitempty"`
 
+	// Filters to apply towards all metrics collected by the collector.
+	Filters Filters `json:"filters,omitempty"`
+
 	// Default metrics collection interval. Defaults to 60s.
 	// +kubebuilder:default:="60s"
 	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
@@ -231,6 +234,14 @@ type Resources struct {
 
 	// Limits CPU and Memory requirements
 	Limits Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
+}
+
+type Filters struct {
+	// List of metric patterns to deny
+	DenyList []string `json:"denyList,omitempty"`
+
+	// List of metric patterns to allow
+	AllowList []string `json:"allowList,omitempty"`
 }
 
 type Collector struct {

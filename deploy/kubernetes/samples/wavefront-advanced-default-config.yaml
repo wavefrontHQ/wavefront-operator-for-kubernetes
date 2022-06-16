@@ -1,0 +1,24 @@
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: wavefront
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    metrics:
+      enable: true
+      filters:
+        denyList:
+          - oneLineDeny
+          - anotherLineDeny
+        allowList:
+          - oneLineAllow
+          - anotherLineAllow
+      defaultCollectionInterval: 90s #defaults to 60s
+      #enableDiscovery: true #defaults to true
+  dataExport:
+    wavefrontProxy:
+      enable: true

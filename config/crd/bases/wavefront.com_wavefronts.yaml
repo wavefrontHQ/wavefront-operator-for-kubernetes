@@ -100,6 +100,21 @@ spec:
                         description: Rules based and Prometheus endpoints auto-discovery.
                           Defaults to true.
                         type: boolean
+                      filters:
+                        description: Filters to apply towards all metrics collected
+                          by the collector.
+                        properties:
+                          allowList:
+                            description: List of metric patterns to allow
+                            items:
+                              type: string
+                            type: array
+                          denyList:
+                            description: List of metric patterns to deny
+                            items:
+                              type: string
+                            type: array
+                        type: object
                       nodeCollector:
                         description: NodeCollector is for resource configuration for
                           the node collector.
