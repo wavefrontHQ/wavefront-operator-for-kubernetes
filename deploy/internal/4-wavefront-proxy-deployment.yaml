@@ -12,7 +12,6 @@ metadata:
       name: wavefront-controller-manager
       uid: {{ .ControllerManagerUID }}
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name : wavefront
@@ -104,12 +103,7 @@ spec:
               protocol: TCP
             {{- end }}
           resources:
-            limits:
-              cpu: 1000m
-              memory: 4Gi
-            requests:
-              cpu: 100m
-              memory: 1Gi
+{{ .DataExport.WavefrontProxy.Resources | toYaml | indent 12 }}
           securityContext:
             privileged: false
           volumeMounts:
