@@ -22,6 +22,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/fs"
+	appsv1 "k8s.io/api/apps/v1"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -75,7 +76,7 @@ type WavefrontReconciler struct {
 // Permissions for creating Kubernetes resources from internal files.
 // Possible point of confusion: the collector itself watches resources,
 // but the operator doesn't need to... yet?
-// +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=deployments,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=deployments,verbs=get;create;update;patch;delete;watch;list
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=services,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=daemonsets,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=serviceaccounts,verbs=get;create;update;patch;delete
@@ -132,6 +133,16 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
 	wavefront.Status.Healthy = true
+	proxyDeployment := client.ObjectKey{
+		Namespace: "wavefront",
+		Name:      "wavefront-proxy",
+	}
+	deployment := &appsv1.Deployment{}
+	err := r.Client.Get(ctx, proxyDeployment, deployment)
+	if err != nil {
+		return err
+	}
+	wavefront.Status.Proxy = fmt.Sprintf("Running(%d/%d)", deployment.Status.ReadyReplicas, deployment.Status.Replicas)
 	return r.UpdateStatus(ctx, wavefront)
 }
 
