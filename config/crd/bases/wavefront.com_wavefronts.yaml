@@ -324,6 +324,21 @@ spec:
             type: object
           status:
             description: WavefrontStatus defines the observed state of Wavefront
+            properties:
+              clusterCollector:
+                description: ClusterCollector is the deployment status of the collector
+                type: string
+              healthy:
+                description: Healthy is the healthy status of the components
+                type: boolean
+              nodeCollector:
+                description: NodeCollector is the daemonSet status of the collector
+                type: string
+              proxy:
+                description: Proxy is the deployment status of the proxy
+                type: string
+            required:
+            - healthy
             type: object
         type: object
     served: true

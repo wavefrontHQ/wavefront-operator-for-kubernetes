@@ -244,8 +244,17 @@ type Collector struct {
 
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Healthy is the healthy status of the components
+	Healthy bool `json:"healthy,required"`
+
+	// Proxy is the deployment status of the proxy
+	Proxy string `json:"proxy,omitempty"`
+
+	// NodeCollector is the daemonSet status of the collector
+	NodeCollector string `json:"nodeCollector,omitempty"`
+
+	// ClusterCollector is the deployment status of the collector
+	ClusterCollector string `json:"clusterCollector,omitempty"`
 }
 
 //+kubebuilder:object:root=true

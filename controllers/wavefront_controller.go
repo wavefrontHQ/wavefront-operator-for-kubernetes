@@ -65,6 +65,7 @@ type WavefrontReconciler struct {
 	DynamicClient dynamic.Interface
 	RestMapper    meta.RESTMapper
 	Appsv1        typedappsv1.AppsV1Interface
+	UpdateStatus  func(ctx context.Context, wavefront *wf.Wavefront) error
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -116,10 +117,22 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	err = r.reportHealthStatus(ctx, wavefront)
+
+	if err != nil {
+		log.Log.Error(err, "error report health status")
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{
 		Requeue:      true,
 		RequeueAfter: 30 * time.Second,
 	}, nil
+}
+
+func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
+	wavefront.Status.Healthy = true
+	return r.UpdateStatus(ctx, wavefront)
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -148,14 +161,18 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	return &WavefrontReconciler{
+	reconciler := &WavefrontReconciler{
 		Client:        client,
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
 		DynamicClient: dynamicClient,
 		RestMapper:    mapper,
 		Appsv1:        clientSet.AppsV1(),
-	}, nil
+	}
+	reconciler.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
+		return reconciler.Status().Update(ctx, wavefront)
+	}
+	return reconciler, nil
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
