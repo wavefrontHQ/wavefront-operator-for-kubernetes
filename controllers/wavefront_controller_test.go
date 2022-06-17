@@ -31,6 +31,34 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+func TestReconcileReportHealthStatus(t *testing.T) {
+	t.Run("report health status", func(t *testing.T) {
+		var proxyDeployment = &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-proxy",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DeploymentStatus{
+				Replicas:            1,
+				ReadyReplicas:       1,
+			},
+		}
+		r, _, _, _, _ := setupForCreate(defaultWFSpec(), proxyDeployment)
+
+		var wavefrontStatus *wf.Wavefront
+		r.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
+			wavefrontStatus = wavefront
+			return nil
+		}
+		results, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+		assert.Equal(t, true, wavefrontStatus.Status.Healthy)
+		assert.Equal(t, "Running(1/1)", wavefrontStatus.Status.Proxy)
+	})
+}
+
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
@@ -62,20 +90,6 @@ func TestReconcileAll(t *testing.T) {
 
 		service := getCreatedService(t, dynamicClient)
 		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
-	})
-
-	t.Run("report health status", func(t *testing.T) {
-		r, _, _, _, _ := setupForCreate(defaultWFSpec())
-		var wavefrontStatus *wf.Wavefront
-		r.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
-			wavefrontStatus = wavefront
-			return nil
-		}
-
-		results, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
-		assert.Equal(t, true, wavefrontStatus.Status.Healthy)
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
