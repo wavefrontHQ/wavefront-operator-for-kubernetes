@@ -31,7 +31,7 @@ function run_test() {
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
   green "Success!"
 
-  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+#  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
 function main() {
@@ -71,11 +71,13 @@ function main() {
 
   cd $REPO_ROOT
 
-  run_test "advanced-proxy"
+#  run_test "advanced-proxy"
+#
+#  run_test "advanced-collector"
+#
+  run_test "advanced-default-config"
 
-  run_test "advanced-collector"
-
-  run_test "basic"
+#  run_test "basic"
 }
 
 main "$@"

@@ -61,6 +61,7 @@ type Metrics struct {
 	CustomConfig string `json:"customConfig,omitempty"`
 
 	// Filters to apply towards all metrics collected by the collector.
+	// +kubebuilder:default:={denyList: {kubernetes.sys_container.*, kubernetes.collector.runtime.*, kubernetes.*.network.rx_rate, kubernetes.*.network.rx_errors_rate, kubernetes.*.network.tx_rate, kubernetes.*.network.tx_errors_rate, kubernetes.*.memory.page_faults, kubernetes.*.memory.page_faults_rate, kubernetes.*.memory.major_page_faults, kubernetes.*.memory.major_page_faults_rate, kubernetes.*.filesystem.inodes, kubernetes.*.filesystem.inodes_free, kubernetes.*.ephemeral_storage.request, kubernetes.*.ephemeral_storage.limit}}
 	Filters Filters `json:"filters,omitempty"`
 
 	// Default metrics collection interval. Defaults to 60s.

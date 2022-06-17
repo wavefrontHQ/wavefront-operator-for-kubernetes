@@ -11,14 +11,9 @@ spec:
     metrics:
       enable: true
       filters:
-        denyList:
-          - oneLineDeny
-          - anotherLineDeny
         allowList:
-          - oneLineAllow
-          - anotherLineAllow
-      defaultCollectionInterval: 90s #defaults to 60s
-      #enableDiscovery: true #defaults to true
+          - one
+          - two
   dataExport:
     wavefrontProxy:
       enable: true
