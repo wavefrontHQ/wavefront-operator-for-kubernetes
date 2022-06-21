@@ -1,6 +1,72 @@
 {
   "packages": [
     {
+      "_unique_id": "c558b07a-e763-4f7e-b160-a33bc4349b1cc8d6fb9f-1be5-4106-9324-b1b05717a8bb",
+      "aliases": [
+        "uber-go/atomic:20211218-snapshot"
+      ],
+      "bd_component_id": "c558b07a-e763-4f7e-b160-a33bc4349b1c",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "uber-go/atomic:20211218-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "MIT License",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/go.uber.org/atomic/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "fbd15204-7fe2-4487-96d3-86abaf25aad1",
+      "bd_version_id": "c8d6fb9f-1be5-4106-9324-b1b05717a8bb",
+      "license": "UNKNOWN",
+      "name": "uber-go/atomic",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://go.uber.org/atomic",
+      "version": "20211218-snapshot"
+    },
+    {
+      "_unique_id": "b859c1af-1545-46be-b5d7-b375dd4e43531be0149c-aa54-49b7-b946-0c6622daf8c7",
+      "aliases": [
+        "kubernetes-sigs/yaml:20211119-snapshot"
+      ],
+      "bd_component_id": "b859c1af-1545-46be-b5d7-b375dd4e4353",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "kubernetes-sigs/yaml:20211119-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/sigs.k8s.io/yaml/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "fe5d1c02-3b9b-486b-a5b7-5e906e5d473e",
+      "bd_version_id": "1be0149c-aa54-49b7-b946-0c6622daf8c7",
+      "license": "UNKNOWN",
+      "name": "sigs.k8s.io/yaml",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/kubernetes-sigs/yaml",
+      "version": "20211119-snapshot"
+    },
+    {
       "_unique_id": "82c6bcba-bcc2-4e13-866b-1c7ee522f066d47e8548-a943-46eb-92d2-39f9733dadd5",
       "aliases": [
         "kubernetes-sigs/json:20220324-snapshot"
@@ -68,72 +134,6 @@
       "version": "20211124-snapshot"
     },
     {
-      "_unique_id": "b859c1af-1545-46be-b5d7-b375dd4e43531be0149c-aa54-49b7-b946-0c6622daf8c7",
-      "aliases": [
-        "kubernetes-sigs/yaml:20211119-snapshot"
-      ],
-      "bd_component_id": "b859c1af-1545-46be-b5d7-b375dd4e4353",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "kubernetes-sigs/yaml:20211119-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "Apache License 2.0",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/sigs.k8s.io/yaml/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "fe5d1c02-3b9b-486b-a5b7-5e906e5d473e",
-      "bd_version_id": "1be0149c-aa54-49b7-b946-0c6622daf8c7",
-      "license": "UNKNOWN",
-      "name": "sigs.k8s.io/yaml",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/kubernetes-sigs/yaml",
-      "version": "20211119-snapshot"
-    },
-    {
-      "_unique_id": "c558b07a-e763-4f7e-b160-a33bc4349b1cc8d6fb9f-1be5-4106-9324-b1b05717a8bb",
-      "aliases": [
-        "uber-go/atomic:20211218-snapshot"
-      ],
-      "bd_component_id": "c558b07a-e763-4f7e-b160-a33bc4349b1c",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "uber-go/atomic:20211218-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "MIT License",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/go.uber.org/atomic/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "fbd15204-7fe2-4487-96d3-86abaf25aad1",
-      "bd_version_id": "c8d6fb9f-1be5-4106-9324-b1b05717a8bb",
-      "license": "UNKNOWN",
-      "name": "uber-go/atomic",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://go.uber.org/atomic",
-      "version": "20211218-snapshot"
-    },
-    {
       "_unique_id": "6d1fc2ab-23c3-4b18-bfc4-24ea174f6f5bb01c4323-732e-4ee3-a241-e164784d1bdc",
       "aliases": [
         "kubernetes-sigs/controller-runtime:20220329-snapshot"
@@ -176,39 +176,6 @@
       "type": "signature",
       "url": "https://github.com/kubernetes-sigs/controller-runtime",
       "version": "20220329-snapshot"
-    },
-    {
-      "_unique_id": "399ba8e6-0419-4d36-81ef-754f8a32bdf06e23d3f8-3467-4caf-a25f-17bc0f80087e",
-      "aliases": [
-        "prometheus/common:20210708-snapshot"
-      ],
-      "bd_component_id": "399ba8e6-0419-4d36-81ef-754f8a32bdf0",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "prometheus/common:20210708-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "Apache License 2.0",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/prometheus/common/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "fd0f6030-40ee-482a-955b-6045c3e7262b",
-      "bd_version_id": "6e23d3f8-3467-4caf-a25f-17bc0f80087e",
-      "license": "UNKNOWN",
-      "name": "prometheus-common",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/prometheus/common",
-      "version": "20210708-snapshot"
     },
     {
       "_unique_id": "28fc1259-0963-4734-85ab-7eb29eb9e1341be8df14-c28a-4c57-9dc2-0de3d4f9b441",
@@ -277,6 +244,39 @@
       "version": "20220126-snapshot"
     },
     {
+      "_unique_id": "399ba8e6-0419-4d36-81ef-754f8a32bdf06e23d3f8-3467-4caf-a25f-17bc0f80087e",
+      "aliases": [
+        "prometheus/common:20210708-snapshot"
+      ],
+      "bd_component_id": "399ba8e6-0419-4d36-81ef-754f8a32bdf0",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "prometheus/common:20210708-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/github.com/prometheus/common/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "fd0f6030-40ee-482a-955b-6045c3e7262b",
+      "bd_version_id": "6e23d3f8-3467-4caf-a25f-17bc0f80087e",
+      "license": "UNKNOWN",
+      "name": "prometheus-common",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/prometheus/common",
+      "version": "20210708-snapshot"
+    },
+    {
       "_unique_id": "e365ab96-407e-422b-9205-dd87509f73dcd3e4e77c-aff4-4ac3-98e3-923ff946865e",
       "aliases": [
         "nxadm/tail:20211117-snapshot"
@@ -343,39 +343,6 @@
       "version": "0.2.2"
     },
     {
-      "_unique_id": "78acd48b-3cf3-499d-841b-1fefe4a6ff4ad9f1439f-196f-45f5-824c-151319c4de56",
-      "aliases": [
-        "modern-go/reflect2:20211211-snapshot"
-      ],
-      "bd_component_id": "78acd48b-3cf3-499d-841b-1fefe4a6ff4a",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "modern-go/reflect2:20211211-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "Apache License 2.0",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/modern-go/reflect2/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "feae313e-efa1-471c-9604-0ed26bb3b9ba",
-      "bd_version_id": "d9f1439f-196f-45f5-824c-151319c4de56",
-      "license": "UNKNOWN",
-      "name": "modern-go/reflect2",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/modern-go/reflect2",
-      "version": "20211211-snapshot"
-    },
-    {
       "_unique_id": "fe670e13-a8b1-4636-a212-f6c338b9679ee34ba962-fef5-4d04-9259-3db8dffdcd53",
       "aliases": [
         "matttproud/golang_protobuf_extensions:20170323-snapshot"
@@ -407,72 +374,6 @@
       "type": "signature",
       "url": "https://github.com/matttproud/golang_protobuf_extensions",
       "version": "20170323-snapshot"
-    },
-    {
-      "_unique_id": "c53535a5-8ae4-41fa-bc0f-bfe6f831e3b14ae6bdfe-45c7-4361-99dc-38dadeddbc07",
-      "aliases": [
-        "mattn/go-isatty:20180120-snapshot"
-      ],
-      "bd_component_id": "c53535a5-8ae4-41fa-bc0f-bfe6f831e3b1",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "mattn/go-isatty:20180120-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "MIT License",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "fe06006e-0382-4c67-9de2-4ed80410eb08",
-      "bd_version_id": "4ae6bdfe-45c7-4361-99dc-38dadeddbc07",
-      "license": "UNKNOWN",
-      "name": "mattn-go-isatty",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "http://godoc.org/github.com/mattn/go-isatty",
-      "version": "20180120-snapshot"
-    },
-    {
-      "_unique_id": "9224887c-aa28-4b52-92df-d7f1d873a26e08b41150-5f85-4366-b510-7e5c38dbb308",
-      "aliases": [
-        "imdario/mergo:20220328-snapshot"
-      ],
-      "bd_component_id": "9224887c-aa28-4b52-92df-d7f1d873a26e",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "imdario/mergo:20220328-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "BSD 3-clause \"New\" or \"Revised\" License",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/imdario/mergo/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "ff70fafd-eb87-476c-ab8f-f2dfdc79f019",
-      "bd_version_id": "08b41150-5f85-4366-b510-7e5c38dbb308",
-      "license": "UNKNOWN",
-      "name": "mergo",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/imdario/mergo",
-      "version": "20220328-snapshot"
     },
     {
       "_unique_id": "1e1e000d-7303-409d-b203-ea78a54a19aa40db7b16-4217-4f8b-a9ad-51a87f269390",
@@ -509,47 +410,47 @@
       "version": "0.0~git20200227.1396c95"
     },
     {
-      "_unique_id": "2accd2fb-2d75-4f0e-9c9a-92cac4edba1824ef93fb-32da-4028-af3e-a8723a44c2e3",
+      "_unique_id": "9224887c-aa28-4b52-92df-d7f1d873a26e08b41150-5f85-4366-b510-7e5c38dbb308",
       "aliases": [
-        "kubernetes/component-base:20220505-snapshot"
+        "imdario/mergo:20220328-snapshot"
       ],
-      "bd_component_id": "2accd2fb-2d75-4f0e-9c9a-92cac4edba18",
+      "bd_component_id": "9224887c-aa28-4b52-92df-d7f1d873a26e",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "kubernetes/component-base:20220505-snapshot",
+        "external_id": "imdario/mergo:20220328-snapshot",
         "external_namespace": "github",
         "license": {
-          "name": "Apache License 2.0",
+          "name": "BSD 3-clause \"New\" or \"Revised\" License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/k8s.io/component-base/#"
+          "vendor/github.com/imdario/mergo/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "f1aa5352-dfca-4fdf-aa24-48b167f7097b",
-      "bd_version_id": "24ef93fb-32da-4028-af3e-a8723a44c2e3",
+      "bd_origin_id": "ff70fafd-eb87-476c-ab8f-f2dfdc79f019",
+      "bd_version_id": "08b41150-5f85-4366-b510-7e5c38dbb308",
       "license": "UNKNOWN",
-      "name": "kubernetes/component-base",
+      "name": "mergo",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/kubernetes/component-base",
-      "version": "20220505-snapshot"
+      "url": "https://github.com/imdario/mergo",
+      "version": "20220328-snapshot"
     },
     {
-      "_unique_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d028c73338-98f1-4256-b570-573aa19d6f78",
+      "_unique_id": "78acd48b-3cf3-499d-841b-1fefe4a6ff4ad9f1439f-196f-45f5-824c-151319c4de56",
       "aliases": [
-        "kubernetes/apimachinery:20220318-snapshot"
+        "modern-go/reflect2:20211211-snapshot"
       ],
-      "bd_component_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d0",
+      "bd_component_id": "78acd48b-3cf3-499d-841b-1fefe4a6ff4a",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "kubernetes/apimachinery:20220318-snapshot",
+        "external_id": "modern-go/reflect2:20211211-snapshot",
         "external_namespace": "github",
         "license": {
           "name": "Apache License 2.0",
@@ -559,55 +460,53 @@
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/k8s.io/apimachinery/pkg/api/#",
-          "vendor/k8s.io/apimachinery/pkg/apis/#",
-          "vendor/k8s.io/apimachinery/pkg/util/#"
+          "vendor/github.com/modern-go/reflect2/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "57419343-8c8e-4fbd-88fb-a16f3e6475aa",
-      "bd_version_id": "28c73338-98f1-4256-b570-573aa19d6f78",
+      "bd_origin_id": "feae313e-efa1-471c-9604-0ed26bb3b9ba",
+      "bd_version_id": "d9f1439f-196f-45f5-824c-151319c4de56",
       "license": "UNKNOWN",
-      "name": "kubernetes/apimachinery",
+      "name": "modern-go/reflect2",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/kubernetes/apimachinery",
-      "version": "20220318-snapshot"
+      "url": "https://github.com/modern-go/reflect2",
+      "version": "20211211-snapshot"
     },
     {
-      "_unique_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d078e26bd1-0590-443f-a1f8-6aec1150e1ce",
+      "_unique_id": "c53535a5-8ae4-41fa-bc0f-bfe6f831e3b14ae6bdfe-45c7-4361-99dc-38dadeddbc07",
       "aliases": [
-        "kubernetes/apimachinery:20220524-snapshot"
+        "mattn/go-isatty:20180120-snapshot"
       ],
-      "bd_component_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d0",
+      "bd_component_id": "c53535a5-8ae4-41fa-bc0f-bfe6f831e3b1",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "kubernetes/apimachinery:20220524-snapshot",
+        "external_id": "mattn/go-isatty:20180120-snapshot",
         "external_namespace": "github",
         "license": {
-          "name": "Apache License 2.0",
+          "name": "MIT License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/k8s.io/apimachinery/pkg/runtime/#"
+          "vendor/github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "ebad5927-b9a2-478a-a2a2-0cf3b2ccb3e9",
-      "bd_version_id": "78e26bd1-0590-443f-a1f8-6aec1150e1ce",
+      "bd_origin_id": "fe06006e-0382-4c67-9de2-4ed80410eb08",
+      "bd_version_id": "4ae6bdfe-45c7-4361-99dc-38dadeddbc07",
       "license": "UNKNOWN",
-      "name": "kubernetes/apimachinery",
+      "name": "mattn-go-isatty",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/kubernetes/apimachinery",
-      "version": "20220524-snapshot"
+      "url": "http://godoc.org/github.com/mattn/go-isatty",
+      "version": "20180120-snapshot"
     },
     {
       "_unique_id": "941abdfc-47e0-4350-acb7-eda1ea53d5657ec913ae-228d-4205-8313-118b833ef3a3",
@@ -643,6 +542,72 @@
       "version": "20220329-snapshot"
     },
     {
+      "_unique_id": "1f9b60a8-93bb-4af8-920e-9d3b690fc054b78be240-544d-45c9-9681-4101714194da",
+      "aliases": [
+        "kubernetes/api:20220126-snapshot"
+      ],
+      "bd_component_id": "1f9b60a8-93bb-4af8-920e-9d3b690fc054",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "kubernetes/api:20220126-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/k8s.io/api/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "fc4afbd3-baf4-4d55-9407-b5ced4ad7148",
+      "bd_version_id": "b78be240-544d-45c9-9681-4101714194da",
+      "license": "UNKNOWN",
+      "name": "kubernetes/api",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/kubernetes/api",
+      "version": "20220126-snapshot"
+    },
+    {
+      "_unique_id": "7dacc721-b6f6-4691-9b29-d558a9c5172a2050e2c3-8b23-43c2-a82a-674874822640",
+      "aliases": [
+        "kubernetes/utils:20220506-snapshot"
+      ],
+      "bd_component_id": "7dacc721-b6f6-4691-9b29-d558a9c5172a",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "kubernetes/utils:20220506-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/k8s.io/utils/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "ff98ef05-4808-455c-90f8-7ccc2a5a785c",
+      "bd_version_id": "2050e2c3-8b23-43c2-a82a-674874822640",
+      "license": "UNKNOWN",
+      "name": "k8s.io/utils",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/kubernetes/utils",
+      "version": "20220506-snapshot"
+    },
+    {
       "_unique_id": "8fa77e97-34b2-443c-9972-31369353e8d9b6ba712e-5453-4d9c-8348-33d3e78a66c3",
       "aliases": [
         "kubernetes/kube-openapi:20220330-snapshot"
@@ -674,39 +639,6 @@
       "type": "signature",
       "url": "https://github.com/kubernetes/kube-openapi",
       "version": "20220330-snapshot"
-    },
-    {
-      "_unique_id": "23aafcb2-e33e-487c-9d8f-eb7d272ee1cfd323763a-148e-4274-9d2b-6c38f8fed51b",
-      "aliases": [
-        "googleapis/gnostic:20220117-snapshot"
-      ],
-      "bd_component_id": "23aafcb2-e33e-487c-9d8f-eb7d272ee1cf",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "googleapis/gnostic:20220117-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "Apache License 2.0",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/googleapis/gnostic/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "ffbe3c60-4ddb-428d-82ad-d6840f5f6d33",
-      "bd_version_id": "d323763a-148e-4274-9d2b-6c38f8fed51b",
-      "license": "UNKNOWN",
-      "name": "googleapis/gnostic",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/googleapis/gnostic",
-      "version": "20220117-snapshot"
     },
     {
       "_unique_id": "7773904d-6f03-42e5-9ce5-3ef396562e35bacf3cf5-9080-4945-a3ec-aa230d6b7348",
@@ -808,6 +740,39 @@
       "version": "20211110-snapshot"
     },
     {
+      "_unique_id": "23aafcb2-e33e-487c-9d8f-eb7d272ee1cfd323763a-148e-4274-9d2b-6c38f8fed51b",
+      "aliases": [
+        "googleapis/gnostic:20220117-snapshot"
+      ],
+      "bd_component_id": "23aafcb2-e33e-487c-9d8f-eb7d272ee1cf",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "googleapis/gnostic:20220117-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/github.com/googleapis/gnostic/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "ffbe3c60-4ddb-428d-82ad-d6840f5f6d33",
+      "bd_version_id": "d323763a-148e-4274-9d2b-6c38f8fed51b",
+      "license": "UNKNOWN",
+      "name": "googleapis/gnostic",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/googleapis/gnostic",
+      "version": "20220117-snapshot"
+    },
+    {
       "_unique_id": "458e027c-e2ba-49eb-b32e-654a6224463156b0b789-1c3f-4515-a49e-e89c4c047130",
       "aliases": [
         "google/go-cmp:20220527-snapshot"
@@ -874,39 +839,6 @@
       "version": "20211208-snapshot"
     },
     {
-      "_unique_id": "e76d7771-4193-4e7a-b650-bb58a2d290746006c0bb-9244-4ff9-9649-df050f48f025",
-      "aliases": [
-        "onsi/gomega:20220317-snapshot"
-      ],
-      "bd_component_id": "e76d7771-4193-4e7a-b650-bb58a2d29074",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "onsi/gomega:20220317-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "MIT License",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/onsi/gomega/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "f50c1a9f-5b08-424f-8bd6-720d13e37930",
-      "bd_version_id": "6006c0bb-9244-4ff9-9649-df050f48f025",
-      "license": "UNKNOWN",
-      "name": "gomega",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/onsi/gomega",
-      "version": "20220317-snapshot"
-    },
-    {
       "_unique_id": "16221570-a392-4c6c-950e-40a7103e2f55683d5446-a587-49e3-bcd8-ad1a980041e4",
       "aliases": [
         "google/gofuzz:20220525-snapshot"
@@ -940,37 +872,37 @@
       "version": "20220525-snapshot"
     },
     {
-      "_unique_id": "2c771167-95ec-4d9a-91ae-a08f7da10f1b0857cf81-99bf-4644-9063-826e116e1825",
+      "_unique_id": "e76d7771-4193-4e7a-b650-bb58a2d290746006c0bb-9244-4ff9-9649-df050f48f025",
       "aliases": [
-        "golang/appengine:20210129-snapshot"
+        "onsi/gomega:20220317-snapshot"
       ],
-      "bd_component_id": "2c771167-95ec-4d9a-91ae-a08f7da10f1b",
+      "bd_component_id": "e76d7771-4193-4e7a-b650-bb58a2d29074",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "golang/appengine:20210129-snapshot",
+        "external_id": "onsi/gomega:20220317-snapshot",
         "external_namespace": "github",
         "license": {
-          "name": "Apache License 2.0",
+          "name": "MIT License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/google.golang.org/appengine/#"
+          "vendor/github.com/onsi/gomega/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "feb6358a-0ae7-4fe9-b592-dc7305c5836d",
-      "bd_version_id": "0857cf81-99bf-4644-9063-826e116e1825",
+      "bd_origin_id": "f50c1a9f-5b08-424f-8bd6-720d13e37930",
+      "bd_version_id": "6006c0bb-9244-4ff9-9649-df050f48f025",
       "license": "UNKNOWN",
-      "name": "golang/appengine",
+      "name": "gomega",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "http://google.golang.org/appengine",
-      "version": "20210129-snapshot"
+      "url": "https://github.com/onsi/gomega",
+      "version": "20220317-snapshot"
     },
     {
       "_unique_id": "c4b7d4ea-b69e-41cd-8158-8f370c2195ad8db638c3-48fd-4673-8cc1-534cf2b72bd1",
@@ -1004,6 +936,39 @@
       "type": "signature",
       "url": "https://go.googlesource.com/time",
       "version": "20210913-snapshot"
+    },
+    {
+      "_unique_id": "2c771167-95ec-4d9a-91ae-a08f7da10f1b0857cf81-99bf-4644-9063-826e116e1825",
+      "aliases": [
+        "golang/appengine:20210129-snapshot"
+      ],
+      "bd_component_id": "2c771167-95ec-4d9a-91ae-a08f7da10f1b",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "golang/appengine:20210129-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/google.golang.org/appengine/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "feb6358a-0ae7-4fe9-b592-dc7305c5836d",
+      "bd_version_id": "0857cf81-99bf-4644-9063-826e116e1825",
+      "license": "UNKNOWN",
+      "name": "golang/appengine",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "http://google.golang.org/appengine",
+      "version": "20210129-snapshot"
     },
     {
       "_unique_id": "92e824e9-7afe-43dd-82c6-ed0defe6816c905b25b0-4fec-4a4d-95a9-a12d97d2013a",
@@ -1072,14 +1037,14 @@
       "version": "20211216-snapshot"
     },
     {
-      "_unique_id": "8155c001-31c8-4a27-9a15-77fb97a4779e6e1d1c8e-2208-4ac5-a528-97aa9525ea6c",
+      "_unique_id": "11568d85-7d53-4e9d-b755-3294c5a1234617ed2e20-1544-40b2-bc12-443cb48e14d0",
       "aliases": [
-        "golang.org/x/net#20211112-snapshot"
+        "golang.org/x/oauth2#20211027-snapshot"
       ],
-      "bd_component_id": "8155c001-31c8-4a27-9a15-77fb97a4779e",
+      "bd_component_id": "11568d85-7d53-4e9d-b755-3294c5a12346",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "golang.org/x/net#20211112-snapshot",
+        "external_id": "golang.org/x/oauth2#20211027-snapshot",
         "external_namespace": "long_tail",
         "license": {
           "name": "BSD 3-clause \"New\" or \"Revised\" License",
@@ -1089,20 +1054,20 @@
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/golang.org/x/net/html/#"
+          "vendor/golang.org/x/oauth2/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "cc6719e0-c125-424c-9267-ce6446a5862e",
-      "bd_version_id": "6e1d1c8e-2208-4ac5-a528-97aa9525ea6c",
+      "bd_origin_id": "fee8e435-4850-4fd6-a238-49ae75cc4c21",
+      "bd_version_id": "17ed2e20-1544-40b2-bc12-443cb48e14d0",
       "license": "UNKNOWN",
-      "name": "golang.org/x/net",
+      "name": "golang.org/x/oauth2",
       "namespace": "long_tail",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://godoc.org/golang.org/x/net",
-      "version": "20211112-snapshot"
+      "url": "https://go.googlesource.com/oauth2",
+      "version": "20211027-snapshot"
     },
     {
       "_unique_id": "0faf96d2-f25b-44c9-ada2-54a9140e3569da92f8e1-dd43-44e7-ab8c-b9b19a8aae11",
@@ -1138,14 +1103,47 @@
       "version": "20220317-snapshot"
     },
     {
-      "_unique_id": "11568d85-7d53-4e9d-b755-3294c5a1234617ed2e20-1544-40b2-bc12-443cb48e14d0",
+      "_unique_id": "8155c001-31c8-4a27-9a15-77fb97a4779e5c458b52-20e5-4821-b802-5e9f170493ce",
       "aliases": [
-        "golang.org/x/oauth2#20211027-snapshot"
+        "golang.org/x/net#20220328-snapshot"
       ],
-      "bd_component_id": "11568d85-7d53-4e9d-b755-3294c5a12346",
+      "bd_component_id": "8155c001-31c8-4a27-9a15-77fb97a4779e",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "golang.org/x/oauth2#20211027-snapshot",
+        "external_id": "golang.org/x/net#20220328-snapshot",
+        "external_namespace": "long_tail",
+        "license": {
+          "name": "BSD 3-clause \"New\" or \"Revised\" License",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_SOME_FILES_MODIFIED"
+        ],
+        "paths": [
+          "vendor/golang.org/x/net/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "823d96a8-ad4c-4770-9b83-e551e399e41a",
+      "bd_version_id": "5c458b52-20e5-4821-b802-5e9f170493ce",
+      "license": "UNKNOWN",
+      "name": "golang.org/x/net",
+      "namespace": "long_tail",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://godoc.org/golang.org/x/net",
+      "version": "20220328-snapshot"
+    },
+    {
+      "_unique_id": "8155c001-31c8-4a27-9a15-77fb97a4779e6e1d1c8e-2208-4ac5-a528-97aa9525ea6c",
+      "aliases": [
+        "golang.org/x/net#20211112-snapshot"
+      ],
+      "bd_component_id": "8155c001-31c8-4a27-9a15-77fb97a4779e",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "golang.org/x/net#20211112-snapshot",
         "external_namespace": "long_tail",
         "license": {
           "name": "BSD 3-clause \"New\" or \"Revised\" License",
@@ -1155,20 +1153,20 @@
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/golang.org/x/oauth2/#"
+          "vendor/golang.org/x/net/html/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "fee8e435-4850-4fd6-a238-49ae75cc4c21",
-      "bd_version_id": "17ed2e20-1544-40b2-bc12-443cb48e14d0",
+      "bd_origin_id": "cc6719e0-c125-424c-9267-ce6446a5862e",
+      "bd_version_id": "6e1d1c8e-2208-4ac5-a528-97aa9525ea6c",
       "license": "UNKNOWN",
-      "name": "golang.org/x/oauth2",
+      "name": "golang.org/x/net",
       "namespace": "long_tail",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://go.googlesource.com/oauth2",
-      "version": "20211027-snapshot"
+      "url": "https://godoc.org/golang.org/x/net",
+      "version": "20211112-snapshot"
     },
     {
       "_unique_id": "7da255a2-0cbb-4423-bf64-69d93fde4326644e0377-d06b-414d-a6ff-6af0f859adff",
@@ -1204,37 +1202,37 @@
       "version": "20220524-snapshot"
     },
     {
-      "_unique_id": "8155c001-31c8-4a27-9a15-77fb97a4779e5c458b52-20e5-4821-b802-5e9f170493ce",
+      "_unique_id": "ba8f049d-1c78-4a27-a8a4-40727f93b18111602612-afa3-4413-a06d-bcb1e6bfe713",
       "aliases": [
-        "golang.org/x/net#20220328-snapshot"
+        "golang/protobuf:20220330-snapshot"
       ],
-      "bd_component_id": "8155c001-31c8-4a27-9a15-77fb97a4779e",
+      "bd_component_id": "ba8f049d-1c78-4a27-a8a4-40727f93b181",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "golang.org/x/net#20220328-snapshot",
-        "external_namespace": "long_tail",
+        "external_id": "golang/protobuf:20220330-snapshot",
+        "external_namespace": "github",
         "license": {
           "name": "BSD 3-clause \"New\" or \"Revised\" License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
-          "FILE_SOME_FILES_MODIFIED"
+          "FILE_EXACT"
         ],
         "paths": [
-          "vendor/golang.org/x/net/#"
+          "vendor/github.com/golang/protobuf/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "823d96a8-ad4c-4770-9b83-e551e399e41a",
-      "bd_version_id": "5c458b52-20e5-4821-b802-5e9f170493ce",
+      "bd_origin_id": "ffe7c5b6-7ae4-401d-96f2-f93bc50d61ee",
+      "bd_version_id": "11602612-afa3-4413-a06d-bcb1e6bfe713",
       "license": "UNKNOWN",
-      "name": "golang.org/x/net",
-      "namespace": "long_tail",
+      "name": "golang protobuf",
+      "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://godoc.org/golang.org/x/net",
-      "version": "20220328-snapshot"
+      "url": "https://github.com/golang/protobuf",
+      "version": "20220330-snapshot"
     },
     {
       "_unique_id": "a27131ba-2db2-490e-81d2-66b572d13f0917298ddf-66bd-4c73-8bc3-331b1c819935",
@@ -1270,72 +1268,6 @@
       "version": "20210719-snapshot"
     },
     {
-      "_unique_id": "2aea5277-bf2d-4cd6-b47c-dc19ae3ebf1d4cc730f1-ec76-4280-854f-da51d10bb5ff",
-      "aliases": [
-        "uber-go/multierr:20211006-snapshot"
-      ],
-      "bd_component_id": "2aea5277-bf2d-4cd6-b47c-dc19ae3ebf1d",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "uber-go/multierr:20211006-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "MIT License",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/go.uber.org/multierr/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "fe3d994a-a17c-4d78-81a1-c75e4bd9498e",
-      "bd_version_id": "4cc730f1-ec76-4280-854f-da51d10bb5ff",
-      "license": "UNKNOWN",
-      "name": "go.uber.org/multierr",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/uber-go/multierr",
-      "version": "20211006-snapshot"
-    },
-    {
-      "_unique_id": "ba8f049d-1c78-4a27-a8a4-40727f93b18111602612-afa3-4413-a06d-bcb1e6bfe713",
-      "aliases": [
-        "golang/protobuf:20220330-snapshot"
-      ],
-      "bd_component_id": "ba8f049d-1c78-4a27-a8a4-40727f93b181",
-      "bd_metadata": {
-        "detect_ways": null,
-        "external_id": "golang/protobuf:20220330-snapshot",
-        "external_namespace": "github",
-        "license": {
-          "name": "BSD 3-clause \"New\" or \"Revised\" License",
-          "type": "DISJUNCTIVE"
-        },
-        "match_types": [
-          "FILE_EXACT"
-        ],
-        "paths": [
-          "vendor/github.com/golang/protobuf/#"
-        ],
-        "vulnerabilities": []
-      },
-      "bd_origin_id": "ffe7c5b6-7ae4-401d-96f2-f93bc50d61ee",
-      "bd_version_id": "11602612-afa3-4413-a06d-bcb1e6bfe713",
-      "license": "UNKNOWN",
-      "name": "golang protobuf",
-      "namespace": "github",
-      "repository": "VMWsource",
-      "scanner": "signature",
-      "type": "signature",
-      "url": "https://github.com/golang/protobuf",
-      "version": "20220330-snapshot"
-    },
-    {
       "_unique_id": "2cae3977-12c3-4a7c-aea8-0e4290e514d1a4ff0644-991c-405b-a7f8-325a9ebdca4f",
       "aliases": [
         "uber-go/zap:20220524-snapshot"
@@ -1369,37 +1301,37 @@
       "version": "20220524-snapshot"
     },
     {
-      "_unique_id": "9ebf2d1d-62b0-471e-a13b-c43746ccf4d01d6c3fcc-155b-4560-8b17-6d078dce7756",
+      "_unique_id": "2aea5277-bf2d-4cd6-b47c-dc19ae3ebf1d4cc730f1-ec76-4280-854f-da51d10bb5ff",
       "aliases": [
-        "davecgh/go-spew:20180723-snapshot"
+        "uber-go/multierr:20211006-snapshot"
       ],
-      "bd_component_id": "9ebf2d1d-62b0-471e-a13b-c43746ccf4d0",
+      "bd_component_id": "2aea5277-bf2d-4cd6-b47c-dc19ae3ebf1d",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "davecgh/go-spew:20180723-snapshot",
+        "external_id": "uber-go/multierr:20211006-snapshot",
         "external_namespace": "github",
         "license": {
-          "name": "ISC License",
+          "name": "MIT License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/github.com/davecgh/go-spew/spew/#"
+          "vendor/go.uber.org/multierr/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "fd3e0963-8a9a-4e9f-b891-4248189fcd5a",
-      "bd_version_id": "1d6c3fcc-155b-4560-8b17-6d078dce7756",
+      "bd_origin_id": "fe3d994a-a17c-4d78-81a1-c75e4bd9498e",
+      "bd_version_id": "4cc730f1-ec76-4280-854f-da51d10bb5ff",
       "license": "UNKNOWN",
-      "name": "go-spew",
+      "name": "go.uber.org/multierr",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/davecgh/go-spew",
-      "version": "20180723-snapshot"
+      "url": "https://github.com/uber-go/multierr",
+      "version": "20211006-snapshot"
     },
     {
       "_unique_id": "4e2d3ed6-968b-4f3e-b6f0-2d8ce12c1cef0dbc9ce6-4a5d-43ab-8576-2b3310246cba",
@@ -1435,37 +1367,37 @@
       "version": "20211229-snapshot"
     },
     {
-      "_unique_id": "5271cd46-d193-4af5-b2c2-50a07751f580280bdf32-7365-4d28-bd87-869362def127",
+      "_unique_id": "9ebf2d1d-62b0-471e-a13b-c43746ccf4d01d6c3fcc-155b-4560-8b17-6d078dce7756",
       "aliases": [
-        "stretchr/testify:20220410-snapshot"
+        "davecgh/go-spew:20180723-snapshot"
       ],
-      "bd_component_id": "5271cd46-d193-4af5-b2c2-50a07751f580",
+      "bd_component_id": "9ebf2d1d-62b0-471e-a13b-c43746ccf4d0",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "stretchr/testify:20220410-snapshot",
+        "external_id": "davecgh/go-spew:20180723-snapshot",
         "external_namespace": "github",
         "license": {
-          "name": "MIT License",
+          "name": "ISC License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/github.com/stretchr/testify/#"
+          "vendor/github.com/davecgh/go-spew/spew/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "ffd10a6d-f6d5-43f4-b87f-bc35abe800c5",
-      "bd_version_id": "280bdf32-7365-4d28-bd87-869362def127",
+      "bd_origin_id": "fd3e0963-8a9a-4e9f-b891-4248189fcd5a",
+      "bd_version_id": "1d6c3fcc-155b-4560-8b17-6d078dce7756",
       "license": "UNKNOWN",
-      "name": "Go Testify",
+      "name": "go-spew",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/stretchr/testify",
-      "version": "20220410-snapshot"
+      "url": "https://github.com/davecgh/go-spew",
+      "version": "20180723-snapshot"
     },
     {
       "_unique_id": "0904bfe8-1407-4e70-b859-69165bd444b1eb1c41d0-e74a-4c59-9b23-571de40d0211",
@@ -1501,37 +1433,37 @@
       "version": "20220324-snapshot"
     },
     {
-      "_unique_id": "688963a2-f61a-46d0-9145-962ae9de662eca5d58a8-cf51-4f1f-aab6-3b3f3b46ac40",
+      "_unique_id": "5271cd46-d193-4af5-b2c2-50a07751f580280bdf32-7365-4d28-bd87-869362def127",
       "aliases": [
-        "evanphx/json-patch:20220511-snapshot"
+        "stretchr/testify:20220410-snapshot"
       ],
-      "bd_component_id": "688963a2-f61a-46d0-9145-962ae9de662e",
+      "bd_component_id": "5271cd46-d193-4af5-b2c2-50a07751f580",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "evanphx/json-patch:20220511-snapshot",
+        "external_id": "stretchr/testify:20220410-snapshot",
         "external_namespace": "github",
         "license": {
-          "name": "BSD 3-clause \"New\" or \"Revised\" License",
+          "name": "MIT License",
           "type": "DISJUNCTIVE"
         },
         "match_types": [
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/github.com/evanphx/json-patch/#"
+          "vendor/github.com/stretchr/testify/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "fdcf650d-b678-4cda-be6d-c1d349b72bc3",
-      "bd_version_id": "ca5d58a8-cf51-4f1f-aab6-3b3f3b46ac40",
+      "bd_origin_id": "ffd10a6d-f6d5-43f4-b87f-bc35abe800c5",
+      "bd_version_id": "280bdf32-7365-4d28-bd87-869362def127",
       "license": "UNKNOWN",
-      "name": "evanphx/json-patch",
+      "name": "Go Testify",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/evanphx/json-patch",
-      "version": "20220511-snapshot"
+      "url": "https://github.com/stretchr/testify",
+      "version": "20220410-snapshot"
     },
     {
       "_unique_id": "163bec4e-b7f6-4c8a-828d-5ba673aaa72a656180f6-7be4-4b8c-8fa9-238fb363ac90",
@@ -1603,6 +1535,39 @@
       "version": "20211206-snapshot"
     },
     {
+      "_unique_id": "688963a2-f61a-46d0-9145-962ae9de662eca5d58a8-cf51-4f1f-aab6-3b3f3b46ac40",
+      "aliases": [
+        "evanphx/json-patch:20220511-snapshot"
+      ],
+      "bd_component_id": "688963a2-f61a-46d0-9145-962ae9de662e",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "evanphx/json-patch:20220511-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "BSD 3-clause \"New\" or \"Revised\" License",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/github.com/evanphx/json-patch/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "fdcf650d-b678-4cda-be6d-c1d349b72bc3",
+      "bd_version_id": "ca5d58a8-cf51-4f1f-aab6-3b3f3b46ac40",
+      "license": "UNKNOWN",
+      "name": "evanphx/json-patch",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/evanphx/json-patch",
+      "version": "20220511-snapshot"
+    },
+    {
       "_unique_id": "49651356-8651-4b8e-9eba-a245f6d236a9d69ce22b-3c18-44cc-8d39-cad43c0f9c30",
       "aliases": [
         "cespare/xxhash:20211108-snapshot"
@@ -1636,14 +1601,14 @@
       "version": "20211108-snapshot"
     },
     {
-      "_unique_id": "1f9b60a8-93bb-4af8-920e-9d3b690fc054b78be240-544d-45c9-9681-4101714194da",
+      "_unique_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d078e26bd1-0590-443f-a1f8-6aec1150e1ce",
       "aliases": [
-        "kubernetes/api:20220126-snapshot"
+        "kubernetes/apimachinery:20220524-snapshot"
       ],
-      "bd_component_id": "1f9b60a8-93bb-4af8-920e-9d3b690fc054",
+      "bd_component_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d0",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "kubernetes/api:20220126-snapshot",
+        "external_id": "kubernetes/apimachinery:20220524-snapshot",
         "external_namespace": "github",
         "license": {
           "name": "Apache License 2.0",
@@ -1653,30 +1618,30 @@
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/k8s.io/api/#"
+          "vendor/k8s.io/apimachinery/pkg/runtime/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "fc4afbd3-baf4-4d55-9407-b5ced4ad7148",
-      "bd_version_id": "b78be240-544d-45c9-9681-4101714194da",
+      "bd_origin_id": "ebad5927-b9a2-478a-a2a2-0cf3b2ccb3e9",
+      "bd_version_id": "78e26bd1-0590-443f-a1f8-6aec1150e1ce",
       "license": "UNKNOWN",
-      "name": "kubernetes/api",
+      "name": "kubernetes/apimachinery",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/kubernetes/api",
-      "version": "20220126-snapshot"
+      "url": "https://github.com/kubernetes/apimachinery",
+      "version": "20220524-snapshot"
     },
     {
-      "_unique_id": "7dacc721-b6f6-4691-9b29-d558a9c5172a2050e2c3-8b23-43c2-a82a-674874822640",
+      "_unique_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d028c73338-98f1-4256-b570-573aa19d6f78",
       "aliases": [
-        "kubernetes/utils:20220506-snapshot"
+        "kubernetes/apimachinery:20220318-snapshot"
       ],
-      "bd_component_id": "7dacc721-b6f6-4691-9b29-d558a9c5172a",
+      "bd_component_id": "e89b7fcb-cfa4-481a-b7aa-1303db2e65d0",
       "bd_metadata": {
         "detect_ways": null,
-        "external_id": "kubernetes/utils:20220506-snapshot",
+        "external_id": "kubernetes/apimachinery:20220318-snapshot",
         "external_namespace": "github",
         "license": {
           "name": "Apache License 2.0",
@@ -1686,20 +1651,55 @@
           "FILE_EXACT"
         ],
         "paths": [
-          "vendor/k8s.io/utils/#"
+          "vendor/k8s.io/apimachinery/pkg/api/#",
+          "vendor/k8s.io/apimachinery/pkg/apis/#",
+          "vendor/k8s.io/apimachinery/pkg/util/#"
         ],
         "vulnerabilities": []
       },
-      "bd_origin_id": "ff98ef05-4808-455c-90f8-7ccc2a5a785c",
-      "bd_version_id": "2050e2c3-8b23-43c2-a82a-674874822640",
+      "bd_origin_id": "57419343-8c8e-4fbd-88fb-a16f3e6475aa",
+      "bd_version_id": "28c73338-98f1-4256-b570-573aa19d6f78",
       "license": "UNKNOWN",
-      "name": "k8s.io/utils",
+      "name": "kubernetes/apimachinery",
       "namespace": "github",
       "repository": "VMWsource",
       "scanner": "signature",
       "type": "signature",
-      "url": "https://github.com/kubernetes/utils",
-      "version": "20220506-snapshot"
+      "url": "https://github.com/kubernetes/apimachinery",
+      "version": "20220318-snapshot"
+    },
+    {
+      "_unique_id": "2accd2fb-2d75-4f0e-9c9a-92cac4edba1824ef93fb-32da-4028-af3e-a8723a44c2e3",
+      "aliases": [
+        "kubernetes/component-base:20220505-snapshot"
+      ],
+      "bd_component_id": "2accd2fb-2d75-4f0e-9c9a-92cac4edba18",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "kubernetes/component-base:20220505-snapshot",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_EXACT"
+        ],
+        "paths": [
+          "vendor/k8s.io/component-base/#"
+        ],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "f1aa5352-dfca-4fdf-aa24-48b167f7097b",
+      "bd_version_id": "24ef93fb-32da-4028-af3e-a8723a44c2e3",
+      "license": "UNKNOWN",
+      "name": "kubernetes/component-base",
+      "namespace": "github",
+      "repository": "VMWsource",
+      "scanner": "signature",
+      "type": "signature",
+      "url": "https://github.com/kubernetes/component-base",
+      "version": "20220505-snapshot"
     }
   ],
   "server": {

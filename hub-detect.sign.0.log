@@ -1,6 +1,6 @@
 Detect Shell Script 2.3.0
 Java Source: JAVA_HOME/bin/java=/Users/jcornish/.osspicli/osspi/resources/java/bin/java
-running Detect: "/Users/jcornish/.osspicli/osspi/resources/java/bin/java"  -jar "/Users/jcornish/.osspicli/osspi/lib/synopsys-detect-7.7.0.jar"  --detect.code.location.name=osspicli-soppezzlso-signature-SIGN-489995 --blackduck.trust.cert=true --detect.blackduck.signature.scanner.memory=26214 --detect.excluded.directories.defaults.disabled=True --detect.excluded.directories="compcache,tmp,gobuild,.access2,logs,publish" --detect.project.name=osspicli-soppezzlso --blackduck.url=https://ins07-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com --detect.project.version.name=signature --detect.tools=SIGNATURE_SCAN --blackduck.api.token=<redacted>
+running Detect: "/Users/jcornish/.osspicli/osspi/resources/java/bin/java"  -jar "/Users/jcornish/.osspicli/osspi/lib/synopsys-detect-7.7.0.jar"  --detect.project.version.name=signature --detect.blackduck.signature.scanner.memory=26214 --detect.excluded.directories.defaults.disabled=True --blackduck.api.token=<redacted> --detect.tools=SIGNATURE_SCAN --blackduck.url=https://ins03-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com --detect.excluded.directories="compcache,tmp,gobuild,.access2,logs,publish" --detect.code.location.name=osspicli-crrwigxxgz-signature-SIGN-353125 --detect.project.name=osspicli-crrwigxxgz --blackduck.trust.cert=true
 ______     _            _
 |  _  \   | |          | |
 | | | |___| |_ ___  ___| |_
@@ -11,78 +11,78 @@ ______     _            _
 
 Detect Version: 7.7.0
 
-2022-06-17 14:03:02 MDT INFO  [main] --- 
-2022-06-17 14:03:02 MDT INFO  [main] --- Current property values:
-2022-06-17 14:03:02 MDT INFO  [main] --- --property = value [notes]
-2022-06-17 14:03:02 MDT INFO  [main] --- ------------------------------------------------------------
-2022-06-17 14:03:02 MDT INFO  [main] --- blackduck.api.token = **************************************************************************************************** [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- blackduck.trust.cert = true [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- blackduck.url = https://ins07-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.blackduck.signature.scanner.memory = 26214 [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.code.location.name = osspicli-soppezzlso-signature-SIGN-489995 [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.excluded.directories = compcache,tmp,gobuild,.access2,logs,publish [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.excluded.directories.defaults.disabled = True [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.project.name = osspicli-soppezzlso [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.project.version.name = signature [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- detect.tools = SIGNATURE_SCAN [cmd] 
-2022-06-17 14:03:02 MDT INFO  [main] --- ------------------------------------------------------------
-2022-06-17 14:03:02 MDT INFO  [main] --- 
-2022-06-17 14:03:02 MDT INFO  [main] --- Tilde's will be automatically resolved to USER HOME.
-2022-06-17 14:03:02 MDT INFO  [main] --- Source directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files
-2022-06-17 14:03:02 MDT INFO  [main] --- Output directory: /Users/jcornish/blackduck
-2022-06-17 14:03:02 MDT INFO  [main] --- Run directory: /Users/jcornish/blackduck/runs/2022-06-17-20-03-02-293
-2022-06-17 14:03:02 MDT INFO  [main] --- 
-2022-06-17 14:03:03 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
-2022-06-17 14:03:04 MDT INFO  [main] --- Successfully connected to Black Duck (version 2021.10.3)!
-2022-06-17 14:03:04 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:04 MDT INFO  [main] --- Docker tool will not be run.
-2022-06-17 14:03:04 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:04 MDT INFO  [main] --- Bazel tool will not be run.
-2022-06-17 14:03:04 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:04 MDT INFO  [main] --- Detectors tool will not be run.
-2022-06-17 14:03:04 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:04 MDT INFO  [main] --- Project name: osspicli-soppezzlso
-2022-06-17 14:03:04 MDT INFO  [main] --- Project version: signature
-2022-06-17 14:03:05 MDT INFO  [main] --- The osspicli-soppezzlso project was not found, so it will be created - if a version was included, it will also be created.
-2022-06-17 14:03:08 MDT INFO  [main] --- Starting the codelocation file uploads.
-2022-06-17 14:03:08 MDT INFO  [main] --- Completed the codelocation file uploads.
-2022-06-17 14:03:08 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:08 MDT INFO  [main] --- Will include the Signature Scanner tool.
-2022-06-17 14:03:08 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
-2022-06-17 14:03:08 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
-2022-06-17 14:03:08 MDT INFO  [main] --- No scan targets provided - registering the source path /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files to scan
-2022-06-17 14:03:11 MDT INFO  [main] --- The Black Duck Signature Scanner downloaded/found successfully: /Users/jcornish/blackduck/tools
-2022-06-17 14:03:11 MDT INFO  [main] --- Starting the Black Duck Signature Scan commands.
-2022-06-17 14:03:11 MDT INFO  [pool-3-thread-1] --- Black Duck CLI command: /Users/jcornish/.osspicli/osspi/resources/java/bin/java -Done-jar.silent=true -Done-jar.jar.path=/Users/jcornish/blackduck/tools/Black_Duck_Scan_Installation/scan.cli-2021.10.3/lib/cache/scan.cli.impl-standalone.jar -Xmx26214m -jar /Users/jcornish/blackduck/tools/Black_Duck_Scan_Installation/scan.cli-2021.10.3/lib/scan.cli-2021.10.3-standalone.jar --no-prompt --scheme https --host ins07-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com --port 443 --insecure -v --logDir /Users/jcornish/blackduck/runs/2022-06-17-20-03-02-293/scan/BlackDuckScanOutput/2022-06-17_20-03-11-505_1 --statusWriteDir /Users/jcornish/blackduck/runs/2022-06-17-20-03-02-293/scan/BlackDuckScanOutput/2022-06-17_20-03-11-505_1 --project osspicli-soppezzlso --release signature --name osspicli-soppezzlso-signature-SIGN-489995 scan --exclude /.access2/ --exclude /.git/logs/ /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files
-2022-06-17 14:03:22 MDT INFO  [pool-3-thread-1] --- 
-2022-06-17 14:03:22 MDT INFO  [pool-3-thread-1] --- Black Duck Signature Scanner return code: 0
-2022-06-17 14:03:22 MDT INFO  [pool-3-thread-1] --- You can view the logs at: '/Users/jcornish/blackduck/runs/2022-06-17-20-03-02-293/scan/BlackDuckScanOutput/2022-06-17_20-03-11-505_1'
-2022-06-17 14:03:22 MDT INFO  [main] --- Completed the Black Duck Signature Scan commands.
-2022-06-17 14:03:22 MDT INFO  [main] --- Signature Scanner actions finished.
-2022-06-17 14:03:22 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:22 MDT INFO  [main] --- Binary Scanner tool will not be run.
-2022-06-17 14:03:22 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:22 MDT INFO  [main] --- Vulnerability Impact Analysis tool will not be run.
-2022-06-17 14:03:22 MDT INFO  [main] --- ----------------------------------
-2022-06-17 14:03:22 MDT INFO  [main] --- Checking to see if Detect should wait for bom tool calculations to finish.
-2022-06-17 14:03:22 MDT INFO  [main] --- Checking to see if Detect should check policy for violations.
-2022-06-17 14:03:22 MDT INFO  [main] --- 
-2022-06-17 14:03:22 MDT INFO  [main] --- 
-2022-06-17 14:03:22 MDT INFO  [main] --- Creating status file: /Users/jcornish/blackduck/runs/2022-06-17-20-03-02-293/status/status.json
-2022-06-17 14:03:22 MDT INFO  [main] --- Status file has been deleted.  To preserve status file, turn off cleanup actions.
-2022-06-17 14:03:22 MDT INFO  [main] --- Cleaning up directory: /Users/jcornish/blackduck/runs/2022-06-17-20-03-02-293
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- ======== Detect Result ========
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- Black Duck Project BOM: https://ins07-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com/api/projects/1ce4536e-9a2d-492c-a2e1-001b166ce7cf/versions/6d33dbef-a9f1-4099-acda-3b7b7489c730/components
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- ======== Detect Status ========
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- Signature scan / Snippet scan on /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files: SUCCESS
-2022-06-17 14:03:23 MDT INFO  [main] --- Overall Status: SUCCESS - Detect exited successfully.
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- ===============================
-2022-06-17 14:03:23 MDT INFO  [main] --- 
-2022-06-17 14:03:23 MDT INFO  [main] --- Detect duration: 00h 00m 20s 735ms
+2022-06-21 12:10:02 MDT INFO  [main] --- 
+2022-06-21 12:10:02 MDT INFO  [main] --- Current property values:
+2022-06-21 12:10:02 MDT INFO  [main] --- --property = value [notes]
+2022-06-21 12:10:02 MDT INFO  [main] --- ------------------------------------------------------------
+2022-06-21 12:10:02 MDT INFO  [main] --- blackduck.api.token = **************************************************************************************************** [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- blackduck.trust.cert = true [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- blackduck.url = https://ins03-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.blackduck.signature.scanner.memory = 26214 [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.code.location.name = osspicli-crrwigxxgz-signature-SIGN-353125 [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.excluded.directories = compcache,tmp,gobuild,.access2,logs,publish [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.excluded.directories.defaults.disabled = True [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.project.name = osspicli-crrwigxxgz [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.project.version.name = signature [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- detect.tools = SIGNATURE_SCAN [cmd] 
+2022-06-21 12:10:02 MDT INFO  [main] --- ------------------------------------------------------------
+2022-06-21 12:10:02 MDT INFO  [main] --- 
+2022-06-21 12:10:02 MDT INFO  [main] --- Tilde's will be automatically resolved to USER HOME.
+2022-06-21 12:10:02 MDT INFO  [main] --- Source directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files
+2022-06-21 12:10:02 MDT INFO  [main] --- Output directory: /Users/jcornish/blackduck
+2022-06-21 12:10:03 MDT INFO  [main] --- Run directory: /Users/jcornish/blackduck/runs/2022-06-21-18-10-01-772
+2022-06-21 12:10:03 MDT INFO  [main] --- 
+2022-06-21 12:10:06 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
+2022-06-21 12:10:08 MDT INFO  [main] --- Successfully connected to Black Duck (version 2021.10.3)!
+2022-06-21 12:10:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:10:08 MDT INFO  [main] --- Docker tool will not be run.
+2022-06-21 12:10:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:10:08 MDT INFO  [main] --- Bazel tool will not be run.
+2022-06-21 12:10:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:10:08 MDT INFO  [main] --- Detectors tool will not be run.
+2022-06-21 12:10:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:10:08 MDT INFO  [main] --- Project name: osspicli-crrwigxxgz
+2022-06-21 12:10:08 MDT INFO  [main] --- Project version: signature
+2022-06-21 12:10:09 MDT INFO  [main] --- The osspicli-crrwigxxgz project was not found, so it will be created - if a version was included, it will also be created.
+2022-06-21 12:10:13 MDT INFO  [main] --- Starting the codelocation file uploads.
+2022-06-21 12:10:13 MDT INFO  [main] --- Completed the codelocation file uploads.
+2022-06-21 12:10:13 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:10:13 MDT INFO  [main] --- Will include the Signature Scanner tool.
+2022-06-21 12:10:13 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
+2022-06-21 12:10:13 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
+2022-06-21 12:10:13 MDT INFO  [main] --- No scan targets provided - registering the source path /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files to scan
+2022-06-21 12:10:17 MDT INFO  [main] --- The Black Duck Signature Scanner downloaded/found successfully: /Users/jcornish/blackduck/tools
+2022-06-21 12:10:17 MDT INFO  [main] --- Starting the Black Duck Signature Scan commands.
+2022-06-21 12:10:17 MDT INFO  [pool-3-thread-1] --- Black Duck CLI command: /Users/jcornish/.osspicli/osspi/resources/java/bin/java -Done-jar.silent=true -Done-jar.jar.path=/Users/jcornish/blackduck/tools/Black_Duck_Scan_Installation/scan.cli-2021.10.3/lib/cache/scan.cli.impl-standalone.jar -Xmx26214m -jar /Users/jcornish/blackduck/tools/Black_Duck_Scan_Installation/scan.cli-2021.10.3/lib/scan.cli-2021.10.3-standalone.jar --no-prompt --scheme https --host ins03-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com --port 443 --insecure -v --logDir /Users/jcornish/blackduck/runs/2022-06-21-18-10-01-772/scan/BlackDuckScanOutput/2022-06-21_18-10-17-018_1 --statusWriteDir /Users/jcornish/blackduck/runs/2022-06-21-18-10-01-772/scan/BlackDuckScanOutput/2022-06-21_18-10-17-018_1 --project osspicli-crrwigxxgz --release signature --name osspicli-crrwigxxgz-signature-SIGN-353125 scan --exclude /.access2/ --exclude /.git/logs/ /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files
+2022-06-21 12:11:08 MDT INFO  [pool-3-thread-1] --- 
+2022-06-21 12:11:08 MDT INFO  [pool-3-thread-1] --- Black Duck Signature Scanner return code: 0
+2022-06-21 12:11:08 MDT INFO  [pool-3-thread-1] --- You can view the logs at: '/Users/jcornish/blackduck/runs/2022-06-21-18-10-01-772/scan/BlackDuckScanOutput/2022-06-21_18-10-17-018_1'
+2022-06-21 12:11:08 MDT INFO  [main] --- Completed the Black Duck Signature Scan commands.
+2022-06-21 12:11:08 MDT INFO  [main] --- Signature Scanner actions finished.
+2022-06-21 12:11:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:11:08 MDT INFO  [main] --- Binary Scanner tool will not be run.
+2022-06-21 12:11:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:11:08 MDT INFO  [main] --- Vulnerability Impact Analysis tool will not be run.
+2022-06-21 12:11:08 MDT INFO  [main] --- ----------------------------------
+2022-06-21 12:11:08 MDT INFO  [main] --- Checking to see if Detect should wait for bom tool calculations to finish.
+2022-06-21 12:11:08 MDT INFO  [main] --- Checking to see if Detect should check policy for violations.
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- Creating status file: /Users/jcornish/blackduck/runs/2022-06-21-18-10-01-772/status/status.json
+2022-06-21 12:11:09 MDT INFO  [main] --- Status file has been deleted.  To preserve status file, turn off cleanup actions.
+2022-06-21 12:11:09 MDT INFO  [main] --- Cleaning up directory: /Users/jcornish/blackduck/runs/2022-06-21-18-10-01-772
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- ======== Detect Result ========
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- Black Duck Project BOM: https://ins03-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com/api/projects/8376d38f-9ec9-4d3e-a650-ff462b0dfcf8/versions/808d725e-9ba0-44e1-b9c1-d3a6d6a5db9a/components
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- ======== Detect Status ========
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- Signature scan / Snippet scan on /Users/jcornish/workspace/wavefront-operator-for-kubernetes/tmp/signature_files: SUCCESS
+2022-06-21 12:11:09 MDT INFO  [main] --- Overall Status: SUCCESS - Detect exited successfully.
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- ===============================
+2022-06-21 12:11:09 MDT INFO  [main] --- 
+2022-06-21 12:11:09 MDT INFO  [main] --- Detect duration: 00h 01m 07s 993ms
 Result code of 0, exiting
