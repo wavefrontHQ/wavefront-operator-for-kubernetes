@@ -463,24 +463,26 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 
 // Reporting Health Status`
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
-	wavefront.Status.Healthy = true
-	wavefront.Status.Message = "Wavefront components are healthy."
-
+	var componentHealth []bool
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		updateDeploymentStatus(r.Appsv1, "wavefront-proxy", &wavefront.Status.Proxy)
-		//wavefront.Status.Healthy = wavefront.Status.Healthy && wavefront.Status.Proxy.Healthy
+		componentHealth = append(componentHealth, wavefront.Status.Proxy.Healthy)
 	}
 
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		updateDeploymentStatus(r.Appsv1, "wavefront-cluster-collector", &wavefront.Status.ClusterCollector)
 		updateDaemonSetStatus(r.Appsv1, "wavefront-node-collector", &wavefront.Status.NodeCollector)
-		//wavefront.Status.Healthy = wavefront.Status.Healthy && wavefront.Status.ClusterCollector.Healthy
+		componentHealth = append(componentHealth, wavefront.Status.ClusterCollector.Healthy)
+		componentHealth = append(componentHealth, wavefront.Status.NodeCollector.Healthy)
 	}
+
+	wavefront.Status.Healthy = boolCount(false, componentHealth...) == 0
+	wavefront.Status.Message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
 
 	return r.UpdateStatus(ctx, wavefront)
 }
 
-func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
+func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus)  {
 	deploymentStatus.DeploymentName = deploymentName
 	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), deploymentName, v1.GetOptions{})
 	if err != nil {
@@ -522,4 +524,15 @@ func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName str
 		daemonSetStatus.Healthy = true
 		daemonSetStatus.Message = "healthy"
 	}
+}
+
+
+func boolCount(b bool, statuses ...bool) int {
+	n := 0
+	for _, v := range statuses {
+		if v == b {
+			n++
+		}
+	}
+	return n
 }
