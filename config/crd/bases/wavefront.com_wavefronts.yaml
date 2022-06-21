@@ -257,6 +257,42 @@ spec:
                         maxLength: 253
                         pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
                         type: string
+                      resources:
+                        default:
+                          limits:
+                            cpu: 1000m
+                            memory: 4Gi
+                          requests:
+                            cpu: 100m
+                            memory: 1Gi
+                        description: Resources Compute resources required by the Proxy
+                          containers.
+                        properties:
+                          limits:
+                            description: Limits CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                          requests:
+                            description: Requests CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                        type: object
                       tracing:
                         description: Distributed tracing configuration
                         properties:

@@ -133,6 +133,10 @@ type WavefrontProxy struct {
 	// +kubebuilder:validation:Pattern:=`^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$`
 	Preprocessor string `json:"preprocessor,omitempty"`
 
+	// Resources Compute resources required by the Proxy containers.
+	// +kubebuilder:default:={requests: {cpu: "100m", memory: "1Gi"}, limits: {cpu: "1000m", memory: "4Gi"}}
+	Resources Resources `json:"resources,omitempty"`
+
 	// HttpProxy configuration
 	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
 
