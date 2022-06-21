@@ -32,7 +32,7 @@ import (
 )
 
 func TestReconcileReportHealthStatus(t *testing.T) {
-	t.Run("report health status", func(t *testing.T) {
+	t.Run("report health status when all components are healthy", func(t *testing.T) {
 		var proxyDeployment = &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
@@ -55,7 +55,9 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 		assert.Equal(t, true, wavefrontStatus.Status.Healthy)
-		assert.Equal(t, "Running (1/1)", wavefrontStatus.Status.Proxy)
+		assert.Equal(t, "Wavefront components are healthy.", wavefrontStatus.Status.Message)
+		assert.Equal(t, "Running (1/1)", wavefrontStatus.Status.Proxy.Status)
+		assert.Equal(t, "Running (1/1)", wavefrontStatus.Status.ClusterCollector.Status)
 	})
 }
 

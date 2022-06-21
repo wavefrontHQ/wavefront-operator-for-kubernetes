@@ -257,20 +257,63 @@ type Collector struct {
 
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
-	// Healthy is the healthy status of the components
-	Healthy bool `json:"healthy,required"`
+	// Overall health status of the wavefront components
+	Healthy bool `json:"healthy,omitempty"`
 
-	// Message associated to the health of the components
+	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
 
-	// Proxy is the deployment status of the proxy
-	Proxy string `json:"proxy,omitempty"`
+	// The deployment status  of the cluster collector
+	Proxy DeploymentStatus `json:"proxy,omitempty"`
 
-	// NodeCollector is the daemonSet status of the collector
-	NodeCollector string `json:"nodeCollector,omitempty"`
+	// The daemonSet status of the node collector
+	NodeCollector DaemonSetStatus `json:"nodeCollector,omitempty"`
 
-	// ClusterCollector is the deployment status of the collector
-	ClusterCollector string `json:"clusterCollector,omitempty"`
+	// The deployment status of the cluster collector
+	ClusterCollector DeploymentStatus `json:"clusterCollector,omitempty"`
+}
+
+type DaemonSetStatus struct {
+	// The total number of nodes that should be running the daemon
+	// pod (including nodes correctly running the daemon pod).
+	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
+	DesiredNumberScheduled int32 `json:"DesiredNumberScheduled,omitempty"`
+
+	// numberReady is the number of nodes that should be running the daemon pod and have one
+	// or more of the daemon pod running with a Ready Condition.
+	NumberReady int32 `json:"numberReady,omitempty"`
+
+	// Computed deployment status. (available replicas / desired replicas)
+	Status string `json:"status,omitempty"`
+
+	// Human readable message indicating details about the deployment status.
+	Message string `json:"message,omitempty"`
+
+	// Health status of the deployment
+	Healthy bool `json:"healthy,omitempty"`
+
+	// Name of the deployment
+	DaemonSetName string `json:"daemonSetName,omitempty"`
+}
+
+type DeploymentStatus struct {
+	// Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
+
+	// Computed deployment status. (available replicas / desired replicas)
+	Status string `json:"status,omitempty"`
+
+	// Human readable message indicating details about the deployment status.
+	Message string `json:"message,omitempty"`
+
+	// Health status of the deployment
+	Healthy bool `json:"healthy,omitempty"`
+
+	// Name of the deployment
+	DeploymentName string `json:"deploymentName,omitempty"`
 }
 
 //+kubebuilder:object:root=true
