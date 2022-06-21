@@ -468,7 +468,13 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		updateDeploymentStatus(r.Appsv1, "wavefront-proxy", &wavefront.Status.Proxy)
-		wavefront.Status.Healthy = wavefront.Status.Healthy && wavefront.Status.Proxy.Healthy
+		//wavefront.Status.Healthy = wavefront.Status.Healthy && wavefront.Status.Proxy.Healthy
+	}
+
+	if wavefront.Spec.DataCollection.Metrics.Enable {
+		updateDeploymentStatus(r.Appsv1, "wavefront-cluster-collector", &wavefront.Status.ClusterCollector)
+		updateDaemonSetStatus(r.Appsv1, "wavefront-node-collector", &wavefront.Status.NodeCollector)
+		//wavefront.Status.Healthy = wavefront.Status.Healthy && wavefront.Status.ClusterCollector.Healthy
 	}
 
 	return r.UpdateStatus(ctx, wavefront)
@@ -492,5 +498,26 @@ func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName s
 		deploymentStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", deploymentStatus.DeploymentName, deployment.Status.AvailableReplicas, deployment.Status.Replicas)
 	} else {
 		deploymentStatus.Healthy = true
+	}
+}
+
+func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName string, daemonSetStatus *wf.DaemonSetStatus) {
+	daemonSetStatus.DaemonSetName = daemonSetName
+	daemonSet, err := appsV1.DaemonSets("wavefront").Get(context.Background(), daemonSetName, v1.GetOptions{})
+	if err != nil {
+		daemonSetStatus.Healthy = false
+		daemonSetStatus.Message = err.Error()
+		return
+	}
+
+	daemonSetStatus.DesiredNumberScheduled = daemonSet.Status.DesiredNumberScheduled
+	daemonSetStatus.NumberReady = daemonSet.Status.NumberReady
+	daemonSetStatus.Status = fmt.Sprintf("Running (%d/%d)", daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
+
+	if daemonSet.Status.NumberReady < daemonSet.Status.DesiredNumberScheduled {
+		daemonSetStatus.Healthy = false
+		daemonSetStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", daemonSetStatus.DaemonSetName, daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
+	} else {
+		daemonSetStatus.Healthy = true
 	}
 }
