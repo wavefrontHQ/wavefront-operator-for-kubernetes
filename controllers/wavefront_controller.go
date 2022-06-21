@@ -467,22 +467,30 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 	wavefront.Status.Message = "Wavefront components are healthy."
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		wavefront.Status.Proxy = deploymentStatus(r.Appsv1, "wavefront-proxy", wavefront, "Proxy")
+		updateDeploymentStatus(r.Appsv1, "wavefront-proxy", &wavefront.Status.Proxy)
+		wavefront.Status.Healthy = wavefront.Status.Healthy && wavefront.Status.Proxy.Healthy
 	}
 
 	return r.UpdateStatus(ctx, wavefront)
 }
 
-func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string, wavefront *wf.Wavefront, statusField string) string {
-	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), name, v1.GetOptions{})
+func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
+	deploymentStatus.DeploymentName = deploymentName
+	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), deploymentName, v1.GetOptions{})
 	if err != nil {
-		wavefront.Status.Healthy = false
-		wavefront.Status.Message = err.Error()
-		return err.Error()
+		deploymentStatus.Healthy = false
+		deploymentStatus.Message = err.Error()
+		return
 	}
+
+	deploymentStatus.Replicas = deployment.Status.Replicas
+	deploymentStatus.AvailableReplicas = deployment.Status.AvailableReplicas
+	deploymentStatus.Status = fmt.Sprintf("Running (%d/%d)", deployment.Status.AvailableReplicas, deployment.Status.Replicas)
+
 	if deployment.Status.AvailableReplicas < deployment.Status.Replicas {
-		wavefront.Status.Healthy = false
-		wavefront.Status.Message = "Deployment does not have minimum availability"
+		deploymentStatus.Healthy = false
+		deploymentStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", deploymentStatus.DeploymentName, deployment.Status.AvailableReplicas, deployment.Status.Replicas)
+	} else {
+		deploymentStatus.Healthy = true
 	}
-	return fmt.Sprintf("Running (%d/%d)", deployment.Status.AvailableReplicas, deployment.Status.Replicas)
 }

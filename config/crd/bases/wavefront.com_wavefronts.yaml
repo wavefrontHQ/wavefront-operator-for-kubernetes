@@ -326,22 +326,98 @@ spec:
             description: WavefrontStatus defines the observed state of Wavefront
             properties:
               clusterCollector:
-                description: ClusterCollector is the deployment status of the collector
-                type: string
+                description: The deployment status  of the cluster collector
+                properties:
+                  availableReplicas:
+                    description: Total number of available pods (ready for at least
+                      minReadySeconds) targeted by this deployment.
+                    format: int32
+                    type: integer
+                  deploymentName:
+                    description: Name of the deployment
+                    type: string
+                  healthy:
+                    description: Health status of the deployment
+                    type: boolean
+                  message:
+                    description: Human readable message indicating details about the
+                      deployment status.
+                    type: string
+                  replicas:
+                    description: Total number of non-terminated pods targeted by this
+                      deployment (their labels match the selector).
+                    format: int32
+                    type: integer
+                  status:
+                    description: Computed deployment status. (available replicas /
+                      desired replicas)
+                    type: string
+                type: object
               healthy:
-                description: Healthy is the healthy status of the components
+                description: Overall health status of the wavefront components
                 type: boolean
               message:
-                description: Message associated to the health of the components
+                description: Human readable message indicating details about the deployment
+                  status.
                 type: string
               nodeCollector:
-                description: NodeCollector is the daemonSet status of the collector
-                type: string
+                description: The daemonSet status of the node collector
+                properties:
+                  DesiredNumberScheduled:
+                    description: 'The total number of nodes that should be running
+                      the daemon pod (including nodes correctly running the daemon
+                      pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                    format: int32
+                    type: integer
+                  daemonSetName:
+                    description: Name of the deployment
+                    type: string
+                  healthy:
+                    description: Health status of the deployment
+                    type: boolean
+                  message:
+                    description: Human readable message indicating details about the
+                      deployment status.
+                    type: string
+                  numberReady:
+                    description: numberReady is the number of nodes that should be
+                      running the daemon pod and have one or more of the daemon pod
+                      running with a Ready Condition.
+                    format: int32
+                    type: integer
+                  status:
+                    description: Computed deployment status. (available replicas /
+                      desired replicas)
+                    type: string
+                type: object
               proxy:
-                description: Proxy is the deployment status of the proxy
-                type: string
-            required:
-            - healthy
+                description: The deployment status  of the cluster collector
+                properties:
+                  availableReplicas:
+                    description: Total number of available pods (ready for at least
+                      minReadySeconds) targeted by this deployment.
+                    format: int32
+                    type: integer
+                  deploymentName:
+                    description: Name of the deployment
+                    type: string
+                  healthy:
+                    description: Health status of the deployment
+                    type: boolean
+                  message:
+                    description: Human readable message indicating details about the
+                      deployment status.
+                    type: string
+                  replicas:
+                    description: Total number of non-terminated pods targeted by this
+                      deployment (their labels match the selector).
+                    format: int32
+                    type: integer
+                  status:
+                    description: Computed deployment status. (available replicas /
+                      desired replicas)
+                    type: string
+                type: object
             type: object
         type: object
     served: true
