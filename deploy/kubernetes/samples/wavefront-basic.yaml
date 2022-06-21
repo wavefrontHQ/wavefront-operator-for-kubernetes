@@ -10,8 +10,6 @@ spec:
   dataCollection:
     metrics:
       enable: true
-      defaultCollectionInterval: 90s #defaults to 60s
-      #enableDiscovery: true #defaults to true
   dataExport:
     wavefrontProxy:
       enable: true

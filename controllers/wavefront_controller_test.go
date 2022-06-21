@@ -184,10 +184,14 @@ func TestReconcileCollector(t *testing.T) {
 
 	})
 
-	t.Run("Default filters applied when default collector is used", func(t *testing.T) {
+	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{
 			Enable: true,
+			Filters: wf.Filters{
+				DenyList:  []string{"first_deny", "second_deny"},
+				AllowList: []string{"first_allow", "second_allow"},
+			},
 		}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 		_, err := r.Reconcile(context.Background(), reconcile.Request{})
@@ -195,40 +199,16 @@ func TestReconcileCollector(t *testing.T) {
 
 		configMap := getCreatedConfigMap(t, dynamicClient)
 		var configs map[string]interface{}
-		jsonConfigs, err := yaml.ToJSON([]byte(configMap.Data["config.yaml"]))
+		err = yaml.Unmarshal([]byte(configMap.Data["config.yaml"]), &configs)
 		assert.NoError(t, err)
-		err = yaml.Unmarshal(jsonConfigs, &configs)
-		assert.NoError(t, err)
-
-		//filters, error := NestedMapLookup(configs, "sinks", "filters")
-		//assert.NoError(t, error)
-		sinks := configs["sinks.filters"]
-		assert.NotNil(t, sinks)
-
-		//filters := sinks["filters"]
-		assert.Contains(t, configs, "filters")
+		sinks := configs["sinks"]
+		sinkArray := sinks.([]interface{})
+		sinkMap := sinkArray[0].(map[string]interface{})
+		filters := sinkMap["filters"].(map[string]interface{})
+		assert.Equal(t, 2, len(filters["metricDenyList"].([]interface{})))
+		assert.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
 	})
 }
-
-//func NestedMapLookup(m map[string]interface{}, ks ...string) (rval interface{}, err error) {
-//	var ok bool
-//
-//	if len(ks) == 0 { // degenerate input
-//		return nil, fmt.Errorf("NestedMapLookup needs at least one key")
-//	}
-//	if rval, ok = m[ks[0]]; !ok {
-//		return nil, fmt.Errorf("key not found; remaining keys: %v", ks)
-//	} else if len(ks) == 1 { // we've reached the final key
-//		return rval, nil
-//	}
-//	fmt.Printf("type is %T", rval)
-//	fmt.Printf("type is %T", rval.([]string))
-//	if m, ok = rval.(map[string]interface{}); !ok {
-//		return nil, fmt.Errorf("malformed structure at %#v", rval)
-//	} else { // 1+ more keys
-//		return NestedMapLookup(m, ks[1:]...)
-//	}
-//}
 
 func TestReconcileProxy(t *testing.T) {
 	t.Run("creates proxy and proxy service", func(t *testing.T) {
