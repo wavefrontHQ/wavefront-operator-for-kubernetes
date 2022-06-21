@@ -239,6 +239,7 @@ type Resources struct {
 
 type Filters struct {
 	// List of metric patterns to deny
+	// +kubebuilder:default:={kubernetes.sys_container.*, kubernetes.collector.runtime.*, kubernetes.*.network.rx_rate, kubernetes.*.network.rx_errors_rate, kubernetes.*.network.tx_rate, kubernetes.*.network.tx_errors_rate, kubernetes.*.memory.page_faults, kubernetes.*.memory.page_faults_rate, kubernetes.*.memory.major_page_faults, kubernetes.*.memory.major_page_faults_rate, kubernetes.*.filesystem.inodes, kubernetes.*.filesystem.inodes_free, kubernetes.*.ephemeral_storage.request, kubernetes.*.ephemeral_storage.limit}
 	DenyList []string `json:"denyList,omitempty"`
 
 	// List of metric patterns to allow
