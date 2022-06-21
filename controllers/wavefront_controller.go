@@ -498,6 +498,7 @@ func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName s
 		deploymentStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", deploymentStatus.DeploymentName, deployment.Status.AvailableReplicas, deployment.Status.Replicas)
 	} else {
 		deploymentStatus.Healthy = true
+		deploymentStatus.Message = "healthy"
 	}
 }
 
@@ -519,5 +520,6 @@ func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName str
 		daemonSetStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", daemonSetStatus.DaemonSetName, daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
 	} else {
 		daemonSetStatus.Healthy = true
+		daemonSetStatus.Message = "healthy"
 	}
 }
