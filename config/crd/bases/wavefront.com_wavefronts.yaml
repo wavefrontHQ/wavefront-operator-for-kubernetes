@@ -377,6 +377,9 @@ spec:
               healthy:
                 description: Healthy is the healthy status of the components
                 type: boolean
+              message:
+                description: Message associated to the health of the components
+                type: string
               nodeCollector:
                 description: NodeCollector is the daemonSet status of the collector
                 type: string
