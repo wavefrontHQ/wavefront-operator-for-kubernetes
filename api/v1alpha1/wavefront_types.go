@@ -247,6 +247,9 @@ type WavefrontStatus struct {
 	// Healthy is the healthy status of the components
 	Healthy bool `json:"healthy,required"`
 
+	// Message associated to the health of the components
+	Message string `json:"message,omitempty"`
+
 	// Proxy is the deployment status of the proxy
 	Proxy string `json:"proxy,omitempty"`
 

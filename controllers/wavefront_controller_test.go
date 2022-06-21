@@ -39,8 +39,8 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DeploymentStatus{
-				Replicas:            1,
-				ReadyReplicas:       1,
+				Replicas:          1,
+				AvailableReplicas: 1,
 			},
 		}
 		r, _, _, _, _ := setupForCreate(defaultWFSpec(), proxyDeployment)
@@ -54,7 +54,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 		assert.Equal(t, true, wavefrontStatus.Status.Healthy)
-		assert.Equal(t, "Running(1/1)", wavefrontStatus.Status.Proxy)
+		assert.Equal(t, "Running (1/1)", wavefrontStatus.Status.Proxy)
 	})
 }
 
@@ -626,7 +626,7 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
-func setupForCreate(spec wf.WavefrontSpec, initObjs ...client.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -683,13 +683,13 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...client.Object) (*controll
 
 	clientBuilder := fake.NewClientBuilder()
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR)
-	clientBuilder = clientBuilder.WithScheme(s).WithObjects(initObjs...)
+	clientBuilder = clientBuilder.WithScheme(s).WithRuntimeObjects(initObjs...)
 	clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
 
-	fakesAppsV1 := k8sfake.NewSimpleClientset(&appsv1.Deployment{
+	initObjs = append(initObjs, &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
@@ -701,7 +701,9 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...client.Object) (*controll
 		},
 		Spec:   appsv1.DeploymentSpec{},
 		Status: appsv1.DeploymentStatus{},
-	}).AppsV1()
+	})
+
+	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
 		Client:        apiClient,

@@ -22,7 +22,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/fs"
-	appsv1 "k8s.io/api/apps/v1"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -131,21 +130,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}, nil
 }
 
-func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
-	wavefront.Status.Healthy = true
-	proxyDeployment := client.ObjectKey{
-		Namespace: "wavefront",
-		Name:      "wavefront-proxy",
-	}
-	deployment := &appsv1.Deployment{}
-	err := r.Client.Get(ctx, proxyDeployment, deployment)
-	if err != nil {
-		return err
-	}
-	wavefront.Status.Proxy = fmt.Sprintf("Running(%d/%d)", deployment.Status.ReadyReplicas, deployment.Status.Replicas)
-	return r.UpdateStatus(ctx, wavefront)
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -186,13 +170,7 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 	return reconciler, nil
 }
 
-func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-	return deployment.UID, nil
-}
+// Reading, Ceating, Updating and Delete Resources
 
 func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
 	controllerManagerUID, err := r.getControllerManagerUID()
@@ -296,6 +274,14 @@ func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *un
 	return err
 }
 
+func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
+	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	return deployment.UID, nil
+}
+
 func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 	var files []string
 
@@ -390,6 +376,7 @@ func hashValue(bytes []byte) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+// Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
@@ -445,7 +432,6 @@ func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx c
 }
 
 func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront) error {
-
 	httpProxySecretData := map[string]string{}
 	for k, v := range httpProxySecret.Data {
 		httpProxySecretData[k] = string(v)
@@ -473,4 +459,30 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 	wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = hashValue(configHashBytes)
 
 	return nil
+}
+
+// Reporting Health Status`
+func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
+	wavefront.Status.Healthy = true
+	wavefront.Status.Message = "Wavefront components are healthy."
+
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		wavefront.Status.Proxy = deploymentStatus(r.Appsv1, "wavefront-proxy", wavefront, "Proxy")
+	}
+
+	return r.UpdateStatus(ctx, wavefront)
+}
+
+func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string, wavefront *wf.Wavefront, statusField string) string {
+	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), name, v1.GetOptions{})
+	if err != nil {
+		wavefront.Status.Healthy = false
+		wavefront.Status.Message = err.Error()
+		return err.Error()
+	}
+	if deployment.Status.AvailableReplicas < deployment.Status.Replicas {
+		wavefront.Status.Healthy = false
+		wavefront.Status.Message = "Deployment does not have minimum availability"
+	}
+	return fmt.Sprintf("Running (%d/%d)", deployment.Status.AvailableReplicas, deployment.Status.Replicas)
 }
