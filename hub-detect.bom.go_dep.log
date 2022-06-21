@@ -1,0 +1,499 @@
+Detect Shell Script 2.3.0
+Java Source: JAVA_HOME/bin/java=/Users/jcornish/.osspicli/osspi/resources/java/bin/java
+running Detect: "/Users/jcornish/.osspicli/osspi/resources/java/bin/java"  -jar "/Users/jcornish/.osspicli/osspi/lib/synopsys-detect-7.7.0.jar"  --blackduck.url=https://ins06-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com --detect.detector.search.depth=5 --detect.bom.aggregate.name=osspicli-igbwelkcia-go_dep-BOM-162197 --detect.excluded.directories="compcache,tmp,gobuild,.access2,logs,publish" --detect.project.name=osspicli-igbwelkcia --detect.project.version.name=go_dep --detect.tools=DETECTOR --detect.required.detector.types=go_dep --blackduck.api.token=<redacted> --detect.code.location.name=osspicli-igbwelkcia-go_dep-BOM-162197 --blackduck.trust.cert=true --detect.included.detector.types=go_dep
+______     _            _
+|  _  \   | |          | |
+| | | |___| |_ ___  ___| |_
+| | | / _ \ __/ _ \/ __| __|
+| |/ /  __/ ||  __/ (__| |_
+|___/ \___|\__\___|\___|\__|
+
+
+Detect Version: 7.7.0
+
+2022-06-17 14:59:42 MDT INFO  [main] --- 
+2022-06-17 14:59:42 MDT INFO  [main] --- Current property values:
+2022-06-17 14:59:42 MDT INFO  [main] --- --property = value [notes]
+2022-06-17 14:59:42 MDT INFO  [main] --- ------------------------------------------------------------
+2022-06-17 14:59:42 MDT INFO  [main] --- blackduck.api.token = **************************************************************************************************** [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- blackduck.trust.cert = true [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- blackduck.url = https://ins06-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.bom.aggregate.name = osspicli-igbwelkcia-go_dep-BOM-162197 [cmd] 	 *** DEPRECATED ***
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.code.location.name = osspicli-igbwelkcia-go_dep-BOM-162197 [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.detector.search.depth = 5 [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.excluded.directories = compcache,tmp,gobuild,.access2,logs,publish [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.included.detector.types = go_dep [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.project.name = osspicli-igbwelkcia [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.project.version.name = go_dep [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.required.detector.types = go_dep [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- detect.tools = DETECTOR [cmd] 
+2022-06-17 14:59:42 MDT INFO  [main] --- ------------------------------------------------------------
+2022-06-17 14:59:42 MDT INFO  [main] --- 
+2022-06-17 14:59:43 MDT INFO  [main] --- Tilde's will be automatically resolved to USER HOME.
+2022-06-17 14:59:43 MDT INFO  [main] --- Source directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes
+2022-06-17 14:59:43 MDT INFO  [main] --- Output directory: /Users/jcornish/blackduck
+2022-06-17 14:59:43 MDT INFO  [main] --- Run directory: /Users/jcornish/blackduck/runs/2022-06-17-20-59-42-773
+2022-06-17 14:59:43 MDT INFO  [main] --- 
+2022-06-17 14:59:43 MDT ERROR [main] --- Automatically trusting server certificates - not recommended for production use.
+2022-06-17 14:59:44 MDT INFO  [main] --- Successfully connected to Black Duck (version 2021.10.3)!
+2022-06-17 14:59:45 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:45 MDT INFO  [main] --- Docker tool will not be run.
+2022-06-17 14:59:45 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:45 MDT INFO  [main] --- Bazel tool will not be run.
+2022-06-17 14:59:45 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:45 MDT INFO  [main] --- Will include the Detectors tool.
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config/rbac
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config/rbac/collector
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config/crd
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config/crd/bases
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config/default
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/config/manager
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/deploy
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/deploy/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/deploy/kubernetes
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/deploy/kubernetes/samples
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/hack
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/hack/test
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/hack/test/deploy
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/hack/test/egress-http-proxy
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/hack/jenkins
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/release
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/osspi-scans
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/api
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/api/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/controllers
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gomodules.xyz
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gomodules.xyz/jsonpatch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gomodules.xyz/jsonpatch/v2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gopkg.in
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gopkg.in/yaml.v3
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gopkg.in/yaml.v2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gopkg.in/inf.v0
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/gopkg.in/tomb.v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/internal/remote_api
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/internal/datastore
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/internal/log
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/internal/urlfetch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/internal/base
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/appengine/urlfetch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/types
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/types/descriptorpb
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/types/known
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/proto
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/reflect
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/reflect/protoregistry
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/reflect/protodesc
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/reflect/protoreflect
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/runtime
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/runtime/protoiface
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/runtime/protoimpl
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/impl
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/order
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/flags
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/filedesc
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/strs
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/encoding
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/pragma
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/descopts
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/filetype
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/version
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/genid
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/descfmt
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/errors
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/set
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/internal/detrand
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/encoding
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/encoding/prototext
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/google.golang.org/protobuf/encoding/protowire
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/metrics
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/record
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/cache
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/clientcmd
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/auth
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/leaderelection
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/reference
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/tools/pager
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/dynamic
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/dynamic/fake
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/transport
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/flowcontrol
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/retry
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/workqueue
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/keyutil
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/cert
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/connrotation
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/util/homedir
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/restmapper
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/discovery
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/discovery/cached
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/discovery/fake
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/plugin
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/plugin/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/testing
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/rbac
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/apiserverinternal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/flowcontrol
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/core
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/coordination
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/scheduling
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/networking
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/discovery
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/meta
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/certificates
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/storage
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/extensions
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/batch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/admissionregistration
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/node
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/events
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/autoscaling
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/apps
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/applyconfigurations/policy
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/kubernetes
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/kubernetes/scheme
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/kubernetes/typed
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/kubernetes/fake
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/metadata
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/rest
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/rest/watch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/rest/fake
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/pkg/apis
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/client-go/pkg/version
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apiextensions-apiserver
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apiextensions-apiserver/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apiextensions-apiserver/pkg/apis
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apiextensions-apiserver/pkg/client
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/kube-openapi
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/kube-openapi/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/kube-openapi/pkg/util
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/kube-openapi/pkg/schemaconv
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/net
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/trace
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/internal/third_party
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/integer
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/pointer
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/clock
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/clock/testing
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/utils/buffer
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/rbac
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/rbac/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/rbac/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/rbac/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/apiserverinternal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/apiserverinternal/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/flowcontrol
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/flowcontrol/v1beta2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/flowcontrol/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/flowcontrol/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/core
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/core/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/coordination
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/coordination/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/coordination/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/scheduling
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/scheduling/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/scheduling/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/scheduling/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/networking
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/networking/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/networking/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/admission
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/admission/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/admission/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/discovery
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/discovery/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/discovery/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/certificates
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/certificates/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/certificates/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/storage
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/storage/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/storage/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/storage/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/extensions
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/extensions/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/batch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/batch/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/batch/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/admissionregistration
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/admissionregistration/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/admissionregistration/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/node
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/node/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/node/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/node/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/events
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/events/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/events/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/autoscaling
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/autoscaling/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/autoscaling/v2beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/autoscaling/v2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/autoscaling/v2beta2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/authorization
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/authorization/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/authorization/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/apps
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/apps/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/apps/v1beta2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/apps/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/authentication
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/authentication/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/authentication/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/policy
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/policy/v1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/api/policy/v1beta1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/klog
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/klog/v2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/third_party
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/third_party/forked
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/apis
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/types
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/util
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/runtime
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/labels
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/version
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/conversion
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/api
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/watch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/fields
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/apimachinery/pkg/selection
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/component-base
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/component-base/config
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/k8s.io/component-base/config/v1alpha1
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap/internal/bufferpool
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap/internal/color
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap/internal/exit
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap/zapcore
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/zap/buffer
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/atomic
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/go.uber.org/multierr
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/net
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/net/context
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/net/idna
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/net/html
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/net/http2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/net/http
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/term
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/oauth2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/oauth2/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/time
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/time/rate
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/sys
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/sys/plan9
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/sys/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/sys/unix
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/sys/windows
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/unicode
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/runes
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/encoding
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/language
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/secure
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/golang.org/x/text/transform
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/scheme
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/webhook
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/handler
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/metrics
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/cluster
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/certwatcher
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/predicate
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/reconcile
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/envtest
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/ratelimiter
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/cache
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/config
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/source
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/runtime
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/controller
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/manager
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/leaderelection
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/conversion
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/recorder
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/healthz
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/log
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/builder
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/event
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/controller-runtime/pkg/client
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/structured-merge-diff
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/structured-merge-diff/v4
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/structured-merge-diff/v4/value
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/structured-merge-diff/v4/fieldpath
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/structured-merge-diff/v4/schema
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/structured-merge-diff/v4/typed
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/json
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/json/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/json/internal/golang
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/sigs.k8s.io/yaml
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/gomega
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/gomega/types
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/gomega/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/gomega/format
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/gomega/matchers
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/ginkgo
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/ginkgo/types
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/ginkgo/config
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/ginkgo/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/ginkgo/formatter
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/onsi/ginkgo/reporters
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/davecgh
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/davecgh/go-spew
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/davecgh/go-spew/spew
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/evanphx
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/evanphx/json-patch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/pmezard
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/pmezard/go-difflib
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/pmezard/go-difflib/difflib
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/fsnotify
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/fsnotify/fsnotify
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/cespare
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/cespare/xxhash
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/cespare/xxhash/v2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/beorn7
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/beorn7/perks
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/beorn7/perks/quantile
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/golang
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/golang/groupcache
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/golang/groupcache/lru
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/golang/protobuf
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/golang/protobuf/proto
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/golang/protobuf/ptypes
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/json-iterator
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/json-iterator/go
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/stretchr
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/stretchr/testify
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/stretchr/testify/assert
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/google
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/google/gofuzz
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/google/go-cmp
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/google/go-cmp/cmp
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/google/uuid
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/go-logr
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/go-logr/zapr
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/go-logr/logr
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/imdario
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/imdario/mergo
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/googleapis
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/googleapis/gnostic
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/googleapis/gnostic/extensions
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/googleapis/gnostic/jsonschema
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/googleapis/gnostic/compiler
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/googleapis/gnostic/openapiv2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/spf13
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/spf13/pflag
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/modern-go
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/modern-go/reflect2
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/modern-go/concurrent
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/matttproud
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/matttproud/golang_protobuf_extensions
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/matttproud/golang_protobuf_extensions/pbutil
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/client_golang
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/client_golang/prometheus
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/client_model
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/client_model/go
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/common
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/common/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/common/model
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/common/expfmt
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/procfs
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/prometheus/procfs/internal
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/nxadm
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/nxadm/tail
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/nxadm/tail/ratelimiter
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/nxadm/tail/util
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/nxadm/tail/winfile
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/nxadm/tail/watch
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/gogo
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/gogo/protobuf
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/gogo/protobuf/proto
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/gogo/protobuf/sortkeys
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/pkg
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/pkg/errors
+2022-06-17 14:59:45 MDT INFO  [main] --- Traversing directory: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/.idea
+2022-06-17 14:59:45 MDT INFO  [main] --- Searching for detectors. This may take a while.
+2022-06-17 14:59:46 MDT INFO  [main] --- 
+2022-06-17 14:59:46 MDT INFO  [main] --- ======================================================================================================
+2022-06-17 14:59:46 MDT INFO  [main] --- Detector Report
+2022-06-17 14:59:46 MDT INFO  [main] --- ======================================================================================================
+2022-06-17 14:59:46 MDT INFO  [main] --- 	/Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/json-iterator/go (depth 4)
+2022-06-17 14:59:46 MDT INFO  [main] --- 		GO_DEP - Go Lock
+2022-06-17 14:59:46 MDT INFO  [main] --- 			Found file: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/json-iterator/go/Gopkg.lock
+2022-06-17 14:59:46 MDT INFO  [main] --- 	/Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/modern-go/reflect2 (depth 4)
+2022-06-17 14:59:46 MDT INFO  [main] --- 		GO_DEP - Go Lock
+2022-06-17 14:59:46 MDT INFO  [main] --- 			Found file: /Users/jcornish/workspace/wavefront-operator-for-kubernetes/vendor/github.com/modern-go/reflect2/Gopkg.lock
+2022-06-17 14:59:46 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:46 MDT INFO  [main] --- Detectors actions finished.
+2022-06-17 14:59:46 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:46 MDT INFO  [main] --- Project name: osspicli-igbwelkcia
+2022-06-17 14:59:46 MDT INFO  [main] --- Project version: go_dep
+2022-06-17 14:59:47 MDT INFO  [main] --- The osspicli-igbwelkcia project was not found, so it will be created - if a version was included, it will also be created.
+2022-06-17 14:59:50 MDT INFO  [main] --- Starting the codelocation file uploads.
+2022-06-17 14:59:50 MDT INFO  [main] --- Completed the codelocation file uploads.
+2022-06-17 14:59:50 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:50 MDT INFO  [main] --- Signature Scanner tool will not be run.
+2022-06-17 14:59:50 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:50 MDT INFO  [main] --- Binary Scanner tool will not be run.
+2022-06-17 14:59:50 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:50 MDT INFO  [main] --- Vulnerability Impact Analysis tool will not be run.
+2022-06-17 14:59:50 MDT INFO  [main] --- ----------------------------------
+2022-06-17 14:59:50 MDT INFO  [main] --- Checking to see if Detect should wait for bom tool calculations to finish.
+2022-06-17 14:59:50 MDT INFO  [main] --- Checking to see if Detect should check policy for violations.
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- Creating status file: /Users/jcornish/blackduck/runs/2022-06-17-20-59-42-773/status/status.json
+2022-06-17 14:59:51 MDT INFO  [main] --- Status file has been deleted.  To preserve status file, turn off cleanup actions.
+2022-06-17 14:59:51 MDT INFO  [main] --- Cleaning up directory: /Users/jcornish/blackduck/runs/2022-06-17-20-59-42-773
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- ======== Detect Issues ========
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- DEPRECATIONS:
+2022-06-17 14:59:51 MDT INFO  [main] --- 	detect.bom.aggregate.name
+2022-06-17 14:59:51 MDT INFO  [main] --- 		This property is being removed, along with the ability to set the aggregation mode. Detect will only operate in SUBPROJECT mode to more accurately report the dependency graph. It will be removed in 8.0.0.
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- ======== Detect Result ========
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- Black Duck Project BOM: https://ins06-blackduck-webserver-exposed-vela-oss-scanning.vela.decc.vmware.com/api/projects/105e055d-b553-492b-80ea-73f04a1ca1c0/versions/98b71e8d-4c51-4c46-bdcf-af6b59159945/components
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- ======== Detect Status ========
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- GO_DEP: SUCCESS
+2022-06-17 14:59:51 MDT INFO  [main] --- Overall Status: SUCCESS - Detect exited successfully.
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- ===============================
+2022-06-17 14:59:51 MDT INFO  [main] --- 
+2022-06-17 14:59:51 MDT INFO  [main] --- Detect duration: 00h 00m 08s 706ms
+Result code of 0, exiting

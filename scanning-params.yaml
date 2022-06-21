@@ -1,0 +1,3 @@
+enable: true
+include_bomtools: "go_dep"
+search_depth: 5

@@ -1,0 +1,2 @@
+usage: osspi [<global options>] scan docker [<options>]
+osspi [<global options>] scan [<scanners>] [<scanner specific options>] docker: error: one of the arguments --image --image-tar is required

@@ -1,0 +1,2 @@
+usage: osspi [<global options>] scan bom [<options>]
+osspi [<global options>] scan [<scanners>] [<scanner specific options>] bom: error: the following arguments are required: --conf

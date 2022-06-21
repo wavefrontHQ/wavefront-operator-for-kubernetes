@@ -1,0 +1,2 @@
+usage: osspi [<global options>] scan legacy [<options>]
+osspi [<global options>] scan [<scanners>] [<scanner specific options>] legacy: error: the following arguments are required: --conf

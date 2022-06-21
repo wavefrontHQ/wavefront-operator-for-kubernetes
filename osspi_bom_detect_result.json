@@ -1,0 +1,70 @@
+{
+  "packages": [
+    {
+      "_unique_id": "78acd48b-3cf3-499d-841b-1fefe4a6ff4a3fc43583-1390-44dd-a636-b1fea700c437",
+      "aliases": [
+        "modern-go/reflect2:1.0.1"
+      ],
+      "bd_component_id": "78acd48b-3cf3-499d-841b-1fefe4a6ff4a",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "modern-go/reflect2:1.0.1",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_DEPENDENCY"
+        ],
+        "paths": [],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "f6b2a0c8-d0df-4821-a2c5-0c181f6a8cd7",
+      "bd_version_id": "3fc43583-1390-44dd-a636-b1fea700c437",
+      "license": "UNKNOWN",
+      "name": "modern-go/reflect2",
+      "namespace": "github",
+      "repository": "other",
+      "scanner": "bom",
+      "type": "go_dep",
+      "url": "https://github.com/modern-go/reflect2",
+      "version": "1.0.1"
+    },
+    {
+      "_unique_id": "1cbdd692-7a70-40b6-b291-bf181039f3875bb4c9ae-d27d-41c6-8014-dba3f811c236",
+      "aliases": [
+        "modern-go/concurrent:1.0.0"
+      ],
+      "bd_component_id": "1cbdd692-7a70-40b6-b291-bf181039f387",
+      "bd_metadata": {
+        "detect_ways": null,
+        "external_id": "modern-go/concurrent:1.0.0",
+        "external_namespace": "github",
+        "license": {
+          "name": "Apache License 2.0",
+          "type": "DISJUNCTIVE"
+        },
+        "match_types": [
+          "FILE_DEPENDENCY"
+        ],
+        "paths": [],
+        "vulnerabilities": []
+      },
+      "bd_origin_id": "30bf7e0e-226b-4c4a-b139-a3e9a8c967e1",
+      "bd_version_id": "5bb4c9ae-d27d-41c6-8014-dba3f811c236",
+      "license": "UNKNOWN",
+      "name": "modern-go/concurrent",
+      "namespace": "github",
+      "repository": "other",
+      "scanner": "bom",
+      "type": "go_dep",
+      "url": "https://github.com/modern-go/concurrent",
+      "version": "1.0.0"
+    }
+  ],
+  "server": {
+    "scanner": "bom",
+    "type": "Hub"
+  }
+}

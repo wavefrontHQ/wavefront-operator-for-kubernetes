@@ -1,0 +1,2 @@
+usage: osspi [<global options>] scan binary [<options>]
+osspi [<global options>] scan [<scanners>] [<scanner specific options>] binary: error: one of the arguments --upload-file --fetch-file is required
