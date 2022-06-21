@@ -32,7 +32,7 @@ import (
 
 func TestReconcileReportHealthStatus(t *testing.T) {
 	t.Run("report health status when all components are healthy", func(t *testing.T) {
-		var proxyDeployment = &appsv1.Deployment{
+		proxyDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "wavefront-proxy",
@@ -43,7 +43,29 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				AvailableReplicas: 1,
 			},
 		}
-		r, _, _, _, _ := setupForCreate(defaultWFSpec(), proxyDeployment)
+		collectorDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-cluster-collector",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DeploymentStatus{
+				Replicas:          1,
+				AvailableReplicas: 1,
+			},
+		}
+		collectorDaemonSet := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-node-collector",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DaemonSetStatus{
+				DesiredNumberScheduled:  3,
+				NumberReady: 			 3,
+			},
+		}
+		r, _, _, _, _ := setupForCreate(defaultWFSpec(), proxyDeployment, collectorDeployment, collectorDaemonSet)
 
 		var wavefrontStatus *wf.Wavefront
 		r.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
@@ -54,9 +76,14 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 		assert.Equal(t, true, wavefrontStatus.Status.Healthy)
+		assert.True(t, wavefrontStatus.Status.Healthy)
 		assert.Equal(t, "Wavefront components are healthy.", wavefrontStatus.Status.Message)
+		assert.True(t, wavefrontStatus.Status.Proxy.Healthy)
 		assert.Equal(t, "Running (1/1)", wavefrontStatus.Status.Proxy.Status)
+		assert.True(t, wavefrontStatus.Status.ClusterCollector.Healthy)
 		assert.Equal(t, "Running (1/1)", wavefrontStatus.Status.ClusterCollector.Status)
+		assert.True(t, wavefrontStatus.Status.NodeCollector.Healthy)
+		assert.Equal(t, "Running (3/3)", wavefrontStatus.Status.NodeCollector.Status)
 	})
 }
 

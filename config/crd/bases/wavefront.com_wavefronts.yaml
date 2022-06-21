@@ -326,7 +326,7 @@ spec:
             description: WavefrontStatus defines the observed state of Wavefront
             properties:
               clusterCollector:
-                description: The deployment status  of the cluster collector
+                description: The deployment status of the cluster collector
                 properties:
                   availableReplicas:
                     description: Total number of available pods (ready for at least
