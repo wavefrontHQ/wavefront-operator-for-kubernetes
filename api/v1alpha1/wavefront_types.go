@@ -318,7 +318,11 @@ type DeploymentStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
+// +kubebuilder:printcolumn:name="healthy",type="boolean",JSONPath=".status.healthy"
+// +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.proxy.status"
+// +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.clusterCollector.status"
+// +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.nodeCollector.status"
+// +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // Wavefront is the Schema for the wavefronts API
 type Wavefront struct {
 	metav1.TypeMeta   `json:",inline"`

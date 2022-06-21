@@ -78,13 +78,60 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 		assert.Equal(t, true, wavefrontStatus.Healthy)
 		assert.True(t, wavefrontStatus.Healthy)
-		assert.Equal(t, "Wavefront components are healthy.", wavefrontStatus.Message)
+		assert.Equal(t, "(3/3) wavefront components are healthy.", wavefrontStatus.Message)
 		assert.True(t, wavefrontStatus.Proxy.Healthy)
 		assert.Equal(t, "Running (1/1)", wavefrontStatus.Proxy.Status)
 		assert.True(t, wavefrontStatus.ClusterCollector.Healthy)
 		assert.Equal(t, "Running (1/1)", wavefrontStatus.ClusterCollector.Status)
 		assert.True(t, wavefrontStatus.NodeCollector.Healthy)
 		assert.Equal(t, "Running (3/3)", wavefrontStatus.NodeCollector.Status)
+	})
+
+	t.Run("report health status when one component is unhealthy", func(t *testing.T) {
+		proxyDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-proxy",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DeploymentStatus{
+				Replicas:          1,
+				AvailableReplicas: 0,
+			},
+		}
+		collectorDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-cluster-collector",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DeploymentStatus{
+				Replicas:          1,
+				AvailableReplicas: 1,
+			},
+		}
+		collectorDaemonSet := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-node-collector",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DaemonSetStatus{
+				DesiredNumberScheduled: 3,
+				NumberReady:            3,
+			},
+		}
+		r, _, _, _, _ := setupForCreate(defaultWFSpec(), defaultWFStatus(), proxyDeployment, collectorDeployment, collectorDaemonSet)
+
+		var wavefrontStatus *wf.WavefrontStatus
+		r.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
+			wavefrontStatus = &wavefront.Status
+			return nil
+		}
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.False(t, wavefrontStatus.Healthy)
+		assert.Equal(t, "(2/3) wavefront components are healthy.", wavefrontStatus.Message)
 	})
 
 	t.Run("clear out previous status and message when updating num ready", func(t *testing.T) {
