@@ -353,6 +353,7 @@ spec:
                     description: Name of the deployment
                     type: string
                   healthy:
+                    default: true
                     description: Health status of the deployment
                     type: boolean
                   message:
@@ -365,9 +366,12 @@ spec:
                     format: int32
                     type: integer
                   status:
+                    default: Running (0/0)
                     description: Computed deployment status. (available replicas /
                       desired replicas)
                     type: string
+                required:
+                - healthy
                 type: object
               healthy:
                 description: Overall health status of the wavefront components
@@ -389,6 +393,7 @@ spec:
                     description: Name of the deployment
                     type: string
                   healthy:
+                    default: true
                     description: Health status of the deployment
                     type: boolean
                   message:
@@ -402,6 +407,7 @@ spec:
                     format: int32
                     type: integer
                   status:
+                    default: Running (0/0)
                     description: Computed deployment status. (available replicas /
                       desired replicas)
                     type: string
@@ -418,6 +424,7 @@ spec:
                     description: Name of the deployment
                     type: string
                   healthy:
+                    default: true
                     description: Health status of the deployment
                     type: boolean
                   message:
@@ -430,10 +437,15 @@ spec:
                     format: int32
                     type: integer
                   status:
+                    default: Running (0/0)
                     description: Computed deployment status. (available replicas /
                       desired replicas)
                     type: string
+                required:
+                - healthy
                 type: object
+            required:
+            - healthy
             type: object
         type: object
     served: true

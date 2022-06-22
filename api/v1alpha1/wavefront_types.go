@@ -245,7 +245,7 @@ type Collector struct {
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
 	// Overall health status of the wavefront components
-	Healthy bool `json:"healthy,omitempty"`
+	Healthy bool `json:"healthy,required"`
 
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
@@ -271,12 +271,14 @@ type DaemonSetStatus struct {
 	NumberReady int32 `json:"numberReady,omitempty"`
 
 	// Computed deployment status. (available replicas / desired replicas)
+	// +kubebuilder:default:="Running (0/0)"
 	Status string `json:"status,omitempty"`
 
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
 
 	// Health status of the deployment
+	// +kubebuilder:default:=true
 	Healthy bool `json:"healthy,omitempty"`
 
 	// Name of the deployment
@@ -291,13 +293,15 @@ type DeploymentStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 
 	// Computed deployment status. (available replicas / desired replicas)
+	// +kubebuilder:default:="Running (0/0)"
 	Status string `json:"status,omitempty"`
 
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
 
 	// Health status of the deployment
-	Healthy bool `json:"healthy,omitempty"`
+	// +kubebuilder:default:=true
+	Healthy bool `json:"healthy,required"`
 
 	// Name of the deployment
 	DeploymentName string `json:"deploymentName,omitempty"`
