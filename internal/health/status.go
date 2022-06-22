@@ -9,7 +9,23 @@ import (
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func UpdateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
+func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus) (healthy bool, message string) {
+	var componentHealth []bool
+
+	for name, deploymentStatus := range deploymentStatuses {
+		updateDeploymentStatus(appsV1, name, deploymentStatus)
+		componentHealth = append(componentHealth, deploymentStatus.Healthy)
+	}
+	for name, daemonSetStatus := range daemonSetStatuses {
+		updateDaemonSetStatus(appsV1, name, daemonSetStatus)
+		componentHealth = append(componentHealth, daemonSetStatus.Healthy)
+	}
+	healthy = boolCount(false, componentHealth...) == 0
+	message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
+	return healthy, message
+}
+
+func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
 	deploymentStatus.DeploymentName = deploymentName
 	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), deploymentName, v1.GetOptions{})
 	if err != nil {
@@ -31,7 +47,7 @@ func UpdateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName s
 	}
 }
 
-func UpdateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName string, daemonSetStatus *wf.DaemonSetStatus) {
+func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName string, daemonSetStatus *wf.DaemonSetStatus) {
 	daemonSetStatus.DaemonSetName = daemonSetName
 	daemonSet, err := appsV1.DaemonSets("wavefront").Get(context.Background(), daemonSetName, v1.GetOptions{})
 	if err != nil {
@@ -51,4 +67,14 @@ func UpdateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName str
 		daemonSetStatus.Healthy = true
 		daemonSetStatus.Message = "healthy"
 	}
+}
+
+func boolCount(b bool, statuses ...bool) int {
+	n := 0
+	for _, v := range statuses {
+		if v == b {
+			n++
+		}
+	}
+	return n
 }
