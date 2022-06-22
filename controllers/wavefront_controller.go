@@ -170,8 +170,7 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 	return reconciler, nil
 }
 
-// Reading, Ceating, Updating and Delete Resources
-
+// Read, Create, Update and Delete Resources.
 func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
 	controllerManagerUID, err := r.getControllerManagerUID()
 	if err != nil {
@@ -461,7 +460,7 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 	return nil
 }
 
-// Reporting Health Status`
+// Reporting Health Status
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
 	deploymentStatuses := map[string]*wf.DeploymentStatus{}
 	daemonSetStatuses := map[string]*wf.DaemonSetStatus{}

@@ -429,22 +429,22 @@ spec:
               nodeCollector:
                 description: The daemonSet status of the node collector
                 properties:
-                  DesiredNumberScheduled:
+                  daemonSetName:
+                    description: Name of the daemonset
+                    type: string
+                  desiredNumberScheduled:
                     description: 'The total number of nodes that should be running
                       the daemon pod (including nodes correctly running the daemon
                       pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                     format: int32
                     type: integer
-                  daemonSetName:
-                    description: Name of the deployment
-                    type: string
                   healthy:
                     default: true
-                    description: Health status of the deployment
+                    description: Health status of the daemonset
                     type: boolean
                   message:
                     description: Human readable message indicating details about the
-                      deployment status.
+                      daemonset status.
                     type: string
                   numberReady:
                     description: numberReady is the number of nodes that should be
@@ -454,7 +454,7 @@ spec:
                     type: integer
                   status:
                     default: Running (0/0)
-                    description: Computed deployment status. (available replicas /
+                    description: Computed daemonset status. (available replicas /
                       desired replicas)
                     type: string
                 type: object

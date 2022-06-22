@@ -277,24 +277,24 @@ type DaemonSetStatus struct {
 	// The total number of nodes that should be running the daemon
 	// pod (including nodes correctly running the daemon pod).
 	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
-	DesiredNumberScheduled int32 `json:"DesiredNumberScheduled,omitempty"`
+	DesiredNumberScheduled int32 `json:"desiredNumberScheduled,omitempty"`
 
 	// numberReady is the number of nodes that should be running the daemon pod and have one
 	// or more of the daemon pod running with a Ready Condition.
 	NumberReady int32 `json:"numberReady,omitempty"`
 
-	// Computed deployment status. (available replicas / desired replicas)
+	// Computed daemonset status. (available replicas / desired replicas)
 	// +kubebuilder:default:="Running (0/0)"
 	Status string `json:"status,omitempty"`
 
-	// Human readable message indicating details about the deployment status.
+	// Human readable message indicating details about the daemonset status.
 	Message string `json:"message,omitempty"`
 
-	// Health status of the deployment
+	// Health status of the daemonset
 	// +kubebuilder:default:=true
 	Healthy bool `json:"healthy,omitempty"`
 
-	// Name of the deployment
+	// Name of the daemonset
 	DaemonSetName string `json:"daemonSetName,omitempty"`
 }
 
