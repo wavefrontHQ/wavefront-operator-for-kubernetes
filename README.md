@@ -4,7 +4,35 @@ The Wavefront Operator for Kubernetes
 supports deploying the Wavefront Collector and the Wavefront Proxy in Kubernetes.
 This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
-# Manual Deploy
+# Notice
+This project is in the beta phase and not ready for usage on production environments.
+
+# Use Cases Enabled by Wavefront Operator for Kubernetes
+- Enhanced status reporting of the Kubernetes Integration to ensure that users can be proactive in ensuring their cluster and Kubernetes resources are reporting data.
+- Leverage Kubernetes Operators to provide a more declarative mechanism for how the wavefront collector and proxy should be deployed in a Kubernetes Environment.
+- Abstracts and centralizes the configuration of both the collector and proxy to enable more efficient advanced configuration of the collector and proxy.
+- Provides enhanced configuration validation to reduce configuration errors and surface what needs to be corrected in order to deploy successfully.
+- Enable efficient Kubernetes resource usage by  being able to scale out the cluster (leader) and worker nodes independently.
+- Provides a unified installation mechanism and form factor across VMware Tanzu product lines to ensure that users have a consistent deployment and configuration experience when deploying the Kubernetes collector and proxy.
+
+# Operator Architecture
+
+![Wavefront Operator for Kubernetes Architecture](architecture.png)
+
+# Get Collector and Proxy Status
+TODO and should it be up here or buried lower?
+
+# Deployment Options
+
+## Prerequisites to Installation
+Your prerequisites will depend on your installation type.
+- Manual installation: [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- Helm installation: [helm](https://helm.sh/docs/intro/install/)
+
+## Helm Deploy on Helm 3
+See [helm/wavefront-v2beta](https://github.com/wavefrontHQ/helm/tree/master/wavefront-v2beta) instructions.
+
+## Manual Deploy
 Create a directory named wavefront-operator-dir and download the [wavefront-operator.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml)
 to that directory.
 
@@ -19,8 +47,7 @@ kubectl create -n wavefront secret generic wavefront-secret --from-literal token
 Choose between default or advanced deployment options.  
 
 ### Default option
-If you're just getting started and want to advantage our experienced based default configuration, download the
-[wavefront-basic.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-basic.yaml) file.
+If you're just getting started and want to take advantage of our default configurations, download the [wavefront-basic.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-basic.yaml) file.
 
 
 Edit the wavefront-basic.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL accordingly.
@@ -31,7 +58,7 @@ kubectl create -f wavefront-basic.yaml
 
 ### Advanced Collector option
 
-If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advanced-default-config.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-default-config.yaml) file.
+If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-advanced-default-config.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-default-config.yaml) file.
 
 Edit the wavefront-advanced-default-config.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
@@ -41,7 +68,7 @@ kubectl create -f wavefront-advanced-default-config.yaml
 
 ### Advanced Collector with Customer defined Collector configMap option
 
-If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-collector.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-collector.yaml) file.
+If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advanced-collector.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-collector.yaml) file.
 
 Edit the wavefront-advanced-collector.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
@@ -51,7 +78,7 @@ kubectl create -f wavefront-advanced-collector.yaml
 
 ### Advanced Proxy option
 
-If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
+If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-advance-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
 
 Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
@@ -61,7 +88,7 @@ kubectl create -f wavefront-advanced-proxy.yaml
 
 ### HTTP Proxy option
 
-If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-with-http-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-with-http-proxy.yaml) file.
+If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-with-http-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-with-http-proxy.yaml) file.
 
 Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER, YOUR_WAVEFRONT_URL, YOUR_HTTP_PROXY_URL and YOUR_HTTP_PROXY_CA_CERTIFICATE along with any detailed configuration changes you'd like to make.
 
@@ -69,12 +96,26 @@ Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER, YOUR_WAVEFRONT_UR
 kubectl create -f wavefront-with-http-proxy.yaml
 ```
 
-# Release new version of the manual deploy
+### Uninstall Manual Deploy
+
+To undeploy the Wavefront Operator for Kubernetes, run the following command.
+```
+kubectl delete -f wavefront-operator.yaml
+```
+
+# Contribution and Dev Work
+
+## Community contribution
+This is a work in progress repository.
+Currently, community contribution is not supported.
+
+## Release new version of the manual deploy
 Increment the version number before building
 ```
  PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.10.0-alpha-7 make docker-xplatform-build generate-kubernetes-yaml
 ```
-# Build and install locally
+
+## Build and install locally
 
 See the below steps to build and deploy the operator on your local kind cluster.
 
@@ -110,9 +151,3 @@ make deploy-kind
 # Deploy Proxy
 kubectl apply -f deploy/kubernetes/samples/wavefront-basic.yaml
 ```
-
-
-# Contributing
-
-This is a work in progress repository.
-Currently, active contribution is not supported.
