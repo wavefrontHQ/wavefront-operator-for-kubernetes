@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/yaml"
+
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
@@ -183,6 +185,30 @@ func TestReconcileCollector(t *testing.T) {
 
 	})
 
+	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics = wf.Metrics{
+			Enable: true,
+			Filters: wf.Filters{
+				DenyList:  []string{"first_deny", "second_deny"},
+				AllowList: []string{"first_allow", "second_allow"},
+			},
+		}
+		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		assert.NoError(t, err)
+
+		configMap := getCreatedConfigMap(t, dynamicClient)
+		var configs map[string]interface{}
+		err = yaml.Unmarshal([]byte(configMap.Data["config.yaml"]), &configs)
+		assert.NoError(t, err)
+		sinks := configs["sinks"]
+		sinkArray := sinks.([]interface{})
+		sinkMap := sinkArray[0].(map[string]interface{})
+		filters := sinkMap["filters"].(map[string]interface{})
+		assert.Equal(t, 2, len(filters["metricDenyList"].([]interface{})))
+		assert.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
+	})
 }
 
 func TestReconcileProxy(t *testing.T) {

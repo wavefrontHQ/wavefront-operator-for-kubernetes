@@ -94,6 +94,51 @@ spec:
                         default: true
                         description: Rules based and Prometheus endpoints auto-discovery. Defaults to true.
                         type: boolean
+                      filters:
+                        default:
+                          denyList:
+                          - kubernetes.sys_container.*
+                          - kubernetes.collector.runtime.*
+                          - kubernetes.*.network.rx_rate
+                          - kubernetes.*.network.rx_errors_rate
+                          - kubernetes.*.network.tx_rate
+                          - kubernetes.*.network.tx_errors_rate
+                          - kubernetes.*.memory.page_faults
+                          - kubernetes.*.memory.page_faults_rate
+                          - kubernetes.*.memory.major_page_faults
+                          - kubernetes.*.memory.major_page_faults_rate
+                          - kubernetes.*.filesystem.inodes
+                          - kubernetes.*.filesystem.inodes_free
+                          - kubernetes.*.ephemeral_storage.request
+                          - kubernetes.*.ephemeral_storage.limit
+                        description: Filters to apply towards all metrics collected by the collector.
+                        properties:
+                          allowList:
+                            description: List of metric patterns to allow
+                            items:
+                              type: string
+                            type: array
+                          denyList:
+                            default:
+                            - kubernetes.sys_container.*
+                            - kubernetes.collector.runtime.*
+                            - kubernetes.*.network.rx_rate
+                            - kubernetes.*.network.rx_errors_rate
+                            - kubernetes.*.network.tx_rate
+                            - kubernetes.*.network.tx_errors_rate
+                            - kubernetes.*.memory.page_faults
+                            - kubernetes.*.memory.page_faults_rate
+                            - kubernetes.*.memory.major_page_faults
+                            - kubernetes.*.memory.major_page_faults_rate
+                            - kubernetes.*.filesystem.inodes
+                            - kubernetes.*.filesystem.inodes_free
+                            - kubernetes.*.ephemeral_storage.request
+                            - kubernetes.*.ephemeral_storage.limit
+                            description: List of metric patterns to deny
+                            items:
+                              type: string
+                            type: array
+                        type: object
                       nodeCollector:
                         description: NodeCollector is for resource configuration for the node collector.
                         properties:
@@ -567,7 +612,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-6
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-7
         livenessProbe:
           httpGet:
             path: /healthz

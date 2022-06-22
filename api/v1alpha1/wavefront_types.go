@@ -60,6 +60,10 @@ type Metrics struct {
 	// CustomConfig is the custom ConfigMap name for the collector. Leave blank to use defaults.
 	CustomConfig string `json:"customConfig,omitempty"`
 
+	// Filters to apply towards all metrics collected by the collector.
+	// +kubebuilder:default:={denyList: {kubernetes.sys_container.*, kubernetes.collector.runtime.*, kubernetes.*.network.rx_rate, kubernetes.*.network.rx_errors_rate, kubernetes.*.network.tx_rate, kubernetes.*.network.tx_errors_rate, kubernetes.*.memory.page_faults, kubernetes.*.memory.page_faults_rate, kubernetes.*.memory.major_page_faults, kubernetes.*.memory.major_page_faults_rate, kubernetes.*.filesystem.inodes, kubernetes.*.filesystem.inodes_free, kubernetes.*.ephemeral_storage.request, kubernetes.*.ephemeral_storage.limit}}
+	Filters Filters `json:"filters,omitempty"`
+
 	// Default metrics collection interval. Defaults to 60s.
 	// +kubebuilder:default:="60s"
 	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
@@ -235,6 +239,15 @@ type Resources struct {
 
 	// Limits CPU and Memory requirements
 	Limits Resource `json:"limits,omitempty" yaml:"limits,omitempty"`
+}
+
+type Filters struct {
+	// List of metric patterns to deny
+	// +kubebuilder:default:={kubernetes.sys_container.*, kubernetes.collector.runtime.*, kubernetes.*.network.rx_rate, kubernetes.*.network.rx_errors_rate, kubernetes.*.network.tx_rate, kubernetes.*.network.tx_errors_rate, kubernetes.*.memory.page_faults, kubernetes.*.memory.page_faults_rate, kubernetes.*.memory.major_page_faults, kubernetes.*.memory.major_page_faults_rate, kubernetes.*.filesystem.inodes, kubernetes.*.filesystem.inodes_free, kubernetes.*.ephemeral_storage.request, kubernetes.*.ephemeral_storage.limit}
+	DenyList []string `json:"denyList,omitempty"`
+
+	// List of metric patterns to allow
+	AllowList []string `json:"allowList,omitempty"`
 }
 
 type Collector struct {

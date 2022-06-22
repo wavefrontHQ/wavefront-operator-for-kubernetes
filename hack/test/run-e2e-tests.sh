@@ -75,6 +75,8 @@ function main() {
 
   run_test "advanced-collector"
 
+  run_test "advanced-default-config"
+
   run_test "basic"
 }
 

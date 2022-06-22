@@ -23,21 +23,14 @@ data:
     sinks:
     - proxyAddress: {{.DataCollection.Metrics.ProxyAddress}}
       filters:
+        {{- if .DataCollection.Metrics.Filters.DenyList }}
         metricDenyList:
-        - kubernetes.sys_container.*
-        - kubernetes.collector.runtime.*
-        - kubernetes.*.network.rx_rate
-        - kubernetes.*.network.rx_errors_rate
-        - kubernetes.*.network.tx_rate
-        - kubernetes.*.network.tx_errors_rate
-        - kubernetes.*.memory.page_faults
-        - kubernetes.*.memory.page_faults_rate
-        - kubernetes.*.memory.major_page_faults
-        - kubernetes.*.memory.major_page_faults_rate
-        - kubernetes.*.filesystem.inodes
-        - kubernetes.*.filesystem.inodes_free
-        - kubernetes.*.ephemeral_storage.request
-        - kubernetes.*.ephemeral_storage.limit
+{{ .DataCollection.Metrics.Filters.DenyList | toYaml | indent 8 }}
+        {{- end }}
+        {{- if .DataCollection.Metrics.Filters.AllowList }}
+        metricAllowList:
+{{ .DataCollection.Metrics.Filters.AllowList | toYaml | indent 8 }}
+        {{- end }}
         tagExclude:
         - label?controller?revision*
         - label?pod?template*
@@ -52,7 +45,7 @@ data:
         insecure: true
         prefix: kubernetes.
         filters:
-          metricBlacklist:
+          metricDenyList:
           - 'kubernetes.sys_container.*'
           - 'kubernetes.node.ephemeral_storage.*'
 
@@ -83,7 +76,7 @@ data:
         scheme: http
         prefix: kube.dns.
         filters:
-          metricWhitelist:
+          metricAllowList:
           - 'kube.dns.http.request.duration.microseconds'
           - 'kube.dns.http.request.size.bytes'
           - 'kube.dns.http.requests.total.counter'
@@ -105,7 +98,7 @@ data:
         scheme: http
         prefix: kube.coredns.
         filters:
-          metricWhitelist:
+          metricAllowList:
           - 'kube.coredns.coredns.cache.*'
           - 'kube.coredns.coredns.dns.request.count.total.counter'
           - 'kube.coredns.coredns.dns.request.duration.seconds'
