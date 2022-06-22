@@ -50,7 +50,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
 		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy": {},
+			"wavefront-proxy":             {},
 			"wavefront-cluster-collector": {},
 		}
 		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
@@ -105,7 +105,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
 		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy": {},
+			"wavefront-proxy":             {},
 			"wavefront-cluster-collector": {},
 		}
 		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
@@ -193,7 +193,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		deploymentStatuses := map[string]*wf.DeploymentStatus{
 			"wavefront-proxy": &wf.DeploymentStatus{
 				Message: "previous proxy message",
-				Status: "Running (0/1)",
+				Status:  "Running (0/1)",
 				Healthy: false,
 			},
 
@@ -202,7 +202,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
 			"wavefront-node-collector": &wf.DaemonSetStatus{
 				Message: "previous collector message",
-				Status: "Running (0/1)",
+				Status:  "Running (0/1)",
 				Healthy: false,
 			},
 		}
@@ -221,4 +221,3 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {
 	return k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 }
-
