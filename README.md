@@ -21,9 +21,27 @@ This project is in the beta phase and not ready for usage on production environm
 
 ![Wavefront Operator for Kubernetes Architecture](architecture.png)
 
-# Get Collector and Proxy Status
+# Quick Reference
 
-TODO and should it be up here or buried lower?
+## Uninstall Manual Deploy
+
+To undeploy the Wavefront Operator for Kubernetes, run the following command.
+```
+kubectl delete -f wavefront-operator.yaml
+```
+
+## Get Collector and Proxy Status
+
+To get collector and proxy status from the command line, run the following command.
+```
+kubectl get wavefront -n wavefront
+```
+
+It should return something like this:
+```
+NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
+wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
+```
 
 # Deployment Options
 
@@ -84,7 +102,7 @@ kubectl create -f wavefront-advanced-collector.yaml
 
 ### Advanced Proxy option
 
-If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-advance-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
+If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-advanced-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
 
 Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
 
@@ -100,13 +118,6 @@ Edit the wavefront-advanced-proxy.yaml replacing YOUR_CLUSTER, YOUR_WAVEFRONT_UR
 
 ```
 kubectl create -f wavefront-with-http-proxy.yaml
-```
-
-### Uninstall Manual Deploy
-
-To undeploy the Wavefront Operator for Kubernetes, run the following command.
-```
-kubectl delete -f wavefront-operator.yaml
 ```
 
 # Contribution and Dev Work
