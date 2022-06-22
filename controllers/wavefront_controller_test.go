@@ -134,6 +134,47 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.Equal(t, "(2/3) wavefront components are healthy.", wavefrontStatus.Message)
 	})
 
+	t.Run("report health status when using external proxy", func(t *testing.T) {
+		collectorDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-cluster-collector",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DeploymentStatus{
+				Replicas:          1,
+				AvailableReplicas: 1,
+			},
+		}
+		collectorDaemonSet := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-node-collector",
+				Namespace: "wavefront",
+			},
+			Status: appsv1.DaemonSetStatus{
+				DesiredNumberScheduled: 3,
+				NumberReady:            3,
+			},
+		}
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.Enable = false
+		wfSpec.DataExport.ExternalWavefrontProxy.Url = "http://my-eternal-proxy"
+		r, _, _, _, _ := setupForCreate(wfSpec, defaultWFStatus(), collectorDeployment, collectorDaemonSet)
+
+		var wavefrontStatus *wf.WavefrontStatus
+		r.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
+			wavefrontStatus = &wavefront.Status
+			return nil
+		}
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, wavefrontStatus.Healthy)
+		assert.Equal(t, "(2/2) wavefront components are healthy.", wavefrontStatus.Message)
+		assert.Equal(t, "Running (0/0)", wavefrontStatus.Proxy.Status)
+		assert.True(t,  wavefrontStatus.Proxy.Healthy)
+	})
+
 	t.Run("clear out previous status and message when updating num ready", func(t *testing.T) {
 		proxyDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
@@ -732,7 +773,20 @@ func defaultWFSpec() wf.WavefrontSpec {
 }
 
 func defaultWFStatus() wf.WavefrontStatus {
-	return wf.WavefrontStatus{}
+	return wf.WavefrontStatus{
+		Proxy: wf.DeploymentStatus{
+			Healthy: true,
+			Status: "Running (0/0)",
+		},
+		ClusterCollector: wf.DeploymentStatus{
+			Healthy: true,
+			Status: "Running (0/0)",
+		},
+		NodeCollector: wf.DaemonSetStatus{
+			Healthy: true,
+			Status: "Running (0/0)",
+		},
+	}
 }
 
 func getCreateObject(dynamicClient *dynamicfake.FakeDynamicClient, resource string, metadataName string) *unstructured.Unstructured {
