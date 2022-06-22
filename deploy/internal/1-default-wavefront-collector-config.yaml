@@ -45,7 +45,7 @@ data:
         insecure: true
         prefix: kubernetes.
         filters:
-          metricBlacklist:
+          metricDenyList:
           - 'kubernetes.sys_container.*'
           - 'kubernetes.node.ephemeral_storage.*'
 
@@ -76,7 +76,7 @@ data:
         scheme: http
         prefix: kube.dns.
         filters:
-          metricWhitelist:
+          metricAllowList:
           - 'kube.dns.http.request.duration.microseconds'
           - 'kube.dns.http.request.size.bytes'
           - 'kube.dns.http.requests.total.counter'
@@ -98,7 +98,7 @@ data:
         scheme: http
         prefix: kube.coredns.
         filters:
-          metricWhitelist:
+          metricAllowList:
           - 'kube.coredns.coredns.cache.*'
           - 'kube.coredns.coredns.dns.request.count.total.counter'
           - 'kube.coredns.coredns.dns.request.duration.seconds'
