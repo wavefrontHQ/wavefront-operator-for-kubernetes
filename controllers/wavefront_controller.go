@@ -57,6 +57,9 @@ import (
 )
 
 const DeployDir = "../deploy/internal"
+const ProxyName = "wavefront-proxy"
+const ClusterCollectorName = "wavefront-cluster-collector"
+const NodeCollectorName = "wavefront-node-collector"
 
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
@@ -464,31 +467,19 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 
 // Reporting Health Status`
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
-	var componentHealth []bool
+	deploymentStatuses := map[string]*wf.DeploymentStatus{}
+	daemonSetStatuses := map[string]*wf.DaemonSetStatus{}
+
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		health.UpdateDeploymentStatus(r.Appsv1, "wavefront-proxy", &wavefront.Status.Proxy)
-		componentHealth = append(componentHealth, wavefront.Status.Proxy.Healthy)
+		deploymentStatuses[ProxyName] = &wavefront.Status.Proxy
 	}
 
 	if wavefront.Spec.DataCollection.Metrics.Enable {
-		health.UpdateDeploymentStatus(r.Appsv1, "wavefront-cluster-collector", &wavefront.Status.ClusterCollector)
-		health.UpdateDaemonSetStatus(r.Appsv1, "wavefront-node-collector", &wavefront.Status.NodeCollector)
-		componentHealth = append(componentHealth, wavefront.Status.ClusterCollector.Healthy)
-		componentHealth = append(componentHealth, wavefront.Status.NodeCollector.Healthy)
+		deploymentStatuses[ClusterCollectorName] = &wavefront.Status.ClusterCollector
+		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
 	}
 
-	wavefront.Status.Healthy = boolCount(false, componentHealth...) == 0
-	wavefront.Status.Message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
+	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses)
 
 	return r.UpdateStatus(ctx, wavefront)
-}
-
-func boolCount(b bool, statuses ...bool) int {
-	n := 0
-	for _, v := range statuses {
-		if v == b {
-			n++
-		}
-	}
-	return n
 }
