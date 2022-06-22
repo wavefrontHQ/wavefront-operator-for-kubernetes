@@ -28,7 +28,8 @@ function run_test() {
   wait_for_cluster_ready
 
   echo "Running test-wavefront-metrics"
-  k8po test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
+  echo "IS THIS REALLY WORKING"
+  k8po test-wavefront-metrics -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
   green "Success!"
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
