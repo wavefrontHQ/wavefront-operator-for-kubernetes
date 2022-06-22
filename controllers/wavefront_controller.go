@@ -69,7 +69,6 @@ type WavefrontReconciler struct {
 	DynamicClient dynamic.Interface
 	RestMapper    meta.RESTMapper
 	Appsv1        typedappsv1.AppsV1Interface
-	UpdateStatus  func(ctx context.Context, wavefront *wf.Wavefront) error
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -122,7 +121,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront)
-
 	if err != nil {
 		log.Log.Error(err, "error report health status")
 		return ctrl.Result{}, err
@@ -168,9 +166,7 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 		RestMapper:    mapper,
 		Appsv1:        clientSet.AppsV1(),
 	}
-	reconciler.UpdateStatus = func(ctx context.Context, wavefront *wf.Wavefront) error {
-		return reconciler.Status().Update(ctx, wavefront)
-	}
+
 	return reconciler, nil
 }
 
@@ -481,5 +477,5 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses)
 
-	return r.UpdateStatus(ctx, wavefront)
+	return r.Status().Update(ctx, wavefront)
 }
