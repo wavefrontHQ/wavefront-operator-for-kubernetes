@@ -31,6 +31,16 @@ kubectl create -f wavefront-basic.yaml
 
 ### Advanced Collector option
 
+If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advanced-default-config.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-default-config.yaml) file.
+
+Edit the wavefront-advanced-default-config.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
+
+```
+kubectl create -f wavefront-advanced-default-config.yaml
+```
+
+### Advanced Collector with Customer defined Collector configMap option
+
 If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advance-collector.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-collector.yaml) file.
 
 Edit the wavefront-advanced-collector.yaml replacing YOUR_CLUSTER and YOUR_WAVEFRONT_URL along with any detailed configuration changes you'd like to make.
