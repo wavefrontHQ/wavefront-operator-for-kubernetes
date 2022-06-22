@@ -3,10 +3,11 @@ package controllers_test
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 	"testing"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
