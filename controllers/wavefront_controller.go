@@ -29,6 +29,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 	baseYaml "gopkg.in/yaml.v2"
 
 	"k8s.io/client-go/kubernetes"
@@ -56,6 +57,9 @@ import (
 )
 
 const DeployDir = "../deploy/internal"
+const ProxyName = "wavefront-proxy"
+const ClusterCollectorName = "wavefront-cluster-collector"
+const NodeCollectorName = "wavefront-node-collector"
 
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
@@ -74,7 +78,7 @@ type WavefrontReconciler struct {
 // Permissions for creating Kubernetes resources from internal files.
 // Possible point of confusion: the collector itself watches resources,
 // but the operator doesn't need to... yet?
-// +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=deployments,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=deployments,verbs=get;create;update;patch;delete;watch;list
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=services,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,namespace=wavefront,resources=daemonsets,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=serviceaccounts,verbs=get;create;update;patch;delete
@@ -116,6 +120,12 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	err = r.reportHealthStatus(ctx, wavefront)
+	if err != nil {
+		log.Log.Error(err, "error report health status")
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{
 		Requeue:      true,
 		RequeueAfter: 30 * time.Second,
@@ -148,24 +158,19 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	return &WavefrontReconciler{
+	reconciler := &WavefrontReconciler{
 		Client:        client,
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
 		DynamicClient: dynamicClient,
 		RestMapper:    mapper,
 		Appsv1:        clientSet.AppsV1(),
-	}, nil
-}
-
-func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
-	if err != nil {
-		return "", err
 	}
-	return deployment.UID, nil
+
+	return reconciler, nil
 }
 
+// Read, Create, Update and Delete Resources.
 func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
 	controllerManagerUID, err := r.getControllerManagerUID()
 	if err != nil {
@@ -268,6 +273,14 @@ func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *un
 	return err
 }
 
+func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
+	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	return deployment.UID, nil
+}
+
 func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 	var files []string
 
@@ -362,6 +375,7 @@ func hashValue(bytes []byte) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+// Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
@@ -417,7 +431,6 @@ func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx c
 }
 
 func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront) error {
-
 	httpProxySecretData := map[string]string{}
 	for k, v := range httpProxySecret.Data {
 		httpProxySecretData[k] = string(v)
@@ -445,4 +458,23 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 	wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = hashValue(configHashBytes)
 
 	return nil
+}
+
+// Reporting Health Status
+func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
+	deploymentStatuses := map[string]*wf.DeploymentStatus{}
+	daemonSetStatuses := map[string]*wf.DaemonSetStatus{}
+
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		deploymentStatuses[ProxyName] = &wavefront.Status.Proxy
+	}
+
+	if wavefront.Spec.DataCollection.Metrics.Enable {
+		deploymentStatuses[ClusterCollectorName] = &wavefront.Status.ClusterCollector
+		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
+	}
+
+	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses)
+
+	return r.Status().Update(ctx, wavefront)
 }

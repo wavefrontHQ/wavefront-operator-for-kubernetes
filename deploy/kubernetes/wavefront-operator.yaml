@@ -21,7 +21,23 @@ spec:
     singular: wavefront
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.healthy
+      name: healthy
+      type: boolean
+    - jsonPath: .status.proxy.status
+      name: proxy
+      type: string
+    - jsonPath: .status.clusterCollector.status
+      name: cluster-collector
+      type: string
+    - jsonPath: .status.nodeCollector.status
+      name: node-collector
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Wavefront is the Schema for the wavefronts API
@@ -337,6 +353,97 @@ spec:
             type: object
           status:
             description: WavefrontStatus defines the observed state of Wavefront
+            properties:
+              clusterCollector:
+                description: The deployment status of the cluster collector
+                properties:
+                  availableReplicas:
+                    description: Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+                    format: int32
+                    type: integer
+                  deploymentName:
+                    description: Name of the deployment
+                    type: string
+                  healthy:
+                    default: true
+                    description: Health status of the deployment
+                    type: boolean
+                  message:
+                    description: Human readable message indicating details about the deployment status.
+                    type: string
+                  replicas:
+                    description: Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+                    format: int32
+                    type: integer
+                  status:
+                    default: Running (0/0)
+                    description: Computed deployment status. (available replicas / desired replicas)
+                    type: string
+                required:
+                - healthy
+                type: object
+              healthy:
+                description: Overall health status of the wavefront components
+                type: boolean
+              message:
+                description: Human readable message indicating details about the deployment status.
+                type: string
+              nodeCollector:
+                description: The daemonSet status of the node collector
+                properties:
+                  daemonSetName:
+                    description: Name of the daemonset
+                    type: string
+                  desiredNumberScheduled:
+                    description: 'The total number of nodes that should be running the daemon pod (including nodes correctly running the daemon pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                    format: int32
+                    type: integer
+                  healthy:
+                    default: true
+                    description: Health status of the daemonset
+                    type: boolean
+                  message:
+                    description: Human readable message indicating details about the daemonset status.
+                    type: string
+                  numberReady:
+                    description: numberReady is the number of nodes that should be running the daemon pod and have one or more of the daemon pod running with a Ready Condition.
+                    format: int32
+                    type: integer
+                  status:
+                    default: Running (0/0)
+                    description: Computed daemonset status. (available replicas / desired replicas)
+                    type: string
+                type: object
+              proxy:
+                description: The deployment status  of the cluster collector
+                properties:
+                  availableReplicas:
+                    description: Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+                    format: int32
+                    type: integer
+                  deploymentName:
+                    description: Name of the deployment
+                    type: string
+                  healthy:
+                    default: true
+                    description: Health status of the deployment
+                    type: boolean
+                  message:
+                    description: Human readable message indicating details about the deployment status.
+                    type: string
+                  replicas:
+                    description: Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+                    format: int32
+                    type: integer
+                  status:
+                    default: Running (0/0)
+                    description: Computed deployment status. (available replicas / desired replicas)
+                    type: string
+                required:
+                - healthy
+                type: object
+            required:
+            - healthy
             type: object
         type: object
     served: true
@@ -419,8 +526,10 @@ rules:
   - create
   - delete
   - get
+  - list
   - patch
   - update
+  - watch
 - apiGroups:
   - wavefront.com
   resources:
@@ -612,7 +721,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-7
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:0.10.0-alpha-8
         livenessProbe:
           httpGet:
             path: /healthz

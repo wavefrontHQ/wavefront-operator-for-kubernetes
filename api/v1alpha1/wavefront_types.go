@@ -257,13 +257,76 @@ type Collector struct {
 
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Overall health status of the wavefront components
+	Healthy bool `json:"healthy,required"`
+
+	// Human readable message indicating details about the deployment status.
+	Message string `json:"message,omitempty"`
+
+	// The deployment status  of the cluster collector
+	Proxy DeploymentStatus `json:"proxy,omitempty"`
+
+	// The daemonSet status of the node collector
+	NodeCollector DaemonSetStatus `json:"nodeCollector,omitempty"`
+
+	// The deployment status of the cluster collector
+	ClusterCollector DeploymentStatus `json:"clusterCollector,omitempty"`
+}
+
+type DaemonSetStatus struct {
+	// The total number of nodes that should be running the daemon
+	// pod (including nodes correctly running the daemon pod).
+	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
+	DesiredNumberScheduled int32 `json:"desiredNumberScheduled,omitempty"`
+
+	// numberReady is the number of nodes that should be running the daemon pod and have one
+	// or more of the daemon pod running with a Ready Condition.
+	NumberReady int32 `json:"numberReady,omitempty"`
+
+	// Computed daemonset status. (available replicas / desired replicas)
+	// +kubebuilder:default:="Running (0/0)"
+	Status string `json:"status,omitempty"`
+
+	// Human readable message indicating details about the daemonset status.
+	Message string `json:"message,omitempty"`
+
+	// Health status of the daemonset
+	// +kubebuilder:default:=true
+	Healthy bool `json:"healthy,omitempty"`
+
+	// Name of the daemonset
+	DaemonSetName string `json:"daemonSetName,omitempty"`
+}
+
+type DeploymentStatus struct {
+	// Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
+
+	// Computed deployment status. (available replicas / desired replicas)
+	// +kubebuilder:default:="Running (0/0)"
+	Status string `json:"status,omitempty"`
+
+	// Human readable message indicating details about the deployment status.
+	Message string `json:"message,omitempty"`
+
+	// Health status of the deployment
+	// +kubebuilder:default:=true
+	Healthy bool `json:"healthy,required"`
+
+	// Name of the deployment
+	DeploymentName string `json:"deploymentName,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
+// +kubebuilder:printcolumn:name="healthy",type="boolean",JSONPath=".status.healthy"
+// +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.proxy.status"
+// +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.clusterCollector.status"
+// +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.nodeCollector.status"
+// +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // Wavefront is the Schema for the wavefronts API
 type Wavefront struct {
 	metav1.TypeMeta   `json:",inline"`
