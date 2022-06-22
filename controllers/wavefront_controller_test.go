@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
@@ -187,7 +188,7 @@ func TestReconcileCollector(t *testing.T) {
 			},
 		}
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		_, err := r.Reconcile(context.Background(), reconcile.Request{})
+		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
 		configMap := getCreatedConfigMap(t, dynamicClient)
@@ -581,24 +582,6 @@ func defaultWFSpec() wf.WavefrontSpec {
 		ControllerManagerUID: "",
 	}
 }
-
-func defaultWFStatus() wf.WavefrontStatus {
-	return wf.WavefrontStatus{
-		Proxy: wf.DeploymentStatus{
-			Healthy: true,
-			Status:  "Running (0/0)",
-		},
-		ClusterCollector: wf.DeploymentStatus{
-			Healthy: true,
-			Status:  "Running (0/0)",
-		},
-		NodeCollector: wf.DaemonSetStatus{
-			Healthy: true,
-			Status:  "Running (0/0)",
-		},
-	}
-}
-
 func getCreateObject(dynamicClient *dynamicfake.FakeDynamicClient, resource string, metadataName string) *unstructured.Unstructured {
 	//deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 	for _, action := range dynamicClient.Actions() {
