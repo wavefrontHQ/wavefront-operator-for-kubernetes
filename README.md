@@ -6,11 +6,9 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 ## Quick Reference
 
-TODO link to Removal section
-
-TODO link to Validation section
-
-TODO link upgrade
+- [Operator Removal](#removal)
+- [Operator Validation](#validation)
+- [Operator Upgrade](#upgrade)
 
 ## Beta Notice
 
@@ -60,8 +58,7 @@ Install Wavefront Operator for Kubernetes
 helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
 ```
 
-See [Configuration]() section below to learn about Custom Resource Configuration.
-TODO link
+See [Configuration](#configuration) section below to learn about Custom Resource Configuration.
 
 ## Manual
 
@@ -163,9 +160,8 @@ helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wave
 
 ## Manual
 
-TODO link
 Download the updated `wavefront-operator.yaml` and run the installation command below.
-You can keep the secret the same or go back to the [manual installation instructions]()
+You can keep the secret the same or go back to the [manual installation instructions](#manual)
 to create another one.
 ```shell
 kubectl apply -f wavefront-operator-dir/wavefront-operator.yaml
