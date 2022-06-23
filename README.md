@@ -12,9 +12,18 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 ## Beta Notice
 
-This project is in the beta phase and not ready for usage on production environments.
+This project is in the beta phase and not ready for use on production environments.
+For use on production environments,
+refer to the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
+for our original, more established processes.
 
 ## Use Cases
+
+**Note:** the collector deployed by the Operator is still a full-feature Wavefront Collector.
+The list below documents how the Operator extends the collector
+with the goal of providing a better user experience.
+For example, Istio and MySQL metrics, Telegraf configuration, etc.
+are still supported.
 
 - Enhanced status reporting of the Kubernetes Integration to ensure that users can be proactive in ensuring their cluster and Kubernetes resources are reporting data.
 - Leveraging Kubernetes Operator features to provide a more declarative mechanism for how the wavefront collector and proxy should be deployed in a Kubernetes Environment.
