@@ -36,13 +36,13 @@ are still supported.
 
 ![Wavefront Operator for Kubernetes Architecture](architecture.png)
 
-# Deployment
+# Installation
 
 ## Prerequisites
 
 Your prerequisites will depend on your installation type.
-- Manual installation: [kubectl](https://kubernetes.io/docs/tasks/tools/)
-- Helm installation: [helm](https://helm.sh/docs/intro/install/)
+- Manual installation uses [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [Helm](https://helm.sh/docs/intro/install/) installation
 
 ## Quick Start Using Helm 3
 
@@ -83,6 +83,10 @@ kubectl create -n wavefront secret generic wavefront-secret --from-literal token
 ```
 
 Choose between default or advanced deployment options.
+
+# Migration
+
+See [MIGRATION.md](MIGRATION.md) for more information.
 
 # Configuration
 
