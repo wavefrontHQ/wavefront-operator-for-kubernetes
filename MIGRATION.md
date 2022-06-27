@@ -1,6 +1,6 @@
 # Migration
 
-## Migrate from Helm Installtion
+## Migrate from Helm Installation
 
 The following table lists the mapping of configurable parameters of the Wavefront Helm chart to Wavefront Operator custom resource.
 Refer `config/crd/bases/wavefront.com_wavefronts.yaml` for information on the custom resource fields.
@@ -46,18 +46,21 @@ use `dataCollection.metrics.customConfig` to specify the name of a collector con
 
 ## Migrate from Manual Installation 
 
-### Migrate wavefront proxy
+### Wavefront Proxy Configuration
+
+#### References:
+* See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration.
+* See [custom-resource.yaml](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) for an example Custome Resource configuration.
+* Create wavefront secret: `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN`
 
 Most of the proxy configurations could be set using environment variables for proxy container.
 Here are the different proxy environment variables and how they map to operator config.
+
 | Proxy Environment variables       | Wavefront operator custom resource `spec`                      |
 |-----------------------------------|--------------------------------------------------------------- |
 |`WAVEFRONT_URL`                    | `wavefrontUrl` Ex: https://<your_cluster>.wavefront.com             |
-|`WAVEFRONT_TOKEN`                  | `wavefrontTokenSecret` Default: `wavefront-secret`, See below on how to create a wavefront secret.             |
+|`WAVEFRONT_TOKEN`                  | `wavefrontTokenSecret` Default: `wavefront-secret`. See references above for creating wavefront secret.             |
 |`WAVEFRONT_PROXY_ARGS`             | `dataExport.wavefrontProxy.*` Refer to the below table for details.
-
-Creating a Wavefront secret:
-  - Create a secret using the token `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN` 
 
 Below are the proxy arguments that can be set using `WAVEFRONT_PROXY_ARGS`, which are also supported natively in the Custom Resource. 
 
@@ -84,19 +87,12 @@ Below are the proxy arguments that can be set using `WAVEFRONT_PROXY_ARGS`, whic
 |`--histogramHourListenerPorts`     | `dataExport.wavefrontProxy.histogram.hourPort`                 |
 |`--histogramDayListenerPorts`      | `dataExport.wavefrontProxy.histogram.dayPort`                  |
 
-To set other proxy arguments, you can set those using the Custom Resource parameter `dataExport.wavefrontProxy.args`.
+Here are other custom resource configuration we support for the proxy:
+* `dataExport.wavefrontProxy.args`: Used to set any other valid proxy arguments under WAVEFRONT_PROXY_ARGS which are not mentioned in the above table. 
+* `dataExport.wavefrontProxy.resources`: Used to set container resource request/limits for wavefront proxy.
+* `dataExport.externalWavefrontProxy.Url`: Used to set an external Wavefront Proxy.
 
-To set container resource request/limits for wavefront proxy, set `dataExport.wavefrontProxy.resources`
-
-To set an external Wavefront Proxy, set `dataExport.externalWavefrontProxy.Url`
-
-See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration and 
-sample [Custom Resource](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) configuration.
-
-Did you change any other Kubernetes configuration in your proxy resource yaml? If so, please let us know as we probably might not support customizing those parameters yet in beta.
-
-
-### Migrate wavefront collector
+### Wavefront Collector Configuration
 
 If you are using a custom collector config, then use the `dataCollection.metrics.customConfig` parameter to set the ConfigMap name. See [wavefront-advanced-collector.yaml](deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
 Setting this config map will override other collector configs specified in the operator. Here are the collector configs that operator supports natively as well.
@@ -111,6 +107,7 @@ Setting this config map will override other collector configs specified in the o
 
 To set container resource request/limits for wavefront collector, set `dataCollection.metrics.nodeCollector.resources` and `dataCollection.metrics.clusterCollector.resources`.
 
-Did you change any other Kubernetes configuration in your collector resource yaml? If so, please let us know as we probably might not support customizing those parameters yet in beta.
 
+### Future Support
 
+For configuration that has not yet been supported for legacy installation methods, please contact us for extending support after version beta.
