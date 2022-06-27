@@ -11,5 +11,7 @@ spec:
     metrics:
       enable: true
   dataExport:
+    externalWavefrontProxy:
+      url: https://localhost:8080
     wavefrontProxy:
-      enable: true
+      enable: false
