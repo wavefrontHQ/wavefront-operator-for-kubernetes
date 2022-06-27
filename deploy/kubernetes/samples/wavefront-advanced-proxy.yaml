@@ -45,6 +45,7 @@ spec:
 #        secret: http-proxy-secret
       args: >
         --customSourceTags mySource
+        --prefix=dev
 ---
 apiVersion: v1
 kind: ConfigMap
