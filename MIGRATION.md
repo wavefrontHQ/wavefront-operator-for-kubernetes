@@ -48,21 +48,18 @@ use `dataCollection.metrics.customConfig` to specify the name of a collector con
 
 ### Migrate wavefront proxy
 
-See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) to see how existing configuration
-fields map to new [Custom Resource](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) fields.
-
 Most of the proxy configurations could be set using environment variables for proxy container.
 Here are the different proxy environment variables and how they map to operator config.
 | Proxy Environment variables       | Wavefront operator custom resource `spec`                      |
 |-----------------------------------|--------------------------------------------------------------- |
 |`WAVEFRONT_URL`                    | `wavefrontUrl` Ex: https://<your_cluster>.wavefront.com             |
 |`WAVEFRONT_TOKEN`                  | `wavefrontTokenSecret` Default: `wavefront-secret`, See below on how to create a wavefront secret.             |
-|`WAVEFRONT_PROXY_ARGS`             | `wavefrontUrl` Ex: https://<your_cluster>.wavefront.com             |
+|`WAVEFRONT_PROXY_ARGS`             | `dataExport.wavefrontProxy.*` Refer to the below table for details.
 
 Creating a Wavefront secret:
   - Create a secret using the token `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN` 
 
-For the below proxy configurations that is set in the environment variable `WAVEFRONT_PROXY_ARGS`, please set the corresponding operator config. 
+For Setting the environment variable `WAVEFRONT_PROXY_ARGS`, please set the corresponding operator config. 
 
 | Wavefront Proxy args              | Wavefront operator custom resource `spec`                      |
 |-----------------------------------|--------------------------------------------------------------- |
@@ -93,6 +90,9 @@ If you are using any other proxy args, then set the below operator configuration
 If you need to set container resource request/limits for wavefront proxy, set `dataExport.wavefrontProxy.resources`
 
 If you are using an external Wavefront Proxy, set `dataExport.externalWavefrontProxy.Url`
+
+See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration and 
+sample [Custom Resource](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) configuration.
 
 Did you change any other Kubernetes configuration in your proxy resource yaml? If so, please let us know as we probably might not support customizing those parameters yet in beta.
 
