@@ -8,7 +8,7 @@ Refer `config/crd/bases/wavefront.com_wavefronts.yaml` for information on the cu
 If you have collector configuration with parameters not covered below,
 use `dataCollection.metrics.customConfig` to specify the name of a collector configmap in your cluster.
 
-| Helm collector parameter            | Wavefront operator custom resource field under `spec`.                                               |
+| Helm collector parameter            | Wavefront operator custom resource`spec`.                                               |
 |-------------------------------------|------------------------------------------------------------------------------------------------------|
 | `clusterName`                       | `clusterName`                                                                                        |
 | `wavefront.url`	                  | `wavefrontUrl`                                                                                       |
@@ -46,5 +46,39 @@ use `dataCollection.metrics.customConfig` to specify the name of a collector con
 
 ## Manual
 
-See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml)
-to see how existing configuration fields map to new Custom Resource fields.
+See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) to see how existing configuration
+fields map to new [Custom Resource](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) fields.
+
+There are a few important proxy configurations that we support natively in the operator.
+For the below proxy configurations that we support natively, please use the corresponding operator config. 
+
+| Wavefront Proxy args              | Wavefront operator custom resource `spec`                      |
+|-----------------------------------|--------------------------------------------------------------- |
+|`--preprocessorConfigFile`         | `dataExport.wavefrontProxy.preprocessor` ConfigMap             |
+|`--proxyHost`                      | `dataExport.wavefrontProxy.httpProxy.secret` Secret            |
+|`--proxyPort`                      | `dataExport.wavefrontProxy.httpProxy.secret` Secret            |
+|`--proxyUser`                      | `dataExport.wavefrontProxy.httpProxy.secret` Secret            |
+|`--proxyPassword`                  | `dataExport.wavefrontProxy.httpProxy.secret` Secret            |
+|`--traceListenerPorts`             | `dataExport.wavefrontProxy.tracing.wavefront.port`             |
+|`--traceSamplingRate`              | `dataExport.wavefrontProxy.tracing.wavefront.samplingRate`     |
+|`--traceSamplingDuration`          | `dataExport.wavefrontProxy.tracing.wavefront.samplingDuration` |
+|`--traceZipkinListenerPorts`       | `dataExport.wavefrontProxy.tracing.zipkin.port`                |
+|`--traceZipkinApplicationName`     | `dataExport.wavefrontProxy.tracing.zipkin.applicationName`     |
+|`--traceJaegerListenerPorts`       | `dataExport.wavefrontProxy.tracing.jaeger.port`                |
+|`--traceJaegerHttpListenerPorts`   | `dataExport.wavefrontProxy.tracing.jaeger.httpPort`            |
+|`--traceJaegerGrpcListenerPorts`   | `dataExport.wavefrontProxy.tracing.jaeger.grpcPort`            |
+|`--traceJaegerApplicationName`     | `dataExport.wavefrontProxy.tracing.jaeger.applicationName`     |
+|`--histogramDistListenerPorts`     | `dataExport.wavefrontProxy.histogram.port`                     |
+|`--histogramMinuteListenerPorts`   | `dataExport.wavefrontProxy.histogram.minutePort`               |
+|`--histogramHourListenerPorts`     | `dataExport.wavefrontProxy.histogram.hourPort`                 |
+|`--histogramDayListenerPorts`      | `dataExport.wavefrontProxy.histogram.dayPort`                  |
+
+If you are using any other proxy args, then set the below operator configuration parameter 
+`dataExport.wavefrontProxy.args` 
+
+
+
+
+
+
+

@@ -26,23 +26,56 @@ spec:
           image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
           imagePullPolicy: IfNotPresent
           env:
-            - name: WAVEFRONT_URL
-              value: https://YOUR_CLUSTER.wavefront.com/api/
-            - name: WAVEFRONT_TOKEN
-              value: YOUR_API_TOKEN
+          - name: WAVEFRONT_URL
+            value: https://YOUR_CLUSTER.wavefront.com/api/
+          - name: WAVEFRONT_TOKEN
+            value: YOUR_API_TOKEN
           - name: WAVEFRONT_PROXY_ARGS
             value: >
+              --preprocessorConfigFile /etc/wavefront/wavefront-proxy/preprocessor_rules.yaml
+              --traceListenerPorts 30000
+              --traceSamplingRate 0.1
+              --traceSamplingDuration 100
               --traceZipkinListenerPorts 9411
-              --traceZipkinListenerPorts 9412
-              --traceZipkinListenerPorts 9413
-#              --jaeger
-#              --othersomething
+              --traceZipkinApplicationName "zipkin"
+              --traceJaegerListenerPorts 30001
+              --traceJaegerHttpListenerPorts 30080
+              --traceJaegerGrpcListenerPorts 14250
+              --traceJaegerApplicationName "jaeger"
+              --histogramDistListenerPorts 40000
+              --histogramMinuteListenerPorts 40001
+              --histogramHourListenerPorts 40002
+              --histogramDayListenerPorts 40003
+              --proxyHost <YOUR_HTTP_PROXY_HOST>
+              --proxyPort <YOUR_HTTP_PROXY_PORT>
+              --proxyUser <YOUR_HTTP_PROXY_BASIC_AUTH_USERNAME>
+              --proxyPassword <YOUR_HTTP_PROXY__BASIC_AUTH_PASSWORD>
           ports:
-            - containerPort: 2878                                                  # dataExport.wavefrontProxy.metricPort
-              protocol: TCP
-          # Uncomment the below lines to consume Zipkin/Istio traces
-          #- containerPort: 9411
-          #  protocol: TCP
+            # Metrics
+          - containerPort: 2878
+            protocol: TCP
+            # Wavefront tracing
+          - containerPort: 30000
+            protocol: TCP
+            # Jaeger
+          - containerPort: 30001
+            protocol: TCP
+          - containerPort: 30080
+            protocol: TCP
+          - containerPort: 14250
+            protocol: TCP
+            # Zipkin
+          - containerPort: 9411
+            protocol: TCP
+            # Historgram
+          - containerPort: 40000
+            protocol: TCP
+          - containerPort: 40001
+            protocol: TCP
+          - containerPort: 40002
+            protocol: TCP
+          - containerPort: 40003
+            protocol: TCP
           securityContext:
             privileged: false
 ---
@@ -55,13 +88,48 @@ metadata:
   namespace: default
 spec:
   ports:
-    - name: wavefront
-      port: 2878
-      protocol: TCP
-  # Uncomment the below lines to consume Zipkin/Istio traces
-  #- name: http
-  #  port: 9411
-  #  targetPort: 9411
-  #  protocol: TCP
+  - name: metrics-port
+    port: 2878
+    protocol: TCP
+    # Wavefront tracing
+  - name: tracing-port
+    port: 30000
+    targetPort: 30000
+    protocol: TCP
+    # Zipkin
+  - name: zipkin-port
+    port: 9411
+    targetPort: 9411
+    protocol: TCP
+    # Jaeger
+  - name: jaeger-port
+    port: 30001
+    targetPort: 30001
+    protocol: TCP
+  - name: jaeger-http-port
+    port: 30080
+    targetPort: 30080
+    protocol: TCP
+  - name: jaeger-grpc-port
+    port: 14250
+    targetPort: 14250
+    protocol: TCP
+    # Historgram
+  - name: histogram-port
+    port: 40000
+    targetPort: 40000
+    protocol: TCP
+  - name: histogram-minute-port
+    port: 40001
+    targetPort: 40001
+    protocol: TCP
+  - name: histogram-hour-port
+    port: 40002
+    targetPort: 40002
+    protocol: TCP
+  - name: histogram--day-port
+    port: 40003
+    targetPort: 40003
+    protocol: TCP
   selector:
     app: wavefront-proxy

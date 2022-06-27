@@ -59,3 +59,17 @@ data:
         tag: processed
         value: "true"
 
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: http-proxy-secret
+#   namespace: wavefront
+# type: Opaque
+# stringData:
+#   http-url: YOUR_HTTP_PROXY_URL #i.e. http://10.96.179.49:8080
+#   #  basic-auth-username: YOUR_HTTP_PROXY_BASIC_AUTH_USERNAME
+#   #  basic-auth-password: YOUR_HTTP_PROXY__BASIC_AUTH_PASSWORD
+#   tls-root-ca-bundle: |
+#     YOUR_HTTP_PROXY_CA_CERTIFICATE
+
