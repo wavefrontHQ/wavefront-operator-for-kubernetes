@@ -59,7 +59,7 @@ Here are the different proxy environment variables and how they map to operator 
 Creating a Wavefront secret:
   - Create a secret using the token `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN` 
 
-For Setting the environment variable `WAVEFRONT_PROXY_ARGS`, please set the corresponding operator config. 
+Below are the proxy arguments that can be set using `WAVEFRONT_PROXY_ARGS`, which are also supported natively in the Custom Resource. 
 
 | Wavefront Proxy args              | Wavefront operator custom resource `spec`                      |
 |-----------------------------------|--------------------------------------------------------------- |
@@ -84,12 +84,11 @@ For Setting the environment variable `WAVEFRONT_PROXY_ARGS`, please set the corr
 |`--histogramHourListenerPorts`     | `dataExport.wavefrontProxy.histogram.hourPort`                 |
 |`--histogramDayListenerPorts`      | `dataExport.wavefrontProxy.histogram.dayPort`                  |
 
-If you are using any other proxy args, then set the below operator configuration parameter 
-`dataExport.wavefrontProxy.args` 
+To set other proxy arguments, you can set those using the Custom Resource parameter `dataExport.wavefrontProxy.args`.
 
-If you need to set container resource request/limits for wavefront proxy, set `dataExport.wavefrontProxy.resources`
+To set container resource request/limits for wavefront proxy, set `dataExport.wavefrontProxy.resources`
 
-If you are using an external Wavefront Proxy, set `dataExport.externalWavefrontProxy.Url`
+To set an external Wavefront Proxy, set `dataExport.externalWavefrontProxy.Url`
 
 See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration and 
 sample [Custom Resource](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) configuration.
@@ -110,7 +109,7 @@ Setting this config map will override other collector configs specified in the o
 |`dataCollection.metrics.filters.DenyList`           | `sinks.filters.metricDenyList`          |
 |`dataCollection.metrics.filters.AllowList`          | `sinks.filters.metric.AllowList`        |
 
-If you need to set container resource request/limits for wavefront collector, set `dataCollection.metrics.nodeCollector.resources` and `dataCollection.metrics.clusterCollector.resources`.
+To set container resource request/limits for wavefront collector, set `dataCollection.metrics.nodeCollector.resources` and `dataCollection.metrics.clusterCollector.resources`.
 
 Did you change any other Kubernetes configuration in your collector resource yaml? If so, please let us know as we probably might not support customizing those parameters yet in beta.
 
