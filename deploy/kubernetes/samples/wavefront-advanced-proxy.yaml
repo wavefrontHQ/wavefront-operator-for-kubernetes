@@ -43,7 +43,7 @@ spec:
         dayPort: 40003
 #      httpProxy:
 #        secret: http-proxy-secret
-      args: |
+      args: >
         --customSourceTags mySource
 ---
 apiVersion: v1
