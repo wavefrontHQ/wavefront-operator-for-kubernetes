@@ -46,6 +46,8 @@ use `dataCollection.metrics.customConfig` to specify the name of a collector con
 
 ## Manual
 
+### Migrate wavefront proxy
+
 See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) to see how existing configuration
 fields map to new [Custom Resource](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) fields.
 
@@ -76,7 +78,7 @@ For the below proxy configurations that we support natively, please use the corr
 If you are using any other proxy args, then set the below operator configuration parameter 
 `dataExport.wavefrontProxy.args` 
 
-
+### Migrate wavefront collector
 
 
 
