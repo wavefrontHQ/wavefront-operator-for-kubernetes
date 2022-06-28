@@ -56,7 +56,7 @@ pipeline {
     }
     stage("GKE Integration Test") {
       options {
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 22, unit: 'MINUTES')
       }
       tools {
         go 'Go 1.17'
