@@ -69,6 +69,8 @@ helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wave
 
 See [Configuration](#configuration) section below to learn about Custom Resource Configuration.
 
+**Note**: For migrating from existing helm chart, see [migrate from helm installation](MIGRATION.md#migrate-from-helm-installation) for more information.
+
 ## Manual
 
 Create a directory named wavefront-operator-dir and download the [wavefront-operator.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml)
@@ -84,9 +86,8 @@ kubectl create -n wavefront secret generic wavefront-secret --from-literal token
 
 Choose between default or advanced deployment options.
 
-# Migration
+**Note**: For migrating from manual installation, see [migrate from manual installation](MIGRATION.md#migrate-from-manual-installation) for more information.
 
-See [MIGRATION.md](MIGRATION.md) for more information.
 
 # Configuration
 
