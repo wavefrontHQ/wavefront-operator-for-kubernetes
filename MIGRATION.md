@@ -6,9 +6,6 @@ This is a beta trial migration doc for the operator from collector manual and he
 The following table lists the mapping of configurable parameters of the Wavefront Helm chart to Wavefront Operator custom resource.
 Refer `config/crd/bases/wavefront.com_wavefronts.yaml` for information on the custom resource fields.
 
-If you have collector configuration with parameters not covered below,
-use `dataCollection.metrics.customConfig` to specify the name of a collector configmap in your cluster.
-
 | Helm collector parameter            | Wavefront operator custom resource`spec`.                                               |
 |-------------------------------------|------------------------------------------------------------------------------------------------------|
 | `clusterName`                       | `clusterName`                                                                                        |
@@ -45,6 +42,8 @@ use `dataCollection.metrics.customConfig` to specify the name of a collector con
 | `proxy.args`	                      | `dataExport.wavefrontProxy.args`                                                                     |
 | `proxy.preprocessor.rules.yaml`	  | `dataExport.wavefrontProxy.preprocessor`                                                             |
 
+If you have collector configuration with parameters not covered below, please contact us for adding them post beta trial.
+
 ## Migrate from Manual Installation 
 
 ### Wavefront Proxy Configuration
@@ -65,7 +64,7 @@ Here are the different proxy environment variables and how they map to operator 
 
 Below are the proxy arguments that are specified in `WAVEFRONT_PROXY_ARGS`, which are currently supported natively in the Custom Resource. 
 
-| Wavefront Proxy args              | Wavefront operator custom resource `spec`                      |
+| Wavefront Proxy args              | Wavefront operator Custom Resource `spec`                      |
 |-----------------------------------|--------------------------------------------------------------- |
 |`--preprocessorConfigFile`         | `dataExport.wavefrontProxy.preprocessor` ConfigMap             |
 |`--proxyHost`                      | `dataExport.wavefrontProxy.httpProxy.secret` Secret            |
@@ -88,27 +87,20 @@ Below are the proxy arguments that are specified in `WAVEFRONT_PROXY_ARGS`, whic
 |`--histogramHourListenerPorts`     | `dataExport.wavefrontProxy.histogram.hourPort`                 |
 |`--histogramDayListenerPorts`      | `dataExport.wavefrontProxy.histogram.dayPort`                  |
 
-Here are other custom resource configuration we support for the proxy:
+Here are other Custom Resource configuration we support for the proxy:
 * `dataExport.wavefrontProxy.args`: Used to set any WAVEFRONT_PROXY_ARGS configuration not mentioned in the above table. 
 * `dataExport.wavefrontProxy.resources`: Used to set container resource request or limits for Wavefront Proxy.
 * `dataExport.externalWavefrontProxy.Url`: Used to set an external Wavefront Proxy.
 
 ### Wavefront Collector Configuration
 
-The Wavefront Collector configuration could be set using a `ConfigMap`. 
-If you are already have an existing wavefront collector `ConfigMap`, then use the `dataCollection.metrics.customConfig` parameter to set the `ConfigMap` name. See [wavefront-advanced-collector.yaml](deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
+Wavefront Collector `ConfigMap` changes:
+* Recreate Wavefront Collector ConfigMap in the `wavefront` namespace and 
+* update `sinks.proxyAddress` to `wavefront-proxy:2878`
 
-Note that Specifying collector config via external configmap will override other collector configs specified in the operator.
-
-Below are the collector configurations that operator supports natively.
-
-| Wavefront operator custom resource `spec`          | Wavefront Collector custom `ConfigMap`  |
-|----------------------------------------------------|-----------------------------------------|
-|`clusterName`                                       | `clusterName`                           |
-|`dataCollection.metrics.enableDiscovery`            | `enableDiscovery`                       |
-|`dataCollection.metrics.defaultCollectionInterval`  | `defaultCollectionInterval`             |
-|`dataCollection.metrics.filters.DenyList`           | `sinks.filters.metricDenyList`          |
-|`dataCollection.metrics.filters.AllowList`          | `sinks.filters.metric.AllowList`        |
+Custom Resource `spec` changes:
+* Update Custom Resource configuration`dataCollection.metrics.customConfig` with the created ConfigMap name.
+See [wavefront-advanced-collector.yaml](deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
 
 Below are some other resource configs that operator supports for collector.
 * `dataCollection.metrics.nodeCollector.resources`: Used to set container resource request or limits for Wavefront node collector.
