@@ -1,4 +1,5 @@
 # Migration
+This is a beta trial migration doc for the operator from collector manual and helm installation.
 
 ## Migrate from Helm Installation
 
@@ -62,7 +63,7 @@ Here are the different proxy environment variables and how they map to operator 
 |`WAVEFRONT_TOKEN`                  | `wavefrontTokenSecret` Default: `wavefront-secret`. See references above for creating wavefront secret.             |
 |`WAVEFRONT_PROXY_ARGS`             | `dataExport.wavefrontProxy.*` Refer to the below table for details.
 
-Below are the proxy arguments that can be set using `WAVEFRONT_PROXY_ARGS`, which are also supported natively in the Custom Resource. 
+Below are the proxy arguments that are specified in `WAVEFRONT_PROXY_ARGS`, which are currently supported natively in the Custom Resource. 
 
 | Wavefront Proxy args              | Wavefront operator custom resource `spec`                      |
 |-----------------------------------|--------------------------------------------------------------- |
@@ -88,16 +89,20 @@ Below are the proxy arguments that can be set using `WAVEFRONT_PROXY_ARGS`, whic
 |`--histogramDayListenerPorts`      | `dataExport.wavefrontProxy.histogram.dayPort`                  |
 
 Here are other custom resource configuration we support for the proxy:
-* `dataExport.wavefrontProxy.args`: Used to set any other valid proxy arguments under WAVEFRONT_PROXY_ARGS which are not mentioned in the above table. 
-* `dataExport.wavefrontProxy.resources`: Used to set container resource request/limits for wavefront proxy.
+* `dataExport.wavefrontProxy.args`: Used to set any WAVEFRONT_PROXY_ARGS configuration not mentioned in the above table. 
+* `dataExport.wavefrontProxy.resources`: Used to set container resource request or limits for Wavefront Proxy.
 * `dataExport.externalWavefrontProxy.Url`: Used to set an external Wavefront Proxy.
 
 ### Wavefront Collector Configuration
 
-If you are using a custom collector config, then use the `dataCollection.metrics.customConfig` parameter to set the ConfigMap name. See [wavefront-advanced-collector.yaml](deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
-Setting this config map will override other collector configs specified in the operator. Here are the collector configs that operator supports natively as well.
+The Wavefront Collector configuration could be set using a `ConfigMap`. 
+If you are already have an existing wavefront collector `ConfigMap`, then use the `dataCollection.metrics.customConfig` parameter to set the `ConfigMap` name. See [wavefront-advanced-collector.yaml](deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
 
-| Wavefront operator custom resource `spec`          | Wavefront Collector custom ConfigMap    |
+Note that Specifying collector config via external configmap will override other collector configs specified in the operator.
+
+Below are the collector configurations that operator supports natively.
+
+| Wavefront operator custom resource `spec`          | Wavefront Collector custom `ConfigMap`  |
 |----------------------------------------------------|-----------------------------------------|
 |`clusterName`                                       | `clusterName`                           |
 |`dataCollection.metrics.enableDiscovery`            | `enableDiscovery`                       |
@@ -105,9 +110,10 @@ Setting this config map will override other collector configs specified in the o
 |`dataCollection.metrics.filters.DenyList`           | `sinks.filters.metricDenyList`          |
 |`dataCollection.metrics.filters.AllowList`          | `sinks.filters.metric.AllowList`        |
 
-To set container resource request/limits for wavefront collector, set `dataCollection.metrics.nodeCollector.resources` and `dataCollection.metrics.clusterCollector.resources`.
-
+Below are some other resource configs that operator supports for collector.
+* `dataCollection.metrics.nodeCollector.resources`: Used to set container resource request or limits for Wavefront node collector.
+* `dataCollection.metrics.clusterCollector.resources`: Used to set container resource request or limits for Wavefront cluster collector.
 
 ### Future Support
 
-For configuration that has not yet been supported for legacy installation methods, please contact us for extending support after version beta.
+For configuration is not yet been supported for legacy installation methods, please contact us for adding them post beta trial.
