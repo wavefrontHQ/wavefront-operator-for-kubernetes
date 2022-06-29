@@ -193,6 +193,8 @@ kubectl apply -f wavefront-operator-dir/wavefront-operator.yaml
 
 # Removal
 
+To remove the Wavefront Integration from your environment, follow these steps.
+
 ###### Helm
 
 ```
