@@ -4,7 +4,7 @@ This is a beta trial migration doc for the operator from collector manual and he
 ## Migrate from Helm Installation
 
 The following table lists the mapping of configurable parameters of the Wavefront Helm chart to Wavefront Operator Custom Resource.
-Refer `config/crd/bases/wavefront.com_wavefronts.yaml` for information on the Custom Resource fields.
+Refer [`config/crd/bases/wavefront.com_wavefronts.yaml`](../config/crd/bases/wavefront.com_wavefronts.yaml) for information on the Custom Resource fields.
 
 | Helm collector parameter           | Wavefront operator Custom Resource `spec`.                                                           | Description                                                                                                                                                    |
 |------------------------------------|------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
