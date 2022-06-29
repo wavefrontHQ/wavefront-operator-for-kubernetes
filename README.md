@@ -42,8 +42,8 @@ are still supported.
 
 ## Prerequisites
 
-Your prerequisites will depend on your installation type.
-- Manual installation uses [kubectl](https://kubernetes.io/docs/tasks/tools/)
+You will need the following tools installed to install the Wavefront Integration
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm](https://helm.sh/docs/intro/install/) installation
 
 ## Deploy the Wavefront Collector and Proxy with the Operator
@@ -57,11 +57,6 @@ Your prerequisites will depend on your installation type.
     kubectl create namespace wavefront
     
     helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
-    ```
-   --or--
-    ###### Manual
-    ```
-    kubectl apply -f https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/wavefront-operator.yaml
     ```
 2. Create a Kubernetes secret with your Wavefront Token
     ```
@@ -193,19 +188,10 @@ kubectl apply -f wavefront-operator-dir/wavefront-operator.yaml
 
 # Removal
 
-To remove the Wavefront Integration from your environment, follow these steps.
-
-###### Helm
+To remove the Wavefront Integration from your environment, use the following helm command.
 
 ```
 helm uninstall wavefront-v2beta
-```
-
-###### Manual
-
-To undeploy the Wavefront Operator for Kubernetes, run the following command.
-```
-kubectl delete -f wavefront-operator.yaml
 ```
 
 # Contribution 
