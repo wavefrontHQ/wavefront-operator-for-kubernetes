@@ -150,7 +150,7 @@ kubectl create -f wavefront-advanced-proxy.yaml
 
 ##### Note on Configuration Precedence
 
-All wavefront proxy configuration options should be available via explict fields in the custom resource. That is our recommendation. However, it is also possible to specify options as proxy command line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at this time, but the custom resource field will take precidence.
+Most wavefront proxy configuration options should be available via explicit fields in the custom resource. That is our recommendation. However, it is also possible to specify options as proxy command line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at this time, but the custom resource field will take precidence.
 
 For example, if you specify `--histogramDistListenerPorts 40123` in `dataExport.wavefrontProxy.args`
 and `dataExport.wavefrontProxy.histogram.port: 40000`,
@@ -169,21 +169,10 @@ kubectl create -f wavefront-with-http-proxy.yaml
 
 # Upgrade
 
-Upgrade from one operator version to another? Upgrade from previous installation methods? From what state, perform what action to result in what expected outcome? Idempotent is a reason why an approach works, but is mostly ancillary to the user's goal. We need more detail here.
-
-###### Helm
+Upgrade Wavefront )perator to a new version
 
 ```
 helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
-```
-
-###### Manual
-
-Download the updated `wavefront-operator.yaml` and run the installation command below.
-You can keep the secret the same or go back to the [manual installation instructions](#manual)
-to create another one.
-```shell
-kubectl apply -f wavefront-operator-dir/wavefront-operator.yaml
 ```
 
 # Removal
