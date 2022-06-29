@@ -19,7 +19,9 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 - [Operator Upgrade](#upgrade)
 - [Operator Removal](#removal)
 
-## Use Cases
+## Why use the Wavefront Operator for Kubernetes
+
+The operator seeks to simplify a number of operational aspects of managing the Wavefront Integration in Kubernetes. The following are some current examples, with more to come!
 
 - Enhanced status reporting of the Kubernetes Integration to ensure that users can be proactive in ensuring their cluster and Kubernetes resources are reporting data.
 - Leveraging Kubernetes Operator features to provide a more declarative mechanism for how the wavefront collector and proxy should be deployed in a Kubernetes Environment.
@@ -44,12 +46,10 @@ are still supported.
 
 You will need the following tools installed to install the Wavefront Integration
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
-- [Helm](https://helm.sh/docs/intro/install/) installation
+- [Helm 3](https://helm.sh/docs/intro/install/) installation
 
 ## Deploy the Wavefront Collector and Proxy with the Operator
 1. Install the Wavefront Operator
-
-    ###### Helm 3
     ```
     helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
     helm repo update
@@ -74,11 +74,11 @@ You will need the following tools installed to install the Wavefront Integration
       clusterName: YOUR_CLUSTER_NAME
       wavefrontUrl: YOUR_WAVEFRONT_URL
       dataCollection:
-        metrics:
-          enable: true
+      metrics:
+        enable: true
       dataExport:
         wavefrontProxy:
-          enable: true
+        enable: true
     ```
 4. Deploy the Wavefront Collector and Proxy with the above configuration
     ```
@@ -90,9 +90,9 @@ See [Configuration](#configuration) section below to learn about additional Cust
 
 # Validation
 
-## Collector and Proxy Status
+## Component Status
 
-To get collector and proxy status from the command line, run the following command.
+To get status on the Wavefront Integration from the command line, run the following command.
 ```
 kubectl get wavefront -n wavefront
 ```
@@ -150,7 +150,7 @@ kubectl create -f wavefront-advanced-proxy.yaml
 
 ##### Note on Configuration Precedence
 
-Most wavefront proxy configuration options should be available via explicit fields in the custom resource. That is our recommendation. However, it is also possible to specify options as proxy command line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at this time, but the custom resource field will take precidence.
+Most wavefront proxy configuration options should be available via explicit fields in the custom resource. It is our recommendation to use those fields. However, it is also possible to specify options as proxy command line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at this time, but the custom resource field will take precedence.
 
 For example, if you specify `--histogramDistListenerPorts 40123` in `dataExport.wavefrontProxy.args`
 and `dataExport.wavefrontProxy.histogram.port: 40000`,
