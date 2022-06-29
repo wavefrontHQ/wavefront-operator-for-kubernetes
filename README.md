@@ -23,7 +23,7 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 - Enhanced status reporting of the Kubernetes Integration to ensure that users can be proactive in ensuring their cluster and Kubernetes resources are reporting data.
 - Leveraging Kubernetes Operator features to provide a more declarative mechanism for how the wavefront collector and proxy should be deployed in a Kubernetes Environment.
-- Abstracting and centralizing the configuration of both the collector and proxy to enable more efficient advanced configuration of the collector and proxy.
+- Centralizing the configuration of the integration for simpler configuration of the collector and proxy.
 - Providing enhanced configuration validation to reduce configuration errors and surface what needs to be corrected in order to deploy successfully.
 - Enabling efficient Kubernetes resource usage by being able to scale out the cluster (leader) node and worker nodes independently.
 - Providing a unified installation mechanism and form factor across VMware Tanzu product lines to ensure that users have a consistent deployment and configuration experience when deploying the Kubernetes collector and proxy.
