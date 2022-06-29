@@ -96,7 +96,7 @@ Other supported Custom Resource configuration:
 ### Wavefront Collector Configuration
 
 Wavefront Collector `ConfigMap` changes:
-* Wavefront Collector ConfigMap changed from `wavefront-collector` to `wavefront` namespace and 
+* Wavefront Collector ConfigMap changed from `wavefront-collector` to `wavefront` namespace.
 * `sinks.proxyAddress` changed from `wavefront-proxy.default.svc.cluster.local:2878` to `wavefront-proxy:2878`.
 
 Custom Resource `spec` changes:
