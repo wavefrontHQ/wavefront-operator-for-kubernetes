@@ -174,7 +174,7 @@ kubectl create -f wavefront-with-http-proxy.yaml
 
 # Upgrade
 
-Upgrade from one operator version to another? Upgrade from previous installation methods? From what state to what state with what expected outcome? Idempotent is a reason why an approach works, but is mostly ancillary to the user's goal. We need more detail here.
+Upgrade from one operator version to another? Upgrade from previous installation methods? From what state, perform what action to result in what expected outcome? Idempotent is a reason why an approach works, but is mostly ancillary to the user's goal. We need more detail here.
 
 ###### Helm
 
