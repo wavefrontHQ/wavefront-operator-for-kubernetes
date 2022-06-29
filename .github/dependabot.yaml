@@ -8,6 +8,10 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    # reasoning: use exclude rules for things we will not upgrade in a timely manner
+    open-pull-requests-limit: 1
     ignore:
       - dependency-name: "k8s.io/*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "sigs.k8s.io/*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
