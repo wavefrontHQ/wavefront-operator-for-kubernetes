@@ -155,10 +155,7 @@ kubectl create -f wavefront-advanced-proxy.yaml
 
 ##### Note on Configuration Precedence
 
-If you include a redundant configuration of a proxy arg
-in both the dedicated Custom Resource field
-and via the command line argument input in `dataExport.wavefrontProxy.args`,
-the dedicated Custom Resource field will take precedence.
+All wavefront proxy configuration options should be available via explict fields in the custom resource. That is our recommendation. However, it is also possible to specify options as proxy command line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at this time, but the custom resource field will take precidence.
 
 For example, if you specify `--histogramDistListenerPorts 40123` in `dataExport.wavefrontProxy.args`
 and `dataExport.wavefrontProxy.histogram.port: 40000`,
