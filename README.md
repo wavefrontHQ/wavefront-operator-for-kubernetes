@@ -5,10 +5,11 @@ supports deploying the Wavefront Collector and the Wavefront Proxy in Kubernetes
 This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 ## Quick Reference
-
-- [Operator Removal](#removal)
+- [Operator Installation](#installation)
 - [Operator Validation](#validation)
+- [Operator Configuration](#configuration)
 - [Operator Upgrade](#upgrade)
+- [Operator Removal](#removal)
 
 ## Beta Notice
 
@@ -44,49 +45,67 @@ Your prerequisites will depend on your installation type.
 - Manual installation uses [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm](https://helm.sh/docs/intro/install/) installation
 
-## Quick Start Using Helm 3
+## Deploy the Wavefront Collector and Proxy with the Operator
+1. Install the Wavefront Operator
 
-Create a namespace to install this chart
+    ###### Helm 3
+    ```
+    helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
+    helm repo update
+   
+    kubectl create namespace wavefront
+    
+    helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
+    ```
+   --or--
+    ###### Manual
+    ```
+    kubectl apply -f https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/wavefront-operator.yaml
+    ```
+2. Create a Kubernetes secret with your Wavefront Token
+    ```
+    kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
+    ```
+3. Create a file with your Wavefront deployment configuration.  The simplest configuration is:
+    ```yaml 
+    # Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+    apiVersion: wavefront.com/v1alpha1
+    kind: Wavefront
+    metadata:
+      name: wavefront
+      namespace: wavefront
+    spec:
+      clusterName: YOUR_CLUSTER_NAME
+      wavefrontUrl: YOUR_WAVEFRONT_URL
+      dataCollection:
+      metrics:
+        enable: true
+      dataExport:
+        wavefrontProxy:
+        enable: true
+    ```
+4. Deploy the Wavefront Collector and Proxy with the above configuration
+    ```
+    kubectl apply -f /path/to/your/wavefront.yaml
+    ```
+See [Configuration](#configuration) section below to learn about additional Custom Resource Configuration.
+
+**Note**: For migrating from existing helm chart or manual deploy, see [Migration](docs/migration.md) for more information.
+
+# Validation
+
+## Collector and Proxy Status
+
+To get collector and proxy status from the command line, run the following command.
 ```
-kubectl create namespace wavefront
+kubectl get wavefront -n wavefront
 ```
 
-Create a wavefront secret by providing `YOUR_WAVEFRONT_TOKEN`
+It should return the following table displaying Operator instance health:
 ```
-kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
+NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
+wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
 ```
-
-Add chart repo by running
-```
-helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
-helm repo update
-```
-
-Install Wavefront Operator for Kubernetes
-```
-helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
-```
-
-See [Configuration](#configuration) section below to learn about Custom Resource Configuration.
-
-**Note**: For migrating from existing helm chart, see [migrate from helm installation](MIGRATION.md#migrate-from-helm-installation) for more information.
-
-## Manual
-
-Create a directory named wavefront-operator-dir and download the [wavefront-operator.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml)
-to that directory.
-```
-kubectl apply -f wavefront-operator-dir/wavefront-operator.yaml
-```
-
-Create a wavefront secret by providing `YOUR_WAVEFRONT_TOKEN`
-```
-kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
-```
-
-Choose between default or advanced deployment options.
-
-**Note**: For migrating from manual installation, see [migrate from manual installation](MIGRATION.md#migrate-from-manual-installation) for more information.
 
 
 # Configuration
@@ -145,20 +164,6 @@ Edit the wavefront-advanced-proxy.yaml replacing `YOUR_CLUSTER`, `YOUR_WAVEFRONT
 kubectl create -f wavefront-with-http-proxy.yaml
 ```
 
-# Validation
-
-## Collector and Proxy Status
-
-To get collector and proxy status from the command line, run the following command.
-```
-kubectl get wavefront -n wavefront
-```
-
-It should return the following table displaying Operator instance health:
-```
-NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
-wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
-```
 
 # Upgrade
 
@@ -166,13 +171,13 @@ The Operator installation process is idempotent,
 so these commands should look familiar
 to what you did during installation.
 
-## Helm
+###### Helm
 
 ```
 helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
 ```
 
-## Manual
+###### Manual
 
 Download the updated `wavefront-operator.yaml` and run the installation command below.
 You can keep the secret the same or go back to the [manual installation instructions](#manual)
@@ -183,66 +188,19 @@ kubectl apply -f wavefront-operator-dir/wavefront-operator.yaml
 
 # Removal
 
-## Helm
+###### Helm
 
 ```
 helm uninstall wavefront-v2beta
 ```
 
-## Manual
+###### Manual
 
 To undeploy the Wavefront Operator for Kubernetes, run the following command.
 ```
 kubectl delete -f wavefront-operator.yaml
 ```
 
-# Contribution and Dev Work
+# Contribution 
 
-## Community contribution
-
-This repository is a work in progress.
-Currently, community contribution is not supported.
-
-## Release new version of the manual deploy
-
-Increment the version number before building
-```
- PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.10.0-alpha-7 make docker-xplatform-build generate-kubernetes-yaml
-```
-
-## Build and install locally
-
-See the below steps to build and deploy the operator on your local kind cluster.
-
-(Optional) Recreate your kind cluster **conveniently** from within this current repo.
-You're welcome!
-```
-make nuke-kind
-```
-Run integration test
-```
-make integration-test 
-```
-
-Generate the Custom Resource **Definition** (`manifests`),
-and apply it to the current cluster (`install`)
-(see below to create an **instance** of the Custom Resource):
-```
-make manifests install
-```
-**NOTE**: Currently Kubebuilder requires **go 1.17**. If the above step fails please verify that the go version is set to 1.17 in your environment.
-
-Build the controller manager binary from the go code:
-```
-make build
-```
-
-Run the controller manager on the local cluster:
-```
-# Create new local kind cluster
-make nuke-kind
-# Build and Deploy local operator image
-make deploy-kind
-# Deploy Proxy
-kubectl apply -f deploy/kubernetes/samples/wavefront-basic.yaml
-```
+See the [Contribution page](docs/contribution.md)

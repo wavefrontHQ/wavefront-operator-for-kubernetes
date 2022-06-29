@@ -30,10 +30,10 @@ Refer `config/crd/bases/wavefront.com_wavefronts.yaml` for information on the cu
 | `proxy.traceJaegerHttpListenerPort`| `dataExport.wavefrontProxy.tracing.jaeger.httpPort`                                                  | HttpPort for Jaeger Thrift format data (usually 30080)                                                                                                         |
 | `proxy.traceJaegerGrpcListenerPort`| `dataExport.wavefrontProxy.tracing.jaeger.grpcPort`                                                  | GrpcPort for Jaeger GRPC format data (usually 14250)                                                                                                           |
 | `proxy.zipkinPort`                 | `dataExport.wavefrontProxy.tracing.zipkin.port`                                                      | Port for Zipkin format tracing data (usually 9411)                                                                                                             |
-| `proxy.traceSamplingRate`          | `dataExport.wavefrontProxy.tracing.wavefront.samplingRate`                                           | SamplingRate Distributed tracing data sampling rate (0 to 1)                                                                                                   |
-| `proxy.traceSamplingDuration`      | `dataExport.wavefrontProxy.tracing.wavefront.samplingDuration`                                       | SamplingDuration When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)                                               |
-| `proxy.traceJaegerApplicationName` | `dataExport.wavefrontProxy.tracing.jaeger.applicationName`                                           | Custom application name for traces received on Jaeger's Http or Gprc port.                                                                                     |
-| `proxy.traceZipkinApplicationName` | `dataExport.wavefrontProxy.tracing.zipkin.applicationName`                                           | Custom application name for traces received on Zipkin's port.                                                                                                  |
+| `proxy.traceSamplingRate`          | `dataExport.wavefrontProxy.tracing.wavefront. samplingRate`                                          | SamplingRate Distributed tracing data sampling rate (0 to 1)                                                                                                   |
+| `proxy.traceSamplingDuration`      | `dataExport.wavefrontProxy.tracing.wavefront. samplingDuration`                                      | SamplingDuration When set to greater than 0, spans that exceed this duration will force trace to be sampled (ms)                                               |
+| `proxy.traceJaegerApplicationName` | `dataExport.wavefrontProxy.tracing.jaeger. applicationName`                                          | Custom application name for traces received on Jaeger's Http or Gprc port.                                                                                     |
+| `proxy.traceZipkinApplicationName` | `dataExport.wavefrontProxy.tracing.zipkin. applicationName`                                          | Custom application name for traces received on Zipkin's port.                                                                                                  |
 | `proxy.histogramPort`              | `dataExport.wavefrontProxy.histogram.port`                                                           | Port for wavefront histogram distributions (usually 40000)                                                                                                     |
 | `proxy.histogramMinutePort`        | `dataExport.wavefrontProxy.histogram.minutePort`                                                     | Port to accumulate 1-minute based histograms on Wavefront data format (usually 40001)                                                                          |
 | `proxy.histogramHourPort`          | `dataExport.wavefrontProxy.histogram.hourPort`                                                       | Port to accumulate 1-hour based histograms on Wavefront data format (usually 40002)                                                                            |
@@ -50,8 +50,8 @@ If you have collector configuration with parameters not covered below, please co
 ### Wavefront Proxy Configuration
 
 #### References:
-* See [wavefront-proxy.yaml](hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration.
-* See [custom-resource.yaml](deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) for an example Custome Resource configuration.
+* See [wavefront-proxy.yaml](../hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration.
+* See [custom-resource.yaml](../deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) for an example Custome Resource configuration.
 * Create wavefront secret: `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN`
 
 Most of the proxy configurations could be set using environment variables for proxy container.
@@ -101,7 +101,7 @@ Wavefront Collector `ConfigMap` changes:
 
 Custom Resource `spec` changes:
 * Update Custom Resource configuration`dataCollection.metrics.customConfig` with the created ConfigMap name.
-See [wavefront-advanced-collector.yaml](deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
+See [wavefront-advanced-collector.yaml](../deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
 
 Below are some other resource configs that operator supports for collector.
 * `dataCollection.metrics.nodeCollector.resources`: Used to set container resource request or limits for Wavefront node collector.
