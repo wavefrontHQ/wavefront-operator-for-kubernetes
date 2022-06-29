@@ -153,6 +153,7 @@ Edit the wavefront-advanced-proxy.yaml replacing `YOUR_CLUSTER` and `YOUR_WAVEFR
 ```
 kubectl create -f wavefront-advanced-proxy.yaml
 ```
+**Note**: If you include the same proxy arg in`dataExport.wavefrontProxy.args` as specified in a different`dataExport.wavefrontProxy.*` configuration, for example `histogramDistListenerPorts` vs `dataExport.wavefrontProxy.histogram.port`. The `dataExport.wavefrontProxy.*` /`dataExport.wavefrontProxy.histogram.port` will take precedence. 
 
 ## HTTP Proxy option
 
