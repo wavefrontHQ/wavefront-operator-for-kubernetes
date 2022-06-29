@@ -9,7 +9,7 @@ Currently, community contribution is not supported.
 
 Increment the version number before building
 ```
- PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.10.0-alpha-7 make docker-xplatform-build generate-kubernetes-yaml
+ PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.10.0-alpha-9 make docker-xplatform-build generate-kubernetes-yaml
 ```
 
 ## Build and install locally
