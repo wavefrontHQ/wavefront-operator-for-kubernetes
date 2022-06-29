@@ -169,7 +169,7 @@ kubectl create -f wavefront-with-http-proxy.yaml
 
 # Upgrade
 
-Upgrade Wavefront )perator to a new version
+Upgrade Wavefront Operator to a new version
 
 ```
 helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
