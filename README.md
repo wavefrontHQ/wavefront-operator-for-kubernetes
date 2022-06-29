@@ -111,9 +111,7 @@ wavefront      true          Running(1/1)        Running (1/1)        Running (3
 
 # Configuration
 
-The Wavefront Operator is deployed as a Custom Resource Definition and managing process,
-which allows the user to custom configure and `kubectl apply -f` a Custom Resource yaml file
-to the cluster to create an instance of the Operator. See below for configuration options.
+The Wavefront Operator is configured via a custom resource. When the resource is updated, the managing process (the operator) will pick up the changes and update the integration deployment accordingly. To update the custom resource, change the option you want in the the wavefront custom resource file and run `kubectl apply -f <your config file>.yaml`. See below for configuration options.
 
 ## Default option
 
