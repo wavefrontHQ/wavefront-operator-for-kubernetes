@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Wavefront Operator For Kubernetes 0.10.0 Beta
+Wavefront Operator For Kubernetes 2.0.0 Beta
 ======================================================================
 
 The following copyright statements and licenses apply to various open
@@ -26550,4 +26550,4 @@ Source Files is valid for three years from the date you acquired or last used th
 Software product. Alternatively, the Source Files may accompany the
 VMware service.
 
-[WAVEFRONTK8OPERATOR0100BETAAT060622]
+[WAVEFRONTK8OPERATOR200BETAAT062922]
