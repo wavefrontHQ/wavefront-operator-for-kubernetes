@@ -180,7 +180,8 @@ helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wave
 To remove the Wavefront Integration from your environment, use the following helm command.
 
 ```
-helm uninstall wavefront-v2beta
+helm uninstall wavefront-v2beta -n wavefront
+kubectl delete namespace wavefront
 ```
 
 # Contribution 
