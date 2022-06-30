@@ -20,7 +20,7 @@ function run_test() {
 
   wait_for_cluster_ready
 
-  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/deploy/kubernetes/samples/wavefront-$type.yaml  |
+  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
    sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml

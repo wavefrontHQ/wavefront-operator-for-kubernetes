@@ -106,66 +106,20 @@ wavefront      true          Running(1/1)        Running (1/1)        Running (3
 
 # Configuration
 
-The Wavefront Operator is configured via a custom resource. When the resource is updated, the managing process (the operator) will pick up the changes and update the integration deployment accordingly. To update the custom resource, change the option you want in the the wavefront custom resource file and run `kubectl apply -f <your config file>.yaml`. See below for configuration options.
+The Wavefront Operator is configured via a custom resource. When the resource is updated, the operator will pick up the changes and update the integration deployment accordingly. To update the custom resource, change the option you want in the the wavefront custom resource file and run `kubectl apply -f <your config file>.yaml`. See below for configuration options.
 
-## Default option
+We have templates for common scenarios. See the comments in each file for usage instructions.
 
-If you're just getting started and want to take advantage of our default configurations, download the [wavefront-basic.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-basic.yaml) file.
+ * [Using an existing collector ConfigMap](./deploy/kubernetes/scenarios/wavefront-collector-existing-configmap.yaml)
+ * [Filtering metrics upon collection](./deploy/kubernetes/scenarios/wavefront-collector-filtering.yaml)
+ * [Defining Kubernetes resource limits](./deploy/kubernetes/scenarios/wavefront-pod-resources.yaml)
+ * [Defining proxy pre-processor rules](./deploy/kubernetes/scenarios/wavefront-proxy-preprocessor-rules.yaml)
+ * [Enabling proxy histogram support](./deploy/kubernetes/scenarios/wavefront-proxy-histogram.yaml)
+ * [Enabling proxy tracing support](./deploy/kubernetes/scenarios/wavefront-proxy-tracing.yaml)
+ * [Using an HTTP Proxy](./deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
 
-Edit the wavefront-basic.yaml replacing `YOUR_CLUSTER` and `YOUR_WAVEFRONT_URL` accordingly.
 
-```
-kubectl create -f wavefront-basic.yaml
-```
-
-## Advanced Collector option
-
-If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-advanced-default-config.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-default-config.yaml) file.
-
-Edit the wavefront-advanced-default-config.yaml replacing `YOUR_CLUSTER` and `YOUR_WAVEFRONT_URL` along with any detailed configuration changes you'd like to make.
-
-```
-kubectl create -f wavefront-advanced-default-config.yaml
-```
-
-## Advanced Collector with Customer defined Collector configMap option
-
-If you want more granular control over collector and proxy configuration use the advanced configuration option, download the [wavefront-advanced-collector.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-collector.yaml) file.
-
-Edit the wavefront-advanced-collector.yaml replacing `YOUR_CLUSTER` and `YOUR_WAVEFRONT_URL` along with any detailed configuration changes you'd like to make.
-
-```
-kubectl create -f wavefront-advanced-collector.yaml
-```
-
-## Advanced Proxy option
-
-If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-advanced-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) file.
-
-Edit the wavefront-advanced-proxy.yaml replacing `YOUR_CLUSTER` and `YOUR_WAVEFRONT_URL` along with any detailed configuration changes you'd like to make.
-
-```
-kubectl create -f wavefront-advanced-proxy.yaml
-```
-
-##### Note on Configuration Precedence
-
-Most wavefront proxy configuration options should be available via explicit fields in the custom resource. It is our recommendation to use those fields. However, it is also possible to specify options as proxy command line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at this time, but the custom resource field will take precedence.
-
-For example, if you specify `--histogramDistListenerPorts 40123` in `dataExport.wavefrontProxy.args`
-and `dataExport.wavefrontProxy.histogram.port: 40000`,
-`dataExport.wavefrontProxy.histogram.port: 40000` will take precedence.
-
-## HTTP Proxy option
-
-If you want more granular control over collector and proxy configuration, use the advanced configuration option, download the [wavefront-with-http-proxy.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/samples/wavefront-with-http-proxy.yaml) file.
-
-Edit the wavefront-advanced-proxy.yaml replacing `YOUR_CLUSTER`, `YOUR_WAVEFRONT_URL`, `YOUR_HTTP_PROXY_URL` and `YOUR_HTTP_PROXY_CA_CERTIFICATE` along with any detailed configuration changes you'd like to make.
-
-```
-kubectl create -f wavefront-with-http-proxy.yaml
-```
-
+If you would like to see all configuration options, see [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
 
 # Upgrade
 
