@@ -129,6 +129,8 @@ Upgrade Wavefront Operator to a new version
 helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
 ```
 
+Note: This will not upgrade any existing wavefront/wavefront helm installation. See [migration.md](./docs/migration.md) for instructions on how to migrate.
+
 # Removal
 
 To remove the Wavefront Integration from your environment, use the following helm command.
