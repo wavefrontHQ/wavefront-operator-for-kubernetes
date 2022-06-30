@@ -51,7 +51,7 @@ If you have collector configuration with parameters not covered above, please re
 
 #### References:
 * See [wavefront-proxy.yaml](../hack/migration/wavefront-proxy.yaml) for an example manual proxy configuration.
-* See [custom-resource.yaml](../deploy/kubernetes/samples/wavefront-advanced-proxy.yaml) for an example Custome Resource configuration.
+* See [custom-resource.yaml](../deploy/kubernetes/scenarios/wavefront-proxy-pod-resources.yaml) for an example Custome Resource configuration.
 * Create wavefront secret: `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN`
 
 Most of the proxy configurations could be set using environment variables for proxy container.
@@ -101,7 +101,7 @@ Wavefront Collector `ConfigMap` changes:
 
 Custom Resource `spec` changes:
 * Update Custom Resource configuration`dataCollection.metrics.customConfig` with the created ConfigMap name.
-See [wavefront-advanced-collector.yaml](../deploy/kubernetes/samples/wavefront-advanced-collector.yaml) for an example.
+See [wavefront-advanced-collector.yaml](../deploy/kubernetes/scenarios/wavefront-collector-existing-configmap.yaml) for an example.
 
 Other supported Custom Resource configurations:
 * `dataCollection.metrics.nodeCollector.resources`: Used to set container resource request or limits for Wavefront node collector.
