@@ -98,6 +98,7 @@ Other supported Custom Resource configuration:
 Wavefront Collector `ConfigMap` changes:
 * Wavefront Collector ConfigMap changed from `wavefront-collector` to `wavefront` namespace.
 * `sinks.proxyAddress` changed from `wavefront-proxy.default.svc.cluster.local:2878` to `wavefront-proxy:2878`.
+* Change `collector.yaml` to `config.yaml`
 
 Custom Resource `spec` changes:
 * Update Custom Resource configuration`dataCollection.metrics.customConfig` with the created ConfigMap name.

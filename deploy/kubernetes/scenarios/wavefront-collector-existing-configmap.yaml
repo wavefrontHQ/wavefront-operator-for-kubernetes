@@ -27,6 +27,7 @@ metadata:
   name: wavefront-collector-config
   namespace: wavefront
 data:
+  # Note: make sure your configuration is named `config.yaml` (manual deploy used `collector.yaml`)
   config.yaml: |
     # Note on clusterName Precedence
     #
