@@ -53,7 +53,10 @@ If you have collector configuration with parameters not covered above, please re
 
 #### References:
 * See [Custom Resource Scenarios](/deploy/kubernetes/scenarios) for proxy configuration examples.
-* Create wavefront secret: `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=WAVEFRONT_TOKEN`
+* Copy and save your existing collector configMaps and any other configurations.
+* Uninstall your currently deployed wavefront collector and proxy.
+* Make sure the wavefront operator is already installed.
+* Create a Kubernetes secret with your Wavefront Token `kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN`
 
 Most of the proxy configurations could be set using environment variables for proxy container.
 Here are the different proxy environment variables and how they map to operator config.
