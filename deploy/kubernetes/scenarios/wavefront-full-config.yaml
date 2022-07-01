@@ -41,6 +41,12 @@ spec:
             cpu: 200m
             memory: 256Mi
   dataExport:
+    # Note on externalWavefrontProxy and wavefrontProxy
+    #
+    # It is not valid to define an external proxy (externalWavefrontProxy.url) and
+    # enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster
+    externalWavefrontProxy:
+      url: YOUR_EXTERNAL_PROXY_URL
     wavefrontProxy:
       enable: true
         metricPort: 2878

@@ -7,7 +7,6 @@ metadata:
 spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
-  wavefrontTokenSecret: wavefront-secret
   dataExport:
     wavefrontProxy:
       enable: true
