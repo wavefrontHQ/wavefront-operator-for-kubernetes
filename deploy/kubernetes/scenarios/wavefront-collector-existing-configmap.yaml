@@ -5,9 +5,11 @@ metadata:
   name: wavefront
   namespace: wavefront
 spec:
+  # Note on clusterName Precedence
+  #
+  # clusterName is required, but will be overridden by the clusterName in ConfigMap
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
-  wavefrontTokenSecret: wavefront-secret
   dataExport:
     wavefrontProxy:
       enable: true
@@ -26,6 +28,9 @@ metadata:
   namespace: wavefront
 data:
   config.yaml: |
+    # Note on clusterName Precedence
+    #
+    # This overrides the clusterName Wavefront Custom Resource
     clusterName: YOUR_CLUSTER_NAME
     enableDiscovery: true
     enableEvents: false

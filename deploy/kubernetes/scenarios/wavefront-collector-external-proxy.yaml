@@ -1,4 +1,4 @@
-# Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL accordingly
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL and YOUR_EXTERNAL_PROXY_URL accordingly
 apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
@@ -11,10 +11,5 @@ spec:
     metrics:
       enable: true
   dataExport:
-    wavefrontProxy:
-      enable: true
-      histogram:
-        port: 40000
-        minutePort: 40001
-        hourPort: 40002
-        dayPort: 40003
+    externalWavefrontProxy:
+      url: YOUR_EXTERNAL_PROXY_URL
