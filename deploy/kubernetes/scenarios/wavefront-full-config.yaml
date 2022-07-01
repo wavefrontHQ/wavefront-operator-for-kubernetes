@@ -14,7 +14,7 @@ spec:
       enable: true
       # Note on Custom Configuration Precedence
       #
-      # customConfig will override all top-level config except clusterCollector and nodeCollector
+      # customConfig will override all top-level metrics config (filters, etc.) except for clusterCollector and nodeCollector
       customConfig: wavefront-collector-config
       filters:
         allowList:
