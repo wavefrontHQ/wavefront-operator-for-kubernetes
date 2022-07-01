@@ -62,7 +62,7 @@ You will need the following tools installed to install the Wavefront Integration
     ```
     kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
     ```
-3. Create a file with your Wavefront deployment configuration.  The simplest configuration is:
+3. Create a file with your Wavefront Custom Resource configuration.  The simplest configuration is:
     ```yaml 
     # Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
     apiVersion: wavefront.com/v1alpha1
