@@ -702,14 +702,12 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	})
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
+	resourceManager := controllers.NewResourceManager(os.DirFS(controllers.DeployDir), apiClient.RESTMapper(), fakesAppsV1, dynamicClient)
 
 	r := &controllers.WavefrontReconciler{
 		Client:        apiClient,
 		Scheme:        nil,
-		FS:            os.DirFS(controllers.DeployDir),
-		DynamicClient: dynamicClient,
-		RestMapper:    apiClient.RESTMapper(),
-		Appsv1:        fakesAppsV1,
+		ResourceManager: resourceManager,
 	}
 
 	return r, wfCR, apiClient, dynamicClient, fakesAppsV1
