@@ -74,11 +74,11 @@ You will need the following tools installed to install the Wavefront Integration
       clusterName: YOUR_CLUSTER_NAME
       wavefrontUrl: YOUR_WAVEFRONT_URL
       dataCollection:
-      metrics:
-        enable: true
+        metrics:
+          enable: true
       dataExport:
         wavefrontProxy:
-        enable: true
+          enable: true
     ```
 4. Deploy the Wavefront Collector and Proxy with the above configuration
     ```
