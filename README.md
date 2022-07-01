@@ -50,6 +50,10 @@ You will need the following tools installed to install the Wavefront Integration
 
 ## Deploy the Wavefront Collector and Proxy with the Operator
 1. Install the Wavefront Operator
+
+   Note: Today our operator only supports deployment under wavefront namespace. In case you have earlier wavefront
+   deployments under the same namespace then make sure to uninstall them before proceeding.
+
     ```
     helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
     helm repo update
@@ -58,6 +62,7 @@ You will need the following tools installed to install the Wavefront Integration
     
     helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
     ```
+
 2. Create a Kubernetes secret with your Wavefront Token
     ```
     kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
