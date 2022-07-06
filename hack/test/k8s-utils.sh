@@ -33,3 +33,8 @@ function wait_for_cluster_ready() {
   done
   echo "All Pods are Ready"
 }
+
+function create_cluster_name() {
+  local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
+  echo $(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")
+}
