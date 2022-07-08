@@ -160,7 +160,7 @@ controller-gen:
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 .PHONY: kustomize
 kustomize: ## Download kustomize locally if necessary.
-	k8po go-get-tool $(KUSTOMIZE) sigs.k8s.io/kustomize/kustomize/v3@v3.8.7
+	k8po go-get-tool $(KUSTOMIZE) sigs.k8s.io/kustomize/kustomize/v4@latest
 
 ENVTEST = $(shell pwd)/bin/setup-envtest
 .PHONY: envtest
