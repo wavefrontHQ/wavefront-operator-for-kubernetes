@@ -14,27 +14,24 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 ## Quick Reference
 - [Operator Installation](#installation)
-- [Operator Validation](#validation)
+- [Operator Validation](#component-status-validation)
 - [Operator Configuration](#configuration)
 - [Operator Upgrade](#upgrade)
 - [Operator Removal](#removal)
 
-## Why use the Wavefront Operator for Kubernetes
+## Why use the Wavefront Operator for Kubernetes?
 
-The operator seeks to simplify a number of operational aspects of managing the Wavefront Integration in Kubernetes. The following are some current examples, with more to come!
+The operator simplifies operational aspects of managing the Wavefront Integration. Here are some examples, with more to come!
+ - Enhanced status reporting of the Wavefront Integration so that users can ensure their cluster and Kubernetes resources are reporting data.
+ - Kubernetes Operator features provide a declarative mechanism for deploying the Wavefront Collector and proxy in a Kubernetes environment.
+ - Centralized configuration.
+ - Enhanced configuration validation to surface what needs to be corrected in order to deploy successfully.
+ - Efficient Kubernetes resource usage supports scaling  out the cluster (leader) node and worker nodes independently.
+ - Unified installation mechanism and form factor across VMware Tanzu product lines.
 
-- Enhanced status reporting of the Kubernetes Integration to ensure that users can be proactive in ensuring their cluster and Kubernetes resources are reporting data.
-- Leveraging Kubernetes Operator features to provide a more declarative mechanism for how the wavefront collector and proxy should be deployed in a Kubernetes Environment.
-- Centralizing the configuration of the integration for simpler configuration of the collector and proxy.
-- Providing enhanced configuration validation to reduce configuration errors and surface what needs to be corrected in order to deploy successfully.
-- Enabling efficient Kubernetes resource usage by being able to scale out the cluster (leader) node and worker nodes independently.
-- Providing a unified installation mechanism and form factor across VMware Tanzu product lines to ensure that users have a consistent deployment and configuration experience when deploying the Kubernetes collector and proxy.
-
-**Note:** the collector deployed by the Operator is still a full-feature Wavefront Integration.
-This list documents how the Operator extends the integration
-with the goal of providing a better user experience.
-For example, Istio and MySQL metrics, Telegraf configuration, etc.
-are still supported.
+**Note:** the collector deployed by the Operator still supports configuration via configmap.
+This list documents how the Operator extends the integration with the goal of providing a better user experience.
+For example, Istio and MySQL metrics, Telegraf configuration, etc. are still supported.
 
 ## Architecture
 
@@ -44,15 +41,15 @@ are still supported.
 
 ## Prerequisites
 
-You will need the following tools installed to install the Wavefront Integration
+The following tools are required for installing the integration.
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
-- [Helm 3](https://helm.sh/docs/intro/install/) installation
+- [Helm 3](https://helm.sh/docs/intro/install/) (if you choose the helm installation option)
 
 ## Deploy the Wavefront Collector and Proxy with the Operator
 1. Install the Wavefront Operator
 
-   Note: Today our operator only supports deployment under wavefront namespace. In case you have earlier wavefront
-   deployments under the same namespace then make sure to uninstall them before proceeding.
+   Note: Today the operator only supports deployment under the wavefront namespace.
+   If you already have Wavefront deployments in that namespace, uninstall them before you install the operator.
 
     ```
     helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
@@ -87,17 +84,16 @@ You will need the following tools installed to install the Wavefront Integration
     ```
 4. Deploy the Wavefront Collector and Proxy with the above configuration
     ```
-    kubectl apply -f /path/to/your/wavefront.yaml
+    kubectl apply -f <path_to_your_wavefront.yaml>
     ```
-See [Configuration](#configuration) section below to learn about additional Custom Resource Configuration.
+See [Configuration](#configuration) section below about Custom Resource Configuration.
 
-**Note**: For migrating from existing helm chart or manual deploy, see [Migration](docs/migration.md) for more information.
+**Note**: For migrating from existing helm chart or manual deploy,
+see [Migration](docs/migration.md).
 
-# Validation
+## Component Status Validation
 
-## Component Status
-
-To get status on the Wavefront Integration from the command line, run the following command.
+To get status for the Wavefront Integration, run the following command.
 ```
 kubectl get wavefront -n wavefront
 ```
@@ -108,10 +104,18 @@ NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLEC
 wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
 ```
 
-
 # Configuration
 
-The Wavefront Operator is configured via a custom resource. When the resource is updated, the operator will pick up the changes and update the integration deployment accordingly. To update the custom resource, change the option you want in the the wavefront custom resource file and run `kubectl apply -f <your config file>.yaml`. See below for configuration options.
+You configure the Wavefront Operator via a custom resource file.
+When you update the resource file,
+the operator picks up the changes and updates the integration deployment accordingly.
+
+To update the custom resource:
+- Open the custom resource file for edit.
+- Change one or more options and save the file.  
+- Run kubectl apply -f <path_to_your_config_file.yaml>.
+
+See below for configuration options.
 
 We have templates for common scenarios. See the comments in each file for usage instructions.
 
@@ -125,11 +129,11 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Using an HTTP Proxy](./deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
 
 
-If you would like to see all configuration options, see [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
+You can see all configuration options in [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
 
 # Upgrade
 
-Upgrade Wavefront Operator to a new version
+Upgrade Wavefront Operator to a new version (upgrades both collector and proxy):
 
 ```
 helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
