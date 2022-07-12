@@ -27,7 +27,9 @@ spec:
       containers:
         - name: wavefront-proxy
           image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: true
           env:
             - name: WAVEFRONT_URL
               value: {{ .WavefrontUrl }}/api/

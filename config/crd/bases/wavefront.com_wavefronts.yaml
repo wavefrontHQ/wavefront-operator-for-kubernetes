@@ -64,6 +64,14 @@ spec:
                       cluster-deployed collectors
                     properties:
                       clusterCollector:
+                        default:
+                          resources:
+                            limits:
+                              cpu: 400m
+                              memory: 512Mi
+                            requests:
+                              cpu: 200m
+                              memory: 10Mi
                         description: ClusterCollector is for resource configuration
                           for the cluster collector.
                         properties:
@@ -163,6 +171,14 @@ spec:
                             type: array
                         type: object
                       nodeCollector:
+                        default:
+                          resources:
+                            limits:
+                              cpu: 200m
+                              memory: 256Mi
+                            requests:
+                              cpu: 200m
+                              memory: 10Mi
                         description: NodeCollector is for resource configuration for
                           the node collector.
                         properties:

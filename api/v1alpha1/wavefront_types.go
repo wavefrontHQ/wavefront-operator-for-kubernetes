@@ -73,9 +73,11 @@ type Metrics struct {
 	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
 
 	// ClusterCollector is for resource configuration for the cluster collector.
+	// +kubebuilder:default:={resources: {requests: {cpu: "200m", memory: "10Mi"}, limits: {cpu: "400m", memory: "512Mi"}}}
 	ClusterCollector Collector `json:"clusterCollector,omitempty"`
 
 	// NodeCollector is for resource configuration for the node collector.
+	// +kubebuilder:default:={resources: {requests: {cpu: "200m", memory: "10Mi"}, limits: {cpu: "200m", memory: "256Mi"}}}
 	NodeCollector Collector `json:"nodeCollector,omitempty"`
 
 	// CollectorConfigName ConfigMap name that is used internally
