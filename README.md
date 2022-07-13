@@ -60,6 +60,7 @@ The following tools are required for installing the integration.
     ```
 
 2. Create a Kubernetes secret with your Wavefront Token.
+   See [Managing API Tokens](https://docs.wavefront.com/wavefront_api.html#managing-api-tokens) page.
     ```
     kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
     ```
