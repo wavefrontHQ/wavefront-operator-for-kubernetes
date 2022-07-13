@@ -2,7 +2,7 @@
 
 This project is in the beta phase and not ready for use on production environments.
 For use on production environments,
-refer to the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
+see the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
 for our original, more established processes.
 
 
@@ -29,8 +29,7 @@ The operator simplifies operational aspects of managing the Wavefront Integratio
  - Efficient Kubernetes resource usage supports scaling  out the cluster (leader) node and worker nodes independently.
  - Unified installation mechanism and form factor across VMware Tanzu product lines.
 
-**Note:** the collector deployed by the Operator still supports configuration via configmap.
-This list documents how the Operator extends the integration with the goal of providing a better user experience.
+**Note:** The Collector that is deployed by the Operator still supports configuration via configmap.
 For example, Istio and MySQL metrics, Telegraf configuration, etc. are still supported.
 
 ## Architecture
@@ -54,19 +53,19 @@ The following tools are required for installing the integration.
     ```
     helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
     helm repo update
-   
+
     kubectl create namespace wavefront
-    
+
     helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
     ```
 
-2. Create a Kubernetes secret with your Wavefront Token
+2. Create a Kubernetes secret with your Wavefront Token.
     ```
     kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
     ```
 3. Create a `wavefront.yaml` file with your Wavefront Custom Resource configuration.  The simplest configuration is:
-    ```yaml 
-    # Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+    ```yaml
+    # Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL
     apiVersion: wavefront.com/v1alpha1
     kind: Wavefront
     metadata:
@@ -86,19 +85,19 @@ The following tools are required for installing the integration.
     ```
     kubectl apply -f <path_to_your_wavefront.yaml>
     ```
-See [Configuration](#configuration) section below about Custom Resource Configuration.
+See the [Configuration](#configuration) section below about Custom Resource Configuration.
 
-**Note**: For migrating from existing helm chart or manual deploy,
+**Note**: For details on migrating from existing helm chart or manual deploy,
 see [Migration](docs/migration.md).
 
 ## Component Status Validation
 
-To get status for the Wavefront Integration, run the following command.
+To get status for the Wavefront Integration, run the following command:
 ```
 kubectl get wavefront -n wavefront
 ```
 
-It should return the following table displaying Operator instance health:
+The command should return the following table displaying Operator instance health:
 ```
 NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
 wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
@@ -106,14 +105,15 @@ wavefront      true          Running(1/1)        Running (1/1)        Running (3
 
 # Configuration
 
-You configure the Wavefront Operator via a custom resource file.
-When you update the resource file,
-the operator picks up the changes and updates the integration deployment accordingly.
+You configure the Wavefront Operator with a custom resource file.
 
-To update the custom resource:
+When you update the resource file,
+the Operator picks up the changes and updates the integration deployment accordingly.
+
+To update the custom resource file:
 - Open the custom resource file for edit.
-- Change one or more options and save the file.  
-- Run kubectl apply -f <path_to_your_config_file.yaml>.
+- Change one or more options and save the file.
+- Run `kubectl apply -f <path_to_your_config_file.yaml>`.
 
 See below for configuration options.
 
@@ -129,27 +129,27 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Using an HTTP Proxy](./deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
 
 
-You can see all configuration options in [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
+You can see all configuration options in the [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
 
 # Upgrade
 
-Upgrade Wavefront Operator to a new version (upgrades both collector and proxy):
+Upgrade the Wavefront Operator (both Collector and Proxy) to a new version by running the following command :
 
 ```
 helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
 ```
 
-Note: This will not upgrade any existing wavefront/wavefront helm installation. See [migration.md](./docs/migration.md) for instructions on how to migrate.
+Note: This command will not upgrade any existing wavefront/wavefront helm installation. See [migration.md](./docs/migration.md) for migration instructions.
 
 # Removal
 
-To remove the Wavefront Integration from your environment, use the following helm command.
+To remove the Wavefront Integration from your environment, run the following commands:
 
 ```
 helm uninstall wavefront-v2beta -n wavefront
 kubectl delete namespace wavefront
 ```
 
-# Contribution 
+# Contribution
 
 See the [Contribution page](docs/contribution.md)
