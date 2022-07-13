@@ -24,6 +24,10 @@ spec:
       annotations:
         configHash: "{{ .DataExport.WavefrontProxy.ConfigHash }}"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
       containers:
         - name: wavefront-proxy
           image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
