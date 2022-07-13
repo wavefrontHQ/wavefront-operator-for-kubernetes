@@ -28,8 +28,6 @@ spec:
         - name: wavefront-proxy
           image: projects.registry.vmware.com/tanzu_observability/proxy:11.0
           imagePullPolicy: Always
-          securityContext:
-            readOnlyRootFilesystem: true
           env:
             - name: WAVEFRONT_URL
               value: {{ .WavefrontUrl }}/api/
@@ -108,6 +106,7 @@ spec:
 {{ .DataExport.WavefrontProxy.Resources | toYaml | indent 12 }}
           securityContext:
             privileged: false
+            readOnlyRootFilesystem: true
           volumeMounts:
           {{- if .DataExport.WavefrontProxy.Preprocessor}}
           - name: preprocessor

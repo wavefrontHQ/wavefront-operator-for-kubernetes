@@ -24,6 +24,10 @@ spec:
       annotations:
         installation-method: operator
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
       tolerations:
         - effect: NoSchedule
           key: node.alpha.kubernetes.io/role
