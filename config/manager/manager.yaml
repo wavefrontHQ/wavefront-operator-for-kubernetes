@@ -26,6 +26,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
       containers:
       - command:
         - /manager
@@ -33,6 +35,7 @@ spec:
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
         livenessProbe:
           httpGet:
             path: /healthz
@@ -49,8 +52,10 @@ spec:
           limits:
             cpu: 500m
             memory: 128Mi
+            ephemeral-storage: 256Mi
           requests:
             cpu: 10m
             memory: 64Mi
+            ephemeral-storage: 128Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

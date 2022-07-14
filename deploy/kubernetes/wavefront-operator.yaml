@@ -722,6 +722,7 @@ spec:
       - command:
         - /manager
         image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /healthz
@@ -744,6 +745,7 @@ spec:
             memory: 64Mi
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
       securityContext:
         runAsNonRoot: true
       serviceAccountName: wavefront-controller-manager

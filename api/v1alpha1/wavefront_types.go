@@ -73,9 +73,11 @@ type Metrics struct {
 	EnableDiscovery bool `json:"enableDiscovery,omitempty"`
 
 	// ClusterCollector is for resource configuration for the cluster collector.
+	// +kubebuilder:default:={resources: {requests: {cpu: "200m", memory: "10Mi", ephemeral-storage: "20Mi"}, limits: {cpu: "400m", memory: "512Mi", ephemeral-storage: "1Gi"}}}
 	ClusterCollector Collector `json:"clusterCollector,omitempty"`
 
 	// NodeCollector is for resource configuration for the node collector.
+	// +kubebuilder:default:={resources: {requests: {cpu: "200m", memory: "10Mi", ephemeral-storage: "20Mi"}, limits: {cpu: "200m", memory: "256Mi", ephemeral-storage: "512Mi"}}}
 	NodeCollector Collector `json:"nodeCollector,omitempty"`
 
 	// CollectorConfigName ConfigMap name that is used internally
@@ -134,7 +136,7 @@ type WavefrontProxy struct {
 	Preprocessor string `json:"preprocessor,omitempty"`
 
 	// Resources Compute resources required by the Proxy containers.
-	// +kubebuilder:default:={requests: {cpu: "100m", memory: "1Gi"}, limits: {cpu: "1000m", memory: "4Gi"}}
+	// +kubebuilder:default:={requests: {cpu: "100m", memory: "1Gi", ephemeral-storage: "2Gi"}, limits: {cpu: "1000m", memory: "4Gi", ephemeral-storage: "8Gi"}}
 	Resources Resources `json:"resources,omitempty"`
 
 	// HttpProxy configuration
@@ -231,6 +233,10 @@ type Resource struct {
 	// Memory is for specifying Memory requirements
 	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	Memory string `json:"memory,omitempty" yaml:"memory,omitempty"`
+
+	// Memory is for specifying Memory requirements
+	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
+	EphemeralStorage string `json:"ephemeral-storage,omitempty" yaml:"ephemeral-storage,omitempty"`
 }
 
 type Resources struct {

@@ -64,6 +64,16 @@ spec:
                       cluster-deployed collectors
                     properties:
                       clusterCollector:
+                        default:
+                          resources:
+                            limits:
+                              cpu: 400m
+                              ephemeral-storage: 1Gi
+                              memory: 512Mi
+                            requests:
+                              cpu: 200m
+                              ephemeral-storage: 20Mi
+                              memory: 10Mi
                         description: ClusterCollector is for resource configuration
                           for the cluster collector.
                         properties:
@@ -78,6 +88,10 @@ spec:
                                     description: CPU is for specifying CPU requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
@@ -88,6 +102,10 @@ spec:
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
@@ -163,6 +181,16 @@ spec:
                             type: array
                         type: object
                       nodeCollector:
+                        default:
+                          resources:
+                            limits:
+                              cpu: 200m
+                              ephemeral-storage: 512Mi
+                              memory: 256Mi
+                            requests:
+                              cpu: 200m
+                              ephemeral-storage: 20Mi
+                              memory: 10Mi
                         description: NodeCollector is for resource configuration for
                           the node collector.
                         properties:
@@ -177,6 +205,10 @@ spec:
                                     description: CPU is for specifying CPU requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
@@ -187,6 +219,10 @@ spec:
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
@@ -277,9 +313,11 @@ spec:
                         default:
                           limits:
                             cpu: 1000m
+                            ephemeral-storage: 8Gi
                             memory: 4Gi
                           requests:
                             cpu: 100m
+                            ephemeral-storage: 2Gi
                             memory: 1Gi
                         description: Resources Compute resources required by the Proxy
                           containers.
@@ -289,6 +327,10 @@ spec:
                             properties:
                               cpu:
                                 description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 type: string
                               memory:
@@ -301,6 +343,10 @@ spec:
                             properties:
                               cpu:
                                 description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 type: string
                               memory:
