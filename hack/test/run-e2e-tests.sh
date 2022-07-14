@@ -31,7 +31,29 @@ function run_test() {
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
   green "Success!"
 
-  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+#  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+
+  kubectl api-resources --verbs=list --namespaced -o name \
+  | xargs -n1 -I{} bash -c "kubectl get {} -n wavefront -oyaml && echo ---" \
+  | ${REPO_ROOT}/bin/kube-linter lint - > kube-lint-results-$type.txt || true
+
+  local num_lints=$(grep '<standard input>' kube-lint-results-$type.txt | grep -v 'Kind=Pod' | grep -v 'Kind=ReplicaSet' | wc -l)
+  echo "num_lints: ${num_lints}"
+  if [ $num_lints -gt 2 ]; then
+    echo "num_lints above error threshold of 2; failing"
+    exit 1
+  fi
+
+  kubectl api-resources --verbs=list --namespaced -o name \
+  | xargs -n1 -I{} bash -c "kubectl get {} -n wavefront -oyaml && echo ---" \
+  | ${REPO_ROOT}/bin/kube-score score - > kube-score-results-$type.txt || true
+
+  local num_scores=$(grep '💥' kube-score-results-$type.txt | grep -v 'v1/Pod' | wc -l)
+  echo "num_scores: ${num_scores}"
+  if [ $num_scores -gt 4 ]; then
+    echo "num_scores above error threshold of 4; failing"
+    exit 1
+  fi
 }
 
 function main() {

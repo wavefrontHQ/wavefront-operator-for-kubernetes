@@ -162,6 +162,17 @@ KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
 
+KUBE_LINTER = $(shell pwd)/bin/kube-linter
+.PHONY: kube-linter
+kube-linter: ## Download kube-linter locally if necessary.
+	$(call go-get-tool,$(KUBE_LINTER),golang.stackrox.io/kube-linter/cmd/kube-linter@v0.4.0)
+
+KUBE_SCORE = $(shell pwd)/bin/kube-score
+.PHONY: kube-score
+kube-score: ## Download kustomize locally if necessary.
+	$(call go-get-tool,$(KUBE_SCORE),github.com/zegl/kube-score/cmd/kube-score@v1.14.0)
+
+
 ENVTEST = $(shell pwd)/bin/setup-envtest
 .PHONY: envtest
 envtest: ## Download envtest-setup locally if necessary.
@@ -192,7 +203,7 @@ nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: undeploy manifests build-kind deploy
+integration-test: kube-score kube-linter undeploy manifests build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-test-ci: undeploy deploy
