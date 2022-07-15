@@ -624,6 +624,7 @@ func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource stri
 	return nil
 }
 
+// TODO: why is this so huge? tackle this for refactor
 func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
@@ -705,8 +706,8 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	resourceManager := controllers.NewResourceManager(os.DirFS(controllers.DeployDir), apiClient.RESTMapper(), fakesAppsV1, dynamicClient)
 
 	r := &controllers.WavefrontReconciler{
-		Client:        apiClient,
-		Scheme:        nil,
+		Client:          apiClient,
+		Scheme:          nil,
 		ResourceManager: resourceManager,
 	}
 
