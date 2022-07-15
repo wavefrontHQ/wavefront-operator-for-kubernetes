@@ -40,6 +40,8 @@ function run_test() {
 }
 
 function run_static_analysis() {
+  # Ideally we want to fail when a non-zero error count is identified. Until we get to a zero error count, use the known
+  # error count to pass.
   echo "Running static analysis: kube-linter"
   rm -rf kube-lint-results.txt
   kubectl api-resources --verbs=list --namespaced -o name \
@@ -48,9 +50,9 @@ function run_static_analysis() {
 
   local current_lint_errors=$(grep '<standard input>' kube-lint-results.txt | wc -l)
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=5
-  if [ $current_lint_errors -gt $known_lint_errors ]; then
-    red "Failure: Found $(($current_lint_errors-$known_lint_errors)) newer error(s) more than the previously known ${known_lint_errors} error(s)"
+  local known_lint_errors=4
+  if [ $current_lint_errors -ne $known_lint_errors ]; then
+    red "Failure: Expected error count = $known_lint_errors"
     grep '<standard input>' kube-lint-results.txt
     exit_status=1
   fi
@@ -63,9 +65,9 @@ function run_static_analysis() {
 
   local current_score_errors=$(grep '\[CRITICAL\]' kube-score-results.txt | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=12
-  if [ $current_score_errors -gt $known_score_errors ]; then
-    red "Failure: Found $(($current_score_errors-$known_score_errors)) newer error(s) more than the previously known ${known_score_errors} error(s)"
+  local known_score_errors=11
+  if [ $current_score_errors -ne $known_score_errors ]; then
+    red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' kube-score-results.txt
     exit_status=1
   fi
