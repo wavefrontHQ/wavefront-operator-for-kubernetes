@@ -104,7 +104,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = r.readAndDeleteResources()
+		err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
 
@@ -188,7 +188,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	resources, err := r.readAndInterpolateResources(spec)
+	resources, err := readAndInterpolateResources(r.FS, spec)
 	if err != nil {
 		return err
 	}
@@ -200,16 +200,16 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	return nil
 }
 
-func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec) ([]string, error) {
+func readAndInterpolateResources(FS fs.FS, spec wf.WavefrontSpec) ([]string, error) {
 	var resources []string
 
-	resourceFiles, err := r.resourceFiles("yaml")
+	resourceFiles, err := resourceFiles("yaml")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, resourceFile := range resourceFiles {
-		resourceTemplate, err := newTemplate(resourceFile).ParseFS(r.FS, resourceFile)
+		resourceTemplate, err := newTemplate(resourceFile).ParseFS(FS, resourceFile)
 		if err != nil {
 			return nil, err
 		}
@@ -291,7 +291,7 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 	return deployment.UID, nil
 }
 
-func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
+func resourceFiles(suffix string) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(DeployDir,
@@ -309,8 +309,8 @@ func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 	return files, err
 }
 
-func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{})
+func (r *WavefrontReconciler) readAndDeleteResources(FS fs.FS) error {
+	resources, err := readAndInterpolateResources(FS, wf.WavefrontSpec{})
 	if err != nil {
 		return err
 	}
