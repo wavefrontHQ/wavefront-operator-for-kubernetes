@@ -29,9 +29,49 @@ function run_test() {
 
   echo "Running test-wavefront-metrics"
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
-  green "Success!"
 
+  run_static_analysis
+
+  green "Success!"
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+}
+
+function run_static_analysis() {
+  local resources_yaml_file=$(mktemp)
+  kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n wavefront -o yaml \
+  | yq '.items[] | split_doc' - > "$resources_yaml_file"
+
+  # Ideally we want to fail when a non-zero error count is identified. Until we get to a zero error count, use the known
+  # error count to pass.
+  echo "Running static analysis: kube-linter"
+  local kube_lint_results_file=$(mktemp)
+  ${REPO_ROOT}/bin/kube-linter lint "$resources_yaml_file" --format json 1> "$kube_lint_results_file" 2>/dev/null || true
+
+  local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
+  yellow "Kube linter error count: ${current_lint_errors}"
+  local known_lint_errors=6
+  if [ $current_lint_errors -le $known_lint_errors ]; then
+    red "Failure: Expected error count = $known_lint_errors"
+    jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
+    exit_status=1
+  fi
+
+  echo "Running static analysis: kube-score"
+  local kube_score_results_file=$(mktemp)
+  ${REPO_ROOT}/bin/kube-score score "$resources_yaml_file" --output-format ci> "$kube_score_results_file" || true
+
+  local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
+  yellow "Kube score error count: ${current_score_errors}"
+  local known_score_errors=14
+  if [ $current_score_errors -le $known_score_errors ]; then
+    red "Failure: Expected error count = $known_score_errors"
+    grep '\[CRITICAL\]' "$kube_score_results_file"
+    exit_status=1
+  fi
+
+  if [[ $exit_status -ne 0 ]]; then
+    exit $exitcode
+  fi
 }
 
 function main() {

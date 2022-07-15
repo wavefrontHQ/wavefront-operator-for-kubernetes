@@ -53,6 +53,15 @@ if ! [ -x "$(command -v jq)" ]; then
 fi
 
 #
+# yq
+#
+if ! [ -x "$(command -v yq)" ]; then
+  curl -H "Authorization: token ${GITHUB_CREDS_PSW}" -L "https://github.com/mikefarah/yq/releases/download/v4.26.1/yq_$(go env GOOS)_$(go env GOARCH)" > ./yq
+  chmod +x ./yq
+  sudo mv ./yq /usr/local/bin
+fi
+
+#
 # kustomize
 #
 if ! [ -x "$(command -v kustomize)" ]; then
