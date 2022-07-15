@@ -40,37 +40,39 @@ function run_test() {
 }
 
 function run_static_analysis() {
-  echo "Running static analysis"
+  echo "Running static analysis: kube-linter"
   rm -rf kube-lint-results.txt
   kubectl api-resources --verbs=list --namespaced -o name \
   | xargs -n1 -I{} bash -c "kubectl get {} -n wavefront -oyaml && echo ---" \
   | ${REPO_ROOT}/bin/kube-linter lint - 1>kube-lint-results.txt 2>&1 || true
 
-  # pods and replica sets are just a duplicate of deployment and daemon sets. So removing them before calculating error count
-  local current_lint_errors=$(grep '<standard input>' kube-lint-results.txt | grep -v 'Kind=Pod' | grep -v 'Kind=ReplicaSet' | wc -l)
+  local current_lint_errors=$(grep '<standard input>' kube-lint-results.txt | wc -l)
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=2
+  local known_lint_errors=5
   if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Found $(($current_lint_errors-$known_lint_errors)) newer error(s) more than the previously known ${known_lint_errors} error(s)"
-    grep '<standard input>' kube-lint-results.txt | grep -v 'Kind=Pod' | grep -v 'Kind=ReplicaSet'
+    grep '<standard input>' kube-lint-results.txt
     exit_status=1
   fi
 
+  echo "Running static analysis: kube-score"
   rm -rf kube-score-results.txt
   kubectl api-resources --verbs=list --namespaced -o name \
   | xargs -n1 -I{} bash -c "kubectl get {} -n wavefront -oyaml && echo ---" \
   | ${REPO_ROOT}/bin/kube-score score - --output-format ci> kube-score-results.txt || true
 
-  # pods are just a duplicate of deployment and daemon sets. So removing them before calculating error count
-  local current_score_errors=$(grep '\[CRITICAL\]' kube-score-results.txt | grep -v 'v1/Pod' | wc -l)
+  local current_score_errors=$(grep '\[CRITICAL\]' kube-score-results.txt | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=6
+  local known_score_errors=12
   if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Found $(($current_score_errors-$known_score_errors)) newer error(s) more than the previously known ${known_score_errors} error(s)"
-    grep '\[CRITICAL\]' kube-score-results.txt | grep -v 'v1/Pod'
+    grep '\[CRITICAL\]' kube-score-results.txt
     exit_status=1
   fi
-  exit "${exit_status:-0}"
+
+  if [[ $exit_status -ne 0 ]]; then
+    exit $exitcode
+  fi
 }
 
 function main() {
