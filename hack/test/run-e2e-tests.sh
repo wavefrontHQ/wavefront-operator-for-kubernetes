@@ -14,7 +14,6 @@ function print_usage_and_exit() {
 
 function run_test() {
   local type=$1
-  local need_to_run_static_analysis="${2:-false}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
 
   echo "Running $type CR"
@@ -31,44 +30,42 @@ function run_test() {
   echo "Running test-wavefront-metrics"
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-  if "$need_to_run_static_analysis"; then
-    run_static_analysis
-  fi;
+  run_static_analysis
 
   green "Success!"
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
 function run_static_analysis() {
+  local resources_yaml_file=$(mktemp)
+  kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n wavefront -o yaml \
+  | yq '.items[] | split_doc' - > "$resources_yaml_file"
+
   # Ideally we want to fail when a non-zero error count is identified. Until we get to a zero error count, use the known
   # error count to pass.
   echo "Running static analysis: kube-linter"
-  rm -rf kube-lint-results.txt
-  kubectl api-resources --verbs=list --namespaced -o name \
-  | xargs -n1 -I{} bash -c "kubectl get {} -n wavefront -oyaml && echo ---" \
-  | ${REPO_ROOT}/bin/kube-linter lint - 1>kube-lint-results.txt 2>&1 || true
+  local kube_lint_results_file=$(mktemp)
+  ${REPO_ROOT}/bin/kube-linter lint "$resources_yaml_file" --format json 1> "$kube_lint_results_file" 2>/dev/null || true
 
-  local current_lint_errors=$(grep '<standard input>' kube-lint-results.txt | wc -l)
+  local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=4
-  if [ $current_lint_errors -ne $known_lint_errors ]; then
+  local known_lint_errors=6
+  if [ $current_lint_errors -le $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
-    grep '<standard input>' kube-lint-results.txt
+    jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
     exit_status=1
   fi
 
   echo "Running static analysis: kube-score"
-  rm -rf kube-score-results.txt
-  kubectl api-resources --verbs=list --namespaced -o name \
-  | xargs -n1 -I{} bash -c "kubectl get {} -n wavefront -oyaml && echo ---" \
-  | ${REPO_ROOT}/bin/kube-score score - --output-format ci> kube-score-results.txt || true
+  local kube_score_results_file=$(mktemp)
+  ${REPO_ROOT}/bin/kube-score score "$resources_yaml_file" --output-format ci> "$kube_score_results_file" || true
 
-  local current_score_errors=$(grep '\[CRITICAL\]' kube-score-results.txt | wc -l)
+  local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=11
-  if [ $current_score_errors -ne $known_score_errors ]; then
+  local known_score_errors=14
+  if [ $current_score_errors -le $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
-    grep '\[CRITICAL\]' kube-score-results.txt
+    grep '\[CRITICAL\]' "$kube_score_results_file"
     exit_status=1
   fi
 
@@ -120,7 +117,7 @@ function main() {
 
   run_test "advanced-default-config"
 
-  run_test "basic" true
+  run_test "basic"
 }
 
 main "$@"
