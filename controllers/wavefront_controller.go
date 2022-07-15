@@ -385,6 +385,11 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		}
 	}
 
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable == false && len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) == 0 {
+		log.Log.Info(fmt.Sprintf("incorrect configuration: wavefront proxy is disabled but external proxy URL is not set: %+v", wavefront.Spec.DataExport))
+		panic("proxy disabled and no external URL")
+	}
+
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)

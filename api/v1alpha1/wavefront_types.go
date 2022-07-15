@@ -108,9 +108,8 @@ type DataCollection struct {
 }
 
 type WavefrontProxy struct {
-	// Enable is whether to enable the wavefront proxy. Defaults to true.
-	// +kubebuilder:default:=true
-	Enable bool `json:"enable,omitempty"`
+	// Enable is whether to enable the wavefront proxy.
+	Enable bool `json:"enable,required"`
 
 	// MetricPort is the primary port for Wavefront data format metrics. Defaults to 2878.
 	// +kubebuilder:default:=2878

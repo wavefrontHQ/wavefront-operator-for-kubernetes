@@ -263,9 +263,7 @@ spec:
                           on Wavefront data format (usually 50000)
                         type: integer
                       enable:
-                        default: true
                         description: Enable is whether to enable the wavefront proxy.
-                          Defaults to true.
                         type: boolean
                       histogram:
                         description: Histogram distribution configuration
@@ -413,6 +411,8 @@ spec:
                                 type: integer
                             type: object
                         type: object
+                    required:
+                    - enable
                     type: object
                 type: object
               wavefrontTokenSecret:
