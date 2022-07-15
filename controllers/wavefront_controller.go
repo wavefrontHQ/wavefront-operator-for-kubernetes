@@ -104,7 +104,8 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = r.readAndDeleteResources(r.FS)
+		err = withFSResources(r.FS, r.deleteKubernetesObjects)
+		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
 
@@ -182,16 +183,16 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 
 // Read, Create, Update and Delete Resources.
 func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
+	resources, err := readAndInterpolateResources(r.FS, spec)
+	if err != nil {
+		return err
+	}
+
 	controllerManagerUID, err := r.getControllerManagerUID()
 	if err != nil {
 		return err
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
-
-	resources, err := readAndInterpolateResources(r.FS, spec)
-	if err != nil {
-		return err
-	}
 
 	err = r.createKubernetesObjects(resources, spec)
 	if err != nil {
@@ -309,17 +310,13 @@ func resourceFiles(suffix string) ([]string, error) {
 	return files, err
 }
 
-func (r *WavefrontReconciler) readAndDeleteResources(FS fs.FS) error {
+func withFSResources(FS fs.FS, resourceHandler func(resources []string) error) error {
 	resources, err := readAndInterpolateResources(FS, wf.WavefrontSpec{})
 	if err != nil {
 		return err
 	}
 
-	err = r.deleteKubernetesObjects(resources)
-	if err != nil {
-		return err
-	}
-	return nil
+	return resourceHandler(resources)
 }
 
 func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error {
