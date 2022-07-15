@@ -64,6 +64,8 @@ const NodeCollectorName = "wavefront-node-collector"
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
 	client.Client
+
+	wavefront     *wf.Wavefront
 	Scheme        *runtime.Scheme
 	FS            fs.FS
 	DynamicClient dynamic.Interface
@@ -96,31 +98,32 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// TODO: write separate story shut down collector and proxy if Operator is being shut down?
 
-	wavefront := &wf.Wavefront{}
-	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
+	r.wavefront = &wf.Wavefront{}
+	err := r.Client.Get(ctx, req.NamespacedName, r.wavefront)
 	if err != nil && !errors.IsNotFound(err) {
 		log.Log.Error(err, "error getting wavefront operator crd")
 		return ctrl.Result{}, err
 	}
 
 	if errors.IsNotFound(err) {
-		err = r.readAndDeleteResources(r.FS)
+		err = withFSResources(r.FS, r.deleteKubernetesObjects)
+		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
 
-	err = r.preprocess(wavefront, ctx)
+	err = r.preprocess(r.wavefront, ctx)
 	if err != nil {
 		log.Log.Error(err, "error preprocessing Wavefront Spec")
 		return ctrl.Result{}, err
 	}
 
-	err = r.readAndCreateResources(wavefront.Spec)
+	err = r.readAndCreateResources()
 	if err != nil {
 		log.Log.Error(err, "error creating resources")
 		return ctrl.Result{}, err
 	}
 
-	err = r.reportHealthStatus(ctx, wavefront)
+	err = r.reportHealthStatus(ctx, r.wavefront)
 	if err != nil {
 		log.Log.Error(err, "error report health status")
 		return ctrl.Result{}, err
@@ -171,19 +174,19 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 }
 
 // Read, Create, Update and Delete Resources.
-func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
+func (r *WavefrontReconciler) readAndCreateResources() error {
+	resources, err := readAndInterpolateResources(r.FS, r.wavefront.Spec)
+	if err != nil {
+		return err
+	}
+
 	controllerManagerUID, err := r.getControllerManagerUID()
 	if err != nil {
 		return err
 	}
-	spec.ControllerManagerUID = string(controllerManagerUID)
+	r.wavefront.Spec.ControllerManagerUID = string(controllerManagerUID)
 
-	resources, err := readAndInterpolateResources(r.FS, spec)
-	if err != nil {
-		return err
-	}
-
-	err = r.createKubernetesObjects(resources, spec)
+	err = r.createKubernetesObjects(resources, r.wavefront.Spec)
 	if err != nil {
 		return err
 	}
@@ -299,17 +302,13 @@ func resourceFiles(suffix string) ([]string, error) {
 	return files, err
 }
 
-func (r *WavefrontReconciler) readAndDeleteResources(FS fs.FS) error {
+func withFSResources(FS fs.FS, resourceHandler func(resources []string) error) error {
 	resources, err := readAndInterpolateResources(FS, wf.WavefrontSpec{})
 	if err != nil {
 		return err
 	}
 
-	err = r.deleteKubernetesObjects(resources)
-	if err != nil {
-		return err
-	}
-	return nil
+	return resourceHandler(resources)
 }
 
 func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error {
