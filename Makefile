@@ -206,7 +206,7 @@ nuke-kind:
 integration-test: kube-score kube-linter undeploy manifests build-kind deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
-integration-test-ci: undeploy deploy
+integration-test-ci: kube-score kube-linter undeploy deploy
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-cascade-delete-test: integration-test
