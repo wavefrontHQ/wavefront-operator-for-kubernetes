@@ -104,7 +104,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = withFSResources(r.FS, r.deleteKubernetesObjects)
+		err = withFSResources(r.FS, wavefront.Spec, r.deleteKubernetesObjects)spec wf.WavefrontSpec,
 		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
@@ -116,15 +116,14 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	validationError := validation.Validate(wavefront)
-
 	if validationError == nil {
-		err = r.readAndCreateResources(wavefront.Spec)
+		err = withFSResources(r.FS, wavefront.Spec, r.readAndCreateResources)
 		if err != nil {
 			log.Log.Error(err, "error creating resources")
 			return ctrl.Result{}, err
 		}
 	} else {
-		r.readAndDeleteResources()
+		err = withFSResources(r.FS, r.deleteKubernetesObjects)spec wf.WavefrontSpec,
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront, validationError)
@@ -181,13 +180,17 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 	return reconciler, nil
 }
 
-// Read, Create, Update and Delete Resources.
-func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) error {
-	resources, err := readAndInterpolateResources(r.FS, spec)
+func withFSResources(FS fs.FS, spec wf.WavefrontSpec, resourceHandler func(spec wf.WavefrontSpec, resources []string) error) error {
+	resources, err := readAndInterpolateResources(FS, spec)
 	if err != nil {
 		return err
 	}
 
+	return resourceHandler(spec, resources)
+}
+
+// Read, Create, Update and Delete Resources.
+func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec, resources []string) error {
 	controllerManagerUID, err := r.getControllerManagerUID()
 	if err != nil {
 		return err
@@ -310,16 +313,7 @@ func resourceFiles(suffix string) ([]string, error) {
 	return files, err
 }
 
-func withFSResources(FS fs.FS, resourceHandler func(resources []string) error) error {
-	resources, err := readAndInterpolateResources(FS, wf.WavefrontSpec{})
-	if err != nil {
-		return err
-	}
-
-	return resourceHandler(resources)
-}
-
-func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error {
+func (r *WavefrontReconciler) deleteKubernetesObjects(spec wf.WavefrontSpec, resources []string) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
