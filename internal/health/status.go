@@ -9,16 +9,15 @@ import (
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func ValidateOperatorConfig(wavefront *wf.Wavefront) (healthy bool, message string) {
+func ValidateOperatorConfig(wavefront *wf.Wavefront) (containsWarnings bool, message string) {
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable && len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
-		return false, "Warning: It is not valid to define an external proxy (externalWavefrontProxy.url) and enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster.\n"
+		return true, "\nWarning: It is not valid to define an external proxy (externalWavefrontProxy.url) and enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster."
 	}
-	return true, ""
+	return false, ""
 }
 
-func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (healthy bool, message string) {
+func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (warnings bool, healthy bool, message string) {
 	var componentHealth []bool
-	healthy, message = ValidateOperatorConfig(wavefront)
 	for name, deploymentStatus := range deploymentStatuses {
 		updateDeploymentStatus(appsV1, name, deploymentStatus)
 		componentHealth = append(componentHealth, deploymentStatus.Healthy)
@@ -29,8 +28,11 @@ func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatu
 		componentHealth = append(componentHealth, daemonSetStatus.Healthy)
 	}
 	healthy = boolCount(false, componentHealth...) == 0
-	message += fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
-	return healthy, message
+	message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
+
+	warnings, warningsMsg := ValidateOperatorConfig(wavefront)
+	message += warningsMsg
+	return warnings, healthy, message
 }
 
 func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {

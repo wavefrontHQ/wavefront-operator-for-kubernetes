@@ -474,7 +474,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
 	}
 
-	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
+	wavefront.Status.Warnings, wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
 
 	return r.Status().Update(ctx, wavefront)
 }
