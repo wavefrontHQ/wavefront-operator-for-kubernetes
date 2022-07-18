@@ -21,24 +21,41 @@ type KubernetesManager struct {
 func (km KubernetesManager) CreateOrUpdateFromYamls(yamls []string) error {
 	var dynamicClient dynamic.ResourceInterface
 
-	resource := yamls[0]
-	object := &unstructured.Unstructured{}
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-	if err != nil {
-		return err
-	}
+	for _, resource := range yamls {
+		object := &unstructured.Unstructured{}
+		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+		if err != nil {
+			return err
+		}
 
-	mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-	if err != nil {
-		return err
-	}
+		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		if err != nil {
+			return err
+		}
 
-	dynamicClient = km.DynamicClient.Resource(mapping.Resource)
+		if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+			dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(object.GetNamespace())
+		} else {
+			dynamicClient = km.DynamicClient.Resource(mapping.Resource)
+		}
 
-	_, err = dynamicClient.Create(context.TODO(), &unstructured.Unstructured{}, v1.CreateOptions{})
-	if err != nil {
-		return err
+		_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
+		if err != nil && errors.IsNotFound(err) {
+			_, err = dynamicClient.Create(context.TODO(), object, v1.CreateOptions{})
+			if err != nil {
+				return err
+			}
+		} else if err == nil {
+			data, err := json.Marshal(object)
+			if err != nil {
+				return err
+			}
+			_, err = dynamicClient.Patch(context.TODO(), object.GetName(), types.MergePatchType, data, v1.PatchOptions{})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
