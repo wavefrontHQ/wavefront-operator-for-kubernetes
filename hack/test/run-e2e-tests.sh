@@ -50,7 +50,7 @@ function run_static_analysis() {
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
   local known_lint_errors=6
-  if [ $current_lint_errors -le $known_lint_errors ]; then
+  if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
     jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
     exit_status=1
@@ -63,7 +63,7 @@ function run_static_analysis() {
   local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
   local known_score_errors=14
-  if [ $current_score_errors -le $known_score_errors ]; then
+  if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' "$kube_score_results_file"
     exit_status=1
