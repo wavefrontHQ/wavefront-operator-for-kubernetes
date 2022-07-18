@@ -38,11 +38,8 @@ import (
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/discovery"
@@ -70,11 +67,6 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager KubernetesManager
-}
-
-type KubernetesManager struct {
-	RestMapper    meta.RESTMapper
-	DynamicClient dynamic.Interface
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -110,7 +102,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = withFSResources(r.FS, r.wavefront.Spec, r.KubernetesManager.deleteKubernetesObjects)
+		err = withFSResources(r.FS, r.wavefront.Spec, r.KubernetesManager.deleteObjects)
 		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
@@ -196,7 +188,7 @@ func (r *WavefrontReconciler) readAndCreateResources(resources []string) error {
 	}
 	r.wavefront.Spec.ControllerManagerUID = string(controllerManagerUID)
 
-	err = r.KubernetesManager.createKubernetesObjects(resources, r.wavefront.Spec)
+	err = r.KubernetesManager.createObjects(resources, r.wavefront.Spec)
 	if err != nil {
 		return err
 	}
@@ -226,66 +218,6 @@ func readAndInterpolateResources(FS fs.FS, spec wf.WavefrontSpec) ([]string, err
 	return resources, nil
 }
 
-func (km KubernetesManager) createKubernetesObjects(resources []string, wavefrontSpec wf.WavefrontSpec) error {
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	for _, resource := range resources {
-		object := &unstructured.Unstructured{}
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-		if err != nil {
-			return err
-		}
-
-		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-		if err != nil {
-			return err
-		}
-
-		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
-			continue
-		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
-			continue
-		}
-		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
-			continue
-		}
-
-		err = km.createResources(mapping, object)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (km KubernetesManager) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
-	var dynamicClient dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
-	} else {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
-	}
-
-	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		_, err = dynamicClient.Create(context.TODO(), obj, v1.CreateOptions{})
-		if err != nil {
-			return err
-		}
-	} else if err == nil {
-		data, err := json.Marshal(obj)
-		if err != nil {
-			return err
-		}
-		_, err = dynamicClient.Patch(context.TODO(), obj.GetName(), types.MergePatchType, data, v1.PatchOptions{})
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
@@ -310,45 +242,6 @@ func resourceFiles(suffix string) ([]string, error) {
 	)
 
 	return files, err
-}
-
-func (km KubernetesManager) deleteKubernetesObjects(resources []string) error {
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	for _, resource := range resources {
-		object := &unstructured.Unstructured{}
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-		if err != nil {
-			return err
-		}
-
-		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-		if err != nil {
-			return err
-		}
-
-		err = km.deleteResources(mapping, object)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (km KubernetesManager) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
-	var dynamicClient dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
-	} else {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
-	}
-	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
 }
 
 func newTemplate(resourceFile string) *template.Template {
