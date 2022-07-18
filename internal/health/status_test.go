@@ -274,10 +274,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		warnings, healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{
-			Spec:       wf.WavefrontSpec{
-				DataExport:           wf.DataExport{
+			Spec: wf.WavefrontSpec{
+				DataExport: wf.DataExport{
 					ExternalWavefrontProxy: wf.ExternalWavefrontProxy{Url: "testURL"},
-					WavefrontProxy: wf.WavefrontProxy{Enable: true},
+					WavefrontProxy:         wf.WavefrontProxy{Enable: true},
 				},
 			},
 		})
