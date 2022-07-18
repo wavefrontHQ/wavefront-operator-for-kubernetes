@@ -726,8 +726,10 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		Client:        apiClient,
 		Scheme:        nil,
 		FS:            os.DirFS(controllers.DeployDir),
-		DynamicClient: dynamicClient,
-		RestMapper:    apiClient.RESTMapper(),
+		KubernetesManager: controllers.KubernetesManager{
+			RestMapper:    apiClient.RESTMapper(),
+			DynamicClient: dynamicClient,
+		},
 		Appsv1:        fakesAppsV1,
 	}
 

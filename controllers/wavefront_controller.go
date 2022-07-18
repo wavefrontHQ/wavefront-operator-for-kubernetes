@@ -65,11 +65,16 @@ const DeployDir = "../deploy/internal"
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
 	client.Client
-	Scheme        *runtime.Scheme
-	FS            fs.FS
-	DynamicClient dynamic.Interface
+
+	Scheme            *runtime.Scheme
+	FS                fs.FS
+	Appsv1            typedappsv1.AppsV1Interface
+	KubernetesManager KubernetesManager
+}
+
+type KubernetesManager struct {
 	RestMapper    meta.RESTMapper
-	Appsv1        typedappsv1.AppsV1Interface
+	DynamicClient dynamic.Interface
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -104,7 +109,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = withFSResources(r.FS, wavefront.Spec, r.deleteKubernetesObjects)spec wf.WavefrontSpec,
+		err = withFSResources(r.FS, wavefront.Spec, r.deleteKubernetesObjects)
 		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
@@ -123,7 +128,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, err
 		}
 	} else {
-		err = withFSResources(r.FS, r.deleteKubernetesObjects)spec wf.WavefrontSpec,
+		err = withFSResources(r.FS, r.deleteKubernetesObjects)
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront, validationError)
@@ -172,9 +177,11 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 		Client:        client,
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
-		DynamicClient: dynamicClient,
-		RestMapper:    mapper,
 		Appsv1:        clientSet.AppsV1(),
+		KubernetesManager: KubernetesManager{
+			RestMapper:    mapper,
+			DynamicClient: dynamicClient,
+		},
 	}
 
 	return reconciler, nil
@@ -236,7 +243,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 			return err
 		}
 
-		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		mapping, err := r.KubernetesManager.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return err
 		}
@@ -263,9 +270,9 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
 	} else {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource)
+		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource)
 	}
 
 	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
@@ -322,7 +329,7 @@ func (r *WavefrontReconciler) deleteKubernetesObjects(spec wf.WavefrontSpec, res
 			return err
 		}
 
-		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		mapping, err := r.KubernetesManager.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return err
 		}
@@ -338,9 +345,9 @@ func (r *WavefrontReconciler) deleteKubernetesObjects(spec wf.WavefrontSpec, res
 func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
 	} else {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource)
+		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource)
 	}
 	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
