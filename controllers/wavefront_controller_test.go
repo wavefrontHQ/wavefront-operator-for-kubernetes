@@ -33,31 +33,6 @@ import (
 )
 
 func TestKubernetesManager(t *testing.T) {
-	fakeBasicProxyYaml := `
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app.kubernetes.io/name: wavefront
-    app.kubernetes.io/component: proxy
-  name: wavefront-proxy
-  namespace: wavefront
-  ownerReferences:
-  - apiVersion: apps/v1
-    kind: Deployment
-    name: wavefront-controller-manager
-    uid: fake-controller-manager-uid
-spec:
-  ports:
-  - name: wavefront
-    port: 2878
-    protocol: TCP
-  selector:
-    app.kubernetes.io/name: wavefront
-    app.kubernetes.io/component: proxy
-  type: ClusterIP
-`
-
 	t.Run("creates or updates kubernetes objects with resource yaml strings", func(t *testing.T) {
 		fakeServiceYaml := `
 apiVersion: v1
@@ -115,14 +90,39 @@ spec:
 	})
 
 	t.Run("deletes multiple kubernetes objects with resource yaml strings if they exist", func(t *testing.T) {
-		namespace := "wavefront"
-
-		fakeNodeCollectorYaml := `
-
+		fakeServiceYaml := `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: fake-app-kubernetes-name
+  name: fake-name
+  namespace: fake-namespace
+spec:
+  type: ClusterIP
 `
+		fakeMissingDeploymentYaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: fake-app-kubernetes-component
+  name: fake-name
+  namespace: fake-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: fake-app-kubernetes-component
+`
+//		fakeDaemonsetYaml := `
+//
+//`
+
 		fakeYamls := []string{
-			fakeBasicProxyYaml,
-			fakeNodeCollectorYaml,
+			fakeServiceYaml,
+			fakeMissingDeploymentYaml,
+			//fakeDaemonsetYaml,
 		}
 
 		testRestMapper := meta.NewDefaultRESTMapper(
@@ -134,6 +134,11 @@ spec:
 			Group:   "",
 			Version: "v1",
 			Kind:    "Service",
+		}, meta.RESTScopeNamespace)
+		testRestMapper.Add(schema.GroupVersionKind{
+			Group:   "",
+			Version: "v1",
+			Kind:    "Deployment",
 		}, meta.RESTScopeNamespace)
 
 		clientBuilder := fake.NewClientBuilder()
@@ -147,11 +152,10 @@ spec:
 			"apiVersion": "v1",
 			"kind":       "Service",
 			"metadata": map[string]interface{}{
-				"name":      controllers.ProxyName,
-				"namespace": namespace,
+				"name":      "fake-name",
+				"namespace": "fake-namespace",
 				"labels": map[string]interface{}{
-					"app.kubernetes.io/name":      "wavefront",
-					"app.kubernetes.io/component": "proxy",
+					"app.kubernetes.io/name":      "fake-app-kubernetes-name",
 				},
 			},
 			"spec": map[string]interface{}{
@@ -166,7 +170,7 @@ spec:
 		err := km.DeleteResources(fakeYamls)
 
 		assert.NoError(t, err)
-		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
+		//assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "services"), "delete Service")
 	})
 }
