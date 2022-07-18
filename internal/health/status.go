@@ -9,7 +9,10 @@ import (
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func ValidateOperatorConfig(wavefront) (healthy bool, message string) {
+func ValidateOperatorConfig(wavefront *wf.Wavefront) (healthy bool, message string) {
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable && len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
+		return false, "Warning: It is not valid to define an external proxy (externalWavefrontProxy.url) and enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster.\n"
+	}
 	return true, ""
 }
 
@@ -25,8 +28,8 @@ func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatu
 		updateDaemonSetStatus(appsV1, name, daemonSetStatus)
 		componentHealth = append(componentHealth, daemonSetStatus.Healthy)
 	}
-	healthy = healthy || boolCount(false, componentHealth...) == 0
-	message = message + "\n" + fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
+	healthy = boolCount(false, componentHealth...) == 0
+	message += fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
 	return healthy, message
 }
 
