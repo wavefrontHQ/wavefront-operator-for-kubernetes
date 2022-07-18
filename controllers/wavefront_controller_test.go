@@ -62,6 +62,7 @@ spec:
 `
 		fakeYamls := []string{
 			fakeProxyYaml,
+			fakeProxyYaml, // duplicated to cause a patch
 		}
 
 		testRestMapper := meta.NewDefaultRESTMapper(
@@ -90,9 +91,9 @@ spec:
 		err := km.CreateOrUpdateFromYamls(fakeYamls)
 		assert.NoError(t, err)
 
-		//expectedObj := &unstructured.Unstructured{}
-
+		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "create", "services"), "create Service")
+		assert.True(t, hasAction(fakeDynamicClient, "patch", "services"), "patch Service")
 	})
 }
 
