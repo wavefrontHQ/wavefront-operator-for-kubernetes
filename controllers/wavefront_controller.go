@@ -110,7 +110,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = withFSResources(r.FS, r.wavefront.Spec, r.deleteKubernetesObjects)
+		err = withFSResources(r.FS, r.wavefront.Spec, r.KubernetesManager.deleteKubernetesObjects)
 		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
@@ -196,7 +196,7 @@ func (r *WavefrontReconciler) readAndCreateResources(resources []string) error {
 	}
 	r.wavefront.Spec.ControllerManagerUID = string(controllerManagerUID)
 
-	err = r.createKubernetesObjects(resources, r.wavefront.Spec)
+	err = r.KubernetesManager.createKubernetesObjects(resources, r.wavefront.Spec)
 	if err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func readAndInterpolateResources(FS fs.FS, spec wf.WavefrontSpec) ([]string, err
 	return resources, nil
 }
 
-func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefrontSpec wf.WavefrontSpec) error {
+func (km KubernetesManager) createKubernetesObjects(resources []string, wavefrontSpec wf.WavefrontSpec) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
@@ -235,7 +235,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 			return err
 		}
 
-		mapping, err := r.KubernetesManager.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return err
 		}
@@ -251,7 +251,7 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 			continue
 		}
 
-		err = r.createResources(mapping, object)
+		err = km.createResources(mapping, object)
 		if err != nil {
 			return err
 		}
@@ -259,12 +259,12 @@ func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefr
 	return nil
 }
 
-func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
+func (km KubernetesManager) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
 	} else {
-		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource)
+		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
 	}
 
 	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
@@ -312,7 +312,7 @@ func resourceFiles(suffix string) ([]string, error) {
 	return files, err
 }
 
-func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error {
+func (km KubernetesManager) deleteKubernetesObjects(resources []string) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
 		object := &unstructured.Unstructured{}
@@ -321,12 +321,12 @@ func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error 
 			return err
 		}
 
-		mapping, err := r.KubernetesManager.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return err
 		}
 
-		err = r.deleteResources(mapping, object)
+		err = km.deleteResources(mapping, object)
 		if err != nil {
 			return err
 		}
@@ -334,12 +334,12 @@ func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error 
 	return nil
 }
 
-func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
+func (km KubernetesManager) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
 	var dynamicClient dynamic.ResourceInterface
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
 	} else {
-		dynamicClient = r.KubernetesManager.DynamicClient.Resource(mapping.Resource)
+		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
 	}
 	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {
