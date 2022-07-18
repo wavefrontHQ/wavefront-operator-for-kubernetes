@@ -14,6 +14,7 @@ function print_usage_and_exit() {
 
 function run_test() {
   local type=$1
+  local should_run_static_analysis="${2:-false}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
 
   echo "Running $type CR"
@@ -27,10 +28,12 @@ function run_test() {
 
   wait_for_cluster_ready
 
+  if "$should_run_static_analysis"; then
+    run_static_analysis
+  fi;
+
   echo "Running test-wavefront-metrics"
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
-
-  run_static_analysis
 
   green "Success!"
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
@@ -38,6 +41,7 @@ function run_test() {
 
 function run_static_analysis() {
   local resources_yaml_file=$(mktemp)
+  local exit_status=0
   kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n wavefront -o yaml \
   | yq '.items[] | split_doc' - > "$resources_yaml_file"
 
@@ -49,8 +53,8 @@ function run_static_analysis() {
 
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=6
-  if [ $current_lint_errors -le $known_lint_errors ]; then
+  local known_lint_errors=7
+  if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
     jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
     exit_status=1
@@ -63,14 +67,14 @@ function run_static_analysis() {
   local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
   local known_score_errors=14
-  if [ $current_score_errors -le $known_score_errors ]; then
+  if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' "$kube_score_results_file"
     exit_status=1
   fi
 
   if [[ $exit_status -ne 0 ]]; then
-    exit $exitcode
+    exit $exit_status
   fi
 }
 
@@ -117,7 +121,7 @@ function main() {
 
   run_test "advanced-default-config"
 
-  run_test "basic"
+  run_test "basic" true
 }
 
 main "$@"
