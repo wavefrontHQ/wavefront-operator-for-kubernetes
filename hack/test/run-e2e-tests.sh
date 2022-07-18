@@ -38,6 +38,7 @@ function run_test() {
 
 function run_static_analysis() {
   local resources_yaml_file=$(mktemp)
+  local exit_status=0
   kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n wavefront -o yaml \
   | yq '.items[] | split_doc' - > "$resources_yaml_file"
 
@@ -49,7 +50,7 @@ function run_static_analysis() {
 
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=6
+  local known_lint_errors=1
   if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
     jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
@@ -62,7 +63,7 @@ function run_static_analysis() {
 
   local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=14
+  local known_score_errors=16
   if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' "$kube_score_results_file"
@@ -70,7 +71,7 @@ function run_static_analysis() {
   fi
 
   if [[ $exit_status -ne 0 ]]; then
-    exit $exitcode
+    exit $exit_status
   fi
 }
 
