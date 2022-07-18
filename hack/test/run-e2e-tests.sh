@@ -28,12 +28,12 @@ function run_test() {
 
   wait_for_cluster_ready
 
-  echo "Running test-wavefront-metrics"
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
-
   if "$should_run_static_analysis"; then
     run_static_analysis
   fi;
+
+  echo "Running test-wavefront-metrics"
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
   green "Success!"
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
@@ -66,7 +66,7 @@ function run_static_analysis() {
 
   local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=16
+  local known_score_errors=14
   if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' "$kube_score_results_file"
