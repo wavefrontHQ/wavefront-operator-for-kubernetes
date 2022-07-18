@@ -17,7 +17,7 @@ type KubernetesManager struct {
 	DynamicClient dynamic.Interface
 }
 
-func (km KubernetesManager) CreateOrUpdateFromYamls(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
+func (km KubernetesManager) CreateOrUpdateResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
 	var dynamicClient dynamic.ResourceInterface
 
 	for _, resource := range resourceYamls {
@@ -62,6 +62,38 @@ func (km KubernetesManager) CreateOrUpdateFromYamls(resourceYamls []string, filt
 	}
 
 	return nil
+}
+
+func (km KubernetesManager) DeleteResources(resourceYamls []string) error {
+	resource := resourceYamls[0]
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+	object := &unstructured.Unstructured{}
+	_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+	if err != nil {
+		return err
+	}
+
+	mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	if err != nil {
+		return err
+	}
+
+	var dynamicClient dynamic.ResourceInterface
+	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(object.GetNamespace())
+	} else {
+		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
+	}
+
+	_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return dynamicClient.Delete(context.TODO(), object.GetName(), v1.DeleteOptions{})
 }
 
 func (km KubernetesManager) deleteObjects(resources []string) error {

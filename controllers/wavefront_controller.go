@@ -197,7 +197,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec, reso
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	err = r.KubernetesManager.CreateOrUpdateFromYamls(resources, filterDisabledAndConfigMap(spec))
+	err = r.KubernetesManager.CreateOrUpdateResources(resources, filterDisabledAndConfigMap(spec))
 	if err != nil {
 		return err
 	}

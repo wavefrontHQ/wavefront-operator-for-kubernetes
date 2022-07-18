@@ -35,8 +35,7 @@ import (
 )
 
 func TestKubernetesManager(t *testing.T) {
-	t.Run("creates kubernetes objects from resource yaml strings", func(t *testing.T) {
-		fakeProxyYaml := `
+	fakeBasicProxyYaml := `
 apiVersion: v1
 kind: Service
 metadata:
@@ -60,9 +59,28 @@ spec:
     app.kubernetes.io/component: proxy
   type: ClusterIP
 `
+
+	t.Run("creates or updates kubernetes objects with resource yaml strings", func(t *testing.T) {
+		fakeServiceYaml := `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: fake-app-kubernetes-name
+  name: fake-name
+  namespace: fake-namespace
+spec:
+  ports:
+  - name: fake-port-name
+    port: 1111
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: fake-app-kubernetes-name
+  type: ClusterIP
+`
 		fakeYamls := []string{
-			fakeProxyYaml,
-			fakeProxyYaml, // duplicated to cause a patch
+			fakeServiceYaml,
+			fakeServiceYaml, // duplicated to cause a patch
 		}
 
 		testRestMapper := meta.NewDefaultRESTMapper(
@@ -88,14 +106,70 @@ spec:
 			RestMapper:    fakeApiClient.RESTMapper(),
 			DynamicClient: fakeDynamicClient,
 		}
-		err := km.CreateOrUpdateFromYamls(fakeYamls, func(obj *unstructured.Unstructured) bool {
+		err := km.CreateOrUpdateResources(fakeYamls, func(obj *unstructured.Unstructured) bool {
 			return false
 		})
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "create", "services"), "create Service")
 		assert.True(t, hasAction(fakeDynamicClient, "patch", "services"), "patch Service")
+	})
+
+	t.Run("deletes multiple kubernetes objects with resource yaml strings if they exist", func(t *testing.T) {
+		namespace := "wavefront"
+
+		fakeNodeCollectorYaml := `
+
+`
+		fakeYamls := []string{
+			fakeBasicProxyYaml,
+			fakeNodeCollectorYaml,
+		}
+
+		testRestMapper := meta.NewDefaultRESTMapper(
+			[]schema.GroupVersion{
+				{Group: "apps", Version: "v1"},
+			},
+		)
+		testRestMapper.Add(schema.GroupVersionKind{
+			Group:   "",
+			Version: "v1",
+			Kind:    "Service",
+		}, meta.RESTScopeNamespace)
+
+		clientBuilder := fake.NewClientBuilder()
+		clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
+
+		fakeApiClient := clientBuilder.Build()
+
+		s := scheme.Scheme
+		fakeDynamicClient := dynamicfake.NewSimpleDynamicClient(s)
+		_ = fakeDynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Service",
+			"metadata": map[string]interface{}{
+				"name":      controllers.ProxyName,
+				"namespace": namespace,
+				"labels": map[string]interface{}{
+					"app.kubernetes.io/name":      "wavefront",
+					"app.kubernetes.io/component": "proxy",
+				},
+			},
+			"spec": map[string]interface{}{
+				"type": "ClusterIP",
+			},
+		}})
+
+		km := controllers.KubernetesManager{
+			RestMapper:    fakeApiClient.RESTMapper(),
+			DynamicClient: fakeDynamicClient,
+		}
+		err := km.DeleteResources(fakeYamls)
+
+		assert.NoError(t, err)
+		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
+		assert.True(t, hasAction(fakeDynamicClient, "delete", "services"), "delete Service")
 	})
 }
 
