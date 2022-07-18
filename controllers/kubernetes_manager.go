@@ -65,35 +65,40 @@ func (km KubernetesManager) CreateOrUpdateResources(resourceYamls []string, filt
 }
 
 func (km KubernetesManager) DeleteResources(resourceYamls []string) error {
-	resource := resourceYamls[0]
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	for _, resource := range resourceYamls {
+		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
-	object := &unstructured.Unstructured{}
-	_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-	if err != nil {
-		return err
-	}
+		object := &unstructured.Unstructured{}
+		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+		if err != nil {
+			return err
+		}
 
-	mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-	if err != nil {
-		return err
-	}
+		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		if err != nil {
+			return err
+		}
 
-	var dynamicClient dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(object.GetNamespace())
-	} else {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
-	}
+		var dynamicClient dynamic.ResourceInterface
+		if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+			dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(object.GetNamespace())
+		} else {
+			dynamicClient = km.DynamicClient.Resource(mapping.Resource)
+		}
 
-	_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		return nil
+		_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
+		if err != nil && errors.IsNotFound(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		err = dynamicClient.Delete(context.TODO(), object.GetName(), v1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
-	}
-	return dynamicClient.Delete(context.TODO(), object.GetName(), v1.DeleteOptions{})
+	return nil
 }
 
 func (km KubernetesManager) deleteObjects(resources []string) error {
