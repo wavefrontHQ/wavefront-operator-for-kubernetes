@@ -9,19 +9,24 @@ import (
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus) (healthy bool, message string) {
-	var componentHealth []bool
+func ValidateOperatorConfig(wavefront) (healthy bool, message string) {
+	return true, ""
+}
 
+func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (healthy bool, message string) {
+	var componentHealth []bool
+	healthy, message = ValidateOperatorConfig(wavefront)
 	for name, deploymentStatus := range deploymentStatuses {
 		updateDeploymentStatus(appsV1, name, deploymentStatus)
 		componentHealth = append(componentHealth, deploymentStatus.Healthy)
 	}
+
 	for name, daemonSetStatus := range daemonSetStatuses {
 		updateDaemonSetStatus(appsV1, name, daemonSetStatus)
 		componentHealth = append(componentHealth, daemonSetStatus.Healthy)
 	}
-	healthy = boolCount(false, componentHealth...) == 0
-	message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
+	healthy = healthy || boolCount(false, componentHealth...) == 0
+	message = message + "\n" + fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
 	return healthy, message
 }
 
