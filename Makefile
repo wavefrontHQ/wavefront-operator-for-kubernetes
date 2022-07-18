@@ -217,6 +217,8 @@ generate-kubernetes-yaml: manifests kustomize
 	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 
 #----- GKE -----#
+GCP_PROJECT?=wavefront-gcp-dev
+
 gke-connect-to-cluster: gke-cluster-name-check
 	gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --zone us-central1-c --project $(GCP_PROJECT)
 
