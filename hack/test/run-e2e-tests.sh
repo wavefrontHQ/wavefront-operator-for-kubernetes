@@ -50,7 +50,7 @@ function run_static_analysis() {
 
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=6
+  local known_lint_errors=7
   if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
     jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
