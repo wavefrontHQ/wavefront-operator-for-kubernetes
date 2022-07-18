@@ -86,7 +86,9 @@ spec:
 			RestMapper:    fakeApiClient.RESTMapper(),
 			DynamicClient: fakeDynamicClient,
 		}
-		err := km.CreateOrUpdateFromYamls(fakeYamls)
+		err := km.CreateOrUpdateFromYamls(fakeYamls, func(obj *unstructured.Unstructured) bool {
+			return false
+		})
 		assert.NoError(t, err)
 
 		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")

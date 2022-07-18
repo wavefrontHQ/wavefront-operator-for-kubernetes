@@ -22,6 +22,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/fs"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -188,7 +189,7 @@ func (r *WavefrontReconciler) readAndCreateResources(resources []string) error {
 	}
 	r.wavefront.Spec.ControllerManagerUID = string(controllerManagerUID)
 
-	err = r.KubernetesManager.createObjects(resources, r.wavefront.Spec)
+	err = r.KubernetesManager.CreateOrUpdateFromYamls(resources, filterDisabledAndConfigMap(r.wavefront.Spec))
 	if err != nil {
 		return err
 	}
@@ -371,3 +372,21 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	return r.Status().Update(ctx, wavefront)
 }
+
+func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
+	// TODO: we could make this function a list of functions but this is fine for now
+	return func(object *unstructured.Unstructured) bool {
+		objLabels := object.GetLabels()
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
+			return true
+		}
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
+			return true
+		}
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+			return true
+		}
+		return false
+	}
+}
+
