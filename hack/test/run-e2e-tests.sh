@@ -14,6 +14,7 @@ function print_usage_and_exit() {
 
 function run_test() {
   local type=$1
+  local should_run_static_analysis="${2:-false}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
 
   echo "Running $type CR"
@@ -30,7 +31,9 @@ function run_test() {
   echo "Running test-wavefront-metrics"
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-  run_static_analysis
+  if "$should_run_static_analysis"; then
+    run_static_analysis
+  fi;
 
   green "Success!"
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
@@ -118,7 +121,7 @@ function main() {
 
   run_test "advanced-default-config"
 
-  run_test "basic"
+  run_test "basic" true
 }
 
 main "$@"
