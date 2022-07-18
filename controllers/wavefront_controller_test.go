@@ -32,6 +32,68 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+func TestKubernetesManager(t *testing.T) {
+	t.Run("creates kubernetes objects from resource yaml strings", func(t *testing.T) {
+		fakeProxyYaml := `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: proxy
+  name: wavefront-proxy
+  namespace: wavefront
+  ownerReferences:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: wavefront-controller-manager
+    uid: fake-controller-manager-uid
+spec:
+  ports:
+  - name: wavefront
+    port: 2878
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: proxy
+  type: ClusterIP
+`
+		fakeYamls := []string{
+			fakeProxyYaml,
+		}
+
+		testRestMapper := meta.NewDefaultRESTMapper(
+			[]schema.GroupVersion{
+				{Group: "apps", Version: "v1"},
+			},
+		)
+		testRestMapper.Add(schema.GroupVersionKind{
+			Group:   "",
+			Version: "v1",
+			Kind:    "Service",
+		}, meta.RESTScopeNamespace)
+
+		clientBuilder := fake.NewClientBuilder()
+		clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
+
+		fakeApiClient := clientBuilder.Build()
+
+		s := scheme.Scheme
+		fakeDynamicClient := dynamicfake.NewSimpleDynamicClient(s)
+
+		km := controllers.KubernetesManager{
+			RestMapper:    fakeApiClient.RESTMapper(),
+			DynamicClient: fakeDynamicClient,
+		}
+		err := km.CreateOrUpdateFromYamls(fakeYamls)
+		assert.NoError(t, err)
+
+		//expectedObj := &unstructured.Unstructured{}
+
+		assert.True(t, hasAction(fakeDynamicClient, "create", "services"), "create Service")
+	})
+}
+
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
@@ -704,14 +766,14 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
-		Client:        apiClient,
-		Scheme:        nil,
-		FS:            os.DirFS(controllers.DeployDir),
+		Client: apiClient,
+		Scheme: nil,
+		FS:     os.DirFS(controllers.DeployDir),
 		KubernetesManager: controllers.KubernetesManager{
 			RestMapper:    apiClient.RESTMapper(),
 			DynamicClient: dynamicClient,
 		},
-		Appsv1:        fakesAppsV1,
+		Appsv1: fakesAppsV1,
 	}
 
 	return r, wfCR, apiClient, dynamicClient, fakesAppsV1

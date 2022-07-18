@@ -18,6 +18,32 @@ type KubernetesManager struct {
 	DynamicClient dynamic.Interface
 }
 
+func (km KubernetesManager) CreateOrUpdateFromYamls(yamls []string) error {
+	var dynamicClient dynamic.ResourceInterface
+
+	resource := yamls[0]
+	object := &unstructured.Unstructured{}
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+	if err != nil {
+		return err
+	}
+
+	mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+	if err != nil {
+		return err
+	}
+
+	dynamicClient = km.DynamicClient.Resource(mapping.Resource)
+
+	_, err = dynamicClient.Create(context.TODO(), &unstructured.Unstructured{}, v1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (km KubernetesManager) createObjects(resources []string, wavefrontSpec v1alpha1.WavefrontSpec) error {
 	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 	for _, resource := range resources {
