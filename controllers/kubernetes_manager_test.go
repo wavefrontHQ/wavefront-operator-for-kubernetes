@@ -59,7 +59,7 @@ spec:
 			RestMapper:    fakeApiClient.RESTMapper(),
 			DynamicClient: fakeDynamicClient,
 		}
-		err := km.CreateOrUpdateResources(fakeYamls, func(obj *unstructured.Unstructured) bool {
+		err := km.ApplyResources(fakeYamls, func(obj *unstructured.Unstructured) bool {
 			return false
 		})
 
@@ -190,4 +190,3 @@ spec:
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "daemonsets"), "delete DaemonSet")
 	})
 }
-

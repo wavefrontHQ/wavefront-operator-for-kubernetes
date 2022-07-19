@@ -42,16 +42,15 @@ func TestReconcileAll(t *testing.T) {
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
-		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
-		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
-		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
 		assert.True(t, hasAction(dynamicClient, "create", "daemonsets"), "create DaemonSet")
-		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
+		// possible interfaces
+		assertApplied(t, "deployments", "wavefront-proxy")
+		getApplied("deployments", "wavefront-proxy")
+		assert.True(t, wasApplied("deployments", "wavefront-proxy"), "applied proxy") // possible way of testing
 
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)

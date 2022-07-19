@@ -68,7 +68,7 @@ func main() {
 	}
 
 	var controller *controllers.WavefrontReconciler
-	controller, err = controllers.NewWavefrontReconciler(mgr.GetClient(), mgr.GetScheme())
+	controller, err = controllers.NewWavefrontReconciler(mgr.GetClient(), mgr.GetScheme(), controllers.WithFSResources(os.DirFS(controllers.DeployDir)))
 	if err != nil {
 		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)

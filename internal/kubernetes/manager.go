@@ -17,7 +17,78 @@ type KubernetesManager struct {
 	DynamicClient dynamic.Interface
 }
 
-func (km KubernetesManager) CreateOrUpdateResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
+type ResourceAction func(resources []*unstructured.Unstructured) error
+
+type Filter func(resource *unstructured.Unstructured) bool
+
+type Transformer func(resources []*unstructured.Unstructured) []*unstructured.Unstructured
+
+func FilterResources(filter Filter, resources []*unstructured.Unstructured) []*unstructured.Unstructured {
+	var filtered []*unstructured.Unstructured
+	for _, resource := range resources {
+		if !filter(resource) {
+			filtered = append(filtered, resource)
+		}
+	}
+	return resources
+}
+
+func ParseResources(resourceYAMLs []string) ([]*unstructured.Unstructured, error) {
+	var resources []*unstructured.Unstructured
+	for _, resourceYAML := range resourceYAMLs {
+		resource := &unstructured.Unstructured{}
+		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		_, _, err := resourceDecoder.Decode([]byte(resourceYAML), nil, resource)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}
+
+// Responsibilities
+// 1. Endpoint discovery (RESTMapping)
+// 2. Create or Update based on existence
+func ApplyResources(restMapper meta.RESTMapper, dynamicClient dynamic.Interface) ResourceAction {
+	return func(resourceYAMLs []*unstructured.Unstructured) error {
+		var dynamicResourceClient dynamic.ResourceInterface
+		for _, resource := range resourceYAMLs {
+			gvk := resource.GroupVersionKind()
+			mapping, err := restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+			if err != nil {
+				return err
+			}
+
+			if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+				dynamicResourceClient = dynamicClient.Resource(mapping.Resource).Namespace(resource.GetNamespace())
+			} else {
+				dynamicResourceClient = dynamicClient.Resource(mapping.Resource)
+			}
+
+			_, err = dynamicResourceClient.Get(context.TODO(), resource.GetName(), v1.GetOptions{})
+			if err != nil && errors.IsNotFound(err) {
+				_, err = dynamicResourceClient.Create(context.TODO(), resource, v1.CreateOptions{})
+				if err != nil {
+					return err
+				}
+			} else if err == nil {
+				data, err := json.Marshal(resource)
+				if err != nil {
+					return err
+				}
+				_, err = dynamicResourceClient.Patch(context.TODO(), resource.GetName(), types.MergePatchType, data, v1.PatchOptions{})
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
+func (km KubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
 	var dynamicClient dynamic.ResourceInterface
 
 	for _, resource := range resourceYamls {
