@@ -25,6 +25,9 @@ spec:
     - jsonPath: .status.healthy
       name: healthy
       type: boolean
+    - jsonPath: .status.warnings
+      name: warnings
+      type: boolean
     - jsonPath: .status.proxy.status
       name: proxy
       type: string
@@ -64,6 +67,16 @@ spec:
                     description: Metrics has resource configuration for node- and cluster-deployed collectors
                     properties:
                       clusterCollector:
+                        default:
+                          resources:
+                            limits:
+                              cpu: 400m
+                              ephemeral-storage: 1Gi
+                              memory: 512Mi
+                            requests:
+                              cpu: 200m
+                              ephemeral-storage: 20Mi
+                              memory: 10Mi
                         description: ClusterCollector is for resource configuration for the cluster collector.
                         properties:
                           resources:
@@ -76,6 +89,10 @@ spec:
                                     description: CPU is for specifying CPU requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
@@ -86,6 +103,10 @@ spec:
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
@@ -156,6 +177,16 @@ spec:
                             type: array
                         type: object
                       nodeCollector:
+                        default:
+                          resources:
+                            limits:
+                              cpu: 200m
+                              ephemeral-storage: 512Mi
+                              memory: 256Mi
+                            requests:
+                              cpu: 200m
+                              ephemeral-storage: 20Mi
+                              memory: 10Mi
                         description: NodeCollector is for resource configuration for the node collector.
                         properties:
                           resources:
@@ -168,6 +199,10 @@ spec:
                                     description: CPU is for specifying CPU requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
                                   memory:
                                     description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
@@ -178,6 +213,10 @@ spec:
                                 properties:
                                   cpu:
                                     description: CPU is for specifying CPU requirements
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    type: string
+                                  ephemeral-storage:
+                                    description: Memory is for specifying Memory requirements
                                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                     type: string
                                   memory:
@@ -256,9 +295,11 @@ spec:
                         default:
                           limits:
                             cpu: 1000m
+                            ephemeral-storage: 8Gi
                             memory: 4Gi
                           requests:
                             cpu: 100m
+                            ephemeral-storage: 2Gi
                             memory: 1Gi
                         description: Resources Compute resources required by the Proxy containers.
                         properties:
@@ -267,6 +308,10 @@ spec:
                             properties:
                               cpu:
                                 description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 type: string
                               memory:
@@ -279,6 +324,10 @@ spec:
                             properties:
                               cpu:
                                 description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 type: string
                               memory:
@@ -442,6 +491,9 @@ spec:
                 required:
                 - healthy
                 type: object
+              warnings:
+                description: Warnings whether the custom resource spec has validation warnings
+                type: boolean
             required:
             - healthy
             type: object
@@ -721,8 +773,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta
-        imagePullPolicy: Always
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta-1
         livenessProbe:
           httpGet:
             path: /healthz
@@ -739,14 +790,18 @@ spec:
         resources:
           limits:
             cpu: 500m
+            ephemeral-storage: 256Mi
             memory: 128Mi
           requests:
             cpu: 10m
+            ephemeral-storage: 128Mi
             memory: 64Mi
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
       securityContext:
+        runAsGroup: 65534
         runAsNonRoot: true
+        runAsUser: 65534
       serviceAccountName: wavefront-controller-manager
       terminationGracePeriodSeconds: 10

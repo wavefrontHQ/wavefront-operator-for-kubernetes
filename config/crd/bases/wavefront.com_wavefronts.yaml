@@ -19,6 +19,9 @@ spec:
     - jsonPath: .status.healthy
       name: healthy
       type: boolean
+    - jsonPath: .status.warnings
+      name: warnings
+      type: boolean
     - jsonPath: .status.proxy.status
       name: proxy
       type: string
@@ -536,6 +539,10 @@ spec:
                 required:
                 - healthy
                 type: object
+              warnings:
+                description: Warnings whether the custom resource spec has validation
+                  warnings
+                type: boolean
             required:
             - healthy
             type: object
