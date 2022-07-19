@@ -21,6 +21,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"io/fs"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"net/url"
@@ -67,7 +68,7 @@ type WavefrontReconciler struct {
 	Scheme            *runtime.Scheme
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
-	KubernetesManager KubernetesManager
+	KubernetesManager manager.KubernetesManager
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -103,7 +104,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = withFSResources(r.FS, r.wavefront.Spec, r.KubernetesManager.deleteObjects)
+		err = withFSResources(r.FS, r.wavefront.Spec, r.KubernetesManager.DeleteResources)
 		//err = r.readAndDeleteResources(r.FS)
 		return ctrl.Result{}, nil
 	}
@@ -163,7 +164,7 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 		Scheme:        scheme,
 		FS:            os.DirFS(DeployDir),
 		Appsv1:        clientSet.AppsV1(),
-		KubernetesManager: KubernetesManager{
+		KubernetesManager: manager.KubernetesManager{
 			RestMapper:    mapper,
 			DynamicClient: dynamicClient,
 		},

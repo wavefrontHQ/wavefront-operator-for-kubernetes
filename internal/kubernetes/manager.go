@@ -1,4 +1,4 @@
-package controllers
+package manager
 
 import (
 	"context"
@@ -99,8 +99,4 @@ func (km KubernetesManager) DeleteResources(resourceYamls []string) error {
 		}
 	}
 	return nil
-}
-
-func (km KubernetesManager) deleteObjects(resources []string) error {
-	return km.DeleteResources(resources)
 }
