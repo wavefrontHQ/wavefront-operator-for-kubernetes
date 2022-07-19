@@ -102,40 +102,5 @@ func (km KubernetesManager) DeleteResources(resourceYamls []string) error {
 }
 
 func (km KubernetesManager) deleteObjects(resources []string) error {
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	for _, resource := range resources {
-		object := &unstructured.Unstructured{}
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-		if err != nil {
-			return err
-		}
-
-		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-		if err != nil {
-			return err
-		}
-
-		err = km.deleteResources(mapping, object)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (km KubernetesManager) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
-	var dynamicClient dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
-	} else {
-		dynamicClient = km.DynamicClient.Resource(mapping.Resource)
-	}
-	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
+	return km.DeleteResources(resources)
 }
