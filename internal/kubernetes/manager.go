@@ -48,7 +48,7 @@ func ParseResources(resourceYAMLs []string) ([]*unstructured.Unstructured, error
 }
 
 // Responsibilities
-// 1. Endpoint discovery (RESTMapping)
+// 1. Client Construction (RESTMapping)
 // 2. Create or Update based on existence
 func ApplyResources(restMapper meta.RESTMapper, dynamicClient dynamic.Interface) ResourceAction {
 	return func(resourceYAMLs []*unstructured.Unstructured) error {
@@ -88,6 +88,11 @@ func ApplyResources(restMapper meta.RESTMapper, dynamicClient dynamic.Interface)
 	}
 }
 
+// Responsibilities
+// 1. Parsing
+// 2. Filtering
+// 3. Client Construction (RESTMapping)
+// 4. Create or Update based on existence
 func (km KubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
 	var dynamicClient dynamic.ResourceInterface
 
