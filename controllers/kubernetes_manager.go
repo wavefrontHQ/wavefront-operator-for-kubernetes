@@ -88,7 +88,7 @@ func (km KubernetesManager) DeleteResources(resourceYamls []string) error {
 
 		_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
 		if err != nil && errors.IsNotFound(err) {
-			return nil
+			continue
 		}
 		if err != nil {
 			return err

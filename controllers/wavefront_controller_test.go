@@ -105,24 +105,36 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app.kubernetes.io/component: fake-app-kubernetes-component
-  name: fake-name
-  namespace: fake-namespace
+ labels:
+   app.kubernetes.io/component: fake-app-kubernetes-component
+ name: fake-name
+ namespace: fake-namespace
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/component: fake-app-kubernetes-component
+ replicas: 1
+ selector:
+   matchLabels:
+     app.kubernetes.io/component: fake-app-kubernetes-component
 `
-//		fakeDaemonsetYaml := `
-//
-//`
+		fakeDaemonsetYaml := `
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ labels:
+   app.kubernetes.io/name: fake-app-kubernetes-name
+   app.kubernetes.io/component: fake-app-kubernetes-component
+ name: fake-daemonset-name
+ namespace: fake-namespace
+spec:
+ selector:
+   matchLabels:
+     app.kubernetes.io/name: fake-app-kubernetes-name
+     app.kubernetes.io/component: fake-app-kubernetes-component
+`
 
 		fakeYamls := []string{
 			fakeServiceYaml,
 			fakeMissingDeploymentYaml,
-			//fakeDaemonsetYaml,
+			fakeDaemonsetYaml,
 		}
 
 		testRestMapper := meta.NewDefaultRESTMapper(
@@ -136,9 +148,14 @@ spec:
 			Kind:    "Service",
 		}, meta.RESTScopeNamespace)
 		testRestMapper.Add(schema.GroupVersionKind{
-			Group:   "",
+			Group:   "apps",
 			Version: "v1",
 			Kind:    "Deployment",
+		}, meta.RESTScopeNamespace)
+		testRestMapper.Add(schema.GroupVersionKind{
+			Group:   "apps",
+			Version: "v1",
+			Kind:    "DaemonSet",
 		}, meta.RESTScopeNamespace)
 
 		clientBuilder := fake.NewClientBuilder()
@@ -162,6 +179,18 @@ spec:
 				"type": "ClusterIP",
 			},
 		}})
+		_ = fakeDynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "DaemonSet",
+			"metadata": map[string]interface{}{
+				"name":      "fake-daemonset-name",
+				"namespace": "fake-namespace",
+				"labels": map[string]interface{}{
+					"app.kubernetes.io/name":      "fake-app-kubernetes-name",
+					"app.kubernetes.io/component": "fake-app-kubernetes-component",
+				},
+			},
+		}})
 
 		km := controllers.KubernetesManager{
 			RestMapper:    fakeApiClient.RESTMapper(),
@@ -170,8 +199,15 @@ spec:
 		err := km.DeleteResources(fakeYamls)
 
 		assert.NoError(t, err)
-		//assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
+		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "services"), "delete Service")
+		assert.True(t, hasAction(fakeDynamicClient, "get", "deployments"), "get Deployment")
+
+		// Notice the 'False'; deployment didn't exist
+		assert.False(t, hasAction(fakeDynamicClient, "delete", "deployments"), "delete Deployment")
+
+		assert.True(t, hasAction(fakeDynamicClient, "get", "daemonsets"), "get DaemonSet")
+		assert.True(t, hasAction(fakeDynamicClient, "delete", "daemonsets"), "delete DaemonSet")
 	})
 }
 
