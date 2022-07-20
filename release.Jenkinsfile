@@ -9,6 +9,7 @@ pipeline {
     RELEASE_TYPE = 'release'
     RC_NUMBER = "1"
     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
+    COLLECTOR_VERSION = "${params.COLLECTOR_VERSION}"
     GIT_BRANCH = getCurrentBranchName()
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
     TOKEN = credentials('GITHUB_TOKEN')
@@ -29,20 +30,23 @@ pipeline {
           sh 'git config --global user.email "svc.wf-jenkins@vmware.com"'
           sh 'git config --global user.name "svc.wf-jenkins"'
           sh 'git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
-          sh './hack/jenkins/create-bump-version-branch.sh "${BUMP_COMPONENT}"'
+          sh './hack/jenkins/create-bump-version-branch.sh -s "${BUMP_COMPONENT}" -c "${COLLECTOR_VERSION}"'
         }
       }
     }
     stage("Publish RC Release") {
       environment {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
-        PREFIX = 'projects.registry.vmware.com/tanzu_observability'
-        DOCKER_IMAGE = 'kubernetes-collector'
-        RELEASE_TYPE = 'rc'
+        PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
+        DOCKER_IMAGE = 'kubernetes-operator-snapshot'
       }
       steps {
+        script {
+          env.READ_VERSION = readFile('./release/OPERATOR_VERSION').trim()
+          env.VERSION = "${env.READ_VERSION}-rc-1"
+        }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-        sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make publish'
+        sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
       }
     }
     // deploy to GKE and run manual tests
@@ -53,13 +57,11 @@ pipeline {
         GKE_CLUSTER_NAME = "k8po-jenkins-rc-testing"
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
         WF_CLUSTER = 'nimba'
-        RELEASE_TYPE = 'rc'
       }
       steps {
         script {
-          env.VERSION = readFile('./release/VERSION').trim()
-          env.CURRENT_VERSION = "${env.VERSION}-rc-${env.RC_NUMBER}"
-          env.CONFIG_CLUSTER_NAME = "jenkins-${env.CURRENT_VERSION}-test"
+          env.READ_VERSION = readFile('./release/VERSION').trim()
+          env.VERSION = "${env.READ_VERSION}-rc-1"
         }
         withCredentials([string(credentialsId: 'nimba-wavefront-token', variable: 'WAVEFRONT_TOKEN')]) {
           withEnv(["PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
@@ -74,51 +76,18 @@ pipeline {
     stage("Publish GA Harbor Image") {
       environment {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
-        RELEASE_TYPE = 'release'
-        PREFIX = 'projects.registry.vmware.com/tanzu_observability'
-        DOCKER_IMAGE = 'kubernetes-collector'
-      }
-      steps {
-        sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-        sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make publish'
-      }
-    }
-    stage("Publish GA Docker Hub") {
-      environment {
-        DOCKERHUB_CREDS=credentials('Dockerhub_svcwfjenkins')
-        RELEASE_TYPE = 'release'
-        PREFIX = 'wavefronthq'
-        DOCKER_IMAGE = 'wavefront-kubernetes-collector'
-      }
-      steps {
-        sh 'echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin'
-        sh 'make publish'
-      }
-    }
-    stage("Push Openshift Image to RedHat Connect") {
-      environment {
-        REDHAT_CREDS=credentials('redhat-connect-wf-collector-creds')
-        REDHAT_OSPID=credentials("redhat-connect-ospid-wf-collector")
-        REDHAT_API_KEY=credentials("redhat-connect-api-key")
-        REDHAT_PROJECT_ID=credentials("redhat-connect-collector-project-id")
-        OPENSHIFT_CREDS_PSW=credentials('OPENSHIFT_CREDS_PSW')
-        OPENSHIFT_VM=credentials('OPENSHIFT_VM')
-        GIT_BUMP_BRANCH_NAME = "${sh(script:'git name-rev --name-only HEAD', returnStdout: true).trim()}"
+        PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
+        DOCKER_IMAGE = 'kubernetes-operator-release-like'
       }
       steps {
         script {
-          env.PREFIX = "scan.connect.redhat.com/${env.REDHAT_OSPID}"
+          env.VERSION = readFile('./release/VERSION').trim()
+          env.RC_VERSION = "${env.VERSION}-rc-1"
         }
-        sh """
-        sshpass -p "${OPENSHIFT_CREDS_PSW}" ssh -o StrictHostKeyChecking=no root@${OPENSHIFT_VM} "bash -s" < hack/jenkins/release-openshift-container.sh \
-                                                                                                                     ${PREFIX} \
-                                                                                                                     ${REDHAT_CREDS_USR} \
-                                                                                                                     ${REDHAT_CREDS_PSW} \
-                                                                                                                     ${REDHAT_API_KEY} \
-                                                                                                                     ${REDHAT_PROJECT_ID} \
-                                                                                                                     ${GIT_BUMP_BRANCH_NAME} \
-                                                                                                                     ${RC_NUMBER}
-        """
+        sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
+        sh 'docker pull $PREFIX/$DOCKER_IMAGE:$RC_VERSION'
+        sh 'docker tag $PREFIX/$DOCKER_IMAGE:$RC_VERSION $PREFIX/$DOCKER_IMAGE:$VERSION'
+        sh 'docker push $PREFIX/$DOCKER_IMAGE:$VERSION'
       }
     }
     stage("Create and Merge Bump Version Pull Request") {
