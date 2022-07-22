@@ -92,7 +92,7 @@ pipeline {
     }
     stage("Create and Merge Bump Version Pull Request") {
       steps {
-        sh './hack/jenkins/create-and-merge-pull-request.sh'
+//         sh './hack/jenkins/create-and-merge-pull-request.sh'
       }
     }
     stage("Github Release") {
@@ -100,7 +100,7 @@ pipeline {
         GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
       }
       steps {
-        sh './hack/jenkins/generate_github_release.sh'
+//         sh './hack/jenkins/generate_github_release.sh'
       }
     }
   }
