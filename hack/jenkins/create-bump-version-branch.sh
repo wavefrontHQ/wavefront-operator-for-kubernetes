@@ -45,9 +45,9 @@ OLD_COLLECTOR_VERSION=$(cat ../../release/COLLECTOR_VERSION)
 echo "$NEW_COLLECTOR_VERSION" >../../release/COLLECTOR_VERSION
 
 echo "Replacing collector version starting with ${OLD_COLLECTOR_VERSION} to ${NEW_COLLECTOR_VERSION} in ../../deploy/internal/2-wavefront-collector-daemonset.yaml"
-sed -i '' "s/${OLD_COLLECTOR_VERSION}.*/${NEW_COLLECTOR_VERSION}/g" "../../deploy/internal/2-wavefront-collector-daemonset.yaml"
+sed -i "s/${OLD_COLLECTOR_VERSION}.*/${NEW_COLLECTOR_VERSION}/g" "../../deploy/internal/2-wavefront-collector-daemonset.yaml"
 echo "Replacing collector version starting with ${OLD_COLLECTOR_VERSION} to ${NEW_COLLECTOR_VERSION} in ../../deploy/internal/2-wavefront-collector-deployment.yaml"
-sed -i '' "s/${OLD_COLLECTOR_VERSION}.*/${NEW_COLLECTOR_VERSION}/g" "../../deploy/internal/2-wavefront-collector-deployment.yaml"
+sed -i "s/${OLD_COLLECTOR_VERSION}.*/${NEW_COLLECTOR_VERSION}/g" "../../deploy/internal/2-wavefront-collector-deployment.yaml"
 
 git commit -am "Bump operator version to ${NEW_OPERATOR_VERSION} and collector version to ${NEW_COLLECTOR_VERSION}"
 
