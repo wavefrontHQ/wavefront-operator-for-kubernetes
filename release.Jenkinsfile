@@ -60,7 +60,7 @@ pipeline {
       }
       steps {
         script {
-          env.READ_VERSION = readFile('./release/VERSION').trim()
+          env.READ_VERSION = readFile('./release/OPERATOR_VERSION').trim()
           env.VERSION = "${env.READ_VERSION}-rc-1"
         }
         withCredentials([string(credentialsId: 'nimba-wavefront-token', variable: 'WAVEFRONT_TOKEN')]) {
