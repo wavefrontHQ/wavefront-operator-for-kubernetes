@@ -36,7 +36,7 @@ pipeline {
     }
     stage("Publish RC Release") {
       environment {
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
+        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
         DOCKER_IMAGE = 'kubernetes-operator-snapshot'
       }
@@ -75,7 +75,7 @@ pipeline {
     }
     stage("Publish GA Harbor Image") {
       environment {
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
+        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
         DOCKER_IMAGE = 'kubernetes-operator-release-like'
       }
