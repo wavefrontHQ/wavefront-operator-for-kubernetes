@@ -54,7 +54,7 @@ pipeline {
     stage("Deploy and Test") {
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
-        GKE_CLUSTER_NAME = "k8po-jenkins-rc-testing"
+        GKE_CLUSTER_NAME = "k8po-jenkins-ci"
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
         WF_CLUSTER = 'nimba'
       }
@@ -63,12 +63,12 @@ pipeline {
           env.READ_VERSION = readFile('./release/OPERATOR_VERSION').trim()
           env.VERSION = "${env.READ_VERSION}-rc-1"
         }
-        withCredentials([string(credentialsId: 'nimba-wavefront-token', variable: 'WAVEFRONT_TOKEN')]) {
-          withEnv(["PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+          lock("integration-test-gke") {
             sh './hack/jenkins/setup-for-integration-test.sh'
             sh 'make gke-connect-to-cluster'
-            sh './hack/test/deploy/deploy-local-linux.sh'
-            sh './hack/test/test-wavefront-metrics.sh -c ${WF_CLUSTER} -t ${WAVEFRONT_TOKEN} -n ${CONFIG_CLUSTER_NAME} -v ${VERSION}'
+            sh 'make integration-test-ci'
+            sh 'make undeploy'
           }
         }
       }
