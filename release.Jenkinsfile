@@ -9,7 +9,6 @@ pipeline {
     RELEASE_TYPE = 'release'
     RC_NUMBER = "1"
     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
-    COLLECTOR_VERSION = "${params.COLLECTOR_VERSION}"
     GIT_BRANCH = getCurrentBranchName()
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
     TOKEN = credentials('GITHUB_TOKEN')
@@ -30,7 +29,7 @@ pipeline {
           sh 'git config --global user.email "svc.wf-jenkins@vmware.com"'
           sh 'git config --global user.name "svc.wf-jenkins"'
           sh 'git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
-          sh './hack/jenkins/create-bump-version-branch.sh -s "${BUMP_COMPONENT}" -c "${COLLECTOR_VERSION}"'
+          sh './hack/jenkins/create-bump-version-branch.sh -s "${BUMP_COMPONENT}"'
         }
       }
     }
