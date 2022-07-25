@@ -80,7 +80,7 @@ pipeline {
       }
       steps {
         script {
-          env.VERSION = readFile('./release/VERSION').trim()
+          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
           env.RC_VERSION = "${env.VERSION}-rc-1"
         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
