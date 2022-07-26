@@ -773,7 +773,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta-1
+        image: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot:0.1.1
         livenessProbe:
           httpGet:
             path: /healthz
