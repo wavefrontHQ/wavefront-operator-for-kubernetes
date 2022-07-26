@@ -7,7 +7,6 @@ pipeline {
 
   environment {
     RELEASE_TYPE = 'release'
-    RC_NUMBER = "1"
     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
     GIT_BRANCH = getCurrentBranchName()
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
@@ -29,11 +28,11 @@ pipeline {
           sh 'git config --global user.email "svc.wf-jenkins@vmware.com"'
           sh 'git config --global user.name "svc.wf-jenkins"'
           sh 'git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
-          sh './hack/jenkins/create-bump-version-branch.sh -s "${BUMP_COMPONENT}"'
+          sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
         }
       }
     }
-    stage("Publish RC Release") {
+    stage("Publish Image") {
       environment {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
@@ -41,15 +40,13 @@ pipeline {
       }
       steps {
         script {
-          env.READ_VERSION = readFile('./release/OPERATOR_VERSION').trim()
-          env.VERSION = "${env.READ_VERSION}-rc-1"
+          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
         sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
       }
     }
     // deploy to GKE and run manual tests
-    // now we have confidence in the validity of our RC release
     stage("Deploy and Test") {
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
@@ -59,8 +56,7 @@ pipeline {
       }
       steps {
         script {
-          env.READ_VERSION = readFile('./release/OPERATOR_VERSION').trim()
-          env.VERSION = "${env.READ_VERSION}-rc-1"
+          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
         }
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
           lock("integration-test-gke") {
@@ -72,34 +68,17 @@ pipeline {
         }
       }
     }
-    stage("Publish GA Harbor Image") {
-      environment {
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-        PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
-        DOCKER_IMAGE = 'kubernetes-operator-release-like'
-      }
+    stage("Merge bumped versions") {
       steps {
-        script {
-          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
-          env.RC_VERSION = "${env.VERSION}-rc-1"
-        }
-        sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-        sh 'docker pull $PREFIX/$DOCKER_IMAGE:$RC_VERSION'
-        sh 'docker tag $PREFIX/$DOCKER_IMAGE:$RC_VERSION $PREFIX/$DOCKER_IMAGE:$VERSION'
-        sh 'docker push $PREFIX/$DOCKER_IMAGE:$VERSION'
+        sh './hack/jenkins/merge-version-bump.sh'
       }
     }
-//     stage("Create and Merge Bump Version Pull Request") {
-//       steps {
-//         sh './hack/jenkins/create-and-merge-pull-request.sh'
-//       }
-//     }
 //     stage("Github Release") {
 //       environment {
 //         GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
 //       }
 //       steps {
-//         sh './hack/jenkins/generate_github_release.sh'
+//         sh './hack/jenkins/generate-github-release.sh'
 //       }
 //     }
   }
@@ -118,8 +97,8 @@ pipeline {
 //     }
 //     success {
 //       script {
-//         BUILD_VERSION = readFile('./release/VERSION').trim()
-//         slackSend (channel: '#tobs-k8s-assist', color: '#008000', message: "Success!! `wavefront-collector-for-kubernetes:v${BUILD_VERSION}` released!")
+//         BUILD_VERSION = readFile('./release/OPERATOR_VERSION').trim()
+//         slackSend (channel: '#tobs-k8s-assist', color: '#008000', message: "Success!! `wavefront-operator-for-kubernetes:v${BUILD_VERSION}` released!")
 //       }
 //     }
 //   }
