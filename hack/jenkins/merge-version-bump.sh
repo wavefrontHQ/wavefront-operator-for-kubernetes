@@ -20,11 +20,9 @@ PR_URL=$(curl \
 
 echo "PR URL: ${PR_URL}"
 
-#curl \
-#  -X PUT \
-#  -H "Authorization: token ${TOKEN}" \
-#  -H "Accept: application/vnd.github.v3+json" \
-#  "${PR_URL}/merge" \
-#  -d "{\"commit_title\":\"Bump version to ${VERSION}\"}"
-
-#TODO: Remember to delete branch
+curl \
+  -X PUT \
+  -H "Authorization: token ${TOKEN}" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "${PR_URL}/merge" \
+  -d "{\"commit_title\":\"Bump version to ${VERSION}\"}"

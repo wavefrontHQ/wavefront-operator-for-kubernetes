@@ -35,8 +35,8 @@ pipeline {
     stage("Publish Image") {
       environment {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-        PREFIX = 'projects.registry.vmware.com/tanzu_observability_keights_saas'
-        DOCKER_IMAGE = 'kubernetes-operator-snapshot'
+        PREFIX = 'projects.registry.vmware.com/tanzu_observability'
+        DOCKER_IMAGE = 'kubernetes-operator'
       }
       steps {
         script {
@@ -73,35 +73,35 @@ pipeline {
         sh './hack/jenkins/merge-version-bump.sh'
       }
     }
-//     stage("Github Release") {
-//       environment {
-//         GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
-//       }
-//       steps {
-//         sh './hack/jenkins/generate-github-release.sh'
-//       }
-//     }
+    stage("Github Release") {
+      environment {
+        GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
+      }
+      steps {
+        sh './hack/jenkins/generate-github-release.sh'
+      }
+    }
   }
 
-//   post {
-//     // Notify only on null->failure or success->failure or any->success
-//     failure {
-//       script {
-//         if(currentBuild.previousBuild == null) {
-//           slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "RELEASE BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
-//         }
-//       }
-//     }
-//     regression {
-//       slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "RELEASE BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
-//     }
-//     success {
-//       script {
-//         BUILD_VERSION = readFile('./release/OPERATOR_VERSION').trim()
-//         slackSend (channel: '#tobs-k8s-assist', color: '#008000', message: "Success!! `wavefront-operator-for-kubernetes:v${BUILD_VERSION}` released!")
-//       }
-//     }
-//   }
+  post {
+    // Notify only on null->failure or success->failure or any->success
+    failure {
+      script {
+        if(currentBuild.previousBuild == null) {
+          slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "RELEASE BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
+        }
+      }
+    }
+    regression {
+      slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "RELEASE BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
+    }
+    success {
+      script {
+        BUILD_VERSION = readFile('./release/OPERATOR_VERSION').trim()
+        slackSend (channel: '#tobs-k8s-assist', color: '#008000', message: "Success!! `wavefront-operator-for-kubernetes:v${BUILD_VERSION}` released!")
+      }
+    }
+  }
 }
 
 def getCurrentBranchName() {
