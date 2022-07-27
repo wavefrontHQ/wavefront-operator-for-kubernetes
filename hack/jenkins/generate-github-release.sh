@@ -7,7 +7,7 @@ VERSION=$(cat ./release/OPERATOR_VERSION)
 GIT_HUB_REPO=wavefrontHQ/wavefront-operator-for-kubernetes
 
 curl --fail -X POST -H "Content-Type:application/json" \
--H "Authorization: token $GITHUB_CREDS_PSW" \
+-H "Authorization: token ${TOKEN}" \
 -d "{
       \"tag_name\": \"v$VERSION\",
       \"target_commitish\": \"$GIT_BRANCH\",
