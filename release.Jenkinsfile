@@ -61,7 +61,8 @@ pipeline {
           lock("integration-test-gke") {
             sh './hack/jenkins/setup-for-integration-test.sh'
             sh 'make gke-connect-to-cluster'
-            sh 'make integration-test-ci'
+            sh './hack/test/deploy/deploy-local.sh -t $WAVEFRONT_TOKEN'
+            sh './hack/test/run-e2e-tests.sh -t $WAVEFRONT_TOKEN'
             sh 'make undeploy'
           }
         }
