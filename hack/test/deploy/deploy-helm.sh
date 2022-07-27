@@ -42,8 +42,11 @@ function main() {
   fi
 
 
-  kubectl delete -f ./deploy/kubernetes/wavefront-operator.yaml || true
-  kubectl apply -f ./deploy/kubernetes/wavefront-operator.yaml
+  helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
+  helm repo update
+  kubectl create namespace wavefront || true
+  helm uninstall wavefront-v2beta -n wavefront || true
+  helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront || true
   kubectl create -n wavefront secret generic wavefront-secret --from-literal token=${WAVEFRONT_TOKEN} || true
 
   cat <<EOF | kubectl apply -f -
