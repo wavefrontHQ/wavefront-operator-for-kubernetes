@@ -9,7 +9,7 @@ pipeline {
     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
     GIT_BRANCH = getCurrentBranchName()
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
-    TOKEN = credentials('GITHUB_TOKEN')
+    GITHUB_TOKEN = credentials('GITHUB_TOKEN')
   }
 
   stages {
@@ -26,12 +26,12 @@ pipeline {
         withEnv(["PATH+EXTRA=${HOME}/go/bin"]){
           sh 'git config --global user.email "svc.wf-jenkins@vmware.com"'
           sh 'git config --global user.name "svc.wf-jenkins"'
-          sh 'git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
+          sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
           sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
         }
       }
     }
-    stage("Publish Image") {
+    stage("Publish Image and Generate YAML") {
       environment {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         PREFIX = 'projects.registry.vmware.com/tanzu_observability'
@@ -67,16 +67,16 @@ pipeline {
         }
       }
     }
-    stage("Merge bumped versions") {
-      steps {
-        sh './hack/jenkins/merge-version-bump.sh'
-      }
-    }
-    stage("Github Release") {
-      steps {
-        sh './hack/jenkins/generate-github-release.sh'
-      }
-    }
+//     stage("Merge bumped versions") {
+//       steps {
+//         sh './hack/jenkins/merge-version-bump.sh'
+//       }
+//     }
+//     stage("Github Release") {
+//       steps {
+//         sh './hack/jenkins/generate-github-release.sh'
+//       }
+//     }
   }
 
   post {
