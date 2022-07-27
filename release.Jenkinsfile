@@ -33,7 +33,7 @@ pipeline {
     }
     stage("Publish Image and Generate YAML") {
       environment {
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
         PREFIX = 'projects.registry.vmware.com/tanzu_observability'
         DOCKER_IMAGE = 'kubernetes-operator'
       }
