@@ -68,16 +68,16 @@ pipeline {
         }
       }
     }
-//     stage("Merge bumped versions") {
-//       steps {
-//         sh './hack/jenkins/merge-version-bump.sh'
-//       }
-//     }
-//     stage("Github Release") {
-//       steps {
-//         sh './hack/jenkins/generate-github-release.sh'
-//       }
-//     }
+    stage("Merge bumped versions") {
+      steps {
+        sh './hack/jenkins/merge-version-bump.sh'
+      }
+    }
+    stage("Github Release") {
+      steps {
+        sh './hack/jenkins/generate-github-release.sh'
+      }
+    }
   }
 
   post {
