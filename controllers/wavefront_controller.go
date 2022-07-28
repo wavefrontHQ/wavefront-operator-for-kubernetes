@@ -21,9 +21,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"io/fs"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -32,6 +30,9 @@ import (
 	"time"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
+	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/validation"
 
@@ -167,15 +168,17 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
+	kubernetesManager, err := manager.NewKubernetesManager(mapper, dynamicClient)
+	if err != nil {
+		return nil, err
+	}
+
 	reconciler := &WavefrontReconciler{
-		Client:        client,
-		Scheme:        scheme,
-		FS:            os.DirFS(DeployDir),
-		Appsv1:        clientSet.AppsV1(),
-		KubernetesManager: manager.KubernetesManager{
-			RestMapper:    mapper,
-			DynamicClient: dynamicClient,
-		},
+		Client:            client,
+		Scheme:            scheme,
+		FS:                os.DirFS(DeployDir),
+		Appsv1:            clientSet.AppsV1(),
+		KubernetesManager: kubernetesManager,
 	}
 
 	return reconciler, nil
@@ -198,7 +201,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec, reso
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	err = r.KubernetesManager.CreateOrUpdateResources(resources, filterDisabledAndConfigMap(spec))
+	err = r.KubernetesManager.ApplyResources(resources, filterDisabledAndConfigMap(spec))
 	if err != nil {
 		return err
 	}
@@ -401,4 +404,3 @@ func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *uns
 		return false
 	}
 }
-

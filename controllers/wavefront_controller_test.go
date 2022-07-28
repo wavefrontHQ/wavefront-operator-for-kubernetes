@@ -3,8 +3,8 @@ package controllers_test
 import (
 	"context"
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
+	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -82,19 +83,22 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		r, wfCR, apiClient, dynamicClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		stubKM := &stubKubernetesManager{deletedYAMLs: []string{}}
+
+		r, wfCR, apiClient, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		r.KubernetesManager = stubKM
+
 		err := apiClient.Delete(context.Background(), wfCR)
 
 		_, err = r.Reconcile(context.Background(), defaultRequest())
-
 		assert.NoError(t, err)
-		assert.Equal(t, 12, len(dynamicClient.Actions()))
 
-		assert.True(t, hasAction(dynamicClient, "delete", "serviceaccounts"), "delete ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "delete", "configmaps"), "delete Configmap")
-		assert.True(t, hasAction(dynamicClient, "delete", "services"), "delete Service")
-		assert.True(t, hasAction(dynamicClient, "delete", "daemonsets"), "delete DaemonSet")
-		assert.True(t, hasAction(dynamicClient, "delete", "deployments"), "delete Deployment")
+		assert.True(t, stubKM.deletedContains("ServiceAccount", "wavefront-collector"))
+		assert.True(t, stubKM.deletedContains("ConfigMap", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.deletedContains("Service", "wavefront-proxy"))
+		assert.True(t, stubKM.deletedContains("DaemonSet", "wavefront-node-collector"))
+		assert.True(t, stubKM.deletedContains("Deployment", "wavefront-cluster-collector"))
+		assert.True(t, stubKM.deletedContains("Deployment", "wavefront-proxy"))
 	})
 }
 
@@ -709,15 +713,17 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
+	kubernetesManager, err := manager.NewKubernetesManager(apiClient.RESTMapper(), dynamicClient)
+	if err != nil {
+		panic(err)
+	}
+
 	r := &controllers.WavefrontReconciler{
-		Client: apiClient,
-		Scheme: nil,
-		FS:     os.DirFS(controllers.DeployDir),
-		KubernetesManager: manager.KubernetesManager{
-			RestMapper:    apiClient.RESTMapper(),
-			DynamicClient: dynamicClient,
-		},
-		Appsv1: fakesAppsV1,
+		Client:            apiClient,
+		Scheme:            nil,
+		FS:                os.DirFS(controllers.DeployDir),
+		KubernetesManager: kubernetesManager,
+		Appsv1:            fakesAppsV1,
 	}
 
 	return r, wfCR, apiClient, dynamicClient, fakesAppsV1
@@ -818,4 +824,27 @@ func defaultRequest() reconcile.Request {
 		Namespace: "wavefront",
 		Name:      "wavefront",
 	}}
+}
+
+type stubKubernetesManager struct {
+	deletedYAMLs []string
+}
+
+func (skm stubKubernetesManager) deletedContains(kind string, name string) bool {
+	for _, dy := range skm.deletedYAMLs {
+		if strings.Contains(dy, kind) && strings.Contains(dy, name) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (skm *stubKubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
+	panic("implement me")
+}
+
+func (skm *stubKubernetesManager) DeleteResources(resourceYamls []string) error {
+	skm.deletedYAMLs = resourceYamls
+	return nil
 }

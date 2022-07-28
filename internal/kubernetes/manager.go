@@ -2,9 +2,10 @@ package manager
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
@@ -12,12 +13,24 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
-type KubernetesManager struct {
+type KubernetesManager interface {
+	ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error
+	DeleteResources(resourceYamls []string) error
+}
+
+func NewKubernetesManager(mapper meta.RESTMapper, dynamicClient dynamic.Interface) (KubernetesManager, error) {
+	return &kubernetesManager{
+		RestMapper:    mapper,
+		DynamicClient: dynamicClient,
+	}, nil
+}
+
+type kubernetesManager struct {
 	RestMapper    meta.RESTMapper
 	DynamicClient dynamic.Interface
 }
 
-func (km KubernetesManager) CreateOrUpdateResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
+func (km kubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
 	var dynamicClient dynamic.ResourceInterface
 
 	for _, resource := range resourceYamls {
@@ -64,7 +77,7 @@ func (km KubernetesManager) CreateOrUpdateResources(resourceYamls []string, filt
 	return nil
 }
 
-func (km KubernetesManager) DeleteResources(resourceYamls []string) error {
+func (km kubernetesManager) DeleteResources(resourceYamls []string) error {
 	for _, resource := range resourceYamls {
 		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
