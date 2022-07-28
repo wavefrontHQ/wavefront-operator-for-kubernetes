@@ -1,15 +1,16 @@
 package controllers_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
+	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	fake2 "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 func TestKubernetesManager(t *testing.T) {
@@ -55,15 +56,17 @@ spec:
 		s := scheme.Scheme
 		fakeDynamicClient := fake2.NewSimpleDynamicClient(s)
 
-		km := manager.KubernetesManager{
-			RestMapper:    fakeApiClient.RESTMapper(),
-			DynamicClient: fakeDynamicClient,
-		}
-		err := km.CreateOrUpdateResources(fakeYamls, func(obj *unstructured.Unstructured) bool {
+		km, err := manager.NewKubernetesManager(
+			fakeApiClient.RESTMapper(),
+			fakeDynamicClient,
+		)
+		assert.NoError(t, err)
+
+		err = km.ApplyResources(fakeYamls, func(obj *unstructured.Unstructured) bool {
 			return false
 		})
-
 		assert.NoError(t, err)
+
 		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "create", "services"), "create Service")
 		assert.True(t, hasAction(fakeDynamicClient, "patch", "services"), "patch Service")
@@ -172,13 +175,15 @@ spec:
 			},
 		}})
 
-		km := manager.KubernetesManager{
-			RestMapper:    fakeApiClient.RESTMapper(),
-			DynamicClient: fakeDynamicClient,
-		}
-		err := km.DeleteResources(fakeYamls)
-
+		km, err := manager.NewKubernetesManager(
+			fakeApiClient.RESTMapper(),
+			fakeDynamicClient,
+		)
 		assert.NoError(t, err)
+
+		err = km.DeleteResources(fakeYamls)
+		assert.NoError(t, err)
+
 		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "services"), "delete Service")
 		assert.True(t, hasAction(fakeDynamicClient, "get", "deployments"), "get Deployment")
@@ -190,4 +195,3 @@ spec:
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "daemonsets"), "delete DaemonSet")
 	})
 }
-
