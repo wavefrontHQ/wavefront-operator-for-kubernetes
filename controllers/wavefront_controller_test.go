@@ -842,8 +842,8 @@ type stubKubernetesManager struct {
 	appliedYAMLs []string
 }
 
-func (skm stubKubernetesManager) deletedContains(kind string, name string) bool {
-	for _, dy := range skm.deletedYAMLs {
+func contains(yamls []string, kind string, name string) bool {
+	for _, dy := range yamls {
 		if strings.Contains(dy, kind) && strings.Contains(dy, name) {
 			return true
 		}
@@ -852,14 +852,12 @@ func (skm stubKubernetesManager) deletedContains(kind string, name string) bool 
 	return false
 }
 
-func (skm stubKubernetesManager) appliedContains(kind string, name string) bool {
-	for _, dy := range skm.appliedYAMLs {
-		if strings.Contains(dy, kind) && strings.Contains(dy, name) {
-			return true
-		}
-	}
+func (skm stubKubernetesManager) deletedContains(kind string, name string) bool {
+	return contains(skm.deletedYAMLs, kind, name)
+}
 
-	return false
+func (skm stubKubernetesManager) appliedContains(kind string, name string) bool {
+	return contains(skm.appliedYAMLs, kind, name)
 }
 
 func (skm *stubKubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
