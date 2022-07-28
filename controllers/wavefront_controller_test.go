@@ -65,6 +65,11 @@ func TestReconcileAll(t *testing.T) {
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
 
+		// TODO: account for path in YAML
+		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy", "testWavefrontUrl/api/"))
+		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy", "testToken"))
+		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy", "2878"))
+
 		configMap := getCreatedConfigMap(t, dynamicClient)
 		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
 		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:2878")
@@ -823,9 +828,14 @@ type stubKubernetesManager struct {
 	appliedYAMLs []string
 }
 
-func contains(yamls []string, kind string, name string) bool {
+func contains(yamls []string, kind string, name string, other ...string) bool {
 	for _, dy := range yamls {
 		if strings.Contains(dy, kind) && strings.Contains(dy, name) {
+			for _, oth := range other {
+				if !strings.Contains(dy, oth) {
+					return false
+				}
+			}
 			return true
 		}
 	}
@@ -837,8 +847,8 @@ func (skm stubKubernetesManager) deletedContains(kind string, name string) bool 
 	return contains(skm.deletedYAMLs, kind, name)
 }
 
-func (skm stubKubernetesManager) appliedContains(kind string, name string) bool {
-	return contains(skm.appliedYAMLs, kind, name)
+func (skm stubKubernetesManager) appliedContains(kind string, name string, other ...string) bool {
+	return contains(skm.appliedYAMLs, kind, name, other...)
 }
 
 func (skm *stubKubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
