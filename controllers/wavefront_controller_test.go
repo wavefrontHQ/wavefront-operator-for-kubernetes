@@ -44,15 +44,10 @@ func TestReconcileAll(t *testing.T) {
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
-		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
-		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
-		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
 		assert.True(t, hasAction(dynamicClient, "create", "daemonsets"), "create DaemonSet")
-		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
 		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
@@ -95,15 +90,10 @@ func TestReconcileAll(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 
-		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
 		assert.True(t, hasAction(dynamicClient, "delete", "serviceaccounts"), "delete ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.True(t, hasAction(dynamicClient, "delete", "configmaps"), "delete Configmap")
-		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "delete", "services"), "delete Service")
-		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
 		assert.True(t, hasAction(dynamicClient, "delete", "daemonsets"), "delete DaemonSet")
-		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "delete", "deployments"), "delete Deployment")
 	})
 }
@@ -118,7 +108,6 @@ func TestReconcileCollector(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, 10, len(dynamicClient.Actions()))
-		assert.False(t, hasAction(dynamicClient, "get", "configmaps"), "get ConfigMap")
 		assert.False(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
 	})
 
@@ -188,9 +177,7 @@ func TestReconcileCollector(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, 4, len(dynamicClient.Actions()))
-		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
-		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
 		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
@@ -233,7 +220,6 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
 		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
