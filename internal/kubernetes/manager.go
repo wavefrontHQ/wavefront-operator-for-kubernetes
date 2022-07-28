@@ -30,10 +30,10 @@ type kubernetesManager struct {
 	DynamicClient dynamic.Interface
 }
 
-func (km kubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
+func (km kubernetesManager) ApplyResources(resourceYAMLs []string, filterObject func(*unstructured.Unstructured) bool) error {
 	var dynamicClient dynamic.ResourceInterface
 
-	for _, resource := range resourceYamls {
+	for _, resource := range resourceYAMLs {
 		object := &unstructured.Unstructured{}
 		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
@@ -77,8 +77,8 @@ func (km kubernetesManager) ApplyResources(resourceYamls []string, filterObject 
 	return nil
 }
 
-func (km kubernetesManager) DeleteResources(resourceYamls []string) error {
-	for _, resource := range resourceYamls {
+func (km kubernetesManager) DeleteResources(resourceYAMLs []string) error {
+	for _, resource := range resourceYAMLs {
 		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
 		object := &unstructured.Unstructured{}
