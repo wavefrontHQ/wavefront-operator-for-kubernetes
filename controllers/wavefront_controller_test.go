@@ -38,20 +38,31 @@ import (
 
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{deletedYAMLs: []string{}}
+
 		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
+
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
+		// TODO: no more dynamic client faking
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
-		assert.True(t, hasAction(dynamicClient, "create", "serviceaccounts"), "create ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
-		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
-		assert.True(t, hasAction(dynamicClient, "create", "daemonsets"), "create DaemonSet")
-		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
+		r.KubernetesManager = stubKM
+		_, err = r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.appliedContains("ServiceAccount", "wavefront-collector"))
+		assert.True(t, stubKM.appliedContains("ConfigMap", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.appliedContains("Service", util.ProxyName))
+		assert.True(t, stubKM.appliedContains("DaemonSet", "wavefront-node-collector"))
+		assert.True(t, stubKM.appliedContains("Deployment", "wavefront-cluster-collector"))
+		assert.True(t, stubKM.appliedContains("Deployment", util.ProxyName))
+
+		// TODO: stub these tests out
+		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
@@ -828,6 +839,7 @@ func defaultRequest() reconcile.Request {
 
 type stubKubernetesManager struct {
 	deletedYAMLs []string
+	appliedYAMLs []string
 }
 
 func (skm stubKubernetesManager) deletedContains(kind string, name string) bool {
@@ -840,8 +852,19 @@ func (skm stubKubernetesManager) deletedContains(kind string, name string) bool 
 	return false
 }
 
+func (skm stubKubernetesManager) appliedContains(kind string, name string) bool {
+	for _, dy := range skm.appliedYAMLs {
+		if strings.Contains(dy, kind) && strings.Contains(dy, name) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (skm *stubKubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
-	panic("implement me")
+	skm.appliedYAMLs = resourceYamls
+	return nil
 }
 
 func (skm *stubKubernetesManager) DeleteResources(resourceYamls []string) error {
