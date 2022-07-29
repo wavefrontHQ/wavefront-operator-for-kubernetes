@@ -89,7 +89,7 @@ The following tools are required for installing the integration.
    ```
    kubectl apply -f <path_to_your_wavefront.yaml>
    ```
-5. To get status for the Wavefront Integration, run the following command:
+5. Run the following command to get status for the Wavefront Integration:
    ```
    kubectl get wavefront -n wavefront
    ```
