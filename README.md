@@ -50,59 +50,57 @@ The following tools are required for installing the integration.
    Note: Today the operator only supports deployment under the wavefront namespace.
    If you already have Wavefront deployments in that namespace, uninstall them before you install the operator.
 
-    ```
-    helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
-    helm repo update
+   ```
+   helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
+   helm repo update
 
-    kubectl create namespace wavefront
+   kubectl create namespace wavefront
 
-    helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
-    ```
+   helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
+   ```
 
 2. Create a Kubernetes secret with your Wavefront Token.
    See [Managing API Tokens](https://docs.wavefront.com/wavefront_api.html#managing-api-tokens) page.
-    ```
-    kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
-    ```
+   ```
+   kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
+   ```
 3. Create a `wavefront.yaml` file with your Wavefront Custom Resource configuration.  The simplest configuration is:
-    ```yaml
-    # Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL
-    apiVersion: wavefront.com/v1alpha1
-    kind: Wavefront
-    metadata:
-      name: wavefront
-      namespace: wavefront
-    spec:
-      clusterName: YOUR_CLUSTER_NAME
-      wavefrontUrl: YOUR_WAVEFRONT_URL
-      dataCollection:
-        metrics:
-          enable: true
-      dataExport:
-        wavefrontProxy:
-          enable: true
-    ```
+   ```yaml
+   # Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL
+   apiVersion: wavefront.com/v1alpha1
+   kind: Wavefront
+   metadata:
+     name: wavefront
+     namespace: wavefront
+   spec:
+     clusterName: YOUR_CLUSTER_NAME
+     wavefrontUrl: YOUR_WAVEFRONT_URL
+     dataCollection:
+       metrics:
+         enable: true
+     dataExport:
+       wavefrontProxy:
+         enable: true
+   ```
+   See the [Configuration](#configuration) section below about Custom Resource Configuration.
+
+
 4. Deploy the Wavefront Collector and Proxy with the above configuration
-    ```
-    kubectl apply -f <path_to_your_wavefront.yaml>
-    ```
-See the [Configuration](#configuration) section below about Custom Resource Configuration.
+   ```
+   kubectl apply -f <path_to_your_wavefront.yaml>
+   ```
+5. To get status for the Wavefront Integration, run the following command:
+   ```
+   kubectl get wavefront -n wavefront
+   ```
+   The command should return the following table displaying Operator instance health:
+   ```
+   NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
+   wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
+   ```
 
 **Note**: For details on migrating from existing helm chart or manual deploy,
 see [Migration](docs/migration.md).
-
-## Component Status Validation
-
-To get status for the Wavefront Integration, run the following command:
-```
-kubectl get wavefront -n wavefront
-```
-
-The command should return the following table displaying Operator instance health:
-```
-NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
-wavefront      true          Running(1/1)        Running (1/1)        Running (3/3)      19h
-```
 
 # Configuration
 
