@@ -72,9 +72,6 @@ func TestReconcileAll(t *testing.T) {
 			"clusterName: testClusterName",
 			"proxyAddress: wavefront-proxy:2878",
 		))
-		//configMap := getCreatedConfigMap(t, dynamicClient)
-		//assert.Contains(t, configMap.Data["config.yaml"])
-		//assert.Contains(t, configMap.Data["config.yaml"])
 
 		assert.True(t, stubKM.appliedContains(
 			"v1",
@@ -84,8 +81,6 @@ func TestReconcileAll(t *testing.T) {
 			"wavefront-proxy",
 			"port: 2878",
 		))
-		//service := getCreatedService(t, dynamicClient)
-		//assert.Equal(t, int32(), service.Spec.Ports[0].Port)
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
