@@ -10,6 +10,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	objYaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
@@ -36,7 +37,7 @@ import (
 
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{deletedYAMLs: []string{}}
+		stubKM := &stubKubernetesManager{}
 
 		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
 
@@ -79,7 +80,7 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{deletedYAMLs: []string{}}
+		stubKM := &stubKubernetesManager{}
 
 		r, wfCR, apiClient, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
@@ -100,15 +101,43 @@ func TestReconcileAll(t *testing.T) {
 
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-
 		assert.NoError(t, err)
-		assert.Equal(t, 10, len(dynamicClient.Actions()))
-		assert.False(t, hasAction(dynamicClient, "create", "configmaps"), "create Configmap")
+
+		// User is responsible for applying ConfigMap
+		assert.False(t, stubKM.appliedContains("ConfigMap", "myconfig"))
+
+		// It DOES call the ApplyResources function with the ConfigMap, but it's filtered out
+		// TODO: test in KubernetesManager
+		assert.True(t, stubKM.appliedContains("ConfigMap", "default-wavefront-collector-config"))
+		assert.False(t, stubKM.deletedContains("ConfigMap", "default-wavefront-collector-config"))
+
+		configMapYAML := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name : wavefront
+    app.kubernetes.io/component: collector
+  name: default-wavefront-collector-config
+  namespace: wavefront
+`
+		var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+		configMapObject := &unstructured.Unstructured{}
+		_, _, err = resourceDecoder.Decode([]byte(configMapYAML), nil, configMapObject)
+		assert.NoError(t, err)
+
+		assert.False(t, stubKM.objectPassesFilter(
+			configMapObject,
+		))
 	})
 
 	t.Run("defaults values for default collector config", func(t *testing.T) {
@@ -826,6 +855,7 @@ func defaultRequest() reconcile.Request {
 type stubKubernetesManager struct {
 	deletedYAMLs []string
 	appliedYAMLs []string
+	usedFilter   func(*unstructured.Unstructured) bool
 }
 
 func contains(yamls []string, kind string, name string, other ...string) bool {
@@ -851,8 +881,14 @@ func (skm stubKubernetesManager) appliedContains(kind string, name string, other
 	return contains(skm.appliedYAMLs, kind, name, other...)
 }
 
+func (skm stubKubernetesManager) objectPassesFilter(object *unstructured.Unstructured) bool {
+	// TODO: filter returning true if filtered is confusing
+	return !skm.usedFilter(object)
+}
+
 func (skm *stubKubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
 	skm.appliedYAMLs = resourceYamls
+	skm.usedFilter = filterObject
 	return nil
 }
 
