@@ -40,36 +40,18 @@ func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		stubKM := &stubKubernetesManager{}
 
-		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
+		r, _, _, _, _ := setupForCreate(defaultWFSpec())
+		r.KubernetesManager = stubKM
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 
-		// TODO: no more dynamic client faking
-		assert.Equal(t, 12, len(dynamicClient.Actions()))
-
-		r.KubernetesManager = stubKM
-		_, err = r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-
 		assert.True(t, stubKM.appliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
-		assert.True(t, stubKM.appliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 		assert.True(t, stubKM.appliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
 		assert.True(t, stubKM.appliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
-		assert.True(t, stubKM.appliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
 
-		// TODO: this returns true on ConfigMap as well; need to be more specific
-		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy"))
-
-		// TODO: stub these tests out
-		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
-		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
-		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
-
-		// TODO: account for path in YAML
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"Deployment",
@@ -81,12 +63,29 @@ func TestReconcileAll(t *testing.T) {
 			"containerPort: 2878",
 		))
 
-		configMap := getCreatedConfigMap(t, dynamicClient)
-		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
-		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:2878")
+		assert.True(t, stubKM.appliedContains(
+			"v1",
+			"ConfigMap",
+			"wavefront",
+			"collector",
+			"default-wavefront-collector-config",
+			"clusterName: testClusterName",
+			"proxyAddress: wavefront-proxy:2878",
+		))
+		//configMap := getCreatedConfigMap(t, dynamicClient)
+		//assert.Contains(t, configMap.Data["config.yaml"])
+		//assert.Contains(t, configMap.Data["config.yaml"])
 
-		service := getCreatedService(t, dynamicClient)
-		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
+		assert.True(t, stubKM.appliedContains(
+			"v1",
+			"Service",
+			"wavefront",
+			"proxy",
+			"wavefront-proxy",
+			"port: 2878",
+		))
+		//service := getCreatedService(t, dynamicClient)
+		//assert.Equal(t, int32(), service.Spec.Ports[0].Port)
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
