@@ -67,6 +67,8 @@ spec:
 		})
 		assert.NoError(t, err)
 
+		// TODO: action count
+
 		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "create", "services"), "create Service")
 		assert.True(t, hasAction(fakeDynamicClient, "patch", "services"), "patch Service")
@@ -183,6 +185,7 @@ spec:
 
 		err = km.DeleteResources(fakeYamls)
 		assert.NoError(t, err)
+		// TODO: action count
 
 		assert.True(t, hasAction(fakeDynamicClient, "get", "services"), "get Service")
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "services"), "delete Service")
