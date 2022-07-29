@@ -170,78 +170,207 @@ metadata:
 	})
 
 	t.Run("defaults values for default collector config", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
 		wfSpec := defaultWFSpec()
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
 		assert.NoError(t, err)
 
-		configMap := getCreatedConfigMap(t, dynamicClient)
-		assert.Contains(t, configMap.Data["config.yaml"], "clusterName: testClusterName")
-		assert.Contains(t, configMap.Data["config.yaml"], "defaultCollectionInterval: 60s")
-		assert.Contains(t, configMap.Data["config.yaml"], "enableDiscovery: true")
+		//configMap := getCreatedConfigMap(t, dynamicClient)
+		//assert.Contains(t, configMap.Data["config.yaml"])
+		//assert.Contains(t, configMap.Data["config.yaml"])
+		//assert.Contains(t, configMap.Data["config.yaml"])
+
+		assert.True(t, stubKM.appliedContains(
+			"v1",
+			"ConfigMap",
+			"wavefront",
+			"collector",
+			"default-wavefront-collector-config",
+			"clusterName: testClusterName",
+			"defaultCollectionInterval: 60s",
+			"enableDiscovery: true",
+		))
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Requests.CPU = "200m"
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Requests.Memory = "10Mi"
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Limits.CPU = "200m"
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Limits.Memory = "256Mi"
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
 		assert.NoError(t, err)
 
-		deployment := getCreatedDeployment(t, dynamicClient, util.ClusterCollectorName)
-		assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ClusterCollectorName)
+		//assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"collector",
+			util.ClusterCollectorName,
+			"memory: 10Mi",
+		))
 	})
 
 	t.Run("resources set for node collector", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Requests.CPU = "200m"
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Requests.Memory = "10Mi"
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Limits.CPU = "200m"
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Limits.Memory = "256Mi"
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		daemonSet := getCreatedDaemonSet(t, dynamicClient)
-		assert.Equal(t, "10Mi", daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+		//daemonSet := getCreatedDaemonSet(t, dynamicClient)
+		//assert.Equal(t, "memory: 10Mi", daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"DaemonSet",
+			"wavefront",
+			"collector",
+			"wavefront-node-collector",
+			"memory: 10Mi",
+		))
 	})
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
-		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
+		stubKM := &stubKubernetesManager{}
+
+		r, _, _, _, _ := setupForCreate(defaultWFSpec())
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		daemonSet := getCreatedDaemonSet(t, dynamicClient)
-		assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Limits)
-		assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests)
+		// TODO: lots of lines of test code... what we can do better? Squash them onto one line?
+		//daemonSet := getCreatedDaemonSet(t, dynamicClient)
+		//assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Limits)
+		//assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests)
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"DaemonSet",
+			"wavefront",
+			"collector",
+			"wavefront-node-collector",
+			"resources:",
+		))
+		assert.False(t, stubKM.appliedContains(
+			"apps/v1",
+			"DaemonSet",
+			"wavefront",
+			"collector",
+			"wavefront-node-collector",
+			"limits:",
+		))
+		assert.False(t, stubKM.appliedContains(
+			"apps/v1",
+			"DaemonSet",
+			"wavefront",
+			"collector",
+			"wavefront-node-collector",
+			"requests:",
+		))
 
-		deployment := getCreatedDeployment(t, dynamicClient, util.ClusterCollectorName)
-		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
-		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ClusterCollectorName)
+		//assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
+		//assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"collector",
+			util.ClusterCollectorName,
+			"resources:",
+		))
+		assert.False(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"collector",
+			util.ClusterCollectorName,
+			"limits:",
+		))
+		assert.False(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"collector",
+			util.ClusterCollectorName,
+			"requests:",
+		))
 	})
 
-	t.Run("Skip creating collector if metrics is not enabled", func(t *testing.T) {
+	t.Run("skip creating collector if metrics is not enabled", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
 		assert.NoError(t, err)
-		assert.Equal(t, 4, len(dynamicClient.Actions()))
-		assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
-		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
-		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		//assert.Equal(t, 4, len(dynamicClient.Actions()))
+		//assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
+		//assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
+		serviceAccountYAML := `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: collector
+  name: wavefront-collector
+  namespace: wavefront
+`
+		var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
+		serviceAccountObject := &unstructured.Unstructured{}
+		_, _, err = resourceDecoder.Decode([]byte(serviceAccountYAML), nil, serviceAccountObject)
+		assert.NoError(t, err)
+
+		// TODO: NOTE: the filter is only based on app.kubernetes.io/component value
+		// so I only tested one object
+		assert.False(t, stubKM.objectPassesFilter(
+			serviceAccountObject,
+		))
+
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		//assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		//assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"proxy",
+			util.ProxyName,
+			"value: testWavefrontUrl/api/",
+			"name: testToken",
+			"containerPort: 2878",
+		))
 	})
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
