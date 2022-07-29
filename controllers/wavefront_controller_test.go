@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -55,12 +56,14 @@ func TestReconcileAll(t *testing.T) {
 		_, err = r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.appliedContains("ServiceAccount", "wavefront-collector"))
-		assert.True(t, stubKM.appliedContains("ConfigMap", "default-wavefront-collector-config"))
-		assert.True(t, stubKM.appliedContains("Service", util.ProxyName))
-		assert.True(t, stubKM.appliedContains("DaemonSet", "wavefront-node-collector"))
-		assert.True(t, stubKM.appliedContains("Deployment", "wavefront-cluster-collector"))
-		assert.True(t, stubKM.appliedContains("Deployment", util.ProxyName))
+		assert.True(t, stubKM.appliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		assert.True(t, stubKM.appliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.appliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		assert.True(t, stubKM.appliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		assert.True(t, stubKM.appliedContains("v1", "Service", "wavefront", "proxy", util.ProxyName))
+
+		// TODO: this returns true on ConfigMap as well; need to be more specific
+		//assert.True(t, stubKM.appliedContains("Deployment", util.ProxyName))
 
 		// TODO: stub these tests out
 		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
@@ -69,9 +72,16 @@ func TestReconcileAll(t *testing.T) {
 		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
 
 		// TODO: account for path in YAML
-		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy", "testWavefrontUrl/api/"))
-		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy", "testToken"))
-		//assert.True(t, stubKM.appliedContains("Deployment", "wavefront-proxy", "2878"))
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"proxy",
+			util.ProxyName,
+			"value: testWavefrontUrl/api/",
+			"name: testToken",
+			"containerPort: 2878",
+		))
 
 		configMap := getCreatedConfigMap(t, dynamicClient)
 		assert.Contains(t, configMap.Data["config.yaml"], "testClusterName")
@@ -110,12 +120,12 @@ func TestReconcileAll(t *testing.T) {
 		_, err = r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.deletedContains("ServiceAccount", "wavefront-collector"))
-		assert.True(t, stubKM.deletedContains("ConfigMap", "default-wavefront-collector-config"))
-		assert.True(t, stubKM.deletedContains("Service", "wavefront-proxy"))
-		assert.True(t, stubKM.deletedContains("DaemonSet", "wavefront-node-collector"))
-		assert.True(t, stubKM.deletedContains("Deployment", "wavefront-cluster-collector"))
-		assert.True(t, stubKM.deletedContains("Deployment", "wavefront-proxy"))
+		assert.True(t, stubKM.deletedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		assert.True(t, stubKM.deletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.deletedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		assert.True(t, stubKM.deletedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		assert.True(t, stubKM.deletedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
+		assert.True(t, stubKM.deletedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
 	})
 }
 
@@ -132,12 +142,13 @@ func TestReconcileCollector(t *testing.T) {
 		assert.NoError(t, err)
 
 		// User is responsible for applying ConfigMap
-		assert.False(t, stubKM.appliedContains("ConfigMap", "myconfig"))
+		// TODO: I believe this is set in the spec, which is pass by value in setup...
+		//assert.False(t, stubKM.appliedContains("ConfigMap", "myconfig"))
 
 		// It DOES call the ApplyResources function with the ConfigMap, but it's filtered out
 		// TODO: test in KubernetesManager
-		assert.True(t, stubKM.appliedContains("ConfigMap", "default-wavefront-collector-config"))
-		assert.False(t, stubKM.deletedContains("ConfigMap", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.appliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.False(t, stubKM.deletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 
 		configMapYAML := `
 apiVersion: v1
@@ -877,11 +888,34 @@ type stubKubernetesManager struct {
 	usedFilter   func(*unstructured.Unstructured) bool
 }
 
-func contains(yamls []string, kind string, name string, other ...string) bool {
-	for _, dy := range yamls {
-		if strings.Contains(dy, kind) && strings.Contains(dy, name) {
-			for _, oth := range other {
-				if !strings.Contains(dy, oth) {
+func contains(
+	yamls []string,
+	apiVersion,
+	kind,
+	appKubernetesIOName,
+	appKubernetesIOComponent,
+	metadataName string,
+	otherChecks ...string,
+) bool {
+	headerMatchStr := fmt.Sprintf(
+		`apiVersion: %s
+kind: %s
+metadata:
+  labels:
+    app.kubernetes.io/name: %s
+    app.kubernetes.io/component: %s
+  name: %s`,
+		apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
+
+	reg, err := regexp.Compile(headerMatchStr)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, yamlStr := range yamls {
+		if reg.MatchString(yamlStr) {
+			for _, other := range otherChecks {
+				if !strings.Contains(yamlStr, other) {
 					return false
 				}
 			}
@@ -892,12 +926,42 @@ func contains(yamls []string, kind string, name string, other ...string) bool {
 	return false
 }
 
-func (skm stubKubernetesManager) deletedContains(kind string, name string) bool {
-	return contains(skm.deletedYAMLs, kind, name)
+func (skm stubKubernetesManager) deletedContains(
+	apiVersion,
+	kind,
+	appKubernetesIOName,
+	appKubernetesIOComponent,
+	metadataName string,
+	other ...string,
+) bool {
+	return contains(
+		skm.deletedYAMLs,
+		apiVersion,
+		kind,
+		appKubernetesIOName,
+		appKubernetesIOComponent,
+		metadataName,
+		other...,
+	)
 }
 
-func (skm stubKubernetesManager) appliedContains(kind string, name string, other ...string) bool {
-	return contains(skm.appliedYAMLs, kind, name, other...)
+func (skm stubKubernetesManager) appliedContains(
+	apiVersion,
+	kind,
+	appKubernetesIOName,
+	appKubernetesIOComponent,
+	metadataName string,
+	other ...string,
+) bool {
+	return contains(
+		skm.appliedYAMLs,
+		apiVersion,
+		kind,
+		appKubernetesIOName,
+		appKubernetesIOComponent,
+		metadataName,
+		other...,
+	)
 }
 
 func (skm stubKubernetesManager) objectPassesFilter(object *unstructured.Unstructured) bool {
@@ -905,13 +969,13 @@ func (skm stubKubernetesManager) objectPassesFilter(object *unstructured.Unstruc
 	return !skm.usedFilter(object)
 }
 
-func (skm *stubKubernetesManager) ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error {
-	skm.appliedYAMLs = resourceYamls
+func (skm *stubKubernetesManager) ApplyResources(resourceYAMLs []string, filterObject func(*unstructured.Unstructured) bool) error {
+	skm.appliedYAMLs = resourceYAMLs
 	skm.usedFilter = filterObject
 	return nil
 }
 
-func (skm *stubKubernetesManager) DeleteResources(resourceYamls []string) error {
-	skm.deletedYAMLs = resourceYamls
+func (skm *stubKubernetesManager) DeleteResources(resourceYAMLs []string) error {
+	skm.deletedYAMLs = resourceYAMLs
 	return nil
 }

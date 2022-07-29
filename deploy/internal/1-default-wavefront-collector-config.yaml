@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/name : wavefront
+    app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: collector
   name: default-wavefront-collector-config
   namespace: wavefront
