@@ -267,19 +267,23 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		r, _, _, dynamicClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		stubKM := &stubKubernetesManager{}
+
+		r, _, _, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.Equal(t, 12, len(dynamicClient.Actions()))
-
-		deploymentObject := getPatch(dynamicClient, "deployments", controllers.ProxyName)
-
-		assert.Contains(t, string(deploymentObject), "updatedToken")
-		assert.Contains(t, string(deploymentObject), "testWavefrontUrl/api/")
-
-		assert.NoError(t, err)
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"proxy",
+			"wavefront-proxy",
+			"name: updatedToken",
+			"value: testWavefrontUrl/api/",
+		))
 	})
 
 	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
