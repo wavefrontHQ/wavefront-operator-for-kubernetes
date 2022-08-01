@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -374,6 +375,8 @@ metadata:
 	})
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{
 			Enable: true,
@@ -382,13 +385,31 @@ metadata:
 				AllowList: []string{"first_allow", "second_allow"},
 			},
 		}
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		configMap := getCreatedConfigMap(t, dynamicClient)
+		configMap, err := stubKM.getAppliedYAML(
+			"v1",
+			"ConfigMap",
+			"wavefront",
+			"collector",
+			"default-wavefront-collector-config",
+			"clusterName: testClusterName",
+			"proxyAddress: wavefront-proxy:2878",
+		)
+		assert.NoError(t, err)
+
+		configStr, found, err := unstructured.NestedString(configMap.Object, "data", "config.yaml")
+		assert.Equal(t, true, found)
+		assert.NoError(t, err)
+
+		// TODO: anything to make this more readable?
 		var configs map[string]interface{}
-		err = yaml.Unmarshal([]byte(configMap.Data["config.yaml"]), &configs)
+		err = yaml.Unmarshal([]byte(configStr), &configs)
 		assert.NoError(t, err)
 		sinks := configs["sinks"]
 		sinkArray := sinks.([]interface{})
@@ -400,23 +421,46 @@ metadata:
 }
 
 func TestReconcileProxy(t *testing.T) {
+	// TODO: is this not already tested in TestReconcileAll?
 	t.Run("creates proxy and proxy service", func(t *testing.T) {
-		r, _, _, dynamicClient, _ := setupForCreate(defaultWFSpec())
+		stubKM := &stubKubernetesManager{}
+
+		r, _, _, _, _ := setupForCreate(defaultWFSpec())
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
 		assert.NoError(t, err)
 
-		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
+		//assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
-		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
-		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
-		assert.Equal(t, "", deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		//assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
+		//assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		//assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
+		//assert.Equal(t, "", deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+		assert.True(t, stubKM.appliedContains(
+			"apps/v1",
+			"Deployment",
+			"wavefront",
+			"proxy",
+			"wavefront-proxy",
+			"value: testWavefrontUrl/api/",
+			"name: testToken",
+			"containerPort: 2878",
+			"configHash: \"\"",
+		))
 
-		service := getCreatedService(t, dynamicClient)
-		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
+		//service := getCreatedService(t, dynamicClient)
+		//assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
+		assert.True(t, stubKM.appliedContains(
+			"v1",
+			"Service",
+			"wavefront",
+			"proxy",
+			util.ProxyName,
+			"port: 2878",
+		))
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
@@ -440,25 +484,40 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Enable = false
 		wfSpec.DataExport.ExternalWavefrontProxy.Url = "externalProxyUrl"
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.Equal(t, 8, len(dynamicClient.Actions()))
-
-		configMap := getCreatedConfigMap(t, dynamicClient)
-		assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
+		//assert.Equal(t, 8, len(dynamicClient.Actions()))
+		//configMap := getCreatedConfigMap(t, dynamicClient)
+		//assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
+		assert.True(t, stubKM.appliedContains(
+			"v1",
+			"ConfigMap",
+			"wavefront",
+			"collector",
+			"default-wavefront-collector-config",
+			"clusterName: testClusterName",
+			"proxyAddress: externalProxyUrl",
+		))
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
+		//stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
+
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		//r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -1028,17 +1087,7 @@ func contains(
 	metadataName string,
 	otherChecks ...string,
 ) bool {
-	headerMatchStr := fmt.Sprintf(
-		`apiVersion: %s
-kind: %s
-metadata:
-  labels:
-    app.kubernetes.io/name: %s
-    app.kubernetes.io/component: %s
-  name: %s`,
-		apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
-
-	reg, err := regexp.Compile(headerMatchStr)
+	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
 	if err != nil {
 		panic(err)
 	}
@@ -1057,13 +1106,28 @@ metadata:
 	return false
 }
 
+func k8sYAMLHeader(apiVersion string, kind string, appKubernetesIOName string, appKubernetesIOComponent string, metadataName string) (*regexp.Regexp, error) {
+	headerMatchStr := fmt.Sprintf(
+		`apiVersion: %s
+kind: %s
+metadata:
+  labels:
+    app.kubernetes.io/name: %s
+    app.kubernetes.io/component: %s
+  name: %s`,
+		apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
+
+	reg, err := regexp.Compile(headerMatchStr)
+	return reg, err
+}
+
 func (skm stubKubernetesManager) deletedContains(
 	apiVersion,
 	kind,
 	appKubernetesIOName,
 	appKubernetesIOComponent,
 	metadataName string,
-	other ...string,
+	otherChecks ...string,
 ) bool {
 	return contains(
 		skm.deletedYAMLs,
@@ -1072,7 +1136,7 @@ func (skm stubKubernetesManager) deletedContains(
 		appKubernetesIOName,
 		appKubernetesIOComponent,
 		metadataName,
-		other...,
+		otherChecks...,
 	)
 }
 
@@ -1082,7 +1146,7 @@ func (skm stubKubernetesManager) appliedContains(
 	appKubernetesIOName,
 	appKubernetesIOComponent,
 	metadataName string,
-	other ...string,
+	otherChecks ...string,
 ) bool {
 	return contains(
 		skm.appliedYAMLs,
@@ -1091,7 +1155,7 @@ func (skm stubKubernetesManager) appliedContains(
 		appKubernetesIOName,
 		appKubernetesIOComponent,
 		metadataName,
-		other...,
+		otherChecks...,
 	)
 }
 
@@ -1109,4 +1173,26 @@ func (skm *stubKubernetesManager) ApplyResources(resourceYAMLs []string, filterO
 func (skm *stubKubernetesManager) DeleteResources(resourceYAMLs []string) error {
 	skm.deletedYAMLs = resourceYAMLs
 	return nil
+}
+
+func (skm stubKubernetesManager) getAppliedYAML(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName string, otherChecks ...string) (*unstructured.Unstructured, error) {
+	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, yamlStr := range skm.appliedYAMLs {
+		if reg.MatchString(yamlStr) {
+			for _, other := range otherChecks {
+				if !strings.Contains(yamlStr, other) {
+					return nil, errors.New("no YAML matched conditions passed")
+				}
+			}
+			object := &unstructured.Unstructured{}
+			var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+			_, _, err := resourceDecoder.Decode([]byte(yamlStr), nil, object)
+			return object, err
+		}
+	}
+	return nil, nil
 }
