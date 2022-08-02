@@ -266,11 +266,11 @@ type WavefrontStatus struct {
 	// Overall health status of the wavefront components
 	Healthy bool `json:"healthy,required"`
 
-	// Warnings whether the custom resource spec has validation warnings
-	Warnings bool `json:"warnings,omitempty"`
-
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
+
+	// Human readable error messages.
+	Errors string `json:"errors,omitempty"`
 
 	// The deployment status  of the cluster collector
 	Proxy DeploymentStatus `json:"proxy,omitempty"`
@@ -332,7 +332,6 @@ type DeploymentStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="healthy",type="boolean",JSONPath=".status.healthy"
-// +kubebuilder:printcolumn:name="warnings",type="boolean",JSONPath=".status.warnings"
 // +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.proxy.status"
 // +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.clusterCollector.status"
 // +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.nodeCollector.status"
