@@ -3,6 +3,8 @@ package controllers_test
 import (
 	"testing"
 
+	k8s_testing "k8s.io/client-go/testing"
+
 	"github.com/stretchr/testify/assert"
 	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -197,4 +199,20 @@ spec:
 		assert.True(t, hasAction(fakeDynamicClient, "get", "daemonsets"), "get DaemonSet")
 		assert.True(t, hasAction(fakeDynamicClient, "delete", "daemonsets"), "delete DaemonSet")
 	})
+}
+
+func hasAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (result bool) {
+	if getAction(dynamicClient, verb, resource) != nil {
+		return true
+	}
+	return false
+}
+
+func getAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (action k8s_testing.Action) {
+	for _, action := range dynamicClient.Actions() {
+		if action.GetVerb() == verb && action.GetResource().Resource == resource {
+			return action
+		}
+	}
+	return nil
 }
