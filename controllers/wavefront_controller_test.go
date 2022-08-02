@@ -2,11 +2,9 @@ package controllers_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
 	"os"
-	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -39,7 +37,7 @@ import (
 
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		r, _, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
@@ -49,11 +47,11 @@ func TestReconcileAll(t *testing.T) {
 
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 
-		assert.True(t, stubKM.appliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
-		assert.True(t, stubKM.appliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
-		assert.True(t, stubKM.appliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		assert.True(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		assert.True(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"apps/v1",
 			"Deployment",
 			"wavefront",
@@ -64,7 +62,7 @@ func TestReconcileAll(t *testing.T) {
 			"containerPort: 2878",
 		))
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"v1",
 			"ConfigMap",
 			"wavefront",
@@ -74,7 +72,7 @@ func TestReconcileAll(t *testing.T) {
 			"proxyAddress: wavefront-proxy:2878",
 		))
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"v1",
 			"Service",
 			"wavefront",
@@ -85,7 +83,7 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		r, wfCR, apiClient, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
@@ -95,18 +93,18 @@ func TestReconcileAll(t *testing.T) {
 		_, err = r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.deletedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
-		assert.True(t, stubKM.deletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
-		assert.True(t, stubKM.deletedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
-		assert.True(t, stubKM.deletedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
-		assert.True(t, stubKM.deletedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
-		assert.True(t, stubKM.deletedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
+		assert.True(t, stubKM.DeletedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		assert.True(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		assert.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		assert.True(t, stubKM.DeletedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
+		assert.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
 	})
 }
 
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
@@ -118,11 +116,11 @@ func TestReconcileCollector(t *testing.T) {
 
 		// User is responsible for applying ConfigMap
 		// TODO: I believe this is set in the spec, which is pass by value in setup...
-		//assert.False(t, stubKM.appliedContains("ConfigMap", "myconfig"))
+		//assert.False(t, stubKM.AppliedContains("ConfigMap", "myconfig"))
 
 		/* It DOES call the ApplyResources function with the ConfigMap, but it's filtered out */
-		assert.True(t, stubKM.appliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
-		assert.False(t, stubKM.deletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.True(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.False(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 
 		configMapYAML := `
 apiVersion: v1
@@ -140,13 +138,13 @@ metadata:
 		_, _, err = resourceDecoder.Decode([]byte(configMapYAML), nil, configMapObject)
 		assert.NoError(t, err)
 
-		assert.False(t, stubKM.objectPassesFilter(
+		assert.False(t, stubKM.ObjectPassesFilter(
 			configMapObject,
 		))
 	})
 
 	t.Run("defaults values for default collector config", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 		wfSpec := defaultWFSpec()
 
 		r, _, _, _, _ := setupForCreate(wfSpec)
@@ -156,11 +154,11 @@ metadata:
 
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.configMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
+		assert.True(t, stubKM.ConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Requests.CPU = "200m"
@@ -175,11 +173,11 @@ metadata:
 
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.clusterCollectorDeploymentContains("memory: 10Mi"))
+		assert.True(t, stubKM.ClusterCollectorDeploymentContains("memory: 10Mi"))
 	})
 
 	t.Run("resources set for node collector", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Requests.CPU = "200m"
@@ -193,11 +191,11 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.nodeCollectorDaemonSetContains("memory: 10Mi"))
+		assert.True(t, stubKM.NodeCollectorDaemonSetContains("memory: 10Mi"))
 	})
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		r, _, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
@@ -207,16 +205,16 @@ metadata:
 
 		// TODO: lots of lines of test code... what we can do better? Squash them onto one line?
 		/* DaemonSet wavefront-node-collector */
-		assert.True(t, stubKM.nodeCollectorDaemonSetContains("resources:"))
-		assert.False(t, stubKM.nodeCollectorDaemonSetContains("limits:", "requests:"))
+		assert.True(t, stubKM.NodeCollectorDaemonSetContains("resources:"))
+		assert.False(t, stubKM.NodeCollectorDaemonSetContains("limits:", "requests:"))
 
 		/* Deployment wavefront-cluster-collector */
-		assert.True(t, stubKM.clusterCollectorDeploymentContains("resources:"))
-		assert.False(t, stubKM.clusterCollectorDeploymentContains("limits:", "requests:"))
+		assert.True(t, stubKM.ClusterCollectorDeploymentContains("resources:"))
+		assert.False(t, stubKM.ClusterCollectorDeploymentContains("limits:", "requests:"))
 	})
 
 	t.Run("skip creating collector if metrics is not enabled", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
@@ -227,13 +225,13 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.False(t, stubKM.serviceAccountPassesFilter(t, err))
+		assert.False(t, stubKM.ServiceAccountPassesFilter(t, err))
 
-		assert.True(t, stubKM.proxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
+		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 	})
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{
@@ -250,7 +248,7 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		configMap, err := stubKM.getAppliedYAML(
+		configMap, err := stubKM.GetAppliedYAML(
 			"v1",
 			"ConfigMap",
 			"wavefront",
@@ -278,34 +276,10 @@ metadata:
 	})
 }
 
-func (skm stubKubernetesManager) serviceAccountPassesFilter(t *testing.T, err error) bool {
-	serviceAccountYAML := `
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app.kubernetes.io/name: wavefront
-    app.kubernetes.io/component: collector
-  name: wavefront-collector
-  namespace: wavefront
-`
-	var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-
-	serviceAccountObject := &unstructured.Unstructured{}
-	_, _, err = resourceDecoder.Decode([]byte(serviceAccountYAML), nil, serviceAccountObject)
-	assert.NoError(t, err)
-
-	// TODO: NOTE: the filter is only based on app.kubernetes.io/component value
-	// so I only tested one object
-	return skm.objectPassesFilter(
-		serviceAccountObject,
-	)
-}
-
 func TestReconcileProxy(t *testing.T) {
 	// TODO: is this not already tested in TestReconcileAll?
 	t.Run("creates proxy and proxy service", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		r, _, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
@@ -313,7 +287,7 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"apps/v1",
 			"Deployment",
 			"wavefront",
@@ -325,7 +299,7 @@ func TestReconcileProxy(t *testing.T) {
 			"configHash: \"\"",
 		))
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"v1",
 			"Service",
 			"wavefront",
@@ -336,7 +310,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		r, _, _, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
@@ -344,7 +318,7 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"apps/v1",
 			"Deployment",
 			"wavefront",
@@ -356,7 +330,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Enable = false
@@ -368,7 +342,7 @@ func TestReconcileProxy(t *testing.T) {
 		assert.NoError(t, err)
 
 		// TODO: find a way to condense all of this test code
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"v1",
 			"ConfigMap",
 			"wavefront",
@@ -395,7 +369,7 @@ metadata:
 		_, _, err = resourceDecoder.Decode([]byte(proxyDeploymentYAML), nil, proxyDeploymentObject)
 		assert.NoError(t, err)
 
-		assert.False(t, stubKM.objectPassesFilter(
+		assert.False(t, stubKM.ObjectPassesFilter(
 			proxyDeploymentObject,
 		))
 
@@ -413,13 +387,13 @@ metadata:
 		_, _, err = resourceDecoder.Decode([]byte(proxyServiceYAML), nil, proxyServiceObject)
 		assert.NoError(t, err)
 
-		assert.False(t, stubKM.objectPassesFilter(
+		assert.False(t, stubKM.ObjectPassesFilter(
 			proxyServiceObject,
 		))
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
@@ -433,7 +407,7 @@ metadata:
 		containsPortInContainers(t, "pushListenerPorts", *stubKM, 1234)
 		containsPortInServicePort(t, 1234, *stubKM)
 
-		assert.True(t, stubKM.appliedContains(
+		assert.True(t, stubKM.AppliedContains(
 			"v1",
 			"ConfigMap",
 			"wavefront",
@@ -445,7 +419,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
@@ -460,7 +434,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with a user defined Wavefront tracing", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.Port = 30000
@@ -482,7 +456,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with a user defined Jaeger distributed tracing", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.Port = 30001
@@ -509,7 +483,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
@@ -528,7 +502,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Histogram.Port = 40000
@@ -556,7 +530,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
@@ -572,7 +546,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with preprocessor rules", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
@@ -586,7 +560,7 @@ metadata:
 
 		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", *stubKM)
 
-		deployment, err := stubKM.getAppliedDeployment("proxy", controllers.ProxyName)
+		deployment, err := stubKM.GetAppliedDeployment("proxy", controllers.ProxyName)
 		assert.NoError(t, err)
 
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
@@ -594,7 +568,7 @@ metadata:
 	})
 
 	t.Run("resources set for the proxy", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
@@ -608,7 +582,7 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		deployment, err := stubKM.getAppliedDeployment("proxy", controllers.ProxyName)
+		deployment, err := stubKM.GetAppliedDeployment("proxy", controllers.ProxyName)
 		assert.NoError(t, err)
 
 		assert.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
@@ -616,7 +590,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
@@ -644,7 +618,7 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		deployment, err := stubKM.getAppliedDeployment("proxy", controllers.ProxyName)
+		deployment, err := stubKM.GetAppliedDeployment("proxy", controllers.ProxyName)
 		assert.NoError(t, err)
 
 		containsProxyArg(t, "--proxyHost myproxyhost_url ", *stubKM)
@@ -659,7 +633,7 @@ metadata:
 	})
 
 	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
-		stubKM := &stubKubernetesManager{}
+		stubKM := test_helper.NewStubKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
@@ -719,8 +693,8 @@ func volumeHasSecret(t *testing.T, deployment appsv1.Deployment, name string, se
 	assert.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
 }
 
-func containsPortInServicePort(t *testing.T, port int32, stubKM stubKubernetesManager) {
-	serviceYAMLUnstructured, err := stubKM.getAppliedYAML(
+func containsPortInServicePort(t *testing.T, port int32, stubKM test_helper.StubKubernetesManager) {
+	serviceYAMLUnstructured, err := stubKM.GetAppliedYAML(
 		"v1",
 		"Service",
 		"wavefront",
@@ -742,9 +716,9 @@ func containsPortInServicePort(t *testing.T, port int32, stubKM stubKubernetesMa
 	assert.Fail(t, fmt.Sprintf("Did not find the port: %d", port))
 }
 
-func containsPortInContainers(t *testing.T, proxyArgName string, stubKM stubKubernetesManager, port int32) bool {
+func containsPortInContainers(t *testing.T, proxyArgName string, stubKM test_helper.StubKubernetesManager, port int32) bool {
 	//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
-	deploymentYAMLUnstructured, err := stubKM.getAppliedYAML(
+	deploymentYAMLUnstructured, err := stubKM.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
 		"wavefront",
@@ -830,8 +804,8 @@ func getEnvValueForName(envs []v1.EnvVar, name string) string {
 	return ""
 }
 
-func containsProxyArg(t *testing.T, proxyArg string, stubKM stubKubernetesManager) {
-	deployment, err := stubKM.getAppliedDeployment("proxy", "wavefront-proxy")
+func containsProxyArg(t *testing.T, proxyArg string, stubKM test_helper.StubKubernetesManager) {
+	deployment, err := stubKM.GetAppliedDeployment("proxy", "wavefront-proxy")
 	assert.NoError(t, err)
 
 	//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
@@ -1130,203 +1104,3 @@ func defaultRequest() reconcile.Request {
 	}}
 }
 
-type stubKubernetesManager struct {
-	deletedYAMLs []string
-	appliedYAMLs []string
-	usedFilter   func(*unstructured.Unstructured) bool
-}
-
-func contains(
-	yamls []string,
-	apiVersion,
-	kind,
-	appKubernetesIOName,
-	appKubernetesIOComponent,
-	metadataName string,
-	otherChecks ...string,
-) bool {
-	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, yamlStr := range yamls {
-		if reg.MatchString(yamlStr) {
-			for _, other := range otherChecks {
-				if !strings.Contains(yamlStr, other) {
-					return false
-				}
-			}
-			return true
-		}
-	}
-
-	return false
-}
-
-func k8sYAMLHeader(apiVersion string, kind string, appKubernetesIOName string, appKubernetesIOComponent string, metadataName string) (*regexp.Regexp, error) {
-	headerMatchStr := fmt.Sprintf(
-		`apiVersion: %s
-kind: %s
-metadata:
-  labels:
-    app.kubernetes.io/name: %s
-    app.kubernetes.io/component: %s
-  name: %s`,
-		apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
-
-	reg, err := regexp.Compile(headerMatchStr)
-	return reg, err
-}
-
-func (skm stubKubernetesManager) deletedContains(
-	apiVersion,
-	kind,
-	appKubernetesIOName,
-	appKubernetesIOComponent,
-	metadataName string,
-	otherChecks ...string,
-) bool {
-	return contains(
-		skm.deletedYAMLs,
-		apiVersion,
-		kind,
-		appKubernetesIOName,
-		appKubernetesIOComponent,
-		metadataName,
-		otherChecks...,
-	)
-}
-
-func (skm stubKubernetesManager) appliedContains(
-	apiVersion,
-	kind,
-	appKubernetesIOName,
-	appKubernetesIOComponent,
-	metadataName string,
-	otherChecks ...string,
-) bool {
-	return contains(
-		skm.appliedYAMLs,
-		apiVersion,
-		kind,
-		appKubernetesIOName,
-		appKubernetesIOComponent,
-		metadataName,
-		otherChecks...,
-	)
-}
-
-func (skm stubKubernetesManager) nodeCollectorDaemonSetContains(checks ...string) bool {
-	return contains(
-		skm.appliedYAMLs,
-		"apps/v1",
-		"DaemonSet",
-		"wavefront",
-		"collector",
-		"wavefront-node-collector",
-		checks...,
-	)
-}
-
-func (skm stubKubernetesManager) clusterCollectorDeploymentContains(checks ...string) bool {
-	return contains(
-		skm.appliedYAMLs,
-		"apps/v1",
-		"Deployment",
-		"wavefront",
-		"collector",
-		"wavefront-cluster-collector",
-		checks...,
-	)
-}
-
-func (skm stubKubernetesManager) objectPassesFilter(object *unstructured.Unstructured) bool {
-	// TODO: filter returning true if filtered is confusing
-	return !skm.usedFilter(object)
-}
-
-func (skm *stubKubernetesManager) ApplyResources(resourceYAMLs []string, filterObject func(*unstructured.Unstructured) bool) error {
-	skm.appliedYAMLs = resourceYAMLs
-	skm.usedFilter = filterObject
-	return nil
-}
-
-func (skm *stubKubernetesManager) DeleteResources(resourceYAMLs []string) error {
-	skm.deletedYAMLs = resourceYAMLs
-	return nil
-}
-
-func (skm stubKubernetesManager) getAppliedYAML(
-	apiVersion,
-	kind,
-	appKubernetesIOName,
-	appKubernetesIOComponent,
-	metadataName string,
-	otherChecks ...string,
-) (*unstructured.Unstructured, error) {
-	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, yamlStr := range skm.appliedYAMLs {
-		if reg.MatchString(yamlStr) {
-			for _, other := range otherChecks {
-				if !strings.Contains(yamlStr, other) {
-					return nil, errors.New("no YAML matched conditions passed")
-				}
-			}
-			object := &unstructured.Unstructured{}
-			var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-			_, _, err := resourceDecoder.Decode([]byte(yamlStr), nil, object)
-			return object, err
-		}
-	}
-	return nil, nil
-}
-
-func (skm stubKubernetesManager) getAppliedDeployment(appKubernetesIOComponent, metadataName string) (appsv1.Deployment, error) {
-	deploymentYAMLUnstructured, err := skm.getAppliedYAML(
-		"apps/v1",
-		"Deployment",
-		"wavefront",
-		appKubernetesIOComponent,
-		metadataName,
-	)
-	if err != nil {
-		return appsv1.Deployment{}, err
-	}
-
-	var deployment appsv1.Deployment
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentYAMLUnstructured.Object, &deployment)
-	if err != nil {
-		return appsv1.Deployment{}, err
-	}
-
-	return deployment, nil
-}
-
-func (skm stubKubernetesManager) proxyDeploymentContains(checks ...string) bool {
-	return contains(
-		skm.appliedYAMLs,
-		"apps/v1",
-		"Deployment",
-		"wavefront",
-		"proxy",
-		"wavefront-proxy",
-		checks...,
-	)
-}
-
-func (skm stubKubernetesManager) configMapContains(checks ...string) bool {
-	return contains(
-		skm.appliedYAMLs,
-		"v1",
-		"ConfigMap",
-		"wavefront",
-		"collector",
-		"default-wavefront-collector-config",
-		checks...,
-	)
-}
