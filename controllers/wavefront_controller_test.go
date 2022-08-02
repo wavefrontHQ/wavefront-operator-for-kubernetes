@@ -181,11 +181,6 @@ metadata:
 
 		assert.NoError(t, err)
 
-		//configMap := getCreatedConfigMap(t, dynamicClient)
-		//assert.Contains(t, configMap.Data["config.yaml"])
-		//assert.Contains(t, configMap.Data["config.yaml"])
-		//assert.Contains(t, configMap.Data["config.yaml"])
-
 		assert.True(t, stubKM.appliedContains(
 			"v1",
 			"ConfigMap",
@@ -214,8 +209,6 @@ metadata:
 
 		assert.NoError(t, err)
 
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ClusterCollectorName)
-		//assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"Deployment",
@@ -241,15 +234,12 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//daemonSet := getCreatedDaemonSet(t, dynamicClient)
-		//assert.Equal(t, "memory: 10Mi", daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
-
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"DaemonSet",
 			"wavefront",
 			"collector",
-			"wavefront-node-collector",
+			util.NodeCollectorName,
 			"memory: 10Mi",
 		))
 	})
@@ -264,9 +254,7 @@ metadata:
 		assert.NoError(t, err)
 
 		// TODO: lots of lines of test code... what we can do better? Squash them onto one line?
-		//daemonSet := getCreatedDaemonSet(t, dynamicClient)
-		//assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Limits)
-		//assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests)
+		/* DaemonSet wavefront-node-collector */
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"DaemonSet",
@@ -292,9 +280,7 @@ metadata:
 			"requests:",
 		))
 
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ClusterCollectorName)
-		//assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
-		//assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
+		/* Deployment wavefront-cluster-collector */
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"Deployment",
@@ -331,12 +317,8 @@ metadata:
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-
 		assert.NoError(t, err)
 
-		//assert.Equal(t, 4, len(dynamicClient.Actions()))
-		//assert.True(t, hasAction(dynamicClient, "create", "services"), "create Service")
-		//assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 		serviceAccountYAML := `
 apiVersion: v1
 kind: ServiceAccount
@@ -359,9 +341,7 @@ metadata:
 			serviceAccountObject,
 		))
 
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
-		//assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		//assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
+		// TODO: condense with stubKM inner getDeployment()
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"Deployment",
@@ -429,16 +409,8 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-
 		assert.NoError(t, err)
 
-		//assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
-
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
-		//assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
-		//assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
-		//assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
-		//assert.Equal(t, "", deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 		assert.True(t, stubKM.appliedContains(
 			"apps/v1",
 			"Deployment",
@@ -451,8 +423,6 @@ func TestReconcileProxy(t *testing.T) {
 			"configHash: \"\"",
 		))
 
-		//service := getCreatedService(t, dynamicClient)
-		//assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
 		assert.True(t, stubKM.appliedContains(
 			"v1",
 			"Service",
@@ -496,9 +466,7 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//assert.Equal(t, 8, len(dynamicClient.Actions()))
-		//configMap := getCreatedConfigMap(t, dynamicClient)
-		//assert.Contains(t, configMap.Data["config.yaml"], "externalProxyUrl")
+		// TODO: find a way to condense all of this test code
 		assert.True(t, stubKM.appliedContains(
 			"v1",
 			"ConfigMap",
@@ -561,12 +529,9 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//assert.True(t, containsPortInContainers(1234, "pushListenerPorts", *stubKM))
 		containsPortInContainers(t, "pushListenerPorts", *stubKM, 1234)
 		containsPortInServicePort(t, 1234, *stubKM)
-		//
-		//configMap := getCreatedConfigMap(t, dynamicClient)
-		//assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
+
 		assert.True(t, stubKM.appliedContains(
 			"v1",
 			"ConfigMap",
@@ -589,7 +554,6 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//containsPortInContainers(t, 50000, "deltaCounterPorts")
 		containsPortInContainers(t, "deltaCounterPorts", *stubKM, 50000)
 		containsPortInServicePort(t, 50000, *stubKM)
 	})
@@ -608,9 +572,10 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//containsPortInContainers(t, 30000, "traceListenerPorts")
+		// TODO: why not make these all methods of stubKM?
 		containsPortInContainers(t, "traceListenerPorts", *stubKM, 30000)
 		containsPortInServicePort(t, 30000, *stubKM)
+
 		containsProxyArg(t, "--traceSamplingRate .1", *stubKM)
 		containsProxyArg(t, "--traceSamplingDuration 45", *stubKM)
 	})
@@ -630,15 +595,15 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//containsPortInContainers(t, 30001, "traceJaegerListenerPorts")
 		containsPortInContainers(t, "traceJaegerListenerPorts", *stubKM, 30001)
 		containsPortInServicePort(t, 30001, *stubKM)
-		//containsPortInContainers(t, 14250, "traceJaegerGrpcListenerPorts")
+
 		containsPortInContainers(t, "traceJaegerGrpcListenerPorts", *stubKM, 14250)
 		containsPortInServicePort(t, 14250, *stubKM)
-		//containsPortInContainers(t, 30080, "traceJaegerHttpListenerPorts")
+
 		containsPortInContainers(t, "traceJaegerHttpListenerPorts", *stubKM, 30080)
 		containsPortInServicePort(t, 30080, *stubKM)
+
 		containsProxyArg(t, "--traceJaegerApplicationName jaeger", *stubKM)
 	})
 
@@ -655,9 +620,9 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//containsPortInContainers(t, 9411, "traceZipkinListenerPorts")
 		containsPortInContainers(t, "traceZipkinListenerPorts", *stubKM, 9411)
 		containsPortInServicePort(t, 9411, *stubKM)
+
 		containsProxyArg(t, "--traceZipkinApplicationName zipkin", *stubKM)
 	})
 
@@ -676,16 +641,15 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//containsPortInContainers(t, 40000, "histogramDistListenerPorts")
 		containsPortInContainers(t, "histogramDistListenerPorts", *stubKM, 40000)
 		containsPortInServicePort(t, 40000, *stubKM)
-		//containsPortInContainers(t, 40001, "histogramMinuteListenerPorts")
+
 		containsPortInContainers(t, "histogramMinuteListenerPorts", *stubKM, 40001)
 		containsPortInServicePort(t, 40001, *stubKM)
-		//containsPortInContainers(t, 40002, "histogramHourListenerPorts")
+
 		containsPortInContainers(t, "histogramHourListenerPorts", *stubKM, 40002)
 		containsPortInServicePort(t, 40002, *stubKM)
-		//containsPortInContainers(t, 40003, "histogramDayListenerPorts")
+
 		containsPortInContainers(t, "histogramDayListenerPorts", *stubKM, 40003)
 		containsPortInServicePort(t, 40003, *stubKM)
 	})
@@ -712,6 +676,7 @@ metadata:
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
 
+		// TODO: I believe setupForCreate() finally now only returns reconciler
 		r, _, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
@@ -723,7 +688,6 @@ metadata:
 		deployment, err := stubKM.getAppliedDeployment("proxy", util.ProxyName)
 		assert.NoError(t, err)
 
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
@@ -744,7 +708,6 @@ metadata:
 		assert.NoError(t, err)
 
 
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 		deployment, err := stubKM.getAppliedDeployment("proxy", util.ProxyName)
 		assert.NoError(t, err)
 
@@ -781,7 +744,6 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 		deployment, err := stubKM.getAppliedDeployment("proxy", util.ProxyName)
 		assert.NoError(t, err)
 
@@ -789,8 +751,10 @@ metadata:
 		containsProxyArg(t, "--proxyPort 8080", *stubKM)
 		containsProxyArg(t, "--proxyUser myUser", *stubKM)
 		containsProxyArg(t, "--proxyPassword myPassword", *stubKM)
+
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
 		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
+
 		assert.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 	})
 
@@ -813,6 +777,7 @@ metadata:
 				"http-url": []byte("https://myproxyhost_url:8080"),
 			},
 		}
+
 		r, _, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
 		r.KubernetesManager = stubKM
 
