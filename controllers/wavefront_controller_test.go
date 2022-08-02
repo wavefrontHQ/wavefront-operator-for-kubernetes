@@ -144,8 +144,7 @@ func TestReconcileCollector(t *testing.T) {
 		// TODO: I believe this is set in the spec, which is pass by value in setup...
 		//assert.False(t, stubKM.appliedContains("ConfigMap", "myconfig"))
 
-		// It DOES call the ApplyResources function with the ConfigMap, but it's filtered out
-		// TODO: test in KubernetesManager
+		/* It DOES call the ApplyResources function with the ConfigMap, but it's filtered out */
 		assert.True(t, stubKM.appliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 		assert.False(t, stubKM.deletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 
@@ -255,56 +254,12 @@ metadata:
 
 		// TODO: lots of lines of test code... what we can do better? Squash them onto one line?
 		/* DaemonSet wavefront-node-collector */
-		assert.True(t, stubKM.appliedContains(
-			"apps/v1",
-			"DaemonSet",
-			"wavefront",
-			"collector",
-			"wavefront-node-collector",
-			"resources:",
-		))
-		assert.False(t, stubKM.appliedContains(
-			"apps/v1",
-			"DaemonSet",
-			"wavefront",
-			"collector",
-			"wavefront-node-collector",
-			"limits:",
-		))
-		assert.False(t, stubKM.appliedContains(
-			"apps/v1",
-			"DaemonSet",
-			"wavefront",
-			"collector",
-			"wavefront-node-collector",
-			"requests:",
-		))
+		assert.True(t, stubKM.nodeCollectorDaemonSetContains("resources:"))
+		assert.False(t, stubKM.nodeCollectorDaemonSetContains("limits:", "requests:"))
 
 		/* Deployment wavefront-cluster-collector */
-		assert.True(t, stubKM.appliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"collector",
-			util.ClusterCollectorName,
-			"resources:",
-		))
-		assert.False(t, stubKM.appliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"collector",
-			util.ClusterCollectorName,
-			"limits:",
-		))
-		assert.False(t, stubKM.appliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"collector",
-			util.ClusterCollectorName,
-			"requests:",
-		))
+		assert.True(t, stubKM.clusterCollectorDeploymentContains("resources:"))
+		assert.False(t, stubKM.clusterCollectorDeploymentContains("limits:", "requests:"))
 	})
 
 	t.Run("skip creating collector if metrics is not enabled", func(t *testing.T) {
@@ -1312,6 +1267,30 @@ func (skm stubKubernetesManager) appliedContains(
 		appKubernetesIOComponent,
 		metadataName,
 		otherChecks...,
+	)
+}
+
+func (skm stubKubernetesManager) nodeCollectorDaemonSetContains(checks ...string) bool {
+	return contains(
+		skm.appliedYAMLs,
+		"apps/v1",
+		"DaemonSet",
+		"wavefront",
+		"collector",
+		"wavefront-node-collector",
+		checks...,
+	)
+}
+
+func (skm stubKubernetesManager) clusterCollectorDeploymentContains(checks ...string) bool {
+	return contains(
+		skm.appliedYAMLs,
+		"apps/v1",
+		"Deployment",
+		"wavefront",
+		"collector",
+		"wavefront-cluster-collector",
+		checks...,
 	)
 }
 
