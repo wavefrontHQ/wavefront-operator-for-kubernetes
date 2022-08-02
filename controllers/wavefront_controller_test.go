@@ -174,7 +174,7 @@ metadata:
 
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.ConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
+		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
@@ -428,15 +428,7 @@ metadata:
 		containsPortInContainers(t, "pushListenerPorts", *stubKM, 1234)
 		containsPortInServicePort(t, 1234, *stubKM)
 
-		assert.True(t, stubKM.AppliedContains(
-			"v1",
-			"ConfigMap",
-			"wavefront",
-			"collector",
-			"default-wavefront-collector-config",
-			"clusterName: testClusterName",
-			"proxyAddress: wavefront-proxy:1234",
-		))
+		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:1234"))
 	})
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
@@ -1123,4 +1115,3 @@ func defaultRequest() reconcile.Request {
 		Name:      "wavefront",
 	}}
 }
-
