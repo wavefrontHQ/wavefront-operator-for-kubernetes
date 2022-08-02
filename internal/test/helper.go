@@ -3,15 +3,16 @@ package test_helper
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
-	"regexp"
-	"strings"
-	"testing"
 )
 
 type stubKubernetesManager struct {
@@ -332,15 +333,15 @@ func (skm stubKubernetesManager) GetNodeCollectorDaemonSet(checks ...string) (ap
 }
 
 func (skm stubKubernetesManager) GetClusterCollectorDeployment(checks ...string) (appsv1.Deployment, error) {
-	return skm.GetAppliedDeployment("collector", "wavefront-cluster-collector", )
+	return skm.GetAppliedDeployment("collector", "wavefront-cluster-collector")
 }
 
 func (skm stubKubernetesManager) GetProxyService(checks ...string) (corev1.Service, error) {
-	return skm.GetAppliedService("proxy", "wavefront-proxy", )
+	return skm.GetAppliedService("proxy", "wavefront-proxy")
 }
 
 func (skm stubKubernetesManager) GetProxyDeployment(checks ...string) (appsv1.Deployment, error) {
-	return skm.GetAppliedDeployment("proxy", "wavefront-proxy", )
+	return skm.GetAppliedDeployment("proxy", "wavefront-proxy")
 }
 
 func (skm stubKubernetesManager) ObjectPassesFilter(object *unstructured.Unstructured) bool {

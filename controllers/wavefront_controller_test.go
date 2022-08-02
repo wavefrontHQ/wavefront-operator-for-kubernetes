@@ -3,10 +3,11 @@ package controllers_test
 import (
 	"context"
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
 	"os"
 	"testing"
 	"time"
+
+	test_helper "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -29,7 +30,6 @@ import (
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	clientgotesting "k8s.io/client-go/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -58,6 +58,7 @@ func TestReconcileAll(t *testing.T) {
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
+		// TODO: so much setup for only one usage...
 		r, wfCR, apiClient, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
 
@@ -87,9 +88,7 @@ func TestReconcileCollector(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		// User is responsible for applying ConfigMap
-		// TODO: I believe this is set in the spec, which is pass by value in setup...
-		//assert.False(t, stubKM.AppliedContains("ConfigMap", "myconfig"))
+		/* Note: User is responsible for applying ConfigMap; we can't test for new ConfigMap "myconfig" */
 
 		/* It DOES call the ApplyResources function with the ConfigMap, but it's filtered out */
 		assert.True(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
@@ -178,7 +177,6 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		// TODO: lots of lines of test code... what we can do better? Squash them onto one line?
 		/* DaemonSet wavefront-node-collector */
 		assert.True(t, stubKM.NodeCollectorDaemonSetContains("resources:"))
 		assert.False(t, stubKM.NodeCollectorDaemonSetContains("limits:", "requests:"))
@@ -381,7 +379,6 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		// TODO: why not make these all methods of stubKM?
 		containsPortInContainers(t, "traceListenerPorts", *stubKM, 30000)
 		containsPortInServicePort(t, 30000, *stubKM)
 
@@ -485,7 +482,7 @@ metadata:
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
 
-		// TODO: I believe setupForCreate() finally now only returns reconciler
+		// TODO: setupForCreate() finally now only returns reconciler... except inside setup()
 		r, _, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
@@ -641,7 +638,7 @@ func containsPortInServicePort(t *testing.T, port int32, stubKM test_helper.Stub
 
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceYAMLUnstructured.Object, &service)
 	assert.NoError(t, err)
-	//service := getCreatedService(t, stubKM)
+
 	for _, servicePort := range service.Spec.Ports {
 		if servicePort.Port == port {
 			return
@@ -651,7 +648,6 @@ func containsPortInServicePort(t *testing.T, port int32, stubKM test_helper.Stub
 }
 
 func containsPortInContainers(t *testing.T, proxyArgName string, stubKM test_helper.StubKubernetesManager, port int32) bool {
-	//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 	deploymentYAMLUnstructured, err := stubKM.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
@@ -665,65 +661,17 @@ func containsPortInContainers(t *testing.T, proxyArgName string, stubKM test_hel
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentYAMLUnstructured.Object, &deployment)
 	assert.NoError(t, err)
 
-	//containers, found, err := unstructured.NestedSlice(
-	//	deploymentYAMLUnstructured.Object,
-	//	"spec",
-	//	"template",
-	//	"spec",
-	//	"containers",
-	//)
-	//assert.NoError(t, err)
-	//assert.True(t, found)
-	//log.Printf(">>>>>>>>>>> containers[0]: %+v", containers[0])
-
-	//var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-
-	//containerPortsObject := &unstructured.Unstructured{}
-	//_, _, err = resourceDecoder.Decode([]byte(containers[0].(string)), nil, containerPortsObject)
-	//assert.NoError(t, err)
-	//log.Printf(">>>>>>>>>>> containerPortsObject: %+v", containerPortsObject)
-
-	//containerObj := containers[0].(map[string]map[string]interface{})
-	//log.Printf(">>>>>>>>>>> containerObj: %+v", containerObj)
-
-	//containerPorts := containerObj.
-
-	//containerPorts, found, err := unstructured.NestedSlice(
-	//	containerPortsObject.Object,
-	//	"ports",
-	//)
-	//assert.NoError(t, err)
-	//assert.True(t, found)
-
-	//log.Printf(">>>>>>>>>>> containerPorts: %+v", containerPorts)
-
 	foundPort := false
 	for _, containerPort := range deployment.Spec.Template.Spec.Containers[0].Ports {
-		//for _, containerPort := range containerObj { // TODO: need to get "ports" field
 		if containerPort.ContainerPort == port {
 			foundPort = true
 			break
 		}
 
 		fmt.Printf("%+v", containerPort)
-
-		//containerPortCheck := fmt.Sprintf("ContainerPort: %d", port)
-
-		//if containerPort.(string) == containerPortCheck {
-		//	foundPort = true
-		//	break
-		//}
 	}
-	//if !foundPort {
-	//	log.Printf("Did not find the port: %d", port)
-	//	return false
-	//}
 	assert.True(t, foundPort, fmt.Sprintf("Did not find the port: %d", port))
 
-	//if !strings.Contains(proxyArgsEnvValue, fmt.Sprintf("--%s %d", proxyArgName, port)) {
-	//	log.Printf("Env did not have proxy args: %s", proxyArgsEnvValue)
-	//	return false
-	//}
 	proxyArgsEnvValue := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
 	assert.Contains(t, proxyArgsEnvValue, fmt.Sprintf("--%s %d", proxyArgName, port))
 	return true
@@ -742,42 +690,8 @@ func containsProxyArg(t *testing.T, proxyArg string, stubKM test_helper.StubKube
 	deployment, err := stubKM.GetAppliedDeployment("proxy", "wavefront-proxy")
 	assert.NoError(t, err)
 
-	//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
 	assert.Contains(t, value, fmt.Sprintf("%s", proxyArg))
-}
-
-func getCreatedConfigMap(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) v1.ConfigMap {
-	configMapObject := getAction(dynamicClient, "create", "configmaps").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-	var configMap v1.ConfigMap
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(configMapObject.Object, &configMap)
-	assert.NoError(t, err)
-	return configMap
-}
-
-func getCreatedDeployment(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient, deploymentName string) appsv1.Deployment {
-	deploymentObject := getCreateObject(dynamicClient, "deployments", deploymentName)
-	var deployment appsv1.Deployment
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObject.Object, &deployment)
-	assert.NoError(t, err)
-	return deployment
-}
-
-func getCreatedService(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) v1.Service {
-	serviceObject := getAction(dynamicClient, "create", "services").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-	var service v1.Service
-
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(serviceObject.Object, &service)
-	assert.NoError(t, err)
-	return service
-}
-
-func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) appsv1.DaemonSet {
-	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", controllers.NodeCollectorName)
-	var ds appsv1.DaemonSet
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
-	assert.NoError(t, err)
-	return ds
 }
 
 func defaultWFSpec() wf.WavefrontSpec {
@@ -803,47 +717,6 @@ func defaultWFSpec() wf.WavefrontSpec {
 		},
 		ControllerManagerUID: "",
 	}
-}
-func getCreateObject(dynamicClient *dynamicfake.FakeDynamicClient, resource string, metadataName string) *unstructured.Unstructured {
-	//deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-	for _, action := range dynamicClient.Actions() {
-		if action.GetVerb() == "create" && action.GetResource().Resource == resource {
-			resourceObj := action.(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-			if resourceObj.GetName() == metadataName {
-				return resourceObj
-			}
-		}
-	}
-	return nil
-}
-
-func getPatch(dynamicClient *dynamicfake.FakeDynamicClient, resource string, metadataName string) []byte {
-	//deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
-	for _, action := range dynamicClient.Actions() {
-		if action.GetVerb() == "patch" && action.GetResource().Resource == resource {
-			resourceObj := action.(clientgotesting.PatchActionImpl)
-			if resourceObj.GetName() == metadataName {
-				return resourceObj.Patch
-			}
-		}
-	}
-	return nil
-}
-
-func hasAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (result bool) {
-	if getAction(dynamicClient, verb, resource) != nil {
-		return true
-	}
-	return false
-}
-
-func getAction(dynamicClient *dynamicfake.FakeDynamicClient, verb, resource string) (action clientgotesting.Action) {
-	for _, action := range dynamicClient.Actions() {
-		if action.GetVerb() == verb && action.GetResource().Resource == resource {
-			return action
-		}
-	}
-	return nil
 }
 
 func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
