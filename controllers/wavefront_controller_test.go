@@ -483,154 +483,253 @@ func TestReconcileProxy(t *testing.T) {
 			"clusterName: testClusterName",
 			"proxyAddress: externalProxyUrl",
 		))
+
+		proxyDeploymentYAML := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: proxy
+  name: wavefront-proxy
+  namespace: wavefront
+`
+		// TODO: all of this is ugly and should be a helper function or something
+		var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+		proxyDeploymentObject := &unstructured.Unstructured{}
+		_, _, err = resourceDecoder.Decode([]byte(proxyDeploymentYAML), nil, proxyDeploymentObject)
+		assert.NoError(t, err)
+
+		assert.False(t, stubKM.objectPassesFilter(
+			proxyDeploymentObject,
+		))
+
+		proxyServiceYAML := `
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: proxy
+  name: wavefront-proxy
+  namespace: wavefront
+`
+		proxyServiceObject := &unstructured.Unstructured{}
+		_, _, err = resourceDecoder.Decode([]byte(proxyServiceYAML), nil, proxyServiceObject)
+		assert.NoError(t, err)
+
+		assert.False(t, stubKM.objectPassesFilter(
+			proxyServiceObject,
+		))
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
-		//stubKM := &stubKubernetesManager{}
+		stubKM := &stubKubernetesManager{}
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		//r.KubernetesManager = stubKM
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsPortInContainers(t, 1234, "pushListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 1234, dynamicClient)
-
-		configMap := getCreatedConfigMap(t, dynamicClient)
-		assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
+		//assert.True(t, containsPortInContainers(1234, "pushListenerPorts", *stubKM))
+		containsPortInContainers(t, "pushListenerPorts", *stubKM, 1234)
+		containsPortInServicePort(t, 1234, *stubKM)
+		//
+		//configMap := getCreatedConfigMap(t, dynamicClient)
+		//assert.Contains(t, configMap.Data["config.yaml"], "wavefront-proxy:1234")
+		assert.True(t, stubKM.appliedContains(
+			"v1",
+			"ConfigMap",
+			"wavefront",
+			"collector",
+			"default-wavefront-collector-config",
+			"clusterName: testClusterName",
+			"proxyAddress: wavefront-proxy:1234",
+		))
 	})
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsPortInContainers(t, 50000, "deltaCounterPorts", dynamicClient)
-		containsPortInServicePort(t, 50000, dynamicClient)
+		//containsPortInContainers(t, 50000, "deltaCounterPorts")
+		containsPortInContainers(t, "deltaCounterPorts", *stubKM, 50000)
+		containsPortInServicePort(t, 50000, *stubKM)
 	})
 
 	t.Run("can create proxy with a user defined Wavefront tracing", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.Port = 30000
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingRate = ".1"
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingDuration = 45
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsPortInContainers(t, 30000, "traceListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 30000, dynamicClient)
-		containsProxyArg(t, "--traceSamplingRate .1", dynamicClient)
-		containsProxyArg(t, "--traceSamplingDuration 45", dynamicClient)
+		//containsPortInContainers(t, 30000, "traceListenerPorts")
+		containsPortInContainers(t, "traceListenerPorts", *stubKM, 30000)
+		containsPortInServicePort(t, 30000, *stubKM)
+		containsProxyArg(t, "--traceSamplingRate .1", *stubKM)
+		containsProxyArg(t, "--traceSamplingDuration 45", *stubKM)
 	})
 
 	t.Run("can create proxy with a user defined Jaeger distributed tracing", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.Port = 30001
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort = 14250
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort = 30080
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.ApplicationName = "jaeger"
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsPortInContainers(t, 30001, "traceJaegerListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 30001, dynamicClient)
-		containsPortInContainers(t, 14250, "traceJaegerGrpcListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 14250, dynamicClient)
-		containsPortInContainers(t, 30080, "traceJaegerHttpListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 30080, dynamicClient)
-		containsProxyArg(t, "--traceJaegerApplicationName jaeger", dynamicClient)
+		//containsPortInContainers(t, 30001, "traceJaegerListenerPorts")
+		containsPortInContainers(t, "traceJaegerListenerPorts", *stubKM, 30001)
+		containsPortInServicePort(t, 30001, *stubKM)
+		//containsPortInContainers(t, 14250, "traceJaegerGrpcListenerPorts")
+		containsPortInContainers(t, "traceJaegerGrpcListenerPorts", *stubKM, 14250)
+		containsPortInServicePort(t, 14250, *stubKM)
+		//containsPortInContainers(t, 30080, "traceJaegerHttpListenerPorts")
+		containsPortInContainers(t, "traceJaegerHttpListenerPorts", *stubKM, 30080)
+		containsPortInServicePort(t, 30080, *stubKM)
+		containsProxyArg(t, "--traceJaegerApplicationName jaeger", *stubKM)
 	})
 
 	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
 		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.ApplicationName = "zipkin"
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsPortInContainers(t, 9411, "traceZipkinListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 9411, dynamicClient)
-		containsProxyArg(t, "--traceZipkinApplicationName zipkin", dynamicClient)
+		//containsPortInContainers(t, 9411, "traceZipkinListenerPorts")
+		containsPortInContainers(t, "traceZipkinListenerPorts", *stubKM, 9411)
+		containsPortInServicePort(t, 9411, *stubKM)
+		containsProxyArg(t, "--traceZipkinApplicationName zipkin", *stubKM)
 	})
 
 	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Histogram.Port = 40000
 		wfSpec.DataExport.WavefrontProxy.Histogram.MinutePort = 40001
 		wfSpec.DataExport.WavefrontProxy.Histogram.HourPort = 40002
 		wfSpec.DataExport.WavefrontProxy.Histogram.DayPort = 40003
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsPortInContainers(t, 40000, "histogramDistListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 40000, dynamicClient)
-		containsPortInContainers(t, 40001, "histogramMinuteListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 40001, dynamicClient)
-		containsPortInContainers(t, 40002, "histogramHourListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 40002, dynamicClient)
-		containsPortInContainers(t, 40003, "histogramDayListenerPorts", dynamicClient)
-		containsPortInServicePort(t, 40003, dynamicClient)
+		//containsPortInContainers(t, 40000, "histogramDistListenerPorts")
+		containsPortInContainers(t, "histogramDistListenerPorts", *stubKM, 40000)
+		containsPortInServicePort(t, 40000, *stubKM)
+		//containsPortInContainers(t, 40001, "histogramMinuteListenerPorts")
+		containsPortInContainers(t, "histogramMinuteListenerPorts", *stubKM, 40001)
+		containsPortInServicePort(t, 40001, *stubKM)
+		//containsPortInContainers(t, 40002, "histogramHourListenerPorts")
+		containsPortInContainers(t, "histogramHourListenerPorts", *stubKM, 40002)
+		containsPortInServicePort(t, 40002, *stubKM)
+		//containsPortInContainers(t, 40003, "histogramDayListenerPorts")
+		containsPortInContainers(t, "histogramDayListenerPorts", *stubKM, 40003)
+		containsPortInServicePort(t, 40003, *stubKM)
 	})
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsProxyArg(t, "--prefix dev", dynamicClient)
-		containsProxyArg(t, "--customSourceTags mySource", dynamicClient)
+		containsProxyArg(t, "--prefix dev", *stubKM)
+		containsProxyArg(t, "--customSourceTags mySource", *stubKM)
 	})
 
 	t.Run("can create proxy with preprocessor rules", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", dynamicClient)
+		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", *stubKM)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment, err := stubKM.getAppliedDeployment("proxy", controllers.ProxyName)
+		assert.NoError(t, err)
+
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
 
 	t.Run("resources set for the proxy", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
 		wfSpec.DataExport.WavefrontProxy.Resources.Requests.Memory = "1Gi"
 		wfSpec.DataExport.WavefrontProxy.Resources.Limits.CPU = "1000m"
 		wfSpec.DataExport.WavefrontProxy.Resources.Limits.Memory = "4Gi"
 
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
-		_, err := r.Reconcile(context.Background(), defaultRequest())
+		r, _, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
 
+		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment, err := stubKM.getAppliedDeployment("proxy", controllers.ProxyName)
+		assert.NoError(t, err)
+
 		assert.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 		assert.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 	})
 
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
 		var httpProxySecet = &v1.Secret{
@@ -650,21 +749,29 @@ func TestReconcileProxy(t *testing.T) {
 				"tls-root-ca-bundle":  []byte("myCert"),
 			},
 		}
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
+
+		r, _, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
-		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
-		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
-		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
-		containsProxyArg(t, "--proxyPassword myPassword", dynamicClient)
+		//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment, err := stubKM.getAppliedDeployment("proxy", controllers.ProxyName)
+		assert.NoError(t, err)
+
+		containsProxyArg(t, "--proxyHost myproxyhost_url ", *stubKM)
+		containsProxyArg(t, "--proxyPort 8080", *stubKM)
+		containsProxyArg(t, "--proxyUser myUser", *stubKM)
+		containsProxyArg(t, "--proxyPassword myPassword", *stubKM)
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
 		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
 		assert.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 	})
 
 	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
+		stubKM := &stubKubernetesManager{}
+
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
 		var httpProxySecet = &v1.Secret{
@@ -681,12 +788,14 @@ func TestReconcileProxy(t *testing.T) {
 				"http-url": []byte("https://myproxyhost_url:8080"),
 			},
 		}
-		r, _, _, dynamicClient, _ := setupForCreate(wfSpec, httpProxySecet)
+		r, _, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
+		r.KubernetesManager = stubKM
+
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
-		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
+		containsProxyArg(t, "--proxyHost myproxyhost_url ", *stubKM)
+		containsProxyArg(t, "--proxyPort 8080", *stubKM)
 	})
 }
 
@@ -720,8 +829,21 @@ func volumeHasSecret(t *testing.T, deployment appsv1.Deployment, name string, se
 	assert.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
 }
 
-func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicfake.FakeDynamicClient) {
-	service := getCreatedService(t, dynamicClient)
+func containsPortInServicePort(t *testing.T, port int32, stubKM stubKubernetesManager) {
+	serviceYAMLUnstructured, err := stubKM.getAppliedYAML(
+		"v1",
+		"Service",
+		"wavefront",
+		"proxy",
+		"wavefront-proxy",
+	)
+	assert.NoError(t, err)
+
+	var service v1.Service
+
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceYAMLUnstructured.Object, &service)
+	assert.NoError(t, err)
+	//service := getCreatedService(t, stubKM)
 	for _, servicePort := range service.Spec.Ports {
 		if servicePort.Port == port {
 			return
@@ -730,17 +852,83 @@ func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicf
 	assert.Fail(t, fmt.Sprintf("Did not find the port: %d", port))
 }
 
-func containsPortInContainers(t *testing.T, port int32, proxyArgName string, dynamicClient *dynamicfake.FakeDynamicClient) {
-	deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+func containsPortInContainers(t *testing.T, proxyArgName string, stubKM stubKubernetesManager, port int32) bool {
+	//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+	deploymentYAMLUnstructured, err := stubKM.getAppliedYAML(
+		"apps/v1",
+		"Deployment",
+		"wavefront",
+		"proxy",
+		"wavefront-proxy",
+	)
+	assert.NoError(t, err)
+
+	var deployment appsv1.Deployment
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentYAMLUnstructured.Object, &deployment)
+	assert.NoError(t, err)
+
+	//containers, found, err := unstructured.NestedSlice(
+	//	deploymentYAMLUnstructured.Object,
+	//	"spec",
+	//	"template",
+	//	"spec",
+	//	"containers",
+	//)
+	//assert.NoError(t, err)
+	//assert.True(t, found)
+	//log.Printf(">>>>>>>>>>> containers[0]: %+v", containers[0])
+
+	//var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+	//containerPortsObject := &unstructured.Unstructured{}
+	//_, _, err = resourceDecoder.Decode([]byte(containers[0].(string)), nil, containerPortsObject)
+	//assert.NoError(t, err)
+	//log.Printf(">>>>>>>>>>> containerPortsObject: %+v", containerPortsObject)
+
+	//containerObj := containers[0].(map[string]map[string]interface{})
+	//log.Printf(">>>>>>>>>>> containerObj: %+v", containerObj)
+
+	//containerPorts := containerObj.
+
+	//containerPorts, found, err := unstructured.NestedSlice(
+	//	containerPortsObject.Object,
+	//	"ports",
+	//)
+	//assert.NoError(t, err)
+	//assert.True(t, found)
+
+	//log.Printf(">>>>>>>>>>> containerPorts: %+v", containerPorts)
+
 	foundPort := false
 	for _, containerPort := range deployment.Spec.Template.Spec.Containers[0].Ports {
+		//for _, containerPort := range containerObj { // TODO: need to get "ports" field
 		if containerPort.ContainerPort == port {
 			foundPort = true
+			break
 		}
+
+		fmt.Printf("%+v", containerPort)
+
+		//containerPortCheck := fmt.Sprintf("ContainerPort: %d", port)
+
+		//if containerPort.(string) == containerPortCheck {
+		//	foundPort = true
+		//	break
+		//}
 	}
+	//if !foundPort {
+	//	log.Printf("Did not find the port: %d", port)
+	//	return false
+	//}
 	assert.True(t, foundPort, fmt.Sprintf("Did not find the port: %d", port))
-	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-	assert.Contains(t, value, fmt.Sprintf("--%s %d", proxyArgName, port))
+
+	//if !strings.Contains(proxyArgsEnvValue, fmt.Sprintf("--%s %d", proxyArgName, port)) {
+	//	log.Printf("Env did not have proxy args: %s", proxyArgsEnvValue)
+	//	return false
+	//}
+	proxyArgsEnvValue := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
+	assert.Contains(t, proxyArgsEnvValue, fmt.Sprintf("--%s %d", proxyArgName, port))
+	return true
 }
 
 func getEnvValueForName(envs []v1.EnvVar, name string) string {
@@ -752,8 +940,11 @@ func getEnvValueForName(envs []v1.EnvVar, name string) string {
 	return ""
 }
 
-func containsProxyArg(t *testing.T, proxyArg string, dynamicClient *dynamicfake.FakeDynamicClient) {
-	deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+func containsProxyArg(t *testing.T, proxyArg string, stubKM stubKubernetesManager) {
+	deployment, err := stubKM.getAppliedDeployment("proxy", "wavefront-proxy")
+	assert.NoError(t, err)
+
+	//deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
 	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
 	assert.Contains(t, value, fmt.Sprintf("%s", proxyArg))
 }
@@ -1152,7 +1343,14 @@ func (skm *stubKubernetesManager) DeleteResources(resourceYAMLs []string) error 
 	return nil
 }
 
-func (skm stubKubernetesManager) getAppliedYAML(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName string, otherChecks ...string) (*unstructured.Unstructured, error) {
+func (skm stubKubernetesManager) getAppliedYAML(
+	apiVersion,
+	kind,
+	appKubernetesIOName,
+	appKubernetesIOComponent,
+	metadataName string,
+	otherChecks ...string,
+) (*unstructured.Unstructured, error) {
 	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
 	if err != nil {
 		return nil, err
@@ -1172,4 +1370,25 @@ func (skm stubKubernetesManager) getAppliedYAML(apiVersion, kind, appKubernetesI
 		}
 	}
 	return nil, nil
+}
+
+func (skm stubKubernetesManager) getAppliedDeployment(appKubernetesIOComponent, metadataName string) (appsv1.Deployment, error) {
+	deploymentYAMLUnstructured, err := skm.getAppliedYAML(
+		"apps/v1",
+		"Deployment",
+		"wavefront",
+		appKubernetesIOComponent,
+		metadataName,
+	)
+	if err != nil {
+		return appsv1.Deployment{}, err
+	}
+
+	var deployment appsv1.Deployment
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentYAMLUnstructured.Object, &deployment)
+	if err != nil {
+		return appsv1.Deployment{}, err
+	}
+
+	return deployment, nil
 }
