@@ -47,39 +47,12 @@ func TestReconcileAll(t *testing.T) {
 
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 
-		assert.True(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
-		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
-		assert.True(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
-
-		assert.True(t, stubKM.AppliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"proxy",
-			"wavefront-proxy",
-			"value: testWavefrontUrl/api/",
-			"name: testToken",
-			"containerPort: 2878",
-		))
-
-		assert.True(t, stubKM.AppliedContains(
-			"v1",
-			"ConfigMap",
-			"wavefront",
-			"collector",
-			"default-wavefront-collector-config",
-			"clusterName: testClusterName",
-			"proxyAddress: wavefront-proxy:2878",
-		))
-
-		assert.True(t, stubKM.AppliedContains(
-			"v1",
-			"Service",
-			"wavefront",
-			"proxy",
-			"wavefront-proxy",
-			"port: 2878",
-		))
+		assert.True(t, stubKM.CollectorServiceAccountContains())
+		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:2878"))
+		assert.True(t, stubKM.NodeCollectorDaemonSetContains())
+		assert.True(t, stubKM.ClusterCollectorDeploymentContains())
+		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
+		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
@@ -133,6 +106,8 @@ metadata:
   namespace: wavefront
 `
 		var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+		// TODO: replace all tests like these with corresponding object getters
 
 		configMapObject := &unstructured.Unstructured{}
 		_, _, err = resourceDecoder.Decode([]byte(configMapYAML), nil, configMapObject)
@@ -287,26 +262,9 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.AppliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"proxy",
-			"wavefront-proxy",
-			"value: testWavefrontUrl/api/",
-			"name: testToken",
-			"containerPort: 2878",
-			"configHash: \"\"",
-		))
+		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878", "configHash: \"\""))
 
-		assert.True(t, stubKM.AppliedContains(
-			"v1",
-			"Service",
-			"wavefront",
-			"proxy",
-			"wavefront-proxy",
-			"port: 2878",
-		))
+		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
@@ -318,15 +276,7 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.AppliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"proxy",
-			"wavefront-proxy",
-			"name: updatedToken",
-			"value: testWavefrontUrl/api/",
-		))
+		assert.True(t, stubKM.ProxyDeploymentContains("name: updatedToken", "value: testWavefrontUrl/api/"))
 	})
 
 	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
@@ -341,17 +291,9 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		// TODO: find a way to condense all of this test code
-		assert.True(t, stubKM.AppliedContains(
-			"v1",
-			"ConfigMap",
-			"wavefront",
-			"collector",
-			"default-wavefront-collector-config",
-			"clusterName: testClusterName",
-			"proxyAddress: externalProxyUrl",
-		))
+		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: externalProxyUrl"))
 
+		// TODO: find a way to condense all of this test code
 		proxyDeploymentYAML := `
 apiVersion: apps/v1
 kind: Deployment
