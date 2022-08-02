@@ -156,16 +156,7 @@ metadata:
 
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.appliedContains(
-			"v1",
-			"ConfigMap",
-			"wavefront",
-			"collector",
-			"default-wavefront-collector-config",
-			"clusterName: testClusterName",
-			"defaultCollectionInterval: 60s",
-			"enableDiscovery: true",
-		))
+		assert.True(t, stubKM.configMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
@@ -184,14 +175,7 @@ metadata:
 
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.appliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"collector",
-			"wavefront-cluster-collector",
-			"memory: 10Mi",
-		))
+		assert.True(t, stubKM.clusterCollectorDeploymentContains("memory: 10Mi"))
 	})
 
 	t.Run("resources set for node collector", func(t *testing.T) {
@@ -209,14 +193,7 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.True(t, stubKM.appliedContains(
-			"apps/v1",
-			"DaemonSet",
-			"wavefront",
-			"collector",
-			"wavefront-node-collector",
-			"memory: 10Mi",
-		))
+		assert.True(t, stubKM.nodeCollectorDaemonSetContains("memory: 10Mi"))
 	})
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
@@ -250,39 +227,9 @@ metadata:
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		serviceAccountYAML := `
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app.kubernetes.io/name: wavefront
-    app.kubernetes.io/component: collector
-  name: wavefront-collector
-  namespace: wavefront
-`
-		var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		assert.False(t, stubKM.serviceAccountPassesFilter(t, err))
 
-		serviceAccountObject := &unstructured.Unstructured{}
-		_, _, err = resourceDecoder.Decode([]byte(serviceAccountYAML), nil, serviceAccountObject)
-		assert.NoError(t, err)
-
-		// TODO: NOTE: the filter is only based on app.kubernetes.io/component value
-		// so I only tested one object
-		assert.False(t, stubKM.objectPassesFilter(
-			serviceAccountObject,
-		))
-
-		// TODO: condense with stubKM inner getDeployment()
-		assert.True(t, stubKM.appliedContains(
-			"apps/v1",
-			"Deployment",
-			"wavefront",
-			"proxy",
-			"wavefront-proxy",
-			"value: testWavefrontUrl/api/",
-			"name: testToken",
-			"containerPort: 2878",
-		))
+		assert.True(t, stubKM.proxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 	})
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
@@ -329,6 +276,30 @@ metadata:
 		assert.Equal(t, 2, len(filters["metricDenyList"].([]interface{})))
 		assert.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
 	})
+}
+
+func (skm stubKubernetesManager) serviceAccountPassesFilter(t *testing.T, err error) bool {
+	serviceAccountYAML := `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: collector
+  name: wavefront-collector
+  namespace: wavefront
+`
+	var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+
+	serviceAccountObject := &unstructured.Unstructured{}
+	_, _, err = resourceDecoder.Decode([]byte(serviceAccountYAML), nil, serviceAccountObject)
+	assert.NoError(t, err)
+
+	// TODO: NOTE: the filter is only based on app.kubernetes.io/component value
+	// so I only tested one object
+	return skm.objectPassesFilter(
+		serviceAccountObject,
+	)
 }
 
 func TestReconcileProxy(t *testing.T) {
@@ -1334,4 +1305,28 @@ func (skm stubKubernetesManager) getAppliedDeployment(appKubernetesIOComponent, 
 	}
 
 	return deployment, nil
+}
+
+func (skm stubKubernetesManager) proxyDeploymentContains(checks ...string) bool {
+	return contains(
+		skm.appliedYAMLs,
+		"apps/v1",
+		"Deployment",
+		"wavefront",
+		"proxy",
+		"wavefront-proxy",
+		checks...,
+	)
+}
+
+func (skm stubKubernetesManager) configMapContains(checks ...string) bool {
+	return contains(
+		skm.appliedYAMLs,
+		"v1",
+		"ConfigMap",
+		"wavefront",
+		"collector",
+		"default-wavefront-collector-config",
+		checks...,
+	)
 }
