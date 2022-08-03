@@ -115,9 +115,10 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		log.Log.Error(err, "error preprocessing Wavefront Spec")
 		return ctrl.Result{}, err
 	}
-	validationErrors := validation.Validate(wavefront)
 
-	if len(validationErrors) == 0 {
+	validationError := validation.Validate(wavefront)
+
+	if validationError == nil {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
 			log.Log.Error(err, "error creating resources")
@@ -125,7 +126,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	err = r.reportHealthStatus(ctx, wavefront, validationErrors)
+	err = r.reportHealthStatus(ctx, wavefront, validationError.Error())
 	if err != nil {
 		log.Log.Error(err, "error report health status")
 		return ctrl.Result{}, err
