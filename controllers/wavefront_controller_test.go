@@ -18,15 +18,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
-	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	dynamicfake "k8s.io/client-go/dynamic/fake"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
@@ -39,7 +35,7 @@ func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
-		r, _, _, _, _ := setupForCreate(defaultWFSpec())
+		r, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
@@ -59,7 +55,7 @@ func TestReconcileAll(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
 		// TODO: so much setup for only one usage...
-		r, wfCR, apiClient, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		r, wfCR, apiClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
 
 		err := apiClient.Delete(context.Background(), wfCR)
@@ -82,7 +78,7 @@ func TestReconcileCollector(t *testing.T) {
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -121,7 +117,7 @@ metadata:
 		stubKM := test_helper.NewStubKubernetesManager()
 		wfSpec := defaultWFSpec()
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -140,7 +136,7 @@ metadata:
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Limits.CPU = "200m"
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Limits.Memory = "256Mi"
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -159,7 +155,7 @@ metadata:
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Limits.CPU = "200m"
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Limits.Memory = "256Mi"
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -171,7 +167,7 @@ metadata:
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
-		r, _, _, _, _ := setupForCreate(defaultWFSpec())
+		r, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -192,7 +188,7 @@ metadata:
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -215,7 +211,7 @@ metadata:
 			},
 		}
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -254,7 +250,7 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("creates proxy and proxy service", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
-		r, _, _, _, _ := setupForCreate(defaultWFSpec())
+		r, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -268,7 +264,7 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("updates proxy and service", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
-		r, _, _, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		r, _, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -283,7 +279,7 @@ func TestReconcileProxy(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Enable = false
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -338,7 +334,7 @@ metadata:
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -355,7 +351,7 @@ metadata:
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -373,7 +369,7 @@ metadata:
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingRate = ".1"
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingDuration = 45
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -395,7 +391,7 @@ metadata:
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort = 30080
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.ApplicationName = "jaeger"
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -420,7 +416,7 @@ metadata:
 		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
 		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.ApplicationName = "zipkin"
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -441,7 +437,7 @@ metadata:
 		wfSpec.DataExport.WavefrontProxy.Histogram.HourPort = 40002
 		wfSpec.DataExport.WavefrontProxy.Histogram.DayPort = 40003
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -466,7 +462,7 @@ metadata:
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -483,7 +479,7 @@ metadata:
 		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
 
 		// TODO: setupForCreate() finally now only returns reconciler... except inside setup()
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -507,7 +503,7 @@ metadata:
 		wfSpec.DataExport.WavefrontProxy.Resources.Limits.CPU = "1000m"
 		wfSpec.DataExport.WavefrontProxy.Resources.Limits.Memory = "4Gi"
 
-		r, _, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -543,7 +539,7 @@ metadata:
 			},
 		}
 
-		r, _, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
+		r, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -583,7 +579,7 @@ metadata:
 			},
 		}
 
-		r, _, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
+		r, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -719,7 +715,7 @@ func defaultWFSpec() wf.WavefrontSpec {
 	}
 }
 
-func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -734,53 +730,10 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Service{})
 	s.AddKnownTypes(wf.GroupVersion, wfCR)
 
-	testRestMapper := meta.NewDefaultRESTMapper(
-		[]schema.GroupVersion{
-			{Group: "apps", Version: "v1"},
-		})
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "apps",
-		Version: "v1",
-		Kind:    "Deployment",
-	}, meta.RESTScopeNamespace)
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "wavefront.com",
-		Version: "v1alpha1",
-		Kind:    "Wavefront",
-	}, meta.RESTScopeNamespace)
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "",
-		Version: "v1",
-		Kind:    "ConfigMap",
-	}, meta.RESTScopeNamespace)
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "",
-		Version: "v1",
-		Kind:    "Secret",
-	}, meta.RESTScopeNamespace)
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "",
-		Version: "v1",
-		Kind:    "Service",
-	}, meta.RESTScopeNamespace)
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "",
-		Version: "v1",
-		Kind:    "ServiceAccount",
-	}, meta.RESTScopeNamespace)
-	testRestMapper.Add(schema.GroupVersionKind{
-		Group:   "apps",
-		Version: "v1",
-		Kind:    "DaemonSet",
-	}, meta.RESTScopeNamespace)
-
 	clientBuilder := fake.NewClientBuilder()
 	clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR)
 	clientBuilder = clientBuilder.WithScheme(s).WithRuntimeObjects(initObjs...)
-	clientBuilder = clientBuilder.WithRESTMapper(testRestMapper)
 	apiClient := clientBuilder.Build()
-
-	dynamicClient := dynamicfake.NewSimpleDynamicClient(s)
 
 	initObjs = append(initObjs, &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -798,110 +751,27 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
-	kubernetesManager, err := manager.NewKubernetesManager(apiClient.RESTMapper(), dynamicClient)
-	if err != nil {
-		panic(err)
-	}
+	stubKubernetesManager := test_helper.NewStubKubernetesManager()
 
 	r := &controllers.WavefrontReconciler{
 		Client:            apiClient,
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
-		KubernetesManager: kubernetesManager,
+		KubernetesManager: stubKubernetesManager,
 		Appsv1:            fakesAppsV1,
 	}
 
-	return r, wfCR, apiClient, dynamicClient, fakesAppsV1
+	return r, wfCR, apiClient, fakesAppsV1
 }
 
-func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, *dynamicfake.FakeDynamicClient, typedappsv1.AppsV1Interface) {
+func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {
 	wfSpec := defaultWFSpec()
 	wfSpec.WavefrontUrl = wavefrontUrl
 	wfSpec.WavefrontTokenSecret = wavefrontTokenSecret
 	wfSpec.ClusterName = clusterName
-	namespace := "wavefront"
-	reconciler, wfCR, apiClient, dynamicClient, fakesAppsV1 := setupForCreate(wfSpec)
+	reconciler, wfCR, apiClient, fakesAppsV1 := setupForCreate(wfSpec)
 
-	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
-		"metadata": map[string]interface{}{
-			"name":      controllers.ProxyName,
-			"namespace": namespace,
-		},
-	}})
-
-	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "ConfigMap",
-		"metadata": map[string]interface{}{
-			"name":      "default-wavefront-collector-config",
-			"namespace": namespace,
-			"labels": map[string]interface{}{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "collector",
-			},
-		},
-		"data": map[string]interface{}{
-			"config.yaml": "foo",
-		},
-	}})
-
-	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "apps/v1",
-		"kind":       "DaemonSet",
-		"metadata": map[string]interface{}{
-			"name":      controllers.NodeCollectorName,
-			"namespace": namespace,
-			"labels": map[string]interface{}{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "collector",
-			},
-		},
-	}})
-
-	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
-		"metadata": map[string]interface{}{
-			"name":      controllers.ClusterCollectorName,
-			"namespace": namespace,
-			"labels": map[string]interface{}{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "collector",
-			},
-		},
-	}})
-
-	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "Service",
-		"metadata": map[string]interface{}{
-			"name":      controllers.ProxyName,
-			"namespace": namespace,
-			"labels": map[string]interface{}{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "proxy",
-			},
-		},
-		"spec": map[string]interface{}{
-			"type": "ClusterIP",
-		},
-	}})
-	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "ServiceAccount",
-		"metadata": map[string]interface{}{
-			"name":      "wavefront-collector",
-			"namespace": namespace,
-			"labels": map[string]interface{}{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "collector",
-			},
-		},
-	}})
-
-	return reconciler, wfCR, apiClient, dynamicClient, fakesAppsV1
+	return reconciler, wfCR, apiClient, fakesAppsV1
 }
 
 func defaultRequest() reconcile.Request {
