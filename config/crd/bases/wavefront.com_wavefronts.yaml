@@ -16,9 +16,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.healthy
-      name: healthy
-      type: boolean
+    - jsonPath: .status.status
+      name: status
+      type: string
     - jsonPath: .status.proxy.status
       name: proxy
       type: string
@@ -539,6 +539,10 @@ spec:
                 required:
                 - healthy
                 type: object
+              status:
+                description: Human readable message indicating details about the deployment
+                  status.
+                type: string
             required:
             - healthy
             type: object

@@ -482,11 +482,11 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
 	}
 
-	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
+	wavefront.Status.Status, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
 
 	if validationError != nil {
-		wavefront.Status.Healthy = false
-		wavefront.Status.Errors = validationError.Error()
+		wavefront.Status.Status = "Unhealthy"
+		wavefront.Status.Message = fmt.Sprintf("Invalid spec: %s", validationError.Error())
 	}
 	return r.Status().Update(ctx, wavefront)
 }

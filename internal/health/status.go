@@ -9,7 +9,7 @@ import (
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (healthy bool, message string) {
+func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (status string, message string) {
 	var componentHealth []bool
 	for name, deploymentStatus := range deploymentStatuses {
 		updateDeploymentStatus(appsV1, name, deploymentStatus)
@@ -20,10 +20,14 @@ func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatu
 		updateDaemonSetStatus(appsV1, name, daemonSetStatus)
 		componentHealth = append(componentHealth, daemonSetStatus.Healthy)
 	}
-	healthy = boolCount(false, componentHealth...) == 0
+	if boolCount(false, componentHealth...) == 0 {
+		status = "Healthy"
+	} else {
+		status = "Unhealthy"
+	}
 	message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
 
-	return healthy, message
+	return status, message
 }
 
 func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
