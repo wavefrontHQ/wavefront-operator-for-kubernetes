@@ -45,15 +45,23 @@ type StubKubernetesManager interface {
 	ProxyServiceContains(checks ...string) bool
 	ProxyDeploymentContains(checks ...string) bool
 
+	/* Get *unstructured.Unstructured objects for filter testing, etc. */
+	GetUnstructuredCollectorServiceAccount() (*unstructured.Unstructured, error)
+	GetUnstructuredCollectorConfigMap() (*unstructured.Unstructured, error)
+	GetUnstructuredNodeCollectorDaemonSet() (*unstructured.Unstructured, error)
+	GetUnstructuredClusterCollectorDeployment() (*unstructured.Unstructured, error)
+	GetUnstructuredProxyService() (*unstructured.Unstructured, error)
+	GetUnstructuredProxyDeployment() (*unstructured.Unstructured, error)
+
 	/* Object getters for specific property testing */
-	GetCollectorServiceAccount(checks ...string) (corev1.ServiceAccount, error)
-	GetCollectorConfigMap(checks ...string) (corev1.ConfigMap, error)
+	GetCollectorServiceAccount() (corev1.ServiceAccount, error)
+	GetCollectorConfigMap() (corev1.ConfigMap, error)
 
-	GetNodeCollectorDaemonSet(checks ...string) (appsv1.DaemonSet, error)
-	GetClusterCollectorDeployment(checks ...string) (appsv1.Deployment, error)
+	GetNodeCollectorDaemonSet() (appsv1.DaemonSet, error)
+	GetClusterCollectorDeployment() (appsv1.Deployment, error)
 
-	GetProxyService(checks ...string) (corev1.Service, error)
-	GetProxyDeployment(checks ...string) (appsv1.Deployment, error)
+	GetProxyService() (corev1.Service, error)
+	GetProxyDeployment() (appsv1.Deployment, error)
 
 	// TODO: pull all object filters into single test
 	ObjectPassesFilter(object *unstructured.Unstructured) bool
@@ -320,28 +328,155 @@ func (skm stubKubernetesManager) ProxyDeploymentContains(checks ...string) bool 
 		checks...,
 	)
 }
-func (skm stubKubernetesManager) GetCollectorServiceAccount(checks ...string) (corev1.ServiceAccount, error) {
-	return skm.GetAppliedServiceAccount("collector", "wavefront-collector")
+
+func (skm stubKubernetesManager) GetUnstructuredCollectorServiceAccount() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"v1",
+		"ServiceAccount",
+		"wavefront",
+		"collector",
+		"wavefront-collector",
+	)
 }
 
-func (skm stubKubernetesManager) GetCollectorConfigMap(checks ...string) (corev1.ConfigMap, error) {
-	return skm.GetAppliedConfigMap("collector", "default-wavefront-collector-config")
+func (skm stubKubernetesManager) GetUnstructuredCollectorConfigMap() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"v1",
+		"ConfigMap",
+		"wavefront",
+		"collector",
+		"default-wavefront-collector-config",
+	)
 }
 
-func (skm stubKubernetesManager) GetNodeCollectorDaemonSet(checks ...string) (appsv1.DaemonSet, error) {
-	return skm.GetAppliedDaemonSet("collector", "wavefront-node-collector")
+func (skm stubKubernetesManager) GetUnstructuredNodeCollectorDaemonSet() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"apps/v1",
+		"DaemonSet",
+		"wavefront",
+		"collector",
+		"wavefront-node-collector",
+	)
 }
 
-func (skm stubKubernetesManager) GetClusterCollectorDeployment(checks ...string) (appsv1.Deployment, error) {
-	return skm.GetAppliedDeployment("collector", "wavefront-cluster-collector")
+func (skm stubKubernetesManager) GetUnstructuredClusterCollectorDeployment() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"apps/v1",
+		"Deployment",
+		"wavefront",
+		"collector",
+		"wavefront-cluster-collector",
+	)
 }
 
-func (skm stubKubernetesManager) GetProxyService(checks ...string) (corev1.Service, error) {
-	return skm.GetAppliedService("proxy", "wavefront-proxy")
+func (skm stubKubernetesManager) GetUnstructuredProxyService() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"v1",
+		"Service",
+		"wavefront",
+		"proxy",
+		"wavefront-proxy",
+	)
 }
 
-func (skm stubKubernetesManager) GetProxyDeployment(checks ...string) (appsv1.Deployment, error) {
-	return skm.GetAppliedDeployment("proxy", "wavefront-proxy")
+func (skm stubKubernetesManager) GetUnstructuredProxyDeployment() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"apps/v1",
+		"Deployment",
+		"wavefront",
+		"proxy",
+		"wavefront-proxy",
+	)
+}
+
+func (skm stubKubernetesManager) GetCollectorServiceAccount() (corev1.ServiceAccount, error) {
+	yamlUnstructured, err := skm.GetUnstructuredCollectorServiceAccount()
+	if err != nil {
+		return corev1.ServiceAccount{}, err
+	}
+
+	var serviceAccount corev1.ServiceAccount
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(yamlUnstructured.Object, &serviceAccount)
+	if err != nil {
+		return corev1.ServiceAccount{}, err
+	}
+
+	return serviceAccount, nil
+}
+
+func (skm stubKubernetesManager) GetCollectorConfigMap() (corev1.ConfigMap, error) {
+	yamlUnstructured, err := skm.GetUnstructuredCollectorConfigMap()
+	if err != nil {
+		return corev1.ConfigMap{}, err
+	}
+
+	var configMap corev1.ConfigMap
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(yamlUnstructured.Object, &configMap)
+	if err != nil {
+		return corev1.ConfigMap{}, err
+	}
+
+	return configMap, nil
+}
+
+func (skm stubKubernetesManager) GetNodeCollectorDaemonSet() (appsv1.DaemonSet, error) {
+	yamlUnstructured, err := skm.GetUnstructuredNodeCollectorDaemonSet()
+	if err != nil {
+		return appsv1.DaemonSet{}, err
+	}
+
+	var daemonSet appsv1.DaemonSet
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(yamlUnstructured.Object, &daemonSet)
+	if err != nil {
+		return appsv1.DaemonSet{}, err
+	}
+
+	return daemonSet, nil
+}
+
+func (skm stubKubernetesManager) GetClusterCollectorDeployment() (appsv1.Deployment, error) {
+	yamlUnstructured, err := skm.GetUnstructuredClusterCollectorDeployment()
+	if err != nil {
+		return appsv1.Deployment{}, err
+	}
+
+	var deployment appsv1.Deployment
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(yamlUnstructured.Object, &deployment)
+	if err != nil {
+		return appsv1.Deployment{}, err
+	}
+
+	return deployment, nil
+}
+
+func (skm stubKubernetesManager) GetProxyService() (corev1.Service, error) {
+	yamlUnstructured, err := skm.GetUnstructuredProxyService()
+	if err != nil {
+		return corev1.Service{}, err
+	}
+
+	var service corev1.Service
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(yamlUnstructured.Object, &service)
+	if err != nil {
+		return corev1.Service{}, err
+	}
+
+	return service, nil
+}
+
+func (skm stubKubernetesManager) GetProxyDeployment() (appsv1.Deployment, error) {
+	yamlUnstructured, err := skm.GetUnstructuredProxyDeployment()
+	if err != nil {
+		return appsv1.Deployment{}, err
+	}
+
+	var deployment appsv1.Deployment
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(yamlUnstructured.Object, &deployment)
+	if err != nil {
+		return appsv1.Deployment{}, err
+	}
+
+	return deployment, nil
 }
 
 func (skm stubKubernetesManager) ObjectPassesFilter(object *unstructured.Unstructured) bool {
@@ -350,25 +485,10 @@ func (skm stubKubernetesManager) ObjectPassesFilter(object *unstructured.Unstruc
 }
 
 func (skm stubKubernetesManager) ServiceAccountPassesFilter(t *testing.T, err error) bool {
-	serviceAccountYAML := `
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app.kubernetes.io/name: wavefront
-    app.kubernetes.io/component: collector
-  name: wavefront-collector
-  namespace: wavefront
-`
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-
-	// TODO: now I can replace this with GetCollectorServiceAccount, somehow...
-	serviceAccountObject := &unstructured.Unstructured{}
-	_, _, err = resourceDecoder.Decode([]byte(serviceAccountYAML), nil, serviceAccountObject)
+	serviceAccountObject, err := skm.GetUnstructuredCollectorServiceAccount()
 	assert.NoError(t, err)
 
 	// TODO: NOTE: the filter is only based on app.kubernetes.io/component value
-	// so I only tested one object
 	return skm.ObjectPassesFilter(
 		serviceAccountObject,
 	)
