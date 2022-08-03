@@ -1,4 +1,4 @@
-package manager
+package kubernetes_manager
 
 import (
 	"context"

@@ -29,9 +29,9 @@ import (
 	"text/template"
 	"time"
 
+	kubernetes_manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
-	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/validation"
@@ -69,7 +69,7 @@ type WavefrontReconciler struct {
 	Scheme            *runtime.Scheme
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
-	KubernetesManager manager.KubernetesManager
+	KubernetesManager kubernetes_manager.KubernetesManager
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -168,7 +168,7 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
-	kubernetesManager, err := manager.NewKubernetesManager(mapper, dynamicClient)
+	kubernetesManager, err := kubernetes_manager.NewKubernetesManager(mapper, dynamicClient)
 	if err != nil {
 		return nil, err
 	}
