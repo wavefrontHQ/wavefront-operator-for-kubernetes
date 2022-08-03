@@ -216,6 +216,73 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.Equal(t, "Running (3/3)", daemonSetStatuses["wavefront-node-collector"].Status)
 	})
 
+	t.Run("report health status when no components are running", func(t *testing.T) {
+		appsV1 := setup()
+		deploymentStatuses := map[string]*wf.DeploymentStatus{
+			"wavefront-proxy":             {},
+			"wavefront-cluster-collector": {},
+		}
+		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
+			"wavefront-node-collector": {},
+		}
+
+		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
+		assert.False(t, healthy)
+		assert.Equal(t, "(0/3) wavefront components are healthy.", message)
+		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].AvailableReplicas)
+		assert.Equal(t, "Not running", deploymentStatuses["wavefront-proxy"].Status)
+		assert.False(t, deploymentStatuses["wavefront-cluster-collector"].Healthy)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].Replicas)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].AvailableReplicas)
+		assert.Equal(t, "Not running", deploymentStatuses["wavefront-cluster-collector"].Status)
+		assert.False(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
+		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].DesiredNumberScheduled)
+		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].NumberReady)
+		assert.Equal(t, "Not running", daemonSetStatuses["wavefront-node-collector"].Status)
+	})
+
+	t.Run("report health status when components are deleted", func(t *testing.T) {
+		appsV1 := setup()
+		deploymentStatuses := map[string]*wf.DeploymentStatus{
+			"wavefront-proxy": &wf.DeploymentStatus{
+				Message:           "previous proxy message",
+				Status:            "Running (1/1)",
+				Healthy:           true,
+				Replicas:          1,
+				AvailableReplicas: 1,
+			},
+
+			"wavefront-cluster-collector": {},
+		}
+		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
+			"wavefront-node-collector": &wf.DaemonSetStatus{
+				Message:                "previous collector message",
+				Status:                 "Running (1/1)",
+				Healthy:                true,
+				DesiredNumberScheduled: 1,
+				NumberReady:            1,
+			},
+		}
+
+		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
+		assert.False(t, healthy)
+		assert.Equal(t, "(0/3) wavefront components are healthy.", message)
+		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].AvailableReplicas)
+		assert.Equal(t, "Not running", deploymentStatuses["wavefront-proxy"].Status)
+		assert.False(t, deploymentStatuses["wavefront-cluster-collector"].Healthy)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].Replicas)
+		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].AvailableReplicas)
+		assert.Equal(t, "Not running", deploymentStatuses["wavefront-cluster-collector"].Status)
+		assert.False(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
+		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].DesiredNumberScheduled)
+		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].NumberReady)
+		assert.Equal(t, "Not running", daemonSetStatuses["wavefront-node-collector"].Status)
+	})
+
 }
 
 func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {

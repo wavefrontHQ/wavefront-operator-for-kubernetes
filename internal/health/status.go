@@ -32,6 +32,9 @@ func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName s
 	if err != nil {
 		deploymentStatus.Healthy = false
 		deploymentStatus.Message = err.Error()
+		deploymentStatus.Status = fmt.Sprintf("Not running")
+		deploymentStatus.Replicas = 0
+		deploymentStatus.AvailableReplicas = 0
 		return
 	}
 
@@ -54,6 +57,9 @@ func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName str
 	if err != nil {
 		daemonSetStatus.Healthy = false
 		daemonSetStatus.Message = err.Error()
+		daemonSetStatus.Status = fmt.Sprintf("Not running")
+		daemonSetStatus.DesiredNumberScheduled = 0
+		daemonSetStatus.NumberReady = 0
 		return
 	}
 
