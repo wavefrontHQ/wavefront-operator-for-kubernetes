@@ -74,7 +74,13 @@ func TestReconcileAll(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
 
-		assert.Equal(t, 0, len(dynamicClient.Actions()))
+		assert.Equal(t, 6, len(dynamicClient.Actions()))
+		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
+		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get Configmap")
+		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
+		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
+		// one deployment for collector and one for proxy
+		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {

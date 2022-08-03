@@ -124,6 +124,8 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Log.Error(err, "error creating resources")
 			return ctrl.Result{}, err
 		}
+	} else {
+		r.readAndDeleteResources()
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront, validationError)
