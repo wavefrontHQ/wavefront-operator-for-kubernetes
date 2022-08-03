@@ -59,7 +59,7 @@ func TestValidate(t *testing.T) {
 		assert.Equal(t, "invalid spec.dataCollection.metrics.nodeCollector.resources.requests.cpu: 500m must be less than or equal to cpu limit", Validate(wfCR).Error())
 	})
 
-	t.Run("Validation error on cluster resources", func(t *testing.T) {
+	t.Run("Validation error on cluster collector resources", func(t *testing.T) {
 		wfCR := defaultWFCR()
 		wfCR.Spec.DataCollection.Metrics.ClusterCollector.Resources.Requests.Memory = "500Mi"
 		wfCR.Spec.DataCollection.Metrics.ClusterCollector.Resources.Limits.Memory = "200Mi"

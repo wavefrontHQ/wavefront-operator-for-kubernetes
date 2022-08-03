@@ -253,8 +253,13 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				Replicas:          1,
 				AvailableReplicas: 1,
 			},
-
-			"wavefront-cluster-collector": {},
+			"wavefront-cluster-collector": {
+				Message:           "previous collector message",
+				Status:            "Running (1/1)",
+				Healthy:           true,
+				Replicas:          1,
+				AvailableReplicas: 1,
+			},
 		}
 		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
 			"wavefront-node-collector": &wf.DaemonSetStatus{
