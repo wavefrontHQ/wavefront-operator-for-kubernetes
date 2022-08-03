@@ -15,6 +15,7 @@ function print_usage_and_exit() {
 function run_test() {
   local type=$1
   local should_run_static_analysis="${2:-false}"
+  local should_be_healthy="${3:-true}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
 
   echo "Running $type CR"
@@ -28,14 +29,31 @@ function run_test() {
 
   wait_for_cluster_ready
 
-  if "$should_run_static_analysis"; then
-    run_static_analysis
-  fi;
+  if "$should_be_healthy"; then
+    if "$should_run_static_analysis"; then
+      run_static_analysis
+    fi
 
-  echo "Running test-wavefront-metrics"
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
+    echo "Running test-wavefront-metrics"
+    ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-  green "Success!"
+    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.healthy}')
+    if [[ "$health_status" == "false" ]]; then
+      red "Health status for $type: expected = true, actual = $health_status"
+      exit 1
+    fi
+    green "Success!"
+  else
+    sleep 1
+    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.healthy}')
+    if [[ "$health_status" == "true" ]]; then
+      red "Health status for $type: expected = false, actual = $health_status"
+      exit 1
+    else
+      green "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.errors}')"
+    fi
+  fi
+
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
@@ -122,6 +140,8 @@ function main() {
   run_test "advanced-default-config"
 
   run_test "basic" true
+
+  run_test "validation-errors" false false
 }
 
 main "$@"

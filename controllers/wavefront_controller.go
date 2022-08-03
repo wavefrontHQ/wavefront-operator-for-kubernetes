@@ -29,6 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/validation"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 	baseYaml "gopkg.in/yaml.v2"
 
@@ -114,13 +116,19 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	err = r.readAndCreateResources(wavefront.Spec)
-	if err != nil {
-		log.Log.Error(err, "error creating resources")
-		return ctrl.Result{}, err
+	validationError := validation.Validate(wavefront)
+
+	if validationError == nil {
+		err = r.readAndCreateResources(wavefront.Spec)
+		if err != nil {
+			log.Log.Error(err, "error creating resources")
+			return ctrl.Result{}, err
+		}
+	} else {
+		r.readAndDeleteResources()
 	}
 
-	err = r.reportHealthStatus(ctx, wavefront)
+	err = r.reportHealthStatus(ctx, wavefront, validationError)
 	if err != nil {
 		log.Log.Error(err, "error report health status")
 		return ctrl.Result{}, err
@@ -461,7 +469,7 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 }
 
 // Reporting Health Status
-func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront) error {
+func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationError error) error {
 	deploymentStatuses := map[string]*wf.DeploymentStatus{}
 	daemonSetStatuses := map[string]*wf.DaemonSetStatus{}
 
@@ -474,7 +482,11 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
 	}
 
-	wavefront.Status.Warnings, wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
+	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
 
+	if validationError != nil {
+		wavefront.Status.Healthy = false
+		wavefront.Status.Errors = validationError.Error()
+	}
 	return r.Status().Update(ctx, wavefront)
 }

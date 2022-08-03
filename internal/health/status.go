@@ -9,14 +9,7 @@ import (
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func ValidateOperatorConfig(wavefront *wf.Wavefront) (containsWarnings bool, message string) {
-	if wavefront.Spec.DataExport.WavefrontProxy.Enable && len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
-		return true, "\nWarning: It is not valid to define an external proxy (externalWavefrontProxy.url) and enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster."
-	}
-	return false, ""
-}
-
-func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (warnings bool, healthy bool, message string) {
+func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) (healthy bool, message string) {
 	var componentHealth []bool
 	for name, deploymentStatus := range deploymentStatuses {
 		updateDeploymentStatus(appsV1, name, deploymentStatus)
@@ -30,9 +23,7 @@ func UpdateComponentStatuses(appsV1 typedappsv1.AppsV1Interface, deploymentStatu
 	healthy = boolCount(false, componentHealth...) == 0
 	message = fmt.Sprintf("(%d/%d) wavefront components are healthy.", boolCount(true, componentHealth...), len(componentHealth))
 
-	warnings, warningsMsg := ValidateOperatorConfig(wavefront)
-	message += warningsMsg
-	return warnings, healthy, message
+	return healthy, message
 }
 
 func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
@@ -41,6 +32,9 @@ func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName s
 	if err != nil {
 		deploymentStatus.Healthy = false
 		deploymentStatus.Message = err.Error()
+		deploymentStatus.Status = fmt.Sprintf("Not running")
+		deploymentStatus.Replicas = 0
+		deploymentStatus.AvailableReplicas = 0
 		return
 	}
 
@@ -63,6 +57,9 @@ func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName str
 	if err != nil {
 		daemonSetStatus.Healthy = false
 		daemonSetStatus.Message = err.Error()
+		daemonSetStatus.Status = fmt.Sprintf("Not running")
+		daemonSetStatus.DesiredNumberScheduled = 0
+		daemonSetStatus.NumberReady = 0
 		return
 	}
 

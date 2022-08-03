@@ -65,6 +65,24 @@ func TestReconcileAll(t *testing.T) {
 		assert.Equal(t, int32(2878), service.Spec.Ports[0].Port)
 	})
 
+	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
+		invalidWFSpec := defaultWFSpec()
+		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
+		r, _, _, dynamicClient, _ := setupForCreate(invalidWFSpec)
+
+		results, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+
+		assert.Equal(t, 6, len(dynamicClient.Actions()))
+		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
+		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get Configmap")
+		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
+		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
+		// one deployment for collector and one for proxy
+		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
+	})
+
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
 		r, wfCR, apiClient, dynamicClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		err := apiClient.Delete(context.Background(), wfCR)
@@ -244,6 +262,7 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Enable = false
+		wfSpec.DataExport.ExternalWavefrontProxy.Url = "externalProxyUrl"
 
 		r, _, _, dynamicClient, _ := setupForCreate(wfSpec)
 
@@ -564,9 +583,6 @@ func defaultWFSpec() wf.WavefrontSpec {
 		WavefrontUrl:         "testWavefrontUrl",
 		WavefrontTokenSecret: "testToken",
 		DataExport: wf.DataExport{
-			ExternalWavefrontProxy: wf.ExternalWavefrontProxy{
-				Url: "externalProxyUrl",
-			},
 			WavefrontProxy: wf.WavefrontProxy{
 				Enable:     true,
 				MetricPort: 2878,
@@ -582,6 +598,7 @@ func defaultWFSpec() wf.WavefrontSpec {
 		ControllerManagerUID: "",
 	}
 }
+
 func getCreateObject(dynamicClient *dynamicfake.FakeDynamicClient, resource string, metadataName string) *unstructured.Unstructured {
 	//deploymentObject := getAction(dynamicClient, "create", "deployments").(clientgotesting.CreateActionImpl).GetObject().(*unstructured.Unstructured)
 	for _, action := range dynamicClient.Actions() {
