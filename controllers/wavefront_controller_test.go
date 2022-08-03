@@ -89,24 +89,6 @@ func TestReconcileCollector(t *testing.T) {
 		assert.True(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 		assert.False(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 
-		//		configMapYAML := `
-		//apiVersion: v1
-		//kind: ConfigMap
-		//metadata:
-		//  labels:
-		//    app.kubernetes.io/name : wavefront
-		//    app.kubernetes.io/component: collector
-		//  name: default-wavefront-collector-config
-		//  namespace: wavefront
-		//`
-		//		var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-		//
-		//		// TODO: replace all tests like these with corresponding object getters
-		//
-		//		configMapObject := &unstructured.Unstructured{}
-		//		_, _, err = resourceDecoder.Decode([]byte(configMapYAML), nil, configMapObject)
-		//		assert.NoError(t, err)
-
 		configMapObject, err := stubKM.GetUnstructuredCollectorConfigMap()
 		assert.NoError(t, err)
 
@@ -289,44 +271,12 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: externalProxyUrl"))
 
-		// TODO: find a way to condense all of this test code
-		//		proxyDeploymentYAML := `
-		//apiVersion: apps/v1
-		//kind: Deployment
-		//metadata:
-		//  labels:
-		//    app.kubernetes.io/name: wavefront
-		//    app.kubernetes.io/component: proxy
-		//  name: wavefront-proxy
-		//  namespace: wavefront
-		//		`
-		//		// TODO: all of this is ugly and should be a helper function or something
-		//var resourceDecoder = objYaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-		//
-		//proxyDeploymentObject := &unstructured.Unstructured{}
-		//_, _, err = resourceDecoder.Decode([]byte(proxyDeploymentYAML), nil, proxyDeploymentObject)
-		//assert.NoError(t, err)
-
 		proxyDeploymentObject, err := stubKM.GetUnstructuredProxyDeployment()
 		assert.NoError(t, err)
 
 		assert.False(t, stubKM.ObjectPassesFilter(
 			proxyDeploymentObject,
 		))
-
-		//		proxyServiceYAML := `
-		//apiVersion: v1
-		//kind: Service
-		//metadata:
-		//  labels:
-		//    app.kubernetes.io/name: wavefront
-		//    app.kubernetes.io/component: proxy
-		//  name: wavefront-proxy
-		//  namespace: wavefront
-		//`
-		//		proxyServiceObject := &unstructured.Unstructured{}
-		//		_, _, err = resourceDecoder.Decode([]byte(proxyServiceYAML), nil, proxyServiceObject)
-		//		assert.NoError(t, err)
 
 		proxyServiceObject, err := stubKM.GetUnstructuredProxyService()
 		assert.NoError(t, err)
