@@ -1,17 +1,16 @@
-package controllers_test
+package kubernetes_manager_test
 
 import (
 	"testing"
 
-	k8s_testing "k8s.io/client-go/testing"
-
 	"github.com/stretchr/testify/assert"
-	manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
+	kubernetes_manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	fake2 "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
+	testing2 "k8s.io/client-go/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -58,7 +57,7 @@ spec:
 		s := scheme.Scheme
 		fakeDynamicClient := fake2.NewSimpleDynamicClient(s)
 
-		km, err := manager.NewKubernetesManager(
+		km, err := kubernetes_manager.NewKubernetesManager(
 			fakeApiClient.RESTMapper(),
 			fakeDynamicClient,
 		)
@@ -179,7 +178,7 @@ spec:
 			},
 		}})
 
-		km, err := manager.NewKubernetesManager(
+		km, err := kubernetes_manager.NewKubernetesManager(
 			fakeApiClient.RESTMapper(),
 			fakeDynamicClient,
 		)
@@ -208,7 +207,7 @@ func hasAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (r
 	return false
 }
 
-func getAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (action k8s_testing.Action) {
+func getAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (action testing2.Action) {
 	for _, action := range dynamicClient.Actions() {
 		if action.GetVerb() == verb && action.GetResource().Resource == resource {
 			return action
