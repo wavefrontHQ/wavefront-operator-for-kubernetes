@@ -269,7 +269,7 @@ type WavefrontStatus struct {
 	// Human readable message indicating details about the deployment status.
 	Status string `json:"status,omitempty"`
 
-	ComponentStatuses []ComponentStatus `json:"ComponentStatuses,omitempty"`
+	ComponentStatuses []ComponentStatus `json:"componentStatuses,omitempty"`
 }
 
 type ComponentStatus struct {
@@ -336,9 +336,9 @@ type DeploymentStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.status"
-// +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.proxy.status"
-// +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.clusterCollector.status"
-// +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.nodeCollector.status"
+// +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-proxy')].status"
+// +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-cluster-collector')].status"
+// +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-node-collector')].status"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // Wavefront is the Schema for the wavefronts API
 type Wavefront struct {

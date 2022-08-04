@@ -4,6 +4,8 @@ import (
 	"fmt"
 	strings "strings"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"golang.org/x/net/context"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,11 +25,11 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	var componentStatus wf.ComponentStatus
 
 	for name, resourceType := range componentsToCheck {
-		if resourceType == "Deployment" {
+		if resourceType == util.Deployment {
 			componentStatus = deploymentStatus(appsV1, name)
 			componentStatuses = append(componentStatuses, componentStatus)
 		}
-		if resourceType == "DaemonSet" {
+		if resourceType == util.DaemonSet {
 			componentStatus = daemonSetStatus(appsV1, name)
 			componentStatuses = append(componentStatuses, componentStatus)
 		}

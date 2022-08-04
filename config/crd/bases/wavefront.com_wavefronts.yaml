@@ -19,13 +19,13 @@ spec:
     - jsonPath: .status.status
       name: status
       type: string
-    - jsonPath: .status.proxy.status
+    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-proxy')].status
       name: proxy
       type: string
-    - jsonPath: .status.clusterCollector.status
+    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-cluster-collector')].status
       name: cluster-collector
       type: string
-    - jsonPath: .status.nodeCollector.status
+    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-node-collector')].status
       name: node-collector
       type: string
     - jsonPath: .metadata.creationTimestamp
@@ -433,7 +433,7 @@ spec:
           status:
             description: WavefrontStatus defines the observed state of Wavefront
             properties:
-              ComponentStatuses:
+              componentStatuses:
                 items:
                   properties:
                     message:

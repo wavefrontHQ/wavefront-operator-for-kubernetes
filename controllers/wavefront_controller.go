@@ -29,6 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/validation"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
@@ -59,9 +61,6 @@ import (
 )
 
 const DeployDir = "../deploy/internal"
-const ProxyName = "wavefront-proxy"
-const ClusterCollectorName = "wavefront-cluster-collector"
-const NodeCollectorName = "wavefront-node-collector"
 
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
@@ -398,7 +397,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
-		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err := r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
 			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
@@ -476,12 +475,12 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 	componentsToCheck := map[string]string{}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		componentsToCheck[ProxyName] = "Deployment"
+		componentsToCheck[util.ProxyName] = util.Deployment
 	}
 
 	if wavefront.Spec.DataCollection.Metrics.Enable {
-		componentsToCheck[ClusterCollectorName] = "Deployment"
-		componentsToCheck[NodeCollectorName] = "DaemonSet"
+		componentsToCheck[util.ClusterCollectorName] = util.Deployment
+		componentsToCheck[util.NodeCollectorName] = util.DaemonSet
 	}
 
 	wavefront.Status = health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
