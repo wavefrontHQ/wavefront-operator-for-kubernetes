@@ -263,14 +263,8 @@ type Collector struct {
 
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
-	// Overall health status of the wavefront components
-	Healthy bool `json:"healthy,required"`
-
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
-
-	// Human readable error messages.
-	Errors string `json:"errors,omitempty"`
 
 	// Human readable message indicating details about the deployment status.
 	Status string `json:"status,omitempty"`
@@ -302,12 +296,11 @@ type DaemonSetStatus struct {
 	// Human readable message indicating details about the daemonset status.
 	Message string `json:"message,omitempty"`
 
-	// Health status of the daemonset
-	// +kubebuilder:default:=true
-	Healthy bool `json:"healthy,omitempty"`
-
 	// Name of the daemonset
 	DaemonSetName string `json:"daemonSetName,omitempty"`
+
+	// Health status of the daemonset, internal use only
+	Healthy bool `json:"-"`
 }
 
 type DeploymentStatus struct {
@@ -324,12 +317,11 @@ type DeploymentStatus struct {
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
 
-	// Health status of the deployment
-	// +kubebuilder:default:=true
-	Healthy bool `json:"healthy,required"`
-
 	// Name of the deployment
 	DeploymentName string `json:"deploymentName,omitempty"`
+
+	// Health status of the deployment, internal use only
+	Healthy bool `json:"-"`
 }
 
 //+kubebuilder:object:root=true

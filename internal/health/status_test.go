@@ -57,9 +57,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			"wavefront-node-collector": {},
 		}
 
-		status, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.Equal(t, "Healthy", status)
-		assert.Equal(t, "(3/3) wavefront components are healthy.", message)
+		wfCR := &wf.Wavefront{}
+		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
+		assert.Equal(t, "Healthy", wfCR.Status.Status)
+		assert.Equal(t, "(3/3) wavefront components are healthy", wfCR.Status.Message)
 		assert.True(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
 		assert.True(t, deploymentStatuses["wavefront-cluster-collector"].Healthy)
@@ -112,9 +113,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			"wavefront-node-collector": {},
 		}
 
-		status, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.Equal(t, "Unhealthy", status)
-		assert.Equal(t, "(2/3) wavefront components are healthy.", message)
+		wfCR := &wf.Wavefront{}
+		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
+		assert.Equal(t, "Unhealthy", wfCR.Status.Status)
+		assert.Equal(t, "not enough instances of wavefront-proxy are running (0/1)", wfCR.Status.Message)
 	})
 
 	t.Run("report health status with less components", func(t *testing.T) {
@@ -149,9 +151,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			"wavefront-node-collector": {},
 		}
 
-		status, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.Equal(t, "Healthy", status)
-		assert.Equal(t, "(2/2) wavefront components are healthy.", message)
+		wfCR := &wf.Wavefront{}
+		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
+		assert.Equal(t, "Healthy", wfCR.Status.Status)
+		assert.Equal(t, "(2/2) wavefront components are healthy", wfCR.Status.Message)
 	})
 
 	t.Run("clear out previous values when updating status", func(t *testing.T) {
@@ -207,9 +210,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			},
 		}
 
-		status, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.Equal(t, "Healthy", status)
-		assert.Equal(t, "(3/3) wavefront components are healthy.", message)
+		wfCR := &wf.Wavefront{}
+		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
+		assert.Equal(t, "Healthy", wfCR.Status.Status)
+		assert.Equal(t, "(3/3) wavefront components are healthy", wfCR.Status.Message)
 		assert.True(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
 		assert.True(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
@@ -226,9 +230,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			"wavefront-node-collector": {},
 		}
 
-		status, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.Equal(t, "Unhealthy", status)
-		assert.Equal(t, "(0/3) wavefront components are healthy.", message)
+		wfCR := &wf.Wavefront{}
+		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
+		assert.Equal(t, "Unhealthy", wfCR.Status.Status)
+		assert.Equal(t, "", wfCR.Status.Message)
 		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
 		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].AvailableReplicas)
@@ -271,9 +276,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			},
 		}
 
-		status, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.Equal(t, "Unhealthy", status)
-		assert.Equal(t, "(0/3) wavefront components are healthy.", message)
+		wfCR := &wf.Wavefront{}
+		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
+		assert.Equal(t, "Unhealthy", wfCR.Status.Status)
+		assert.Equal(t, "", wfCR.Status.Message)
 		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
 		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].AvailableReplicas)

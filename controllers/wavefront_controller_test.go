@@ -38,7 +38,7 @@ func TestReconcileAll(t *testing.T) {
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
@@ -72,7 +72,7 @@ func TestReconcileAll(t *testing.T) {
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
 		assert.Equal(t, 6, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")

@@ -444,10 +444,6 @@ spec:
                   deploymentName:
                     description: Name of the deployment
                     type: string
-                  healthy:
-                    default: true
-                    description: Health status of the deployment
-                    type: boolean
                   message:
                     description: Human readable message indicating details about the
                       deployment status.
@@ -462,15 +458,7 @@ spec:
                     description: Computed deployment status. (available replicas /
                       desired replicas)
                     type: string
-                required:
-                - healthy
                 type: object
-              errors:
-                description: Human readable error messages.
-                type: string
-              healthy:
-                description: Overall health status of the wavefront components
-                type: boolean
               message:
                 description: Human readable message indicating details about the deployment
                   status.
@@ -487,10 +475,6 @@ spec:
                       pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                     format: int32
                     type: integer
-                  healthy:
-                    default: true
-                    description: Health status of the daemonset
-                    type: boolean
                   message:
                     description: Human readable message indicating details about the
                       daemonset status.
@@ -518,10 +502,6 @@ spec:
                   deploymentName:
                     description: Name of the deployment
                     type: string
-                  healthy:
-                    default: true
-                    description: Health status of the deployment
-                    type: boolean
                   message:
                     description: Human readable message indicating details about the
                       deployment status.
@@ -536,15 +516,11 @@ spec:
                     description: Computed deployment status. (available replicas /
                       desired replicas)
                     type: string
-                required:
-                - healthy
                 type: object
               status:
                 description: Human readable message indicating details about the deployment
                   status.
                 type: string
-            required:
-            - healthy
             type: object
         type: object
     served: true

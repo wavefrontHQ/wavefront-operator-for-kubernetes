@@ -96,8 +96,7 @@ type WavefrontReconciler struct {
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO: write separate story shut down collector and proxy if Operator is being shut down?
-
+	requeueAfterTime := 30 * time.Second
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
@@ -134,9 +133,13 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	if wavefront.Status.Status == "Unhealthy" {
+		requeueAfterTime = 5 * time.Second
+	}
+
 	return ctrl.Result{
 		Requeue:      true,
-		RequeueAfter: 30 * time.Second,
+		RequeueAfter: requeueAfterTime,
 	}, nil
 }
 
@@ -482,7 +485,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
 	}
 
-	wavefront.Status.Status, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
+	health.UpdateWavefrontStatus(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
 
 	if validationError != nil {
 		wavefront.Status.Status = "Unhealthy"
