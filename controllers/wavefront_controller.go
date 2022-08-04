@@ -133,7 +133,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	if wavefront.Status.Status == "Unhealthy" {
+	if wavefront.Status.Status == health.Unhealthy {
 		requeueAfterTime = 5 * time.Second
 	}
 
@@ -488,7 +488,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 	health.UpdateWavefrontStatus(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
 
 	if validationError != nil {
-		wavefront.Status.Status = "Unhealthy"
+		wavefront.Status.Status = health.Unhealthy
 		wavefront.Status.Message = fmt.Sprintf("Invalid spec: %s", validationError.Error())
 	}
 	return r.Status().Update(ctx, wavefront)

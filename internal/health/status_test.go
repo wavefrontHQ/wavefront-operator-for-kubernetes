@@ -59,7 +59,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		wfCR := &wf.Wavefront{}
 		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
-		assert.Equal(t, "Healthy", wfCR.Status.Status)
+		assert.Equal(t, Healthy, wfCR.Status.Status)
 		assert.Equal(t, "(3/3) wavefront components are healthy", wfCR.Status.Message)
 		assert.True(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
@@ -115,7 +115,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		wfCR := &wf.Wavefront{}
 		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
-		assert.Equal(t, "Unhealthy", wfCR.Status.Status)
+		assert.Equal(t, Unhealthy, wfCR.Status.Status)
 		assert.Equal(t, "not enough instances of wavefront-proxy are running (0/1)", wfCR.Status.Message)
 	})
 
@@ -153,7 +153,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		wfCR := &wf.Wavefront{}
 		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
-		assert.Equal(t, "Healthy", wfCR.Status.Status)
+		assert.Equal(t, Healthy, wfCR.Status.Status)
 		assert.Equal(t, "(2/2) wavefront components are healthy", wfCR.Status.Message)
 	})
 
@@ -212,7 +212,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		wfCR := &wf.Wavefront{}
 		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
-		assert.Equal(t, "Healthy", wfCR.Status.Status)
+		assert.Equal(t, Healthy, wfCR.Status.Status)
 		assert.Equal(t, "(3/3) wavefront components are healthy", wfCR.Status.Message)
 		assert.True(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
@@ -232,7 +232,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		wfCR := &wf.Wavefront{}
 		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
-		assert.Equal(t, "Unhealthy", wfCR.Status.Status)
+		assert.Equal(t, Unhealthy, wfCR.Status.Status)
 		assert.Equal(t, "", wfCR.Status.Message)
 		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
@@ -278,7 +278,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		wfCR := &wf.Wavefront{}
 		UpdateWavefrontStatus(appsV1, deploymentStatuses, daemonSetStatuses, wfCR)
-		assert.Equal(t, "Unhealthy", wfCR.Status.Status)
+		assert.Equal(t, Unhealthy, wfCR.Status.Status)
 		assert.Equal(t, "", wfCR.Status.Message)
 		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
 		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
