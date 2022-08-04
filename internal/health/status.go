@@ -15,76 +15,86 @@ const (
 	Unhealthy = "Unhealthy"
 )
 
-func UpdateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, deploymentStatuses map[string]*wf.DeploymentStatus, daemonSetStatuses map[string]*wf.DaemonSetStatus, wavefront *wf.Wavefront) {
+func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string) wf.WavefrontStatus {
+	status := wf.WavefrontStatus{}
 	var componentHealth []bool
 	var unhealthyMessages []string
+	var componentStatuses []wf.ComponentStatus
+	var componentStatus wf.ComponentStatus
 
-	for name, deploymentStatus := range deploymentStatuses {
-		updateDeploymentStatus(appsV1, name, deploymentStatus)
-		componentHealth = append(componentHealth, deploymentStatus.Healthy)
-		if !deploymentStatus.Healthy && len(deploymentStatus.Message) > 0 {
-			unhealthyMessages = append(unhealthyMessages, deploymentStatus.Message)
+	for name, resourceType := range componentsToCheck {
+		if resourceType == "Deployment" {
+			componentStatus = deploymentStatus(appsV1, name)
+			componentStatuses = append(componentStatuses, componentStatus)
+		}
+		if resourceType == "DaemonSet" {
+			componentStatus = daemonSetStatus(appsV1, name)
+			componentStatuses = append(componentStatuses, componentStatus)
+		}
+		componentHealth = append(componentHealth, componentStatus.Healthy)
+		if !componentStatus.Healthy && len(componentStatus.Message) > 0 {
+			unhealthyMessages = append(unhealthyMessages, componentStatus.Message)
 		}
 	}
 
-	for name, daemonSetStatus := range daemonSetStatuses {
-		updateDaemonSetStatus(appsV1, name, daemonSetStatus)
-		componentHealth = append(componentHealth, daemonSetStatus.Healthy)
-		if !daemonSetStatus.Healthy && len(daemonSetStatus.Message) > 0 {
-			unhealthyMessages = append(unhealthyMessages, daemonSetStatus.Message)
-		}
-	}
+	status.ComponentStatuses = componentStatuses
 	if boolCount(false, componentHealth...) == 0 {
-		wavefront.Status.Status = Healthy
-		wavefront.Status.Message = fmt.Sprintf("(%d/%d) wavefront components are healthy", boolCount(true, componentHealth...), len(componentHealth))
+		status.Status = Healthy
+		status.Message = fmt.Sprintf("(%d/%d) wavefront components are healthy", boolCount(true, componentHealth...), len(componentHealth))
 	} else {
-		wavefront.Status.Status = Unhealthy
-		wavefront.Status.Message = strings.Join(unhealthyMessages, "; ")
+		status.Status = Unhealthy
+		status.Message = strings.Join(unhealthyMessages, "; ")
 	}
+
+	return status
 }
 
-func updateDeploymentStatus(appsV1 typedappsv1.AppsV1Interface, deploymentName string, deploymentStatus *wf.DeploymentStatus) {
-	resetDeploymentStatus(deploymentStatus)
-	deploymentStatus.DeploymentName = deploymentName
-	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), deploymentName, v1.GetOptions{})
-	if err != nil {
-		deploymentStatus.Healthy = false
-		deploymentStatus.Status = fmt.Sprintf("Not running")
-		return
+func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ComponentStatus {
+	componentStatus := wf.ComponentStatus{
+		Name: name,
 	}
 
-	deploymentStatus.Replicas = deployment.Status.Replicas
-	deploymentStatus.AvailableReplicas = deployment.Status.AvailableReplicas
-	deploymentStatus.Status = fmt.Sprintf("Running (%d/%d)", deployment.Status.AvailableReplicas, deployment.Status.Replicas)
+	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), name, v1.GetOptions{})
+
+	if err != nil {
+		componentStatus.Healthy = false
+		componentStatus.Status = fmt.Sprintf("Not running")
+		return componentStatus
+	}
+
+	componentStatus.Status = fmt.Sprintf("Running (%d/%d)", deployment.Status.AvailableReplicas, deployment.Status.Replicas)
 
 	if deployment.Status.AvailableReplicas < deployment.Status.Replicas {
-		deploymentStatus.Healthy = false
-		deploymentStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", deploymentStatus.DeploymentName, deployment.Status.AvailableReplicas, deployment.Status.Replicas)
+		componentStatus.Healthy = false
+		componentStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", componentStatus.Name, deployment.Status.AvailableReplicas, deployment.Status.Replicas)
 	} else {
-		deploymentStatus.Healthy = true
+		componentStatus.Healthy = true
 	}
+	return componentStatus
 }
 
-func updateDaemonSetStatus(appsV1 typedappsv1.AppsV1Interface, daemonSetName string, daemonSetStatus *wf.DaemonSetStatus) {
-	resetDaemonSetStatus(daemonSetStatus)
-	daemonSetStatus.DaemonSetName = daemonSetName
-	daemonSet, err := appsV1.DaemonSets("wavefront").Get(context.Background(), daemonSetName, v1.GetOptions{})
+func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ComponentStatus {
+	componentStatus := wf.ComponentStatus{
+		Name: name,
+	}
+	daemonSet, err := appsV1.DaemonSets("wavefront").Get(context.Background(), name, v1.GetOptions{})
+
 	if err != nil {
-		daemonSetStatus.Healthy = false
-		daemonSetStatus.Status = fmt.Sprintf("Not running")
-		return
+		componentStatus.Healthy = false
+		componentStatus.Status = fmt.Sprintf("Not running")
+		return componentStatus
 	}
 
-	daemonSetStatus.DesiredNumberScheduled = daemonSet.Status.DesiredNumberScheduled
-	daemonSetStatus.NumberReady = daemonSet.Status.NumberReady
-	daemonSetStatus.Status = fmt.Sprintf("Running (%d/%d)", daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
+	componentStatus.Status = fmt.Sprintf("Running (%d/%d)", daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
 
 	if daemonSet.Status.NumberReady < daemonSet.Status.DesiredNumberScheduled {
-		daemonSetStatus.Healthy = false
-		daemonSetStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", daemonSetStatus.DaemonSetName, daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
+		componentStatus.Healthy = false
+		componentStatus.Message = fmt.Sprintf("not enough instances of %s are running (%d/%d)", componentStatus.Name, daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
 	} else {
-		daemonSetStatus.Healthy = true
+		componentStatus.Healthy = true
 	}
+
+	return componentStatus
 }
 
 func resetDaemonSetStatus(daemonSetStatus *wf.DaemonSetStatus) {

@@ -473,19 +473,18 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 
 // Reporting Health Status
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationError error) error {
-	deploymentStatuses := map[string]*wf.DeploymentStatus{}
-	daemonSetStatuses := map[string]*wf.DaemonSetStatus{}
+	componentsToCheck := map[string]string{}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deploymentStatuses[ProxyName] = &wavefront.Status.Proxy
+		componentsToCheck[ProxyName] = "Deployment"
 	}
 
 	if wavefront.Spec.DataCollection.Metrics.Enable {
-		deploymentStatuses[ClusterCollectorName] = &wavefront.Status.ClusterCollector
-		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
+		componentsToCheck[ClusterCollectorName] = "Deployment"
+		componentsToCheck[NodeCollectorName] = "DaemonSet"
 	}
 
-	health.UpdateWavefrontStatus(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
+	wavefront.Status = health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
 	if validationError != nil {
 		wavefront.Status.Status = health.Unhealthy
