@@ -95,12 +95,12 @@ The following tools are required for installing the integration.
    ```
    The command should return the following table displaying Operator instance health:
    ```
-   NAME         HEALTHY      WAVEFRONT PROXY     CLUSTER COLLECTOR      NODE COLLECTOR       AGE
-   wavefront    true         Running(1/1)        Running (1/1)          Running (3/3)        19h
+   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   AGE
+   wavefront   Healthy   Running (1/1)   Running (1/1)       Running (1/1)    2m4s
    ```
-   NOTE: If `HEALTHY` is `false`, run the below command to get more information
+   NOTE: If `STATUS` is `Unhealthy`, run the below command to get more information
    ```
-   kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.errors}'
+   kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}'
    ```
 **Note**: For details on migrating from existing helm chart or manual deploy,
 see [Migration](docs/migration.md).

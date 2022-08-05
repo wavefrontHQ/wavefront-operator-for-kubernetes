@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -38,7 +40,7 @@ func TestReconcileAll(t *testing.T) {
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
@@ -52,7 +54,7 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deployment := getCreatedDeployment(t, dynamicClient, "wavefront-proxy")
+		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
@@ -72,7 +74,7 @@ func TestReconcileAll(t *testing.T) {
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
 		assert.Equal(t, 6, len(dynamicClient.Actions()))
 		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
@@ -143,7 +145,7 @@ func TestReconcileCollector(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ClusterCollectorName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ClusterCollectorName)
 		assert.Equal(t, "10Mi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 	})
 
@@ -171,7 +173,7 @@ func TestReconcileCollector(t *testing.T) {
 		assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Limits)
 		assert.Nil(t, daemonSet.Spec.Template.Spec.Containers[0].Resources.Requests)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ClusterCollectorName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ClusterCollectorName)
 		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Limits)
 		assert.Nil(t, deployment.Spec.Template.Spec.Containers[0].Resources.Requests)
 	})
@@ -190,7 +192,7 @@ func TestReconcileCollector(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 
@@ -233,7 +235,7 @@ func TestReconcileProxy(t *testing.T) {
 		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
 		assert.True(t, hasAction(dynamicClient, "create", "deployments"), "create Deployment")
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 		assert.Equal(t, "testWavefrontUrl/api/", deployment.Spec.Template.Spec.Containers[0].Env[0].Value)
 		assert.Equal(t, "testToken", deployment.Spec.Template.Spec.Containers[0].Env[1].ValueFrom.SecretKeyRef.Name)
 		assert.Equal(t, int32(2878), deployment.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
@@ -251,7 +253,7 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.Equal(t, 12, len(dynamicClient.Actions()))
 
-		deploymentObject := getPatch(dynamicClient, "deployments", controllers.ProxyName)
+		deploymentObject := getPatch(dynamicClient, "deployments", util.ProxyName)
 
 		assert.Contains(t, string(deploymentObject), "updatedToken")
 		assert.Contains(t, string(deploymentObject), "testWavefrontUrl/api/")
@@ -394,7 +396,7 @@ func TestReconcileProxy(t *testing.T) {
 
 		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", dynamicClient)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
 	})
@@ -411,7 +413,7 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.NoError(t, err)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 		assert.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
 		assert.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 	})
@@ -440,7 +442,7 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+		deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 		containsProxyArg(t, "--proxyHost myproxyhost_url ", dynamicClient)
 		containsProxyArg(t, "--proxyPort 8080", dynamicClient)
 		containsProxyArg(t, "--proxyUser myUser", dynamicClient)
@@ -517,7 +519,7 @@ func containsPortInServicePort(t *testing.T, port int32, dynamicClient *dynamicf
 }
 
 func containsPortInContainers(t *testing.T, port int32, proxyArgName string, dynamicClient *dynamicfake.FakeDynamicClient) {
-	deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+	deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 	foundPort := false
 	for _, containerPort := range deployment.Spec.Template.Spec.Containers[0].Ports {
 		if containerPort.ContainerPort == port {
@@ -539,7 +541,7 @@ func getEnvValueForName(envs []v1.EnvVar, name string) string {
 }
 
 func containsProxyArg(t *testing.T, proxyArg string, dynamicClient *dynamicfake.FakeDynamicClient) {
-	deployment := getCreatedDeployment(t, dynamicClient, controllers.ProxyName)
+	deployment := getCreatedDeployment(t, dynamicClient, util.ProxyName)
 	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
 	assert.Contains(t, value, fmt.Sprintf("%s", proxyArg))
 }
@@ -570,7 +572,7 @@ func getCreatedService(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClien
 }
 
 func getCreatedDaemonSet(t *testing.T, dynamicClient *dynamicfake.FakeDynamicClient) appsv1.DaemonSet {
-	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", controllers.NodeCollectorName)
+	daemonSetObject := getCreateObject(dynamicClient, "daemonsets", util.NodeCollectorName)
 	var ds appsv1.DaemonSet
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(daemonSetObject.Object, &ds)
 	assert.NoError(t, err)
@@ -663,7 +665,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	testRestMapper.Add(schema.GroupVersionKind{
 		Group:   "apps",
 		Version: "v1",
-		Kind:    "Deployment",
+		Kind:    util.Deployment,
 	}, meta.RESTScopeNamespace)
 	testRestMapper.Add(schema.GroupVersionKind{
 		Group:   "wavefront.com",
@@ -693,7 +695,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	testRestMapper.Add(schema.GroupVersionKind{
 		Group:   "apps",
 		Version: "v1",
-		Kind:    "DaemonSet",
+		Kind:    util.DaemonSet,
 	}, meta.RESTScopeNamespace)
 
 	clientBuilder := fake.NewClientBuilder()
@@ -706,7 +708,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 
 	initObjs = append(initObjs, &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Deployment",
+			Kind:       util.Deployment,
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -742,9 +744,9 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
 		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
+		"kind":       util.Deployment,
 		"metadata": map[string]interface{}{
-			"name":      controllers.ProxyName,
+			"name":      util.ProxyName,
 			"namespace": namespace,
 		},
 	}})
@@ -767,9 +769,9 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
 		"apiVersion": "apps/v1",
-		"kind":       "DaemonSet",
+		"kind":       util.DaemonSet,
 		"metadata": map[string]interface{}{
-			"name":      controllers.NodeCollectorName,
+			"name":      util.NodeCollectorName,
 			"namespace": namespace,
 			"labels": map[string]interface{}{
 				"app.kubernetes.io/name":      "wavefront",
@@ -780,9 +782,9 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 	_ = dynamicClient.Tracker().Add(&unstructured.Unstructured{Object: map[string]interface{}{
 		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
+		"kind":       util.Deployment,
 		"metadata": map[string]interface{}{
-			"name":      controllers.ClusterCollectorName,
+			"name":      util.ClusterCollectorName,
 			"namespace": namespace,
 			"labels": map[string]interface{}{
 				"app.kubernetes.io/name":      "wavefront",
@@ -795,7 +797,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 		"apiVersion": "v1",
 		"kind":       "Service",
 		"metadata": map[string]interface{}{
-			"name":      controllers.ProxyName,
+			"name":      util.ProxyName,
 			"namespace": namespace,
 			"labels": map[string]interface{}{
 				"app.kubernetes.io/name":      "wavefront",
