@@ -29,6 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/validation"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
@@ -59,9 +61,6 @@ import (
 )
 
 const DeployDir = "../deploy/internal"
-const ProxyName = "wavefront-proxy"
-const ClusterCollectorName = "wavefront-cluster-collector"
-const NodeCollectorName = "wavefront-node-collector"
 
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
@@ -96,8 +95,7 @@ type WavefrontReconciler struct {
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO: write separate story shut down collector and proxy if Operator is being shut down?
-
+	requeueAfterTime := 30 * time.Second
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
@@ -134,9 +132,13 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	if wavefront.Status.Status == health.Unhealthy {
+		requeueAfterTime = 5 * time.Second
+	}
+
 	return ctrl.Result{
 		Requeue:      true,
-		RequeueAfter: 30 * time.Second,
+		RequeueAfter: requeueAfterTime,
 	}, nil
 }
 
@@ -395,7 +397,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
-		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("wavefront-proxy:%d", wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err := r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
 			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
@@ -470,23 +472,22 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 
 // Reporting Health Status
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationError error) error {
-	deploymentStatuses := map[string]*wf.DeploymentStatus{}
-	daemonSetStatuses := map[string]*wf.DaemonSetStatus{}
+	componentsToCheck := map[string]string{}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deploymentStatuses[ProxyName] = &wavefront.Status.Proxy
+		componentsToCheck[util.ProxyName] = util.Deployment
 	}
 
 	if wavefront.Spec.DataCollection.Metrics.Enable {
-		deploymentStatuses[ClusterCollectorName] = &wavefront.Status.ClusterCollector
-		daemonSetStatuses[NodeCollectorName] = &wavefront.Status.NodeCollector
+		componentsToCheck[util.ClusterCollectorName] = util.Deployment
+		componentsToCheck[util.NodeCollectorName] = util.DaemonSet
 	}
 
-	wavefront.Status.Healthy, wavefront.Status.Message = health.UpdateComponentStatuses(r.Appsv1, deploymentStatuses, daemonSetStatuses, wavefront)
+	wavefront.Status = health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
 	if validationError != nil {
-		wavefront.Status.Healthy = false
-		wavefront.Status.Errors = validationError.Error()
+		wavefront.Status.Status = health.Unhealthy
+		wavefront.Status.Message = fmt.Sprintf("Invalid spec: %s", validationError.Error())
 	}
 	return r.Status().Update(ctx, wavefront)
 }

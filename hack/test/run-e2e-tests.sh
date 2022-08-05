@@ -37,20 +37,20 @@ function run_test() {
     echo "Running test-wavefront-metrics"
     ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.healthy}')
-    if [[ "$health_status" == "false" ]]; then
+    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    if [[ "$health_status" != "Healthy" ]]; then
       red "Health status for $type: expected = true, actual = $health_status"
       exit 1
     fi
     green "Success!"
   else
     sleep 1
-    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.healthy}')
-    if [[ "$health_status" == "true" ]]; then
+    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    if [[ "$health_status" != "Unhealthy" ]]; then
       red "Health status for $type: expected = false, actual = $health_status"
       exit 1
     else
-      green "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.errors}')"
+      green "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}')"
     fi
   fi
 

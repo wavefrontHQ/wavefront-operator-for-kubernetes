@@ -3,6 +3,8 @@ package health
 import (
 	"testing"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -17,7 +19,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		proxyDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-proxy",
+				Name:      util.ProxyName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DeploymentStatus{
@@ -28,7 +30,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		collectorDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-cluster-collector",
+				Name:      util.ClusterCollectorName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DeploymentStatus{
@@ -39,7 +41,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		collectorDaemonSet := &appsv1.DaemonSet{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-node-collector",
+				Name:      util.NodeCollectorName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DaemonSetStatus{
@@ -49,30 +51,34 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
-		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy":             {},
-			"wavefront-cluster-collector": {},
-		}
-		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
-			"wavefront-node-collector": {},
+		componentsToCheck := map[string]string{
+			util.ProxyName:            util.Deployment,
+			util.ClusterCollectorName: util.Deployment,
+			util.NodeCollectorName:    util.DaemonSet,
 		}
 
-		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.True(t, healthy)
-		assert.Equal(t, "(3/3) wavefront components are healthy.", message)
-		assert.True(t, deploymentStatuses["wavefront-proxy"].Healthy)
-		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
-		assert.True(t, deploymentStatuses["wavefront-cluster-collector"].Healthy)
-		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
-		assert.True(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
-		assert.Equal(t, "Running (3/3)", daemonSetStatuses["wavefront-node-collector"].Status)
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck)
+		assert.Equal(t, Healthy, status.Status)
+		assert.Equal(t, "(3/3) wavefront components are healthy", status.Message)
+
+		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ComponentStatuses)
+		assert.True(t, proxyStatus.Healthy)
+		assert.Equal(t, "Running (1/1)", proxyStatus.Status)
+
+		clusterCollectorStatus := getComponentStatusWithName(util.ClusterCollectorName, status.ComponentStatuses)
+		assert.True(t, clusterCollectorStatus.Healthy)
+		assert.Equal(t, "Running (1/1)", clusterCollectorStatus.Status)
+
+		nodeCollectorStatus := getComponentStatusWithName(util.NodeCollectorName, status.ComponentStatuses)
+		assert.True(t, nodeCollectorStatus.Healthy)
+		assert.Equal(t, "Running (3/3)", nodeCollectorStatus.Status)
 	})
 
 	t.Run("report health status when one component is unhealthy", func(t *testing.T) {
 		proxyDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-proxy",
+				Name:      util.ProxyName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DeploymentStatus{
@@ -83,7 +89,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		collectorDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-cluster-collector",
+				Name:      util.ClusterCollectorName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DeploymentStatus{
@@ -94,7 +100,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		collectorDaemonSet := &appsv1.DaemonSet{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-node-collector",
+				Name:      util.NodeCollectorName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DaemonSetStatus{
@@ -104,24 +110,22 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
-		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy":             {},
-			"wavefront-cluster-collector": {},
+		componentsToCheck := map[string]string{
+			util.ProxyName:            util.Deployment,
+			util.ClusterCollectorName: util.Deployment,
+			util.NodeCollectorName:    util.DaemonSet,
 		}
-		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
-			"wavefront-node-collector": {},
-		}
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck)
 
-		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.False(t, healthy)
-		assert.Equal(t, "(2/3) wavefront components are healthy.", message)
+		assert.Equal(t, Unhealthy, status.Status)
+		assert.Equal(t, "not enough instances of wavefront-proxy are running (0/1)", status.Message)
 	})
 
 	t.Run("report health status with less components", func(t *testing.T) {
 		collectorDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-cluster-collector",
+				Name:      util.ClusterCollectorName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DeploymentStatus{
@@ -132,7 +136,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		collectorDaemonSet := &appsv1.DaemonSet{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-node-collector",
+				Name:      util.NodeCollectorName,
 				Namespace: "wavefront",
 			},
 			Status: appsv1.DaemonSetStatus{
@@ -142,154 +146,51 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		appsV1 := setup(collectorDeployment, collectorDaemonSet)
-		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-cluster-collector": {},
+		componentsToCheck := map[string]string{
+			util.ClusterCollectorName: util.Deployment,
+			util.NodeCollectorName:    util.DaemonSet,
 		}
-		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
-			"wavefront-node-collector": {},
-		}
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck)
 
-		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.True(t, healthy)
-		assert.Equal(t, "(2/2) wavefront components are healthy.", message)
-	})
-
-	t.Run("clear out previous values when updating status", func(t *testing.T) {
-		proxyDeployment := &appsv1.Deployment{
-			TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-proxy",
-				Namespace: "wavefront",
-			},
-			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
-				AvailableReplicas: 1,
-			},
-		}
-		collectorDeployment := &appsv1.Deployment{
-			TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-cluster-collector",
-				Namespace: "wavefront",
-			},
-			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
-				AvailableReplicas: 1,
-			},
-		}
-		collectorDaemonSet := &appsv1.DaemonSet{
-			TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "wavefront-node-collector",
-				Namespace: "wavefront",
-			},
-			Status: appsv1.DaemonSetStatus{
-				DesiredNumberScheduled: 3,
-				NumberReady:            3,
-			},
-		}
-
-		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
-		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy": &wf.DeploymentStatus{
-				Message: "previous proxy message",
-				Status:  "Running (0/1)",
-				Healthy: false,
-			},
-
-			"wavefront-cluster-collector": {},
-		}
-		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
-			"wavefront-node-collector": &wf.DaemonSetStatus{
-				Message: "previous collector message",
-				Status:  "Running (0/1)",
-				Healthy: false,
-			},
-		}
-
-		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.True(t, healthy)
-		assert.Equal(t, "(3/3) wavefront components are healthy.", message)
-		assert.True(t, deploymentStatuses["wavefront-proxy"].Healthy)
-		assert.Equal(t, "Running (1/1)", deploymentStatuses["wavefront-proxy"].Status)
-		assert.True(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
-		assert.Equal(t, "Running (3/3)", daemonSetStatuses["wavefront-node-collector"].Status)
+		assert.Equal(t, Healthy, status.Status)
+		assert.Equal(t, "(2/2) wavefront components are healthy", status.Message)
 	})
 
 	t.Run("report health status when no components are running", func(t *testing.T) {
 		appsV1 := setup()
-		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy":             {},
-			"wavefront-cluster-collector": {},
+		componentsToCheck := map[string]string{
+			util.ProxyName:            util.Deployment,
+			util.ClusterCollectorName: util.Deployment,
+			util.NodeCollectorName:    util.DaemonSet,
 		}
-		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
-			"wavefront-node-collector": {},
-		}
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck)
 
-		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.False(t, healthy)
-		assert.Equal(t, "(0/3) wavefront components are healthy.", message)
-		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].AvailableReplicas)
-		assert.Equal(t, "Not running", deploymentStatuses["wavefront-proxy"].Status)
-		assert.False(t, deploymentStatuses["wavefront-cluster-collector"].Healthy)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].Replicas)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].AvailableReplicas)
-		assert.Equal(t, "Not running", deploymentStatuses["wavefront-cluster-collector"].Status)
-		assert.False(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
-		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].DesiredNumberScheduled)
-		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].NumberReady)
-		assert.Equal(t, "Not running", daemonSetStatuses["wavefront-node-collector"].Status)
-	})
+		assert.Equal(t, Unhealthy, status.Status)
+		assert.Equal(t, "", status.Message)
+		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ComponentStatuses)
+		assert.False(t, proxyStatus.Healthy)
+		assert.Equal(t, "Not running", proxyStatus.Status)
 
-	t.Run("report health status when components are deleted", func(t *testing.T) {
-		appsV1 := setup()
-		deploymentStatuses := map[string]*wf.DeploymentStatus{
-			"wavefront-proxy": &wf.DeploymentStatus{
-				Message:           "previous proxy message",
-				Status:            "Running (1/1)",
-				Healthy:           true,
-				Replicas:          1,
-				AvailableReplicas: 1,
-			},
-			"wavefront-cluster-collector": {
-				Message:           "previous collector message",
-				Status:            "Running (1/1)",
-				Healthy:           true,
-				Replicas:          1,
-				AvailableReplicas: 1,
-			},
-		}
-		daemonSetStatuses := map[string]*wf.DaemonSetStatus{
-			"wavefront-node-collector": &wf.DaemonSetStatus{
-				Message:                "previous collector message",
-				Status:                 "Running (1/1)",
-				Healthy:                true,
-				DesiredNumberScheduled: 1,
-				NumberReady:            1,
-			},
-		}
+		clusterCollectorStatus := getComponentStatusWithName(util.ClusterCollectorName, status.ComponentStatuses)
+		assert.False(t, clusterCollectorStatus.Healthy)
+		assert.Equal(t, "Not running", clusterCollectorStatus.Status)
 
-		healthy, message := UpdateComponentStatuses(appsV1, deploymentStatuses, daemonSetStatuses, &wf.Wavefront{})
-		assert.False(t, healthy)
-		assert.Equal(t, "(0/3) wavefront components are healthy.", message)
-		assert.False(t, deploymentStatuses["wavefront-proxy"].Healthy)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].Replicas)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-proxy"].AvailableReplicas)
-		assert.Equal(t, "Not running", deploymentStatuses["wavefront-proxy"].Status)
-		assert.False(t, deploymentStatuses["wavefront-cluster-collector"].Healthy)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].Replicas)
-		assert.Equal(t, int32(0), deploymentStatuses["wavefront-cluster-collector"].AvailableReplicas)
-		assert.Equal(t, "Not running", deploymentStatuses["wavefront-cluster-collector"].Status)
-		assert.False(t, daemonSetStatuses["wavefront-node-collector"].Healthy)
-		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].DesiredNumberScheduled)
-		assert.Equal(t, int32(0), daemonSetStatuses["wavefront-node-collector"].NumberReady)
-		assert.Equal(t, "Not running", daemonSetStatuses["wavefront-node-collector"].Status)
+		nodeCollectorStatus := getComponentStatusWithName(util.NodeCollectorName, status.ComponentStatuses)
+		assert.False(t, nodeCollectorStatus.Healthy)
+		assert.Equal(t, "Not running", nodeCollectorStatus.Status)
 	})
 
 }
 
 func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {
 	return k8sfake.NewSimpleClientset(initObjs...).AppsV1()
+}
+
+func getComponentStatusWithName(name string, componentStatuses []wf.ComponentStatus) wf.ComponentStatus {
+	for _, componentStatus := range componentStatuses {
+		if componentStatus.Name == name {
+			return componentStatus
+		}
+	}
+	return wf.ComponentStatus{}
 }

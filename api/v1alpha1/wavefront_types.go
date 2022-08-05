@@ -263,23 +263,31 @@ type Collector struct {
 
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
-	// Overall health status of the wavefront components
-	Healthy bool `json:"healthy,required"`
-
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
 
-	// Human readable error messages.
-	Errors string `json:"errors,omitempty"`
+	// Human readable message indicating details about the deployment status.
+	Status string `json:"status,omitempty"`
 
-	// The deployment status  of the cluster collector
-	Proxy DeploymentStatus `json:"proxy,omitempty"`
+	ComponentStatuses []ComponentStatus `json:"componentStatuses,omitempty"`
+}
 
-	// The daemonSet status of the node collector
-	NodeCollector DaemonSetStatus `json:"nodeCollector,omitempty"`
+type ComponentStatus struct {
 
-	// The deployment status of the cluster collector
-	ClusterCollector DeploymentStatus `json:"clusterCollector,omitempty"`
+	// Computed running status. (available / desired )
+	Status string `json:"status,omitempty"`
+
+	// Human readable message indicating details of the component.
+	Message string `json:"message,omitempty"`
+
+	// Name of the resource
+	Name string `json:"name,omitempty"`
+
+	// Resource type (daemonSet or deployment) internal use only
+	Type string `json:"-"`
+
+	// Health status internal use only
+	Healthy bool `json:"-"`
 }
 
 type DaemonSetStatus struct {
@@ -293,18 +301,16 @@ type DaemonSetStatus struct {
 	NumberReady int32 `json:"numberReady,omitempty"`
 
 	// Computed daemonset status. (available replicas / desired replicas)
-	// +kubebuilder:default:="Running (0/0)"
 	Status string `json:"status,omitempty"`
 
 	// Human readable message indicating details about the daemonset status.
 	Message string `json:"message,omitempty"`
 
-	// Health status of the daemonset
-	// +kubebuilder:default:=true
-	Healthy bool `json:"healthy,omitempty"`
-
 	// Name of the daemonset
 	DaemonSetName string `json:"daemonSetName,omitempty"`
+
+	// Health status of the daemonset, internal use only
+	Healthy bool `json:"-"`
 }
 
 type DeploymentStatus struct {
@@ -315,26 +321,24 @@ type DeploymentStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 
 	// Computed deployment status. (available replicas / desired replicas)
-	// +kubebuilder:default:="Running (0/0)"
 	Status string `json:"status,omitempty"`
 
 	// Human readable message indicating details about the deployment status.
 	Message string `json:"message,omitempty"`
 
-	// Health status of the deployment
-	// +kubebuilder:default:=true
-	Healthy bool `json:"healthy,required"`
-
 	// Name of the deployment
 	DeploymentName string `json:"deploymentName,omitempty"`
+
+	// Health status of the deployment, internal use only
+	Healthy bool `json:"-"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="healthy",type="boolean",JSONPath=".status.healthy"
-// +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.proxy.status"
-// +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.clusterCollector.status"
-// +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.nodeCollector.status"
+// +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.status"
+// +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-proxy')].status"
+// +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-cluster-collector')].status"
+// +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-node-collector')].status"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // Wavefront is the Schema for the wavefronts API
 type Wavefront struct {
