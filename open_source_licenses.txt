@@ -34,7 +34,7 @@ SECTION 1: Apache License, V2.0
    >>> github.com/prometheus/procfs-v0.6.0
    >>> github.com/golang/groupcache-v0.0.0-20210331224755-41bb18bfe9da
    >>> gomodules.xyz/jsonpatch/v2-v2.2.0
-   >>> github.com/prometheus/client_golang-v1.11.0
+   >>> github.com/prometheus/client_golang-v1.11.1
    >>> github.com/googleapis/gnostic-v0.5.5
    >>> github.com/modern-go/reflect2-v1.0.2
    >>> k8s.io/utils-v0.0.0-20210930125809-cb0fa318a74b
@@ -77,7 +77,7 @@ SECTION 2: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> go.uber.org/zap-v1.19.1
    >>> github.com/json-iterator/go-v1.1.12
    >>> sigs.k8s.io/yaml-v1.3.0
-   >>> golang.org/x/sys-v0.0.0-20211029165221-6e7872819dc8
+   >>> golang.org/x/sys-v0.0.0-20220412211240-33da011f77ad
    >>> k8s.io/client-go-v0.23.0
    >>> github.com/evanphx/json-patch-v4.12.0
 
@@ -987,7 +987,7 @@ APPENDIX. Standard License Files
        License:Apache 2.0
 
 
-   >>> github.com/prometheus/client_golang-v1.11.0
+   >>> github.com/prometheus/client_golang-v1.11.1
 
        Found in: client_golang-master/NOTICE
 
@@ -21660,7 +21660,7 @@ APPENDIX. Standard License Files
        See SECTION 7 in 'LICENSE TEXT REFERENCE TABLE'
 
 
-   >>> golang.org/x/sys-v0.0.0-20211029165221-6e7872819dc8
+   >>> golang.org/x/sys-v0.0.0-20220412211240-33da011f77ad
 
        Copyright (c) 2009 The Go Authors. All rights reserved.
 
