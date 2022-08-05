@@ -25,9 +25,6 @@ spec:
     - jsonPath: .status.healthy
       name: healthy
       type: boolean
-    - jsonPath: .status.warnings
-      name: warnings
-      type: boolean
     - jsonPath: .status.proxy.status
       name: proxy
       type: string
@@ -431,6 +428,9 @@ spec:
                 required:
                 - healthy
                 type: object
+              errors:
+                description: Human readable error messages.
+                type: string
               healthy:
                 description: Overall health status of the wavefront components
                 type: boolean
@@ -491,9 +491,6 @@ spec:
                 required:
                 - healthy
                 type: object
-              warnings:
-                description: Warnings whether the custom resource spec has validation warnings
-                type: boolean
             required:
             - healthy
             type: object
@@ -773,7 +770,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta-1
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta-2
         livenessProbe:
           httpGet:
             path: /healthz
