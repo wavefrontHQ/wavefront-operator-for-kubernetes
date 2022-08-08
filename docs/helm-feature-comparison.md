@@ -1,5 +1,5 @@
 # Helm Feature Comparison
-This document provides a feature comparison of the [helm install configuraiton](https://github.com/wavefrontHQ/helm/tree/master/wavefront#configuration)
+Wavefront Kubernetes Operator feature comparison with [helm install](https://github.com/wavefrontHQ/helm/tree/master/wavefront#configuration)
 
 
 | Helm collector parameter                      | Wavefront operator Custom Resource `spec`.                                                           | Description                                                                                                                                               |
