@@ -53,21 +53,23 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
 		invalidWFSpec := defaultWFSpec()
 		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
-		r, _, _, dynamicClient, _ := setupForCreate(invalidWFSpec)
+		r, _, _, _ := setupForCreate(invalidWFSpec)
+		r.KubernetesManager = stubKM
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
 
-		assert.Equal(t, 6, len(dynamicClient.Actions()))
-		assert.True(t, hasAction(dynamicClient, "get", "serviceaccounts"), "get ServiceAccount")
-		assert.True(t, hasAction(dynamicClient, "get", "configmaps"), "get Configmap")
-		assert.True(t, hasAction(dynamicClient, "get", "services"), "get Service")
-		assert.True(t, hasAction(dynamicClient, "get", "daemonsets"), "get DaemonSet")
-		// one deployment for collector and one for proxy
-		assert.True(t, hasAction(dynamicClient, "get", "deployments"), "get Deployment")
+		assert.False(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		assert.False(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		assert.False(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		assert.False(t, stubKM.AppliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
+		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {

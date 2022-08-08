@@ -104,8 +104,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = withFSResources(r.FS, wavefront.Spec, r.KubernetesManager.DeleteResources)
-		//err = r.readAndDeleteResources(r.FS)
+		err = withFSResources(r.FS, wavefront.Spec, r.deleteResources)
 		return ctrl.Result{}, nil
 	}
 
@@ -123,7 +122,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, err
 		}
 	} else {
-		err = withFSResources(r.FS, wavefront.Spec, r.KubernetesManager.DeleteResources)
+		err = withFSResources(r.FS, wavefront.Spec, r.deleteResources)
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront, validationError)
@@ -237,6 +236,11 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 		return "", err
 	}
 	return deployment.UID, nil
+}
+
+func (r WavefrontReconciler) deleteResources(spec wf.WavefrontSpec, resources []string) error {
+	_ = spec
+	return r.KubernetesManager.DeleteResources(resources)
 }
 
 func resourceFiles(suffix string) ([]string, error) {
