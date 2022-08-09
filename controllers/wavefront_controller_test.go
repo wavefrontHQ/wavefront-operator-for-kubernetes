@@ -490,7 +490,6 @@ func TestReconcileProxy(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-
 		deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
 		assert.NoError(t, err)
 
