@@ -101,7 +101,7 @@ GOARCH?=$(go env GOARCH)
 build: generate fmt vet ## Build manager binary.
 	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
 	rm -rf build/$(GOOS)/$(GOARCH)/deploy
-	cp -r deploy/internal build/$(GOOS)/$(GOARCH)
+	cp -r deploy build/$(GOOS)/$(GOARCH)
 	cp open_source_licenses.txt build/
 
 .PHONY: run
