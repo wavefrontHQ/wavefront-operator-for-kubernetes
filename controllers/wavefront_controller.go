@@ -29,7 +29,10 @@ import (
 	"text/template"
 	"time"
 
+	kubernetes_manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/validation"
 
@@ -42,11 +45,8 @@ import (
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/discovery"
@@ -65,11 +65,11 @@ const DeployDir = "../deploy/internal"
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
 	client.Client
-	Scheme        *runtime.Scheme
-	FS            fs.FS
-	DynamicClient dynamic.Interface
-	RestMapper    meta.RESTMapper
-	Appsv1        typedappsv1.AppsV1Interface
+
+	Scheme            *runtime.Scheme
+	FS                fs.FS
+	Appsv1            typedappsv1.AppsV1Interface
+	KubernetesManager kubernetes_manager.KubernetesManager
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -113,9 +113,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		log.Log.Error(err, "error preprocessing Wavefront Spec")
 		return ctrl.Result{}, err
 	}
-
 	validationError := validation.Validate(wavefront)
-
 	if validationError == nil {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
@@ -123,7 +121,8 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, err
 		}
 	} else {
-		r.readAndDeleteResources()
+		_ = r.readAndDeleteResources()
+		// TODO: should we do something with this error?
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront, validationError)
@@ -168,13 +167,17 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 
 	clientSet, err := kubernetes.NewForConfig(config)
 
+	kubernetesManager, err := kubernetes_manager.NewKubernetesManager(mapper, dynamicClient)
+	if err != nil {
+		return nil, err
+	}
+
 	reconciler := &WavefrontReconciler{
-		Client:        client,
-		Scheme:        scheme,
-		FS:            os.DirFS(DeployDir),
-		DynamicClient: dynamicClient,
-		RestMapper:    mapper,
-		Appsv1:        clientSet.AppsV1(),
+		Client:            client,
+		Scheme:            scheme,
+		FS:                os.DirFS(DeployDir),
+		Appsv1:            clientSet.AppsV1(),
+		KubernetesManager: kubernetesManager,
 	}
 
 	return reconciler, nil
@@ -193,7 +196,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 		return err
 	}
 
-	err = r.createKubernetesObjects(resources, spec)
+	err = r.KubernetesManager.ApplyResources(resources, filterDisabledAndConfigMap(spec))
 	if err != nil {
 		return err
 	}
@@ -203,7 +206,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec) ([]string, error) {
 	var resources []string
 
-	resourceFiles, err := r.resourceFiles("yaml")
+	resourceFiles, err := resourceFiles("yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -223,64 +226,17 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec)
 	return resources, nil
 }
 
-func (r *WavefrontReconciler) createKubernetesObjects(resources []string, wavefrontSpec wf.WavefrontSpec) error {
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	for _, resource := range resources {
-		object := &unstructured.Unstructured{}
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-		if err != nil {
-			return err
-		}
+func (r *WavefrontReconciler) readAndDeleteResources() error {
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{})
+	if err != nil {
+		return err
+	}
 
-		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-		if err != nil {
-			return err
-		}
-
-		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
-			continue
-		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
-			continue
-		}
-		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
-			continue
-		}
-
-		err = r.createResources(mapping, object)
-		if err != nil {
-			return err
-		}
+	err = r.KubernetesManager.DeleteResources(resources)
+	if err != nil {
+		return err
 	}
 	return nil
-}
-
-func (r *WavefrontReconciler) createResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
-	var dynamicClient dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
-	} else {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource)
-	}
-
-	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		_, err = dynamicClient.Create(context.TODO(), obj, v1.CreateOptions{})
-		if err != nil {
-			return err
-		}
-	} else if err == nil {
-		data, err := json.Marshal(obj)
-		if err != nil {
-			return err
-		}
-		_, err = dynamicClient.Patch(context.TODO(), obj.GetName(), types.MergePatchType, data, v1.PatchOptions{})
-		if err != nil {
-			return err
-		}
-	}
-	return err
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
@@ -291,7 +247,7 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 	return deployment.UID, nil
 }
 
-func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
+func resourceFiles(suffix string) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(DeployDir,
@@ -307,58 +263,6 @@ func (r *WavefrontReconciler) resourceFiles(suffix string) ([]string, error) {
 	)
 
 	return files, err
-}
-
-func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{})
-	if err != nil {
-		return err
-	}
-
-	err = r.deleteKubernetesObjects(resources)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *WavefrontReconciler) deleteKubernetesObjects(resources []string) error {
-	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	for _, resource := range resources {
-		object := &unstructured.Unstructured{}
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
-		if err != nil {
-			return err
-		}
-
-		mapping, err := r.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-		if err != nil {
-			return err
-		}
-
-		err = r.deleteResources(mapping, object)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *WavefrontReconciler) deleteResources(mapping *meta.RESTMapping, obj *unstructured.Unstructured) error {
-	var dynamicClient dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource).Namespace(obj.GetNamespace())
-	} else {
-		dynamicClient = r.DynamicClient.Resource(mapping.Resource)
-	}
-	_, err := dynamicClient.Get(context.TODO(), obj.GetName(), v1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	return dynamicClient.Delete(context.TODO(), obj.GetName(), v1.DeleteOptions{})
 }
 
 func newTemplate(resourceFile string) *template.Template {
@@ -490,4 +394,21 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		wavefront.Status.Message = fmt.Sprintf("Invalid spec: %s", validationError.Error())
 	}
 	return r.Status().Update(ctx, wavefront)
+}
+
+func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
+	// TODO: we could make this function a list of functions but this is fine for now
+	return func(object *unstructured.Unstructured) bool {
+		objLabels := object.GetLabels()
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
+			return true
+		}
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
+			return true
+		}
+		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+			return true
+		}
+		return false
+	}
 }

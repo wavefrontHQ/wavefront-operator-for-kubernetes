@@ -2,8 +2,8 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
+    app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: collector
-    app.kubernetes.io/name : wavefront
   name: wavefront-node-collector
   namespace: wavefront
   ownerReferences:
