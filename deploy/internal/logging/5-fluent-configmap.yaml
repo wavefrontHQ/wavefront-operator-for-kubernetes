@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentdconfigmap
+  namespace: wavefront
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: logging
+data:
+  fluent.conf: |-
+    ################################################################
+    # This source gets all logs from local docker host
+    @include pods-kind-fluent.conf
+    @include wavefront-proxy.conf
+    #@include file-fluent.conf
+  pods-kind-fluent.conf: |-
+    <source>
+      @type tail
+      @log_level debug
+      read_from_head true
+      tag kubernetes.*
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      exclude_path ["/var/log/containers/fluent*"]
+      <parse>
+        @type regexp
+        #https://regex101.com/r/ZkOBTI/1
+        expression ^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.[^Z]*Z)\s(?<stream>[^\s]+)\s(?<character>[^\s])\s(?<message>.*)$
+        time_format %Y-%m-%dT%H:%M:%S.%NZ
+      </parse>
+    </source>
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+      @id filter_kube_metadata
+      kubernetes_url "#{ENV['FLUENT_FILTER_KUBERNETES_URL'] || 'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
+      verify_ssl "#{ENV['KUBERNETES_VERIFY_SSL'] || true}"
+      ca_file "#{ENV['KUBERNETES_CA_FILE']}"
+      skip_labels false
+      skip_container_metadata false
+      skip_namespace_metadata true
+      skip_master_url true
+      #skip_labels "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_LABELS'] || 'false'}"
+      #skip_container_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_CONTAINER_METADATA'] || 'false'}"
+      #skip_master_url "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_MASTER_URL'] || 'false'}"
+      #skip_namespace_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_NAMESPACE_METADATA'] || 'false'}"
+    </filter>
+    <filter kubernetes.**>
+      @type grep
+      <and>
+        # Exclude hyperlogs proxy and fluentd logs
+        <exclude>
+          key $.kubernetes.container_name
+          pattern ^fluentd-wf$
+        </exclude>
+      </and>
+    </filter>
+    ## Concatenate multi-line logs
+    #<filter **>
+    #  @id filter_concat
+    #  @type concat
+    #  key message
+    #  multiline_end_regexp /\n$/
+    #  separator ""
+    #</filter>
+    <filter kubernetes.**>
+      @type record_transformer
+      enable_ruby
+      <record>
+        # hyperlogs
+        service "${record.dig('kubernetes', 'labels', 'service')? record.dig('kubernetes', 'labels', 'service') : 'none'}"
+        application "${record.dig('kubernetes', 'labels', 'application')? record.dig('kubernetes', 'labels', 'application') : 'none'}"
+        source "#{ENV['MY_NODE_NAME']}-0809-4"
+        timestamp ${time.to_datetime().strftime('%Q')}
+        pod_name "${record.dig('kubernetes', 'pod_name')}"
+        pod_name2 ${record["kubernetes"]["pod_name"]}
+        container_name ${record["kubernetes"]["container_name"]}
+        namespace_name ${record["kubernetes"]["namespace_name"]}
+      </record>
+      remove_keys kubernetes, docker
+    </filter>
+
+  file-fluent.conf: |-
+    <match **>
+      @type file
+      path /tmp/file-test.log
+    </match>
+  wavefront-proxy.conf: |
+    <match **>
+      @type copy
+      <store>
+        @type http
+        endpoint http://hyperlogs-proxy.wavefront.svc.cluster.local:2878/logs/json_array?f=logs_json_arr
+        open_timeout 2
+        json_array true
+        <buffer>
+          flush_interval 1s
+        </buffer>
+      </store>
+    </match>

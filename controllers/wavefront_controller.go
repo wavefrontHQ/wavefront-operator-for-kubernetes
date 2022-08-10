@@ -212,7 +212,8 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec)
 	}
 
 	for _, resourceFile := range resourceFiles {
-		resourceTemplate, err := newTemplate(resourceFile).ParseFS(r.FS, resourceFile)
+		templateName := strings.Replace(resourceFile, "logging/", "", 1)
+		resourceTemplate, err := newTemplate(templateName).ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
 		}
@@ -250,17 +251,16 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 func resourceFiles(suffix string) ([]string, error) {
 	var files []string
 
-	err := filepath.Walk(DeployDir,
-		func(path string, info fs.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if strings.HasSuffix(path, suffix) {
-				files = append(files, info.Name())
-			}
-			return nil
-		},
-	)
+	err := filepath.WalkDir(DeployDir, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if strings.HasSuffix(path, suffix) {
+			filePath := strings.Replace(path, DeployDir+"/", "", 1)
+			files = append(files, filePath)
+		}
+		return nil
+	})
 
 	return files, err
 }
@@ -406,7 +406,10 @@ func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *uns
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
 			return true
 		}
-		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "logging" && !wavefrontSpec.DataCollection.Logging.Enable {
+			return true
+		}
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
 			return true
 		}
 		return false
