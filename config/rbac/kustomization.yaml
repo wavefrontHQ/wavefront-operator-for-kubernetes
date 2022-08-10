@@ -4,3 +4,5 @@ resources:
 - role_binding.yaml
 - collector/1-collector-roles.yaml
 - collector/2-collector-rbac.yaml
+- collector/3-fluentd-roles.yaml
+- collector/4-fluentd-rbac.yaml
