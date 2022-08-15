@@ -12,10 +12,16 @@ metadata:
       name: wavefront-controller-manager
       uid: {{ .ControllerManagerUID }}
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name : wavefront
       app.kubernetes.io/component: proxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -61,7 +67,8 @@ spec:
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyHost }} --proxyHost {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyHost }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPort }} --proxyPort {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPort }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} --proxyUser {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} {{- end -}}
-              {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} --proxyPassword {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} {{- end }}
+              {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} --proxyPassword {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} {{- end -}}
+              {{- if .DataCollection.Logging.Enable }} --customMessageTags log {{- end }}
 
           ports:
             - containerPort: {{ .DataExport.WavefrontProxy.MetricPort }}
