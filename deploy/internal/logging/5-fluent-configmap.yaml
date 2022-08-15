@@ -69,7 +69,8 @@ data:
         # hyperlogs
         service "${record.dig('kubernetes', 'labels', 'service')? record.dig('kubernetes', 'labels', 'service') : 'none'}"
         application "${record.dig('kubernetes', 'labels', 'application')? record.dig('kubernetes', 'labels', 'application') : 'none'}"
-        source "#{ENV['MY_NODE_NAME']}"
+        source "#{ENV['NODE_NAME']}"
+        cluster "#{ENV['CLUSTER_NAME']}"
         timestamp ${time.to_datetime().strftime('%Q')}
         pod_name "${record.dig('kubernetes', 'pod_name')}"
         container_name "${record.dig('kubernetes', 'container_name')}"
