@@ -15,10 +15,10 @@ func NewTestStatusSender() *statusSender {
 	return statusSender
 }
 
-func TestStoreEmptyStatus(t *testing.T) {
+func TestSendEmptyWfStatus(t *testing.T) {
 	fakeStatusSender := NewTestStatusSender()
 	fakeStatusSender.SendStatus(wf.WavefrontStatus{}, "my_cluster")
-	assert.Equal(t, "", getMetrics(fakeStatusSender))
+	assert.Equal(t, "Metric: kubernetes.operator.status 0.000000 source=\"my_cluster\"", getMetrics(fakeStatusSender))
 }
 
 func getMetrics(sender *statusSender) string {
