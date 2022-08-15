@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -19,6 +20,9 @@ type MockKubernetesManager struct {
 	deletedYAMLs []string
 	appliedYAMLs []string
 	usedFilter   func(*unstructured.Unstructured) bool
+}
+
+type stubStatusSender struct {
 }
 
 func NewMockKubernetesManager() *MockKubernetesManager {
@@ -521,6 +525,16 @@ func (skm MockKubernetesManager) ServiceAccountPassesFilter(t *testing.T, err er
 	return skm.ObjectPassesFilter(
 		serviceAccountObject,
 	)
+}
+
+func NewStubStatusSender() *stubStatusSender {
+	return &stubStatusSender{}
+}
+
+func (statusSender *stubStatusSender) SendStatus(status wf.WavefrontStatus) error {
+	return nil
+}
+func (statusSender *stubStatusSender) Close() {
 }
 
 func k8sYAMLHeader(apiVersion string, kind string, appKubernetesIOName string, appKubernetesIOComponent string, metadataName string) (*regexp.Regexp, error) {

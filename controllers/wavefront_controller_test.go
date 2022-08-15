@@ -994,13 +994,12 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
-	stubKubernetesManager := test_helper.NewMockKubernetesManager()
-
 	r := &controllers.WavefrontReconciler{
 		Client:            apiClient,
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
-		KubernetesManager: stubKubernetesManager,
+		KubernetesManager: test_helper.NewMockKubernetesManager(),
+		StatusSender:      test_helper.NewStubStatusSender(),
 		Appsv1:            fakesAppsV1,
 	}
 
