@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: wavefront-proxy
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: proxy
-  name: wavefront-proxy
   namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
