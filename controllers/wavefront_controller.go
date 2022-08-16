@@ -85,6 +85,8 @@ type WavefrontReconciler struct {
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=serviceaccounts,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=configmaps,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=wavefront,resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=clusterrole,verbs=get;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=clusterrolebinding,verbs=get;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
