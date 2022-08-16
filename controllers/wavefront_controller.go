@@ -212,7 +212,7 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec)
 	}
 
 	for _, resourceFile := range resourceFiles {
-		templateName := strings.Replace(resourceFile, "logging/", "", 1)
+		_, templateName := filepath.Split(resourceFile)
 		resourceTemplate, err := newTemplate(templateName).ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
