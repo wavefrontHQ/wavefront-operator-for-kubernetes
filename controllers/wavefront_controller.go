@@ -193,7 +193,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	resources, err := r.readAndInterpolateResources(spec)
+	resources, err := r.readAndInterpolateResources(spec, false)
 	if err != nil {
 		return err
 	}
@@ -205,13 +205,20 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	return nil
 }
 
-func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec) ([]string, error) {
+func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec, includeAll bool) ([]string, error) {
 	var resources []string
 
-	var dirsToInclude []string
-	if spec.DataCollection.Logging.Enable {
+	dirsToInclude := []string{"internal"}
+	if includeAll || spec.DataExport.WavefrontProxy.Enable {
+		dirsToInclude = append(dirsToInclude, "proxy")
+	}
+	if includeAll || spec.DataCollection.Metrics.Enable {
+		dirsToInclude = append(dirsToInclude, "collector")
+	}
+	if includeAll || spec.DataCollection.Logging.Enable {
 		dirsToInclude = append(dirsToInclude, "logging")
 	}
+
 	resourceFiles, err := resourceFiles("yaml", dirsToInclude)
 	if err != nil {
 		return nil, err
@@ -234,7 +241,7 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec)
 }
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{})
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, true)
 	if err != nil {
 		return err
 	}
@@ -266,7 +273,6 @@ func contains(s []string, str string) bool {
 
 func resourceFiles(suffix string, dirsToInclude []string) ([]string, error) {
 	var files []string
-
 
 	err := filepath.WalkDir(DeployDir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
@@ -420,19 +426,10 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
 	// TODO: we could make this function a list of functions but this is fine for now
 	return func(object *unstructured.Unstructured) bool {
-		//objLabels := object.GetLabels()
-		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
-		//	return true
-		//}
-		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
-		//	return true
-		//}
-		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "logging" && !wavefrontSpec.DataCollection.Logging.Enable {
-		//	return true
-		//}
-		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
-		//	return true
-		//}
+		objLabels := object.GetLabels()
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+			return true
+		}
 		return false
 	}
 }

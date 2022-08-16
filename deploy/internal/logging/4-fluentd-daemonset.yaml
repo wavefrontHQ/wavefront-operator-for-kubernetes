@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: wavefront-logging
-  namespace: wavefront
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: logging
+  name: wavefront-logging
+  namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
       kind: Deployment

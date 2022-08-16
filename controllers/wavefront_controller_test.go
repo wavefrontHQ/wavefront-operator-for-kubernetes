@@ -50,6 +50,7 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, stubKM.ClusterCollectorDeploymentContains())
 		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
 		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
+		assert.False(t, stubKM.LoggingDaemonSetContains())
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
@@ -200,7 +201,8 @@ func TestReconcileCollector(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.False(t, stubKM.ServiceAccountPassesFilter(t, err))
+		assert.False(t, stubKM.ClusterCollectorDeploymentContains())
+		assert.False(t, stubKM.NodeCollectorDaemonSetContains())
 
 		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 	})
@@ -294,19 +296,8 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: externalProxyUrl"))
 
-		proxyDeploymentObject, err := stubKM.GetUnstructuredProxyDeployment()
-		assert.NoError(t, err)
-
-		assert.False(t, stubKM.ObjectPassesFilter(
-			proxyDeploymentObject,
-		))
-
-		proxyServiceObject, err := stubKM.GetUnstructuredProxyService()
-		assert.NoError(t, err)
-
-		assert.False(t, stubKM.ObjectPassesFilter(
-			proxyServiceObject,
-		))
+		assert.False(t, stubKM.ProxyDeploymentContains())
+		assert.False(t, stubKM.ProxyServiceContains())
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
@@ -583,13 +574,7 @@ func TestReconcileLogging(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-
-		loggingDaemonsetObject, err := stubKM.GetUnstructuredLoggingDaemonset()
-		assert.NoError(t, err)
-
-		assert.False(t, stubKM.ObjectPassesFilter(
-			loggingDaemonsetObject,
-		))
+		assert.False(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
 	})
 
 	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
@@ -603,13 +588,7 @@ func TestReconcileLogging(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-
-		loggingDaemonsetObject, err := stubKM.GetUnstructuredLoggingDaemonset()
-		assert.NoError(t, err)
-
-		assert.True(t, stubKM.ObjectPassesFilter(
-			loggingDaemonsetObject,
-		))
+		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
 	})
 
 }
