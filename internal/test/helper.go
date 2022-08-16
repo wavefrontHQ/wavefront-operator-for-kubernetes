@@ -389,6 +389,16 @@ func (skm stubKubernetesManager) GetUnstructuredProxyDeployment() (*unstructured
 	)
 }
 
+func (skm stubKubernetesManager) GetUnstructuredLoggingDaemonset() (*unstructured.Unstructured, error) {
+	return skm.GetAppliedYAML(
+		"apps/v1",
+		"DaemonSet",
+		"wavefront",
+		"logging",
+		"wavefront-logging",
+	)
+}
+
 func (skm stubKubernetesManager) GetCollectorServiceAccount() (corev1.ServiceAccount, error) {
 	yamlUnstructured, err := skm.GetUnstructuredCollectorServiceAccount()
 	if err != nil {

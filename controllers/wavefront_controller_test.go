@@ -571,6 +571,49 @@ func TestReconcileProxy(t *testing.T) {
 	})
 }
 
+func TestReconcileLogging(t *testing.T) {
+	t.Run("Skip creating logging if DataCollection.Logging.Enable is set to false", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = false
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+
+		loggingDaemonsetObject, err := stubKM.GetUnstructuredLoggingDaemonset()
+		assert.NoError(t, err)
+
+		assert.False(t, stubKM.ObjectPassesFilter(
+			loggingDaemonsetObject,
+		))
+	})
+
+	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+
+		loggingDaemonsetObject, err := stubKM.GetUnstructuredLoggingDaemonset()
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.ObjectPassesFilter(
+			loggingDaemonsetObject,
+		))
+	})
+
+}
+
 func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
 	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
 		if volumeMount.Name == name {

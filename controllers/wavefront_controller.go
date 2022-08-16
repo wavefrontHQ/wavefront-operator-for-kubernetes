@@ -208,7 +208,11 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec) ([]string, error) {
 	var resources []string
 
-	resourceFiles, err := resourceFiles("yaml")
+	var dirsToInclude []string
+	if spec.DataCollection.Logging.Enable {
+		dirsToInclude = append(dirsToInclude, "logging")
+	}
+	resourceFiles, err := resourceFiles("yaml", dirsToInclude)
 	if err != nil {
 		return nil, err
 	}
@@ -250,17 +254,32 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 	return deployment.UID, nil
 }
 
-func resourceFiles(suffix string) ([]string, error) {
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+func resourceFiles(suffix string, dirsToInclude []string) ([]string, error) {
 	var files []string
+
 
 	err := filepath.WalkDir(DeployDir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+		if entry.IsDir() && !contains(dirsToInclude, entry.Name()) {
+			return fs.SkipDir
+		}
 		if strings.HasSuffix(path, suffix) {
 			filePath := strings.Replace(path, DeployDir+"/", "", 1)
 			files = append(files, filePath)
 		}
+
 		return nil
 	})
 
@@ -401,19 +420,19 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
 	// TODO: we could make this function a list of functions but this is fine for now
 	return func(object *unstructured.Unstructured) bool {
-		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
-			return true
-		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
-			return true
-		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "logging" && !wavefrontSpec.DataCollection.Logging.Enable {
-			return true
-		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
-			return true
-		}
+		//objLabels := object.GetLabels()
+		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
+		//	return true
+		//}
+		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
+		//	return true
+		//}
+		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "logging" && !wavefrontSpec.DataCollection.Logging.Enable {
+		//	return true
+		//}
+		//if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+		//	return true
+		//}
 		return false
 	}
 }
