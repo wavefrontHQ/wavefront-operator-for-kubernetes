@@ -26,8 +26,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 65534
-        runAsGroup: 65534
+        runAsUser: 1000
+        runAsGroup: 2000
       containers:
         - name: wavefront-proxy
           image: projects.registry.vmware.com/tanzu_observability/proxy:11.3
@@ -110,7 +110,6 @@ spec:
 {{ .DataExport.WavefrontProxy.Resources | toYaml | indent 12 }}
           securityContext:
             privileged: false
-            readOnlyRootFilesystem: true
           volumeMounts:
           {{- if .DataExport.WavefrontProxy.Preprocessor}}
           - name: preprocessor
