@@ -17,6 +17,7 @@ function run_test() {
   local should_run_static_analysis="${2:-false}"
   local should_be_healthy="${3:-true}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
+  local proxyLogErrorCount=0
 
   echo "Running $type CR"
 
@@ -54,6 +55,12 @@ function run_test() {
     fi
   fi
 
+  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep error | wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  if [[ $proxyLogErrorCount > 0 ]]; then
+    red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
+    exit 1
+  fi
+
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
@@ -71,7 +78,7 @@ function run_static_analysis() {
 
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=7
+  local known_lint_errors=10
   if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
     jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
@@ -84,7 +91,7 @@ function run_static_analysis() {
 
   local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=14
+  local known_score_errors=20
   if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' "$kube_score_results_file"
