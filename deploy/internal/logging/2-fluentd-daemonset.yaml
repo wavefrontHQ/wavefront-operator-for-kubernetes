@@ -1,27 +1,29 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: fluentd-wf-logging
+  name: wavefront-logging
   namespace: wavefront
   labels:
-    k8s-app: fluentd-wf-logging
-    app: fluentd-wf-logging
-    version: v1
-    kubernetes.io/cluster-service: "true"
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: logging
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
 spec:
  selector:
    matchLabels:
-     name: fluentd-wf-logging
+     name: wavefront-logging
  template:
    metadata:
-     labels:
-       name: fluentd-wf-logging
-       app: fluentd-wf-logging
-       version: v1
-       kubernetes.io/cluster-service: "true"
+    labels:
+      name: wavefront-logging
+      app.kubernetes.io/name: wavefront
+      app.kubernetes.io/component: logging
    spec:
-     serviceAccount: fluentd-wf-logging
-     serviceAccountName: fluentd-wf-logging
+     serviceAccount: wavefront-logging
+     serviceAccountName: wavefront-logging
      tolerations:
      - key: node-role.kubernetes.io/master
        effect: NoSchedule
@@ -66,7 +68,7 @@ spec:
          path: /var/lib/docker/containers
      - name: config-volume
        configMap:
-         name: fluentdconfigmap
+         name: wavefront-logging-config
      - name: wf-fluent-volume
        emptyDir: {}
      - name: var-logsx1
