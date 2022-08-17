@@ -44,46 +44,28 @@ data:
     <filter kubernetes.**>
       @type kubernetes_metadata
       @id filter_kube_metadata
-      kubernetes_url "#{ENV['FLUENT_FILTER_KUBERNETES_URL'] || 'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
-      verify_ssl "#{ENV['KUBERNETES_VERIFY_SSL'] || true}"
-      ca_file "#{ENV['KUBERNETES_CA_FILE']}"
       skip_labels false
       skip_container_metadata false
       skip_namespace_metadata true
       skip_master_url true
-      #skip_labels "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_LABELS'] || 'false'}"
-      #skip_container_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_CONTAINER_METADATA'] || 'false'}"
-      #skip_master_url "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_MASTER_URL'] || 'false'}"
-      #skip_namespace_metadata "#{ENV['FLUENT_KUBERNETES_METADATA_SKIP_NAMESPACE_METADATA'] || 'false'}"
+    </filter>
+    # Concatenate multi-line logs
+    <filter **>
+      @id filter_concat
+      @type concat
+      key message
+      multiline_start_regexp /\\n$/
+      multiline_end_regexp /(?<!\\n)$/
+      separator "\n"
     </filter>
     <filter kubernetes.**>
-      @type grep
-      <and>
-        # Exclude hyperlogs proxy and fluentd logs
-        <exclude>
-          key $.kubernetes.container_name
-          pattern ^fluentd-wf$
-        </exclude>
-      </and>
-    </filter>
-    ## Concatenate multi-line logs
-    #<filter **>
-    #  @id filter_concat
-    #  @type concat
-    #  key message
-    #  multiline_end_regexp /\n$/
-    #  separator ""
-    #</filter>
-    <filter kubernetes.**>
-      @type record_transformer
-      enable_ruby
+      @type record_modifier
       <record>
-        # hyperlogs
         service "${record.dig('kubernetes', 'labels', 'service')? record.dig('kubernetes', 'labels', 'service') : 'none'}"
         application "${record.dig('kubernetes', 'labels', 'application')? record.dig('kubernetes', 'labels', 'application') : 'none'}"
         source "#{ENV['NODE_NAME']}"
         cluster "#{ENV['CLUSTER_NAME']}"
-        timestamp ${time.to_datetime().strftime('%Q')}
+        timestamp ${(time.sec*1000 + time.nsec/1e6).round}
         pod_name "${record.dig('kubernetes', 'pod_name')}"
         container_name "${record.dig('kubernetes', 'container_name')}"
         namespace_name "${record.dig('kubernetes', 'namespace_name')}"
