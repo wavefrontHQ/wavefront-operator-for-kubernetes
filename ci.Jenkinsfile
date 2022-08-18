@@ -6,7 +6,7 @@ pipeline {
   }
 
   stages {
-    stage("Test with Go 1.17") {
+    stage("Test Go Code") {
       tools {
         go 'Go 1.17'
       }
@@ -68,6 +68,7 @@ pipeline {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         DOCKER_IMAGE = "kubernetes-operator-snapshot"
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+        WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
         GCP_PROJECT = "wavefront-gcp-dev"
       }
       steps {

@@ -191,7 +191,7 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	resources, err := r.readAndInterpolateResources(spec)
+	resources, err := r.readAndInterpolateResources(spec, false)
 	if err != nil {
 		return err
 	}
@@ -203,16 +203,28 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	return nil
 }
 
-func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec) ([]string, error) {
+func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec, includeAll bool) ([]string, error) {
 	var resources []string
 
-	resourceFiles, err := resourceFiles("yaml")
+	dirsToInclude := []string{"internal"}
+	if includeAll || spec.DataExport.WavefrontProxy.Enable {
+		dirsToInclude = append(dirsToInclude, "proxy")
+	}
+	if includeAll || spec.DataCollection.Metrics.Enable {
+		dirsToInclude = append(dirsToInclude, "collector")
+	}
+	if includeAll || spec.DataCollection.Logging.Enable {
+		dirsToInclude = append(dirsToInclude, "logging")
+	}
+
+	resourceFiles, err := resourceFiles("yaml", dirsToInclude)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, resourceFile := range resourceFiles {
-		resourceTemplate, err := newTemplate(resourceFile).ParseFS(r.FS, resourceFile)
+		_, templateName := filepath.Split(resourceFile)
+		resourceTemplate, err := newTemplate(templateName).ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
 		}
@@ -227,7 +239,7 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec)
 }
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{})
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, true)
 	if err != nil {
 		return err
 	}
@@ -247,20 +259,33 @@ func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
 	return deployment.UID, nil
 }
 
-func resourceFiles(suffix string) ([]string, error) {
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+func resourceFiles(suffix string, dirsToInclude []string) ([]string, error) {
 	var files []string
 
-	err := filepath.Walk(DeployDir,
-		func(path string, info fs.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if strings.HasSuffix(path, suffix) {
-				files = append(files, info.Name())
-			}
-			return nil
-		},
-	)
+	err := filepath.WalkDir(DeployDir, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() && !contains(dirsToInclude, entry.Name()) {
+			return fs.SkipDir
+		}
+		if strings.HasSuffix(path, suffix) {
+			filePath := strings.Replace(path, DeployDir+"/", "", 1)
+			files = append(files, filePath)
+		}
+
+		return nil
+	})
 
 	return files, err
 }
@@ -400,13 +425,7 @@ func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *uns
 	// TODO: we could make this function a list of functions but this is fine for now
 	return func(object *unstructured.Unstructured) bool {
 		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && !wavefrontSpec.DataCollection.Metrics.Enable {
-			return true
-		}
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "proxy" && !wavefrontSpec.DataExport.WavefrontProxy.Enable {
-			return true
-		}
-		if object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
 			return true
 		}
 		return false

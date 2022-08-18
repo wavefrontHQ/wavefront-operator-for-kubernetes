@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wavefront-logging-config
+  namespace: wavefront
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: logging
+data:
+  fluent.conf: |-
+    ################################################################
+    # This source gets all logs from local docker host
+    @include pods-fluent-config.conf
+    @include wavefront-proxy.conf
+    #@include file-fluent.conf
+  pods-fluent-config.conf: |-
+    <source>
+      @id in_tail_container_logs
+      @type tail
+      read_from_head true
+      tag kubernetes.*
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      exclude_path ["/var/log/containers/fluent*"]
+      <parse>
+        @type multi_format
+        <pattern>
+          format json
+          time_key time
+          time_format %Y-%m-%dT%H:%M:%S.%NZ
+        </pattern>
+        <pattern>
+          format regexp
+          expression ^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.[^Z]*Z)\s(?<stream>[^\s]+)\s(?<character>[^\s])\s(?<message>.*)$
+          time_format %Y-%m-%dT%H:%M:%S.%NZ
+        </pattern>
+      </parse>
+    </source>
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+      @id filter_kube_metadata
+      skip_labels false
+      skip_container_metadata false
+      skip_namespace_metadata true
+      skip_master_url true
+    </filter>
+    # Concatenate multi-line logs
+    <filter **>
+      @id filter_concat
+      @type concat
+      key message
+      multiline_start_regexp /\\n$/
+      multiline_end_regexp /(?<!\\n)$/
+      separator "\n"
+    </filter>
+    <filter kubernetes.**>
+      @type record_modifier
+      <record>
+        service "${record.dig('kubernetes', 'labels', 'service')? record.dig('kubernetes', 'labels', 'service') : 'none'}"
+        application "${record.dig('kubernetes', 'labels', 'application')? record.dig('kubernetes', 'labels', 'application') : 'none'}"
+        source "#{ENV['NODE_NAME']}"
+        cluster "#{ENV['CLUSTER_NAME']}"
+        timestamp ${(time.sec*1000 + time.nsec/1e6).round}
+        pod_name "${record.dig('kubernetes', 'pod_name')}"
+        container_name "${record.dig('kubernetes', 'container_name')}"
+        namespace_name "${record.dig('kubernetes', 'namespace_name')}"
+      </record>
+      remove_keys kubernetes, docker
+    </filter>
+
+  file-fluent.conf: |-
+    <match **>
+      @type file
+      path /tmp/file-test.log
+    </match>
+  wavefront-proxy.conf: |
+    <match **>
+      @type copy
+      <store>
+        @type http
+        endpoint http://wavefront-proxy:2878/logs/json_array?f=logs_json_arr
+        open_timeout 2
+        json_array true
+        <buffer>
+          flush_interval 1s
+        </buffer>
+      </store>
+    </match>

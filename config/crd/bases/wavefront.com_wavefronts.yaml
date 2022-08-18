@@ -59,6 +59,15 @@ spec:
               dataCollection:
                 description: DataCollection options
                 properties:
+                  logging:
+                    description: Enable and configure wavefront logging
+                    properties:
+                      enable:
+                        default: false
+                        description: Enable is whether to enable the wavefront logging.
+                          Defaults to false.
+                        type: boolean
+                    type: object
                   metrics:
                     description: Metrics has resource configuration for node- and
                       cluster-deployed collectors

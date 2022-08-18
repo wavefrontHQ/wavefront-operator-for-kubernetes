@@ -2,5 +2,7 @@ resources:
 - service_account.yaml
 - role.yaml
 - role_binding.yaml
-- collector/1-collector-roles.yaml
-- collector/2-collector-rbac.yaml
+- components/collector/1-collector-roles.yaml
+- components/collector/2-collector-rbac.yaml
+- components/logging/1-fluentd-roles.yaml
+- components/logging/2-fluentd-rbac.yaml

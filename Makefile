@@ -103,6 +103,12 @@ build: generate fmt vet ## Build manager binary.
 	cp -r deploy build/$(GOOS)/$(GOARCH)
 	cp open_source_licenses.txt build/
 
+.PHONY: clean
+clean:
+	rm -rf bin
+	rm -rf build
+
+
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
@@ -144,6 +150,7 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 	kubectl create -n wavefront secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+	kubectl create -n wavefront secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.

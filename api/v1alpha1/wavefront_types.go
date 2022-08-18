@@ -105,6 +105,9 @@ type ExternalWavefrontProxy struct {
 type DataCollection struct {
 	// Metrics has resource configuration for node- and cluster-deployed collectors
 	Metrics Metrics `json:"metrics,omitempty"`
+
+	//Enable and configure wavefront logging
+	Logging Logging `json:"logging,omitempty"`
 }
 
 type WavefrontProxy struct {
@@ -259,6 +262,12 @@ type Filters struct {
 type Collector struct {
 	// Resources Compute resources required by the Collector containers.
 	Resources Resources `json:"resources,omitempty"`
+}
+
+type Logging struct {
+	// Enable is whether to enable the wavefront logging. Defaults to false.
+	// +kubebuilder:default:=false
+	Enable bool `json:"enable,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
