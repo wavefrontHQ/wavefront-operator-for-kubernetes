@@ -38,7 +38,7 @@ function run_test() {
     echo "Running test-wavefront-metrics"
     ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
     if [[ "$health_status" != "Healthy" ]]; then
       red "Health status for $type: expected = true, actual = $health_status"
       exit 1
@@ -46,7 +46,7 @@ function run_test() {
     green "Success!"
   else
     sleep 1
-    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
     if [[ "$health_status" != "Unhealthy" ]]; then
       red "Health status for $type: expected = false, actual = $health_status"
       exit 1
@@ -56,10 +56,50 @@ function run_test() {
   fi
 
   proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep error | wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-  if [[ $proxyLogErrorCount > 0 ]]; then
+  if [[ $proxyLogErrorCount -gt 0 ]]; then
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
   fi
+
+  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+}
+
+function run_logging_test() {
+  local cluster_name=${CONFIG_CLUSTER_NAME}-$type
+  local WAVEFRONT_LOGGING_URL="https:\/\/springlogs.wavefront.com"
+
+  echo "Running logging CR"
+
+  wait_for_cluster_ready
+
+  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-logging.yaml  |
+  sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_LOGGING_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+
+  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
+
+  wait_for_cluster_ready
+
+  local max_logs_received=0;
+  for _ in {1..12}; do
+    max_logs_received=$(kubectl -n wavefront logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
+    if [[ $max_logs_received -gt 0 ]]; then
+      break
+    fi
+    sleep 5
+  done
+
+  if [[ $max_logs_received -eq 0 ]]; then
+    red "Expected max logs received to be greater than 0, but got $max_logs_received"
+    exit 1
+  fi
+
+  local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+  if [[ "$health_status" != "Healthy" ]]; then
+    red "Health status for $type: expected = true, actual = $health_status"
+    exit 1
+  fi
+
+  green "Success!"
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
@@ -91,7 +131,7 @@ function run_static_analysis() {
 
   local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=20
+  local known_score_errors=23
   if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
     grep '\[CRITICAL\]' "$kube_score_results_file"
@@ -149,6 +189,8 @@ function main() {
   run_test "basic" true
 
   run_test "validation-errors" false false
+
+  run_logging_test
 }
 
 main "$@"
