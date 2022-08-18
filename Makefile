@@ -100,10 +100,14 @@ GOARCH?=$(go env GOARCH)
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
 	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
-	rm -rf build/$(GOOS)/$(GOARCH)/deploy
-	mkdir build/$(GOOS)/$(GOARCH)/deploy
-	cp -r deploy/internal build/$(GOOS)/$(GOARCH)/deploy
+	cp -r deploy build/$(GOOS)/$(GOARCH)
 	cp open_source_licenses.txt build/
+
+.PHONY: clean
+clean:
+	rm -rf bin
+	rm -rf build
+
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
