@@ -26,7 +26,7 @@ data:
       tag kubernetes.*
       path /var/log/containers/*.log
       pos_file /var/log/fluentd-containers.log.pos
-      exclude_path ["/var/log/containers/fluent*"]
+      exclude_path ["/var/log/containers/wavefront-logging*fluent*"]
       <parse>
         @type multi_format
         <pattern>
