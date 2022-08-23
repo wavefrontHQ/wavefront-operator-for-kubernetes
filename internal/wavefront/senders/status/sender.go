@@ -25,18 +25,32 @@ type statusSender struct {
 	wfSender wfsdk.Sender
 }
 
+func truncateMessage(message string) string {
+	maxPointTagLength := 255 - len("=") - len("message")
+	if len(message) >= maxPointTagLength {
+		return message[0:maxPointTagLength]
+	}
+	return message
+}
+
 func (statusSender statusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
 	tags := map[string]string{
 		"cluster": clusterName,
-		"message": status.Message,
-		"status":  status.Status,
 	}
+
+	if len(status.Message) > 0 {
+		tags["message"] = truncateMessage(status.Message)
+	}
+	if len(status.Status) > 0 {
+		tags["status"] = status.Status
+	}
+
 	healthy := 0.0
 	if status.Status == health.Healthy {
 		healthy = 1.0
 	}
-	statusSender.wfSender.SendMetric("kubernetes.operator.status", healthy, 0, clusterName, tags)
-	return nil
+
+    return statusSender.wfSender.SendMetric("kubernetes.operator.status", healthy, 0, clusterName, tags)
 }
 
 func (statusSender statusSender) Close() {

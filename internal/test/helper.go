@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
+
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -23,6 +25,18 @@ type MockKubernetesManager struct {
 }
 
 type stubStatusSender struct {
+	wfSender wfsdk.Sender
+}
+
+func NewStubStatusSender() *stubStatusSender {
+	return &stubStatusSender{}
+}
+
+func (statusSender stubStatusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
+	return nil
+}
+
+func (statusSender stubStatusSender) Close() {
 }
 
 func NewMockKubernetesManager() *MockKubernetesManager {
@@ -525,16 +539,6 @@ func (skm MockKubernetesManager) ServiceAccountPassesFilter(t *testing.T, err er
 	return skm.ObjectPassesFilter(
 		serviceAccountObject,
 	)
-}
-
-func NewStubStatusSender() *stubStatusSender {
-	return &stubStatusSender{}
-}
-
-func (statusSender *stubStatusSender) SendStatus(status wf.WavefrontStatus) error {
-	return nil
-}
-func (statusSender *stubStatusSender) Close() {
 }
 
 func k8sYAMLHeader(apiVersion string, kind string, appKubernetesIOName string, appKubernetesIOComponent string, metadataName string) (*regexp.Regexp, error) {
