@@ -71,7 +71,7 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
-	StatusSender      status.Sender
+	StatusSender      *status.StatusSender
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=wavefront,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -97,12 +97,12 @@ type WavefrontReconciler struct {
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	requeueAfterTime := 30 * time.Second
+	requeueAfterTime := 60 * time.Second
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
 		log.Log.Error(err, "error getting wavefront operator crd")
-		return ctrl.Result{}, err
+		return errorCRTLResult(err)
 	}
 
 	if errors.IsNotFound(err) {
@@ -113,14 +113,14 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	err = r.preprocess(wavefront, ctx)
 	if err != nil {
 		log.Log.Error(err, "error preprocessing Wavefront Spec")
-		return ctrl.Result{}, err
+		return errorCRTLResult(err)
 	}
 	validationError := validation.Validate(wavefront)
 	if validationError == nil {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
 			log.Log.Error(err, "error creating resources")
-			return ctrl.Result{}, err
+			return errorCRTLResult(err)
 		}
 	} else {
 		_ = r.readAndDeleteResources()
@@ -130,11 +130,11 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	err = r.reportHealthStatus(ctx, wavefront, validationError)
 	if err != nil {
 		log.Log.Error(err, "error report health status")
-		return ctrl.Result{}, err
+		return errorCRTLResult(err)
 	}
 
 	if wavefront.Status.Status == health.Unhealthy {
-		requeueAfterTime = 5 * time.Second
+		requeueAfterTime = 15 * time.Second
 	}
 
 	return ctrl.Result{
@@ -466,6 +466,9 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		wavefront.Status.Status = health.Unhealthy
 		wavefront.Status.Message = fmt.Sprintf("Invalid spec: %s", validationError.Error())
 	}
+	err := r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
+	log.Log.Error(err, "error sending status metric")
+
 	return r.Status().Update(ctx, wavefront)
 }
 
@@ -477,4 +480,11 @@ func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *uns
 		}
 		return false
 	}
+}
+
+func errorCRTLResult(err error) (ctrl.Result, error) {
+	return ctrl.Result{
+		Requeue:      true,
+		RequeueAfter: 10 * time.Second,
+	}, err
 }

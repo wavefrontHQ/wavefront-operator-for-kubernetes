@@ -9,9 +9,9 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
 )
 
-func NewTestStatusSender() *statusSender {
-	statusSender, _ := NewStatusSender("http://myproxy.com")
-	statusSender.wfSender = senders.NewTestSender()
+func NewTestStatusSender() *StatusSender {
+	statusSender, _ := NewStatusSender("myproxy.svc:2878")
+	statusSender.WavefrontSender = senders.NewTestSender()
 	return statusSender
 }
 
@@ -48,9 +48,8 @@ func TestSendWfStatus(t *testing.T) {
 		assert.Equal(t, "Metric: kubernetes.operator.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E\" status=\"Unhealthy\"", getMetrics(fakeStatusSender))
 	})
 
-
 }
 
-func getMetrics(sender *statusSender) string {
-	return strings.TrimSpace(sender.wfSender.(*senders.TestSender).GetReceivedLines())
+func getMetrics(sender *StatusSender) string {
+	return strings.TrimSpace(sender.WavefrontSender.(*senders.TestSender).GetReceivedLines())
 }

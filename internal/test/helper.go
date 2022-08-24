@@ -7,10 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
-
 	"github.com/stretchr/testify/assert"
-	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,19 +23,14 @@ type MockKubernetesManager struct {
 	usedFilter   func(*unstructured.Unstructured) bool
 }
 
-type stubStatusSender struct {
-	wfSender wfsdk.Sender
+func NewTestStatusSender() *status.StatusSender {
+	statusSender, _ := status.NewStatusSender("myproxy.svc:2878")
+	statusSender.WavefrontSender = senders.NewTestSender()
+	return statusSender
 }
 
-func NewStubStatusSender() *stubStatusSender {
-	return &stubStatusSender{}
-}
-
-func (statusSender stubStatusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
-	return nil
-}
-
-func (statusSender stubStatusSender) Close() {
+func GetMetrics(sender *status.StatusSender) string {
+	return strings.TrimSpace(sender.WavefrontSender.(*senders.TestSender).GetReceivedLines())
 }
 
 func NewMockKubernetesManager() *MockKubernetesManager {

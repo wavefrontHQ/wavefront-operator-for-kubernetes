@@ -1,28 +1,40 @@
 package status
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 )
 
-type Sender interface {
-	SendStatus(status wf.WavefrontStatus, clusterName string) error
-	Close()
-}
+func NewStatusSender(wavefrontProxyAddress string) (*StatusSender, error) {
 
-func NewStatusSender(wavefrontUrl string) (*statusSender, error) {
-	wavefrontSender, err := wfsdk.NewSender(wavefrontUrl)
+	s := strings.Split(wavefrontProxyAddress, ":")
+	host, portStr := s[0], s[1]
+	port, err := strconv.Atoi(portStr)
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing proxy port: %s", err.Error())
+	}
+
+	wavefrontSender, err := wfsdk.NewProxySender(&wfsdk.ProxyConfiguration{
+		Host:        host,
+		MetricsPort: port,
+	})
+
 	if err != nil {
 		return nil, err
 	}
-	return &statusSender{
+	return &StatusSender{
 		wavefrontSender,
 	}, nil
 }
 
-type statusSender struct {
-	wfSender wfsdk.Sender
+type StatusSender struct {
+	WavefrontSender wfsdk.Sender
 }
 
 func truncateMessage(message string) string {
@@ -33,7 +45,7 @@ func truncateMessage(message string) string {
 	return message
 }
 
-func (statusSender statusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
+func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
 	tags := map[string]string{
 		"cluster": clusterName,
 	}
@@ -50,9 +62,13 @@ func (statusSender statusSender) SendStatus(status wf.WavefrontStatus, clusterNa
 		healthy = 1.0
 	}
 
-    return statusSender.wfSender.SendMetric("kubernetes.operator.status", healthy, 0, clusterName, tags)
+	err := statusSender.WavefrontSender.SendMetric("kubernetes.operator.status", healthy, 0, clusterName, tags)
+	if err != nil {
+		return err
+	}
+	return statusSender.WavefrontSender.Flush()
 }
 
-func (statusSender statusSender) Close() {
-	statusSender.wfSender.Close()
+func (statusSender StatusSender) Close() {
+	statusSender.WavefrontSender.Close()
 }
