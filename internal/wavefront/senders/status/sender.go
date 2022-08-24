@@ -10,6 +10,10 @@ import (
 	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 )
 
+type StatusSender struct {
+	WavefrontSender wfsdk.Sender
+}
+
 func NewStatusSender(wavefrontProxyAddress string) (*StatusSender, error) {
 
 	s := strings.Split(wavefrontProxyAddress, ":")
@@ -31,18 +35,6 @@ func NewStatusSender(wavefrontProxyAddress string) (*StatusSender, error) {
 	return &StatusSender{
 		wavefrontSender,
 	}, nil
-}
-
-type StatusSender struct {
-	WavefrontSender wfsdk.Sender
-}
-
-func truncateMessage(message string) string {
-	maxPointTagLength := 255 - len("=") - len("message")
-	if len(message) >= maxPointTagLength {
-		return message[0:maxPointTagLength]
-	}
-	return message
 }
 
 func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
@@ -71,4 +63,12 @@ func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterNa
 
 func (statusSender StatusSender) Close() {
 	statusSender.WavefrontSender.Close()
+}
+
+func truncateMessage(message string) string {
+	maxPointTagLength := 255 - len("=") - len("message")
+	if len(message) >= maxPointTagLength {
+		return message[0:maxPointTagLength]
+	}
+	return message
 }
