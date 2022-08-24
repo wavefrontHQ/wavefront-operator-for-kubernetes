@@ -32,8 +32,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 2000
+        runAsUser: 65534
+        runAsGroup: 65534
       containers:
         - name: wavefront-proxy
           image: projects.registry.vmware.com/tanzu_observability/proxy:11.3
@@ -47,7 +47,9 @@ spec:
                   name: {{ .WavefrontTokenSecret }}
                   key: token
             - name: WAVEFRONT_PROXY_ARGS
-              value: --pushListenerPorts {{ .DataExport.WavefrontProxy.MetricPort }}
+              value: >
+                --pushListenerPorts {{ .DataExport.WavefrontProxy.MetricPort }}
+                --buffer /tmp/buffer
               {{- if .DataExport.WavefrontProxy.Args }} {{ .DataExport.WavefrontProxy.Args }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.DeltaCounterPort }} --deltaCounterPorts {{ .DataExport.WavefrontProxy.DeltaCounterPort }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.Tracing.Wavefront.Port }} --traceListenerPorts {{ .DataExport.WavefrontProxy.Tracing.Wavefront.Port }} {{- end -}}
@@ -117,7 +119,10 @@ spec:
 {{ .DataExport.WavefrontProxy.Resources | toYaml | indent 12 }}
           securityContext:
             privileged: false
+            readOnlyRootFilesystem: true
           volumeMounts:
+          - name: buffer
+            mountPath: /tmp
           {{- if .DataExport.WavefrontProxy.Preprocessor}}
           - name: preprocessor
             mountPath: /etc/wavefront/preprocessor
@@ -127,6 +132,8 @@ spec:
             mountPath: /tmp/ca
           {{- end }}
       volumes:
+      - name: buffer
+        emptyDir: {}
       {{- if .DataExport.WavefrontProxy.Preprocessor }}
       - name: preprocessor
         configMap:
