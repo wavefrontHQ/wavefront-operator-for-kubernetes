@@ -233,6 +233,12 @@ gke-connect-to-cluster: gke-cluster-name-check
 gke-cluster-name-check:
 	@if [ -z ${GKE_CLUSTER_NAME} ]; then echo "Need to set GKE_CLUSTER_NAME" && exit 1; fi
 
+#----- AKS -----#
+aks-subscription-id-check:
+	@if [ -z ${AKS_SUBSCRIPTION_ID} ]; then echo "Need to set AKS_SUBSCRIPTION_ID" && exit 1; fi
+
+aks-connect-to-cluster: aks-subscription-id-check
+	az account set --subscription
 
 #----- EKS -----#
 ECR_REPO_PREFIX=tobs/k8s/saas
