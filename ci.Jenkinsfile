@@ -102,10 +102,11 @@ pipeline {
           withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
 //               sh 'make aks-connect-to-cluster'
             sh 'cat $KUBECONFIG'
+            sh 'kubectl config use k8po-ci'
           }
-          withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-//               sh 'make integration-test-ci'
-//               sh 'make undeploy'
+          withEnv(["PATH+GO=${HOME}/go/bin"]) {
+            sh 'make integration-test-ci'
+            sh 'make undeploy'
           }
         }
       }
