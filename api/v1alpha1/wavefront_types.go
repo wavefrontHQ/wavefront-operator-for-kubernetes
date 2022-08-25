@@ -348,6 +348,7 @@ type DeploymentStatus struct {
 // +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-proxy')].status"
 // +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-cluster-collector')].status"
 // +kubebuilder:printcolumn:name="node-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-node-collector')].status"
+// +kubebuilder:printcolumn:name="logging",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-logging')].status"
 // +kubebuilder:printcolumn:name="age",type="date",JSONPath=".metadata.creationTimestamp"
 // Wavefront is the Schema for the wavefronts API
 type Wavefront struct {

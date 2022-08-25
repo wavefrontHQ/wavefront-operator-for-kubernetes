@@ -412,6 +412,10 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		componentsToCheck[util.NodeCollectorName] = util.DaemonSet
 	}
 
+	if wavefront.Spec.DataCollection.Logging.Enable {
+		componentsToCheck[util.LoggingName] = util.DaemonSet
+	}
+
 	wavefront.Status = health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
 	if validationError != nil {
