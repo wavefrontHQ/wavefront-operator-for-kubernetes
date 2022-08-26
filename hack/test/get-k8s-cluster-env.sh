@@ -12,6 +12,9 @@ if grep -q "kind" <<< "$CURRENT_CONTEXT"; then
   echo "Kind"
 elif grep -q "gke" <<< "$CURRENT_CONTEXT"; then
   echo "GKE"
+elif grep -q "k8po-ci" <<< "$CURRENT_CONTEXT"; then
+  # TODO create new AKS cluster with proper naming scheme
+  echo "AKS"
 elif grep -q "eks" <<< "$CURRENT_CONTEXT"; then
   echo "EKS"
 else
