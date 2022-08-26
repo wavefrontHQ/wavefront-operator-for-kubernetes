@@ -121,6 +121,7 @@ pipeline {
         }
       }
     }
+  }
   post {
     // Notify only on null->failure or success->failure or failure->success
     failure {
