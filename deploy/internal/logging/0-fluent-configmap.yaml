@@ -72,6 +72,29 @@ data:
       </record>
       remove_keys kubernetes, docker
     </filter>
+    {{- if .DataCollection.Logging.Filters.TagDenyList }}
+    <filter **>
+      @type grep
+      <or>
+        {{ range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
+        {{$sep := ""}}
+        <exclude>
+          key $.{{ $tagKey }}
+          pattern /(^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$)/
+        </exclude>
+        {{ end }}
+    
+        # <exclude>
+        #   pattern /^((?!default).)*$/
+        #   key $.namespace_name
+        # </exclude>
+        # <exclude>
+        #   pattern /(^kube-system$|^wavefront$)/
+        #   key $.namespace_name
+        # </exclude>
+      </or>
+    </filter>
+    {{- end }}
 
   file-fluent.conf: |-
     <match **>

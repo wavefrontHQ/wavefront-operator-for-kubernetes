@@ -226,11 +226,14 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec,
 		_, templateName := filepath.Split(resourceFile)
 		resourceTemplate, err := newTemplate(templateName).ParseFS(r.FS, resourceFile)
 		if err != nil {
+			// TODO use proper log.Error
+			fmt.Printf("Error in templating: %s", err.Error())
 			return nil, err
 		}
 		buffer := bytes.NewBuffer(nil)
 		err = resourceTemplate.Execute(buffer, spec)
 		if err != nil {
+			// TODO use proper log.Error
 			return nil, err
 		}
 		resources = append(resources, buffer.String())

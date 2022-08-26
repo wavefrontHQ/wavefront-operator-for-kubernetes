@@ -11,6 +11,13 @@ spec:
   dataCollection:
     logging:
       enable: true
+      filters:
+        tagDenyList:
+          namespace_name:
+            - kube-sys*
+            - wavefront
+          pod_name:
+            - pet-clinic*
   dataExport:
     wavefrontProxy:
       enable: true

@@ -259,6 +259,11 @@ type Filters struct {
 	AllowList []string `json:"allowList,omitempty"`
 }
 
+type LogFilters struct {
+	// List of log tag patterns to deny
+	TagDenyList map[string][]string `json:"tagDenyList,omitempty"`
+}
+
 type Collector struct {
 	// Resources Compute resources required by the Collector containers.
 	Resources Resources `json:"resources,omitempty"`
@@ -268,6 +273,9 @@ type Logging struct {
 	// Enable is whether to enable the wavefront logging. Defaults to false.
 	// +kubebuilder:default:=false
 	Enable bool `json:"enable,omitempty"`
+
+	// Filters to apply towards all logs collected by wavefront-logging.
+	Filters LogFilters `json:"filters,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
