@@ -19,7 +19,7 @@ function run_test() {
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
   local proxyLogErrorCount=0
 
-  green "Running $type CR"
+  echo "Running $type CR"
 
   wait_for_cluster_ready
 
@@ -152,7 +152,7 @@ function main() {
   local VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
   local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
-  local CONFIG_CLUSTER_NAME=$(create_cluster_name)
+  local CONFIG_CLUSTER_NAME=$(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")
 
   while getopts ":c:t:v:n:p:" opt; do
     case $opt in
@@ -176,10 +176,6 @@ function main() {
 
   if [[ -z ${WAVEFRONT_TOKEN} ]]; then
     print_usage_and_exit "wavefront token required"
-  fi
-
-  if [[ -z ${CONFIG_CLUSTER_NAME} ]]; then
-    CONFIG_CLUSTER_NAME=$(create_cluster_name)
   fi
 
   cd $REPO_ROOT
