@@ -16,6 +16,7 @@ function run_test() {
   local type=$1
   local should_run_static_analysis="${2:-false}"
   local should_be_healthy="${3:-true}"
+  echo "CONFIG_CLUSTER_NAME in run_test: '${CONFIG_CLUSTER_NAME}'"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
   local proxyLogErrorCount=0
 
@@ -23,6 +24,7 @@ function run_test() {
 
   wait_for_cluster_ready
 
+  echo "cluster_name in run_test: '${cluster_name}'"
   sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
    sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
@@ -177,6 +179,12 @@ function main() {
   if [[ -z ${WAVEFRONT_TOKEN} ]]; then
     print_usage_and_exit "wavefront token required"
   fi
+
+  if [[ -z ${CONFIG_CLUSTER_NAME} ]]; then
+    CONFIG_CLUSTER_NAME=$(create_cluster_name)
+  fi
+
+  echo "CONFIG_CLUSTER_NAME after flags in run-e2e-tests: '${CONFIG_CLUSTER_NAME}'"
 
   cd $REPO_ROOT
 
