@@ -103,7 +103,6 @@ pipeline {
           steps {
             lock("integration-test-aks") {
               withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
-//                   sh 'make aks-connect-to-cluster'
                 sh 'cat $KUBECONFIG'
                 sh 'kubectl config use k8po-ci'
 
@@ -122,45 +121,20 @@ pipeline {
         }
       }
     }
-//     stage("EKS Integration Test") {
-//       options {
-//         timeout(time: 15, unit: 'MINUTES')
-//       }
-//       tools {
-//         go 'Go 1.17'
-//       }
-//       environment {
-//         VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-//         PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-//         DOCKER_IMAGE = "kubernetes-operator-snapshot"
-//         AWS_SHARED_CREDENTIALS_FILE = credentials("k8po-ci-aws-creds")
-//         AWS_CONFIG_FILE = credentials("k8po-ci-aws-profile")
-//         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-//       }
-//       steps {
-//         withEnv(["PATH+GO=${HOME}/go/bin"]) {
-//           lock("integration-test-eks") {
-//             sh 'make target-eks'
-//             sh 'VERSION_POSTFIX=$VERSION_POSTFIX make integration-test-ci'
-//           }
-//         }
-//       }
-//     }
-//   }
-//   post {
+  post {
     // Notify only on null->failure or success->failure or failure->success
-//     failure {
-//       script {
-//         if(currentBuild.previousBuild == null) {
-//           slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "CI OPERATOR BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
-//         }
-//       }
-//     }
-//     regression {
-//       slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "CI OPERATOR BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
-//     }
-//     fixed {
-//       slackSend (channel: '#tobs-k8po-team', color: '#008000', message: "CI OPERATOR BUILD FIXED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
-//     }
+    failure {
+      script {
+        if(currentBuild.previousBuild == null) {
+          slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "CI OPERATOR BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
+        }
+      }
+    }
+    regression {
+      slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "CI OPERATOR BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
+    }
+    fixed {
+      slackSend (channel: '#tobs-k8po-team', color: '#008000', message: "CI OPERATOR BUILD FIXED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
+    }
   }
 }
