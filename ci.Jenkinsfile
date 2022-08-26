@@ -112,7 +112,7 @@ pipeline {
                 sh 'echo $WAVEFRONT_TOKEN'
                 sh 'echo $WAVEFRONT_WAVEFRONT_LOGGING_TOKEN'
 
-                withEnv(["PATH+GO=${HOME}/go/bin"]) {
+                withEnv(["PATH+GO=${HOME}/go/bin", "CONFIG_CLUSTER_NAME=k8po-aks-ci-test"]) {
                   sh 'make integration-test-ci'
                   sh 'make undeploy'
                 }

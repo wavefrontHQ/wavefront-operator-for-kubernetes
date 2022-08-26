@@ -152,7 +152,7 @@ function main() {
   local VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
   local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
-  local CONFIG_CLUSTER_NAME=$(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")
+  local CONFIG_CLUSTER_NAME=$(create_cluster_name)
 
   while getopts ":c:t:v:n:p:" opt; do
     case $opt in

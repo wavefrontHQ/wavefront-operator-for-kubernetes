@@ -25,6 +25,9 @@ endif
 GOOS?=$(shell go env GOOS)
 GOARCH?=$(shell go env GOARCH)
 
+K8S_ENV?=$(shell $(REPO_DIR)/hack/test/get-k8s-cluster-env.sh)
+CONFIG_CLUSTER_NAME?=$(shell whoami)-$(K8S_ENV)-operator-$(shell date +"%y%m%d")
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -215,7 +218,7 @@ integration-test: install-kube-score install-kube-linter undeploy manifests buil
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-test-ci: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME))
 
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
