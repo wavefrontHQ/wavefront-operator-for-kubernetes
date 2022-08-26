@@ -131,25 +131,69 @@ func (skm stubKubernetesManager) GetAppliedYAML(
 	metadataName string,
 	otherChecks ...string,
 ) (*unstructured.Unstructured, error) {
-	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, yamlStr := range skm.appliedYAMLs {
-		if reg.MatchString(yamlStr) {
+		object, err := unstructuredFromStr(yamlStr)
+		if err != nil {
+			return nil, err
+		}
+
+		if objectMatchesAll(
+			object,
+			apiVersion,
+			kind,
+			appKubernetesIOName,
+			appKubernetesIOComponent,
+			metadataName,
+		) {
 			for _, other := range otherChecks {
 				if !strings.Contains(yamlStr, other) {
 					return nil, errors.New("no YAML matched conditions passed")
 				}
 			}
-			object := &unstructured.Unstructured{}
-			var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-			_, _, err := resourceDecoder.Decode([]byte(yamlStr), nil, object)
 			return object, err
 		}
 	}
 	return nil, nil
+}
+
+func objectMatchesAll(
+	object *unstructured.Unstructured,
+	apiVersion string,
+	kind string,
+	appKubernetesIOName string,
+	appKubernetesIOComponent string,
+	metadataName string,
+) bool {
+	if object.Object["apiVersion"] != apiVersion {
+		return false
+	}
+
+	if object.Object["kind"] != kind {
+		return false
+	}
+
+	objectAppK8sIOName, found, err := unstructured.NestedString(object.Object, "metadata", "labels", "app.kubernetes.io/name")
+	if objectAppK8sIOName != appKubernetesIOName || !found || err != nil {
+		return false
+	}
+
+	objectAppK8sIOComponent, found, err := unstructured.NestedString(object.Object, "metadata", "labels", "app.kubernetes.io/component")
+	if objectAppK8sIOComponent != appKubernetesIOComponent || !found || err != nil {
+		return false
+	}
+
+	objectMetadataName, found, err := unstructured.NestedString(object.Object, "metadata", "name")
+	if objectMetadataName != metadataName || !found || err != nil {
+		return false
+	}
+	return true
+}
+
+func unstructuredFromStr(yamlStr string) (*unstructured.Unstructured, error) {
+	object := &unstructured.Unstructured{}
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	_, _, err := resourceDecoder.Decode([]byte(yamlStr), nil, object)
+	return object, err
 }
 
 func (skm stubKubernetesManager) GetAppliedServiceAccount(appKubernetesIOComponent, metadataName string) (corev1.ServiceAccount, error) {
@@ -540,13 +584,20 @@ func contains(
 	metadataName string,
 	otherChecks ...string,
 ) bool {
-	reg, err := k8sYAMLHeader(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
-	if err != nil {
-		panic(err)
-	}
-
 	for _, yamlStr := range yamls {
-		if reg.MatchString(yamlStr) {
+		object, err := unstructuredFromStr(yamlStr)
+		if err != nil {
+			panic(err)
+		}
+
+		if objectMatchesAll(
+			object,
+			apiVersion,
+			kind,
+			appKubernetesIOName,
+			appKubernetesIOComponent,
+			metadataName,
+		) {
 			for _, other := range otherChecks {
 				if !strings.Contains(yamlStr, other) {
 					return false

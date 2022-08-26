@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: wavefront-cluster-collector
+  namespace: wavefront
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: collector
-  name: wavefront-cluster-collector
-  namespace: wavefront
   ownerReferences:
     - apiVersion: apps/v1
       kind: Deployment

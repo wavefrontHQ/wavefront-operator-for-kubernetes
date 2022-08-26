@@ -155,6 +155,7 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	kubectl delete -n wavefront secret wavefront-secret || true
+	kubectl delete -n wavefront secret wavefront-secret-logging || true
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
 
@@ -214,7 +215,7 @@ integration-test: install-kube-score install-kube-linter undeploy manifests buil
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-test-ci: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME))
 
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
@@ -232,6 +233,12 @@ gke-connect-to-cluster: gke-cluster-name-check
 gke-cluster-name-check:
 	@if [ -z ${GKE_CLUSTER_NAME} ]; then echo "Need to set GKE_CLUSTER_NAME" && exit 1; fi
 
+#----- AKS -----#
+aks-subscription-id-check:
+	@if [ -z ${AKS_SUBSCRIPTION_ID} ]; then echo "Need to set AKS_SUBSCRIPTION_ID" && exit 1; fi
+
+aks-connect-to-cluster: aks-subscription-id-check
+	az account set --subscription
 
 #----- EKS -----#
 ECR_REPO_PREFIX=tobs/k8s/saas
