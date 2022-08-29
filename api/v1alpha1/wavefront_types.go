@@ -262,6 +262,9 @@ type Filters struct {
 type LogFilters struct {
 	// List of log tag patterns to deny
 	TagDenyList map[string][]string `json:"tagDenyList,omitempty"`
+
+	// List of log tag patterns to allow
+	TagAllowList map[string][]string `json:"tagAllowList,omitempty"`
 }
 
 type Collector struct {

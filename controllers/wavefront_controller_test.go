@@ -591,6 +591,47 @@ func TestReconcileLogging(t *testing.T) {
 		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
 	})
 
+	t.Run("Verify log tag allow list", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+		wfSpec.DataCollection.Logging.Filters =  wf.LogFilters{
+			TagDenyList: nil,
+			TagAllowList: map[string][]string{ "namespace_name" : {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
+		}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, stubKM.LoggingConfigMapContains("key $.namespace_name"))
+		assert.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
+		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^kube-sys$|^wavefront$)/"))
+		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^pet-clinic$)/"))
+	})
+
+	t.Run("Verify log tag deny list", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+		wfSpec.DataCollection.Logging.Filters =  wf.LogFilters{
+			TagDenyList: map[string][]string{ "namespace_name" : {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
+			TagAllowList: nil,
+		}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, stubKM.LoggingConfigMapContains("key $.namespace_name"))
+		assert.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
+		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
+		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
+	})
 }
 
 func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
