@@ -38,7 +38,15 @@ function run_test() {
     echo "Running test-wavefront-metrics"
     ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-    local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    local health_status
+    for _ in {1..12}; do
+      health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+      if [[ "$health_status" == "Healthy"]]; then
+        break
+      fi
+      sleep 5
+    done
+
     if [[ "$health_status" != "Healthy" ]]; then
       red "Health status for $type: expected = true, actual = $health_status"
       exit 1
