@@ -49,7 +49,7 @@ spec:
             - name: WAVEFRONT_PROXY_ARGS
               value: >
                 --pushListenerPorts {{ .DataExport.WavefrontProxy.MetricPort }}
-                --buffer /tmp/buffer
+                --buffer /wavefront-proxy/buffer
               {{- if .DataExport.WavefrontProxy.Args }} {{ .DataExport.WavefrontProxy.Args }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.DeltaCounterPort }} --deltaCounterPorts {{ .DataExport.WavefrontProxy.DeltaCounterPort }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.Tracing.Wavefront.Port }} --traceListenerPorts {{ .DataExport.WavefrontProxy.Tracing.Wavefront.Port }} {{- end -}}
@@ -121,8 +121,8 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
           volumeMounts:
-          - name: buffer
-            mountPath: /tmp
+          - name: buffer-volume
+            mountPath: /wavefront-proxy
           {{- if .DataExport.WavefrontProxy.Preprocessor}}
           - name: preprocessor
             mountPath: /etc/wavefront/preprocessor
@@ -132,7 +132,7 @@ spec:
             mountPath: /tmp/ca
           {{- end }}
       volumes:
-      - name: buffer
+      - name: buffer-volume
         emptyDir: {}
       {{- if .DataExport.WavefrontProxy.Preprocessor }}
       - name: preprocessor
