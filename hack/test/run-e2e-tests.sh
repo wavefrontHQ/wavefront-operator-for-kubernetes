@@ -19,7 +19,7 @@ function run_test() {
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
   local proxyLogErrorCount=0
 
-  echo "Running $type CR"
+  green "Running $type CR"
 
   wait_for_cluster_ready
 
@@ -38,7 +38,15 @@ function run_test() {
     echo "Running test-wavefront-metrics"
     ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 
-    local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    local health_status=
+    for _ in {1..12}; do
+      health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+      if [[ "$health_status" == "Healthy" ]]; then
+        break
+      fi
+      sleep 5
+    done
+
     if [[ "$health_status" != "Healthy" ]]; then
       red "Health status for $type: expected = true, actual = $health_status"
       exit 1
@@ -152,7 +160,7 @@ function main() {
   local VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
   local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
-  local CONFIG_CLUSTER_NAME=$(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")
+  local CONFIG_CLUSTER_NAME=$(create_cluster_name)
 
   while getopts ":c:t:v:n:p:" opt; do
     case $opt in
@@ -176,6 +184,10 @@ function main() {
 
   if [[ -z ${WAVEFRONT_TOKEN} ]]; then
     print_usage_and_exit "wavefront token required"
+  fi
+
+  if [[ -z ${CONFIG_CLUSTER_NAME} ]]; then
+    CONFIG_CLUSTER_NAME=$(create_cluster_name)
   fi
 
   cd $REPO_ROOT
