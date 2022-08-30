@@ -202,7 +202,7 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-deploy-kind: copy-kind-patches manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	@kind load docker-image ${IMG}
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
