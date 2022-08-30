@@ -596,9 +596,9 @@ func TestReconcileLogging(t *testing.T) {
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
-		wfSpec.DataCollection.Logging.Filters =  wf.LogFilters{
-			TagDenyList: nil,
-			TagAllowList: map[string][]string{ "namespace_name" : {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
+		wfSpec.DataCollection.Logging.Filters = wf.LogFilters{
+			TagDenyList:  nil,
+			TagAllowList: map[string][]string{"namespace_name": {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
 		}
 
 		r, _, _, _ := setupForCreate(wfSpec)
@@ -617,8 +617,8 @@ func TestReconcileLogging(t *testing.T) {
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
-		wfSpec.DataCollection.Logging.Filters =  wf.LogFilters{
-			TagDenyList: map[string][]string{ "namespace_name" : {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
+		wfSpec.DataCollection.Logging.Filters = wf.LogFilters{
+			TagDenyList:  map[string][]string{"namespace_name": {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
 			TagAllowList: nil,
 		}
 
