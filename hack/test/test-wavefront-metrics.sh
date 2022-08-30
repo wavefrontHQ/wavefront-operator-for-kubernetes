@@ -97,7 +97,9 @@ function main() {
   local EXPECTED_VERSION=${COLLECTOR_VERSION}
   local EXTRA_TESTS=
 
-  while getopts ":c:t:n:v:e:" opt; do
+  local LOGGING_TEST_PROXY_NAME=
+
+  while getopts ":c:t:n:v:e:l:" opt; do
     case $opt in
     c)
       WF_CLUSTER="$OPTARG"
@@ -113,6 +115,9 @@ function main() {
       ;;
     e)
       EXTRA_TESTS="$OPTARG"
+      ;;
+    l)
+      LOGGING_TEST_PROXY_NAME="$OPTARG"
       ;;
     \?)
       print_usage_and_exit "Invalid option: -$OPTARG"
@@ -136,6 +141,10 @@ function main() {
 
   exit_on_fail wait_for_query_match_exact "ts(kubernetes.collector.version%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22%20AND%20installation_method%3D%22operator%22)" "${VERSION_IN_DECIMAL}"
   exit_on_fail wait_for_query_non_zero "ts(kubernetes.cluster.pod.count%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22)"
+
+  if [[ ! -z ${LOGGING_TEST_PROXY_NAME} ]]; then
+    exit_on_fail wait_for_query_non_zero "ts(~proxy.logs.*.received.bytes%2C%20source%3D%22${LOGGING_TEST_PROXY_NAME}%22)"
+  fi
 
   if [[ -f "${EXTRA_TESTS}" ]]; then
     source "${EXTRA_TESTS}"

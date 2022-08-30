@@ -9,6 +9,8 @@ spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
+    metrics:
+      enable: true
     logging:
       enable: true
       filters:

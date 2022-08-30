@@ -107,6 +107,11 @@ function run_logging_test() {
     exit 1
   fi
 
+  echo "Running test-wavefront-metrics"
+  local proxy_name=$(kubectl -n wavefront get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
+
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
+
   green "Success!"
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
