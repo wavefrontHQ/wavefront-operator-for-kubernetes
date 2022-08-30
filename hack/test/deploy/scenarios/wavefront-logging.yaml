@@ -14,10 +14,7 @@ spec:
       filters:
         tagDenyList:
           namespace_name:
-            - kube-sys*
-            - wavefront
-          pod_name:
-            - pet-clinic*
+            - kube-system
   dataExport:
     wavefrontProxy:
       enable: true

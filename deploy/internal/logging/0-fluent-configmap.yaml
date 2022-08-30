@@ -76,13 +76,13 @@ data:
     <filter **>
       @type grep
       <or>
-        {{ range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagAllowList }}
-        {{$sep := ""}}
+        {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagAllowList }}
+        {{- $sep := "" }}
         <regexp>
           key $.{{ $tagKey }}
           pattern /(^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$)/
         </regexp>
-        {{ end }}
+        {{- end }}
       </or>
     </filter>
     {{- end }}
@@ -90,13 +90,13 @@ data:
     <filter **>
       @type grep
       <or>
-        {{ range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
-        {{$sep := ""}}
+        {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
+        {{- $sep := "" }}
         <exclude>
           key $.{{ $tagKey }}
           pattern /(^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$)/
         </exclude>
-        {{ end }}
+        {{- end }}
       </or>
     </filter>
     {{- end }}
