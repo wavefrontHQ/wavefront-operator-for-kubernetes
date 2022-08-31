@@ -77,13 +77,15 @@ pipeline {
             GCP_PROJECT = "wavefront-gcp-dev"
           }
           steps {
-            sh './hack/jenkins/setup-for-integration-test.sh'
-            sh './hack/jenkins/install_docker_buildx.sh'
-            sh 'make semver-cli'
-            lock("integration-test-gke") {
-              sh 'make gke-connect-to-cluster'
-              sh 'make integration-test-ci'
-              sh 'make undeploy'
+            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+              sh './hack/jenkins/setup-for-integration-test.sh'
+              sh './hack/jenkins/install_docker_buildx.sh'
+              sh 'make semver-cli'
+              lock("integration-test-gke") {
+                sh 'make gke-connect-to-cluster'
+                sh 'make integration-test-ci'
+                sh 'make undeploy'
+              }
             }
           }
         }
@@ -108,14 +110,16 @@ pipeline {
             WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
           }
           steps {
-            sh './hack/jenkins/setup-for-integration-test.sh'
-            sh './hack/jenkins/install_docker_buildx.sh'
-            sh 'make semver-cli'
-            lock("integration-test-aks") {
-              withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
-                sh 'kubectl config use k8po-ci'
-                sh 'make integration-test-ci'
-                sh 'make undeploy'
+            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+              sh './hack/jenkins/setup-for-integration-test.sh'
+              sh './hack/jenkins/install_docker_buildx.sh'
+              sh 'make semver-cli'
+              lock("integration-test-aks") {
+                withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
+                  sh 'kubectl config use k8po-ci'
+                  sh 'make integration-test-ci'
+                  sh 'make undeploy'
+                }
               }
             }
           }
