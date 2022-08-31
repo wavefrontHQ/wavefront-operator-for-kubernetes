@@ -349,6 +349,18 @@ func (skm stubKubernetesManager) LoggingDaemonSetContains(checks ...string) bool
 	)
 }
 
+func (skm stubKubernetesManager) LoggingConfigMapContains(checks ...string) bool {
+	return contains(
+		skm.appliedYAMLs,
+		"v1",
+		"ConfigMap",
+		"wavefront",
+		"logging",
+		"wavefront-logging-config",
+		checks...,
+	)
+}
+
 func (skm stubKubernetesManager) ClusterCollectorDeploymentContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,

@@ -16,7 +16,7 @@ pipeline {
         }
       }
     }
-    stage("Setup Integration Test") {
+    stage("Setup For Publish") {
       tools {
         go 'Go 1.17'
       }
@@ -57,6 +57,9 @@ pipeline {
     stage("Run Integration Tests") {
       parallel {
         stage("GKE Integration Test") {
+          agent {
+            label "gke"
+          }
           options {
             timeout(time: 30, unit: 'MINUTES')
           }
@@ -65,6 +68,7 @@ pipeline {
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            GCP_CREDS = credentials("GCP_CREDS")
             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
             HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
@@ -75,6 +79,9 @@ pipeline {
           }
           steps {
             withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+              sh './hack/jenkins/setup-for-integration-test.sh'
+              sh './hack/jenkins/install_docker_buildx.sh'
+              sh 'make semver-cli'
               lock("integration-test-gke") {
                 sh 'make gke-connect-to-cluster'
                 sh 'make integration-test-ci'
@@ -85,6 +92,9 @@ pipeline {
         }
 
         stage("AKS Integration Test") {
+          agent {
+            label "aks"
+          }
           options {
             timeout(time: 30, unit: 'MINUTES')
           }
@@ -92,6 +102,8 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
+            GCP_CREDS = credentials("GCP_CREDS")
+            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
             AKS_CLUSTER_NAME = "k8po-ci"
             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
@@ -101,17 +113,13 @@ pipeline {
             WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
           }
           steps {
-            lock("integration-test-aks") {
-              withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
-                sh 'cat $KUBECONFIG'
-                sh 'kubectl config use k8po-ci'
-
-                sh 'echo $AKS_CLUSTER_NAME'
-                sh 'echo $HARBOR_CREDS'
-                sh 'echo $WAVEFRONT_TOKEN'
-                sh 'echo $WAVEFRONT_WAVEFRONT_LOGGING_TOKEN'
-
-                withEnv(["PATH+GO=${HOME}/go/bin", "CONFIG_CLUSTER_NAME=k8po-aks-ci-test"]) {
+            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+              sh './hack/jenkins/setup-for-integration-test.sh'
+              sh './hack/jenkins/install_docker_buildx.sh'
+              sh 'make semver-cli'
+              lock("integration-test-aks") {
+                withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
+                  sh 'kubectl config use k8po-ci'
                   sh 'make integration-test-ci'
                   sh 'make undeploy'
                 }

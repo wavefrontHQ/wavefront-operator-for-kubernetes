@@ -9,8 +9,14 @@ spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
+    metrics:
+      enable: true
     logging:
       enable: true
+      filters:
+        tagDenyList:
+          namespace_name:
+            - kube-system
   dataExport:
     wavefrontProxy:
       enable: true

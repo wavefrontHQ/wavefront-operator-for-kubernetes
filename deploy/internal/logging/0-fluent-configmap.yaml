@@ -72,7 +72,34 @@ data:
       </record>
       remove_keys kubernetes, docker
     </filter>
-
+    {{- if .DataCollection.Logging.Filters.TagAllowList }}
+    <filter **>
+      @type grep
+      <or>
+        {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagAllowList }}
+        {{- $sep := "" }}
+        <regexp>
+          key $.{{ $tagKey }}
+          pattern /(^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$)/
+        </regexp>
+        {{- end }}
+      </or>
+    </filter>
+    {{- end }}
+    {{- if .DataCollection.Logging.Filters.TagDenyList }}
+    <filter **>
+      @type grep
+      <or>
+        {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
+        {{- $sep := "" }}
+        <exclude>
+          key $.{{ $tagKey }}
+          pattern /(^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$)/
+        </exclude>
+        {{- end }}
+      </or>
+    </filter>
+    {{- end }}
   file-fluent.conf: |-
     <match **>
       @type file

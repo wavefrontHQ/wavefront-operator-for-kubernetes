@@ -146,7 +146,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: copy-base-patches manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 	kubectl create -n wavefront secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
@@ -158,6 +158,8 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 	kubectl delete -n wavefront secret wavefront-secret-logging || true
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
+copy-base-patches:
+	cp config/manager/patches-base.yaml config/manager/patches.yaml
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 
@@ -200,18 +202,23 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-build-kind: docker-build
+deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	@kind load docker-image ${IMG}
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	kubectl create -n wavefront secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+	kubectl create -n wavefront secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
-deploy-kind: build-kind deploy
+redeploy-kind: undeploy deploy-kind
 
-redeploy-kind: undeploy build-kind deploy
+copy-kind-patches:
+	cp config/manager/patches-kind.yaml config/manager/patches.yaml
 
 nuke-kind:
 	kind delete cluster
 	kind create cluster
 
-integration-test: install-kube-score install-kube-linter undeploy manifests build-kind deploy
+integration-test: install-kube-score install-kube-linter undeploy manifests deploy-kind
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
 integration-test-ci: install-kube-score install-kube-linter undeploy deploy
@@ -220,7 +227,7 @@ integration-test-ci: install-kube-score install-kube-linter undeploy deploy
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
 
-generate-kubernetes-yaml: manifests kustomize
+generate-kubernetes-yaml: copy-base-patches manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 

@@ -63,7 +63,7 @@ function run_test() {
     fi
   fi
 
-  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep error | wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep " ERROR "| wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   if [[ $proxyLogErrorCount -gt 0 ]]; then
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
@@ -106,6 +106,11 @@ function run_logging_test() {
     red "Health status for $type: expected = true, actual = $health_status"
     exit 1
   fi
+
+  echo "Running test-wavefront-metrics"
+  local proxy_name=$(kubectl -n wavefront get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
+
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
 
   green "Success!"
 
