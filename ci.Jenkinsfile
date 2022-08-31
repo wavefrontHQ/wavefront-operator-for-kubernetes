@@ -16,7 +16,7 @@ pipeline {
         }
       }
     }
-    stage("Setup Integration Test") {
+    stage("Setup For Publish") {
       tools {
         go 'Go 1.17'
       }
@@ -77,12 +77,13 @@ pipeline {
             GCP_PROJECT = "wavefront-gcp-dev"
           }
           steps {
-            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-              lock("integration-test-gke") {
-                sh 'make gke-connect-to-cluster'
-                sh 'make integration-test-ci'
-                sh 'make undeploy'
-              }
+            sh './hack/jenkins/setup-for-integration-test.sh'
+            sh './hack/jenkins/install_docker_buildx.sh'
+            sh 'make semver-cli'
+            lock("integration-test-gke") {
+              sh 'make gke-connect-to-cluster'
+              sh 'make integration-test-ci'
+              sh 'make undeploy'
             }
           }
         }
@@ -107,20 +108,14 @@ pipeline {
             WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
           }
           steps {
+            sh './hack/jenkins/setup-for-integration-test.sh'
+            sh './hack/jenkins/install_docker_buildx.sh'
+            sh 'make semver-cli'
             lock("integration-test-aks") {
               withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
-                sh 'cat $KUBECONFIG'
                 sh 'kubectl config use k8po-ci'
-
-                sh 'echo $AKS_CLUSTER_NAME'
-                sh 'echo $HARBOR_CREDS'
-                sh 'echo $WAVEFRONT_TOKEN'
-                sh 'echo $WAVEFRONT_WAVEFRONT_LOGGING_TOKEN'
-
-                withEnv(["PATH+GO=${HOME}/go/bin", "CONFIG_CLUSTER_NAME=k8po-aks-ci-test"]) {
-                  sh 'make integration-test-ci'
-                  sh 'make undeploy'
-                }
+                sh 'make integration-test-ci'
+                sh 'make undeploy'
               }
             }
           }
