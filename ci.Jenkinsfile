@@ -68,6 +68,7 @@ pipeline {
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            GCP_CREDS = credentials("GCP_CREDS")
             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
             HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
@@ -101,6 +102,8 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
+            GCP_CREDS = credentials("GCP_CREDS")
+            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
             AKS_CLUSTER_NAME = "k8po-ci"
             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
