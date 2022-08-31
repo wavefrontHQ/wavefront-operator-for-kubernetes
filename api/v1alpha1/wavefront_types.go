@@ -142,6 +142,10 @@ type WavefrontProxy struct {
 	// +kubebuilder:default:={requests: {cpu: "100m", memory: "1Gi", ephemeral-storage: "2Gi"}, limits: {cpu: "1000m", memory: "4Gi", ephemeral-storage: "8Gi"}}
 	Resources Resources `json:"resources,omitempty"`
 
+	// Replicas number of replicas
+	// +kubebuilder:default:=1
+	Replicas int `json:"replicas,omitempty"`
+
 	// HttpProxy configuration
 	HttpProxy HttpProxy `json:"httpProxy,omitempty"`
 

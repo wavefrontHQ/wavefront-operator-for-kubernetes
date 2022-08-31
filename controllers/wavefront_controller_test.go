@@ -488,6 +488,24 @@ func TestReconcileProxy(t *testing.T) {
 		assert.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 	})
 
+	t.Run("replicas set for the proxy", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.Replicas = 2
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+
+		deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
+		assert.NoError(t, err)
+
+		assert.Equal(t, int32(2), *deployment.Spec.Replicas)
+	})
+
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 
