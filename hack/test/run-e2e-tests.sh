@@ -63,7 +63,7 @@ function run_test() {
     fi
   fi
 
-  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep error | wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep " ERROR "| wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   if [[ $proxyLogErrorCount -gt 0 ]]; then
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
