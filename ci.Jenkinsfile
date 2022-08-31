@@ -57,6 +57,9 @@ pipeline {
     stage("Run Integration Tests") {
       parallel {
         stage("GKE Integration Test") {
+          agent {
+            label "gke"
+          }
           options {
             timeout(time: 30, unit: 'MINUTES')
           }
@@ -85,6 +88,9 @@ pipeline {
         }
 
         stage("AKS Integration Test") {
+          agent {
+            label "aks"
+          }
           options {
             timeout(time: 30, unit: 'MINUTES')
           }
