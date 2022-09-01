@@ -151,6 +151,9 @@ type WavefrontProxy struct {
 
 	// ConfigHash is for internal use only
 	ConfigHash string `json:"-"`
+
+	// AvailableReplicas is for internal use only
+	AvailableReplicas int `json:"-"`
 }
 
 type Tracing struct {
