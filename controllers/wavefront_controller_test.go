@@ -35,7 +35,7 @@ import (
 
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		r, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
@@ -55,7 +55,7 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		invalidWFSpec := defaultWFSpec()
 		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
@@ -75,7 +75,7 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		// TODO: so much setup for only one usage...
 		r, wfCR, apiClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
@@ -97,7 +97,7 @@ func TestReconcileAll(t *testing.T) {
 
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
@@ -122,7 +122,7 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("defaults values for default collector config", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 		wfSpec := defaultWFSpec()
 
 		r, _, _, _ := setupForCreate(wfSpec)
@@ -136,7 +136,7 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Requests.CPU = "200m"
@@ -155,7 +155,7 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("resources set for node collector", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Requests.CPU = "200m"
@@ -173,7 +173,7 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		r, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
@@ -191,7 +191,7 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("skip creating collector if metrics is not enabled", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{}
@@ -209,7 +209,7 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Metrics = wf.Metrics{
@@ -255,9 +255,8 @@ func TestReconcileCollector(t *testing.T) {
 }
 
 func TestReconcileProxy(t *testing.T) {
-	// TODO: is this not already tested in TestReconcileAll?
 	t.Run("creates proxy and proxy service", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		r, _, _, _ := setupForCreate(defaultWFSpec())
 		r.KubernetesManager = stubKM
@@ -271,7 +270,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		r, _, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
@@ -283,7 +282,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Enable = false
@@ -302,7 +301,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
@@ -320,7 +319,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
@@ -335,7 +334,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with a user defined Wavefront tracing", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.Port = 30000
@@ -356,7 +355,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with a user defined Jaeger distributed tracing", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.Port = 30001
@@ -383,7 +382,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
@@ -402,7 +401,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Histogram.Port = 40000
@@ -430,7 +429,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
@@ -446,7 +445,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with preprocessor rules", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
@@ -468,7 +467,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("resources set for the proxy", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
@@ -490,7 +489,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("adjusting proxy replicas changes the number of desired replicas", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Replicas = 2
@@ -508,7 +507,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("proxy available replicas defaults to zero when no proxy exists", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Replicas = 2
@@ -537,7 +536,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("updates available replicas when based on the proxy", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.Replicas = 2
@@ -579,7 +578,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
@@ -622,7 +621,7 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
@@ -654,7 +653,7 @@ func TestReconcileProxy(t *testing.T) {
 
 func TestReconcileLogging(t *testing.T) {
 	t.Run("Skip creating logging if DataCollection.Logging.Enable is set to false", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = false
@@ -668,7 +667,7 @@ func TestReconcileLogging(t *testing.T) {
 	})
 
 	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
@@ -682,7 +681,7 @@ func TestReconcileLogging(t *testing.T) {
 	})
 
 	t.Run("Verify log tag allow list", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
@@ -703,7 +702,7 @@ func TestReconcileLogging(t *testing.T) {
 	})
 
 	t.Run("Verify log tag deny list", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
@@ -754,7 +753,7 @@ func volumeHasSecret(t *testing.T, deployment appsv1.Deployment, name string, se
 	assert.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
 }
 
-func containsPortInServicePort(t *testing.T, port int32, stubKM test_helper.StubKubernetesManager) {
+func containsPortInServicePort(t *testing.T, port int32, stubKM test_helper.MockKubernetesManager) {
 	serviceYAMLUnstructured, err := stubKM.GetAppliedYAML(
 		"v1",
 		"Service",
@@ -777,7 +776,7 @@ func containsPortInServicePort(t *testing.T, port int32, stubKM test_helper.Stub
 	assert.Fail(t, fmt.Sprintf("Did not find the port: %d", port))
 }
 
-func containsPortInContainers(t *testing.T, proxyArgName string, stubKM test_helper.StubKubernetesManager, port int32) bool {
+func containsPortInContainers(t *testing.T, proxyArgName string, stubKM test_helper.MockKubernetesManager, port int32) bool {
 	deploymentYAMLUnstructured, err := stubKM.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
@@ -816,7 +815,7 @@ func getEnvValueForName(envs []v1.EnvVar, name string) string {
 	return ""
 }
 
-func containsProxyArg(t *testing.T, proxyArg string, stubKM test_helper.StubKubernetesManager) {
+func containsProxyArg(t *testing.T, proxyArg string, stubKM test_helper.MockKubernetesManager) {
 	deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
 	assert.NoError(t, err)
 
@@ -882,7 +881,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
-	stubKubernetesManager := test_helper.NewStubKubernetesManager()
+	stubKubernetesManager := test_helper.NewMockKubernetesManager()
 
 	r := &controllers.WavefrontReconciler{
 		Client:            apiClient,
