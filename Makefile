@@ -100,6 +100,7 @@ GOARCH?=$(go env GOARCH)
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
 	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
+	rm -rf build/$(GOOS)/$(GOARCH)/deploy
 	cp -r deploy build/$(GOOS)/$(GOARCH)
 	cp open_source_licenses.txt build/
 
@@ -170,7 +171,7 @@ controller-gen:
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 .PHONY: kustomize
 kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
 
 KUBE_LINTER = $(shell pwd)/bin/kube-linter
 .PHONY: install-kube-linter
@@ -193,12 +194,8 @@ PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 define go-get-tool
 @[ -f $(1) ] || { \
 set -e ;\
-TMP_DIR=$$(mktemp -d) ;\
-cd $$TMP_DIR ;\
-go mod init tmp ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
-rm -rf $$TMP_DIR ;\
+GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 }
 endef
 
