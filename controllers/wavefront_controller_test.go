@@ -190,24 +190,6 @@ func TestReconcileCollector(t *testing.T) {
 		assert.False(t, stubKM.ClusterCollectorDeploymentContains("limits:", "requests:"))
 	})
 
-	t.Run("skip creating collector if metrics is not enabled", func(t *testing.T) {
-		stubKM := test_helper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics = wf.Metrics{}
-
-		r, _, _, _ := setupForCreate(wfSpec)
-		r.KubernetesManager = stubKM
-
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-
-		assert.False(t, stubKM.ClusterCollectorDeploymentContains())
-		assert.False(t, stubKM.NodeCollectorDaemonSetContains())
-
-		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
-	})
-
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
 		stubKM := test_helper.NewMockKubernetesManager()
 
@@ -252,6 +234,40 @@ func TestReconcileCollector(t *testing.T) {
 		assert.Equal(t, 2, len(filters["metricDenyList"].([]interface{})))
 		assert.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
 	})
+
+	t.Run("can be disabled", func(t *testing.T) {
+		disabledMetricsSpec := defaultWFSpec()
+		disabledMetricsSpec.DataCollection.Metrics.Enable = false
+
+		BehavesLikeItCanBeDisabled(t, disabledMetricsSpec,
+			&appsv1.DaemonSet{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "DaemonSet",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.NodeCollectorName,
+					Labels: map[string]string{
+						"app.kubernetes.io/name":      "wavefront",
+						"app.kubernetes.io/component": "collector",
+					},
+				},
+			},
+			&appsv1.Deployment{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "Deployment",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.ClusterCollectorName,
+					Labels: map[string]string{
+						"app.kubernetes.io/name":      "wavefront",
+						"app.kubernetes.io/component": "collector",
+					},
+				},
+			},
+		)
+	})
 }
 
 func TestReconcileProxy(t *testing.T) {
@@ -279,25 +295,6 @@ func TestReconcileProxy(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.True(t, stubKM.ProxyDeploymentContains("name: updatedToken", "value: testWavefrontUrl/api/"))
-	})
-
-	t.Run("Skip creating proxy if DataExport.WavefrontProxy.Enable is set to false", func(t *testing.T) {
-		stubKM := test_helper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Enable = false
-		wfSpec.DataExport.ExternalWavefrontProxy.Url = "externalProxyUrl"
-
-		r, _, _, _ := setupForCreate(wfSpec)
-		r.KubernetesManager = stubKM
-
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-
-		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: externalProxyUrl"))
-
-		assert.False(t, stubKM.ProxyDeploymentContains())
-		assert.False(t, stubKM.ProxyServiceContains())
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
@@ -693,23 +690,30 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--proxyHost myproxyhost_url ", *stubKM)
 		containsProxyArg(t, "--proxyPort 8080", *stubKM)
 	})
+
+	t.Run("can be disabled", func(t *testing.T) {
+		disabledMetricsSpec := defaultWFSpec()
+		disabledMetricsSpec.DataExport.WavefrontProxy.Enable = false
+
+		BehavesLikeItCanBeDisabled(t, disabledMetricsSpec,
+			&appsv1.Deployment{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "Deployment",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.ProxyName,
+					Labels: map[string]string{
+						"app.kubernetes.io/name":      "wavefront",
+						"app.kubernetes.io/component": "proxy",
+					},
+				},
+			},
+		)
+	})
 }
 
 func TestReconcileLogging(t *testing.T) {
-	t.Run("Skip creating logging if DataCollection.Logging.Enable is set to false", func(t *testing.T) {
-		stubKM := test_helper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = false
-
-		r, _, _, _ := setupForCreate(wfSpec)
-		r.KubernetesManager = stubKM
-
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.False(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
-	})
-
 	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
 		stubKM := test_helper.NewMockKubernetesManager()
 
@@ -764,6 +768,71 @@ func TestReconcileLogging(t *testing.T) {
 		assert.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
 		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
 		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
+	})
+
+	t.Run("can be disabled", func(t *testing.T) {
+		disabledMetricsSpec := defaultWFSpec()
+		disabledMetricsSpec.DataCollection.Logging.Enable = false
+
+		BehavesLikeItCanBeDisabled(t, disabledMetricsSpec,
+			&appsv1.DaemonSet{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "DaemonSet",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.LoggingName,
+					Labels: map[string]string{
+						"app.kubernetes.io/name":      "wavefront",
+						"app.kubernetes.io/component": "logging",
+					},
+				},
+			},
+		)
+	})
+}
+
+func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, existingResources ...runtime.Object) {
+	t.Run("on CR creation", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+
+		r, _, _, _ := setupForCreate(disabledSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		for _, e := range existingResources {
+			objMeta := e.(metav1.ObjectMetaAccessor).GetObjectMeta()
+			gvk := e.GetObjectKind().GroupVersionKind()
+			assert.Falsef(t, stubKM.AppliedContains(
+				gvk.GroupVersion().String(), gvk.Kind,
+				objMeta.GetLabels()["app.kubernetes.io/name"],
+				objMeta.GetLabels()["app.kubernetes.io/component"],
+				objMeta.GetName(),
+			), "%s/%s should not have been applied", gvk.Kind, objMeta.GetName())
+		}
+	})
+
+	t.Run("on CR update", func(t *testing.T) {
+		mockKM := test_helper.NewMockKubernetesManager()
+
+		r, _, _, _ := setupForCreate(disabledSpec, existingResources...)
+		r.KubernetesManager = mockKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		for _, e := range existingResources {
+			objMeta := e.(metav1.ObjectMetaAccessor).GetObjectMeta()
+			gvk := e.GetObjectKind().GroupVersionKind()
+			assert.True(t, mockKM.DeletedContains(
+				gvk.GroupVersion().String(), gvk.Kind,
+				objMeta.GetLabels()["app.kubernetes.io/name"],
+				objMeta.GetLabels()["app.kubernetes.io/component"],
+				objMeta.GetName(),
+			), "%s/%s should have been deleted", gvk.Kind, objMeta.GetName())
+		}
 	})
 }
 
