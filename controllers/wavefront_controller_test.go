@@ -507,6 +507,48 @@ func TestReconcileProxy(t *testing.T) {
 			require.Equal(t, int32(2), *deployment.Spec.Replicas)
 		})
 
+		t.Run("defaults to one when no available proxy exists", func(t *testing.T) {
+			stubKM := test_helper.NewMockKubernetesManager()
+
+			wfSpec := defaultWFSpec()
+			wfSpec.DataExport.WavefrontProxy.Replicas = 1
+			wfSpec.DataCollection.Logging.Enable = true
+
+			r, _, _, _ := setupForCreate(wfSpec, &appsv1.Deployment{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       util.Deployment,
+					APIVersion: "apps/v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: util.Namespace,
+					Name:      util.ProxyName,
+				},
+				Spec: appsv1.DeploymentSpec{},
+				Status: appsv1.DeploymentStatus{
+					AvailableReplicas: 0,
+				},
+			})
+			r.KubernetesManager = stubKM
+
+			_, err := r.Reconcile(context.Background(), defaultRequest())
+			require.NoError(t, err)
+
+			nodeCollector, err := stubKM.GetAppliedDaemonSet("collector", util.NodeCollectorName)
+			require.NoError(t, err)
+
+			require.Equal(t, "1", nodeCollector.Spec.Template.Annotations["proxy-available-replicas"])
+
+			clusterCollector, err := stubKM.GetAppliedDeployment("collector", util.ClusterCollectorName)
+			require.NoError(t, err)
+
+			require.Equal(t, "1", clusterCollector.Spec.Template.Annotations["proxy-available-replicas"])
+
+			logging, err := stubKM.GetAppliedDaemonSet("logging", util.LoggingName)
+			require.NoError(t, err)
+
+			require.Equal(t, "1", logging.Spec.Template.Annotations["proxy-available-replicas"])
+		})
+
 		t.Run("defaults to one when no proxies exists", func(t *testing.T) {
 			stubKM := test_helper.NewMockKubernetesManager()
 

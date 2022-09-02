@@ -327,7 +327,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
-		if err == nil {
+		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
 		}
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
