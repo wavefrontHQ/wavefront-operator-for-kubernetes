@@ -208,6 +208,42 @@ func TestReconcileCollector(t *testing.T) {
 		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 	})
 
+	t.Run("removes collector if metrics become disabled", func(t *testing.T) {
+		mockKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics = wf.Metrics{Enable: false}
+
+		r, _, _, _ := setupForCreate(
+			wfSpec,
+			&appsv1.DaemonSet{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "DaemonSet",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.NodeCollectorName,
+				},
+			},
+			&appsv1.Deployment{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "Deployment",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.ClusterCollectorName,
+				},
+			},
+		)
+		r.KubernetesManager = mockKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, mockKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "collector", util.NodeCollectorName))
+		require.True(t, mockKM.DeletedContains("apps/v1", "Deployment", "wavefront", "collector", util.ClusterCollectorName))
+	})
+
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
 		stubKM := test_helper.NewMockKubernetesManager()
 
@@ -298,6 +334,32 @@ func TestReconcileProxy(t *testing.T) {
 
 		assert.False(t, stubKM.ProxyDeploymentContains())
 		assert.False(t, stubKM.ProxyServiceContains())
+	})
+
+	t.Run("removes proxy if it become disabled", func(t *testing.T) {
+		mockKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.Enable = false
+
+		r, _, _, _ := setupForCreate(
+			wfSpec,
+			&appsv1.Deployment{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "Deployment",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.ProxyName,
+				},
+			},
+		)
+		r.KubernetesManager = mockKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, mockKM.DeletedContains("apps/v1", "Deployment", "wavefront", "proxy", util.ProxyName))
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
@@ -722,6 +784,32 @@ func TestReconcileLogging(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
+	})
+
+	t.Run("removes logging if it become disabled", func(t *testing.T) {
+		mockKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = false
+
+		r, _, _, _ := setupForCreate(
+			wfSpec,
+			&appsv1.DaemonSet{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "apps/v1",
+					Kind:       "DaemonSet",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: util.LoggingName,
+				},
+			},
+		)
+		r.KubernetesManager = mockKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, mockKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
 	})
 
 	t.Run("Verify log tag allow list", func(t *testing.T) {
