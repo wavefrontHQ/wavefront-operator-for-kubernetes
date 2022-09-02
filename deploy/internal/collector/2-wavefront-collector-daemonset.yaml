@@ -23,6 +23,7 @@ spec:
         app.kubernetes.io/component: collector
       annotations:
         installation-method: operator
+        proxy-available-replicas: "{{ .DataExport.WavefrontProxy.AvailableReplicas }}"
     spec:
       securityContext:
         runAsNonRoot: true

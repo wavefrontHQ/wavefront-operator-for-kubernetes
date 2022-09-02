@@ -22,6 +22,8 @@ spec:
      type: RollingUpdate
  template:
    metadata:
+    annotations:
+      proxy-available-replicas: "{{ .DataExport.WavefrontProxy.AvailableReplicas }}"
     labels:
       name: wavefront-logging
       app.kubernetes.io/name: wavefront

@@ -56,7 +56,7 @@ func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Compon
 		Name: name,
 	}
 
-	deployment, err := appsV1.Deployments("wavefront").Get(context.Background(), name, v1.GetOptions{})
+	deployment, err := appsV1.Deployments(util.Namespace).Get(context.Background(), name, v1.GetOptions{})
 
 	if err != nil {
 		componentStatus.Healthy = false

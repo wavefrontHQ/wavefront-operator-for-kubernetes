@@ -15,77 +15,28 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 )
 
-type stubKubernetesManager struct {
+type MockKubernetesManager struct {
 	deletedYAMLs []string
 	appliedYAMLs []string
 	usedFilter   func(*unstructured.Unstructured) bool
 }
 
-/*
-** Note: interface sections and functions
-** are in the same order as ${REPO_ROOT}/deploy/internal/
-** for readability and ease of refactor / extension.
-**/
-type StubKubernetesManager interface {
-	/* Check if YAML matching checks was applied */
-	AppliedContains(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName string, otherChecks ...string) bool
-	DeletedContains(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName string, otherChecks ...string) bool
-
-	// TODO: GetDeletedYAML for consistency
-	GetAppliedYAML(apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName string, otherChecks ...string) (*unstructured.Unstructured, error)
-	GetAppliedDeployment(appKubernetesIOComponent, metadataName string) (appsv1.Deployment, error)
-
-	/* Contains helpers */
-	CollectorServiceAccountContains(checks ...string) bool
-	CollectorConfigMapContains(checks ...string) bool
-
-	NodeCollectorDaemonSetContains(checks ...string) bool
-	ClusterCollectorDeploymentContains(checks ...string) bool
-
-	ProxyServiceContains(checks ...string) bool
-	ProxyDeploymentContains(checks ...string) bool
-
-	/* Get *unstructured.Unstructured objects for filter testing, etc. */
-	GetUnstructuredCollectorServiceAccount() (*unstructured.Unstructured, error)
-	GetUnstructuredCollectorConfigMap() (*unstructured.Unstructured, error)
-	GetUnstructuredNodeCollectorDaemonSet() (*unstructured.Unstructured, error)
-	GetUnstructuredClusterCollectorDeployment() (*unstructured.Unstructured, error)
-	GetUnstructuredProxyService() (*unstructured.Unstructured, error)
-	GetUnstructuredProxyDeployment() (*unstructured.Unstructured, error)
-
-	/* Object getters for specific property testing */
-	GetCollectorServiceAccount() (corev1.ServiceAccount, error)
-	GetCollectorConfigMap() (corev1.ConfigMap, error)
-
-	GetNodeCollectorDaemonSet() (appsv1.DaemonSet, error)
-	GetClusterCollectorDeployment() (appsv1.Deployment, error)
-
-	GetProxyService() (corev1.Service, error)
-	GetProxyDeployment() (appsv1.Deployment, error)
-
-	// TODO: pull all object filters into single test
-	ObjectPassesFilter(object *unstructured.Unstructured) bool
-
-	// TODO: remove now that I have easy getters
-	ServiceAccountPassesFilter(t *testing.T, err error) bool
+func NewMockKubernetesManager() *MockKubernetesManager {
+	return &MockKubernetesManager{}
 }
 
-func NewStubKubernetesManager() *stubKubernetesManager {
-	return &stubKubernetesManager{}
-}
-
-func (skm *stubKubernetesManager) ApplyResources(resourceYAMLs []string, filterObject func(*unstructured.Unstructured) bool) error {
+func (skm *MockKubernetesManager) ApplyResources(resourceYAMLs []string, filterObject func(*unstructured.Unstructured) bool) error {
 	skm.appliedYAMLs = resourceYAMLs
 	skm.usedFilter = filterObject
 	return nil
 }
 
-func (skm *stubKubernetesManager) DeleteResources(resourceYAMLs []string) error {
+func (skm *MockKubernetesManager) DeleteResources(resourceYAMLs []string) error {
 	skm.deletedYAMLs = resourceYAMLs
 	return nil
 }
 
-func (skm stubKubernetesManager) AppliedContains(
+func (skm MockKubernetesManager) AppliedContains(
 	apiVersion,
 	kind,
 	appKubernetesIOName,
@@ -104,7 +55,7 @@ func (skm stubKubernetesManager) AppliedContains(
 	)
 }
 
-func (skm stubKubernetesManager) DeletedContains(
+func (skm MockKubernetesManager) DeletedContains(
 	apiVersion,
 	kind,
 	appKubernetesIOName,
@@ -123,7 +74,7 @@ func (skm stubKubernetesManager) DeletedContains(
 	)
 }
 
-func (skm stubKubernetesManager) GetAppliedYAML(
+func (skm MockKubernetesManager) GetAppliedYAML(
 	apiVersion,
 	kind,
 	appKubernetesIOName,
@@ -196,7 +147,7 @@ func unstructuredFromStr(yamlStr string) (*unstructured.Unstructured, error) {
 	return object, err
 }
 
-func (skm stubKubernetesManager) GetAppliedServiceAccount(appKubernetesIOComponent, metadataName string) (corev1.ServiceAccount, error) {
+func (skm MockKubernetesManager) GetAppliedServiceAccount(appKubernetesIOComponent, metadataName string) (corev1.ServiceAccount, error) {
 	yamlUnstructured, err := skm.GetAppliedYAML(
 		"v1",
 		"ServiceAccount",
@@ -217,7 +168,7 @@ func (skm stubKubernetesManager) GetAppliedServiceAccount(appKubernetesIOCompone
 	return serviceAccount, nil
 }
 
-func (skm stubKubernetesManager) GetAppliedConfigMap(appKubernetesIOComponent, metadataName string) (corev1.ConfigMap, error) {
+func (skm MockKubernetesManager) GetAppliedConfigMap(appKubernetesIOComponent, metadataName string) (corev1.ConfigMap, error) {
 	yamlUnstructured, err := skm.GetAppliedYAML(
 		"v1",
 		"ConfigMap",
@@ -238,7 +189,7 @@ func (skm stubKubernetesManager) GetAppliedConfigMap(appKubernetesIOComponent, m
 	return configMap, nil
 }
 
-func (skm stubKubernetesManager) GetAppliedDaemonSet(appKubernetesIOComponent, metadataName string) (appsv1.DaemonSet, error) {
+func (skm MockKubernetesManager) GetAppliedDaemonSet(appKubernetesIOComponent, metadataName string) (appsv1.DaemonSet, error) {
 	yamlUnstructured, err := skm.GetAppliedYAML(
 		"apps/v1",
 		"DaemonSet",
@@ -259,7 +210,7 @@ func (skm stubKubernetesManager) GetAppliedDaemonSet(appKubernetesIOComponent, m
 	return daemonSet, nil
 }
 
-func (skm stubKubernetesManager) GetAppliedDeployment(appKubernetesIOComponent, metadataName string) (appsv1.Deployment, error) {
+func (skm MockKubernetesManager) GetAppliedDeployment(appKubernetesIOComponent, metadataName string) (appsv1.Deployment, error) {
 	yamlUnstructured, err := skm.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
@@ -280,7 +231,7 @@ func (skm stubKubernetesManager) GetAppliedDeployment(appKubernetesIOComponent, 
 	return deployment, nil
 }
 
-func (skm stubKubernetesManager) GetAppliedService(appKubernetesIOComponent, metadataName string) (corev1.Service, error) {
+func (skm MockKubernetesManager) GetAppliedService(appKubernetesIOComponent, metadataName string) (corev1.Service, error) {
 	yamlUnstructured, err := skm.GetAppliedYAML(
 		"v1",
 		"Service",
@@ -301,7 +252,7 @@ func (skm stubKubernetesManager) GetAppliedService(appKubernetesIOComponent, met
 	return service, nil
 }
 
-func (skm stubKubernetesManager) CollectorServiceAccountContains(checks ...string) bool {
+func (skm MockKubernetesManager) CollectorServiceAccountContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"v1",
@@ -313,7 +264,7 @@ func (skm stubKubernetesManager) CollectorServiceAccountContains(checks ...strin
 	)
 }
 
-func (skm stubKubernetesManager) CollectorConfigMapContains(checks ...string) bool {
+func (skm MockKubernetesManager) CollectorConfigMapContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"v1",
@@ -325,7 +276,7 @@ func (skm stubKubernetesManager) CollectorConfigMapContains(checks ...string) bo
 	)
 }
 
-func (skm stubKubernetesManager) NodeCollectorDaemonSetContains(checks ...string) bool {
+func (skm MockKubernetesManager) NodeCollectorDaemonSetContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"apps/v1",
@@ -337,7 +288,7 @@ func (skm stubKubernetesManager) NodeCollectorDaemonSetContains(checks ...string
 	)
 }
 
-func (skm stubKubernetesManager) LoggingDaemonSetContains(checks ...string) bool {
+func (skm MockKubernetesManager) LoggingDaemonSetContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"apps/v1",
@@ -349,7 +300,7 @@ func (skm stubKubernetesManager) LoggingDaemonSetContains(checks ...string) bool
 	)
 }
 
-func (skm stubKubernetesManager) LoggingConfigMapContains(checks ...string) bool {
+func (skm MockKubernetesManager) LoggingConfigMapContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"v1",
@@ -361,7 +312,7 @@ func (skm stubKubernetesManager) LoggingConfigMapContains(checks ...string) bool
 	)
 }
 
-func (skm stubKubernetesManager) ClusterCollectorDeploymentContains(checks ...string) bool {
+func (skm MockKubernetesManager) ClusterCollectorDeploymentContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"apps/v1",
@@ -373,7 +324,7 @@ func (skm stubKubernetesManager) ClusterCollectorDeploymentContains(checks ...st
 	)
 }
 
-func (skm stubKubernetesManager) ProxyServiceContains(checks ...string) bool {
+func (skm MockKubernetesManager) ProxyServiceContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"v1",
@@ -385,7 +336,7 @@ func (skm stubKubernetesManager) ProxyServiceContains(checks ...string) bool {
 	)
 }
 
-func (skm stubKubernetesManager) ProxyDeploymentContains(checks ...string) bool {
+func (skm MockKubernetesManager) ProxyDeploymentContains(checks ...string) bool {
 	return contains(
 		skm.appliedYAMLs,
 		"apps/v1",
@@ -397,7 +348,7 @@ func (skm stubKubernetesManager) ProxyDeploymentContains(checks ...string) bool 
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredCollectorServiceAccount() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredCollectorServiceAccount() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"v1",
 		"ServiceAccount",
@@ -407,7 +358,7 @@ func (skm stubKubernetesManager) GetUnstructuredCollectorServiceAccount() (*unst
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredCollectorConfigMap() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredCollectorConfigMap() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"v1",
 		"ConfigMap",
@@ -417,7 +368,7 @@ func (skm stubKubernetesManager) GetUnstructuredCollectorConfigMap() (*unstructu
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredNodeCollectorDaemonSet() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredNodeCollectorDaemonSet() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"apps/v1",
 		"DaemonSet",
@@ -427,7 +378,7 @@ func (skm stubKubernetesManager) GetUnstructuredNodeCollectorDaemonSet() (*unstr
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredClusterCollectorDeployment() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredClusterCollectorDeployment() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
@@ -437,7 +388,7 @@ func (skm stubKubernetesManager) GetUnstructuredClusterCollectorDeployment() (*u
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredProxyService() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredProxyService() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"v1",
 		"Service",
@@ -447,7 +398,7 @@ func (skm stubKubernetesManager) GetUnstructuredProxyService() (*unstructured.Un
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredProxyDeployment() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredProxyDeployment() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
@@ -457,7 +408,7 @@ func (skm stubKubernetesManager) GetUnstructuredProxyDeployment() (*unstructured
 	)
 }
 
-func (skm stubKubernetesManager) GetUnstructuredLoggingDaemonset() (*unstructured.Unstructured, error) {
+func (skm MockKubernetesManager) GetUnstructuredLoggingDaemonset() (*unstructured.Unstructured, error) {
 	return skm.GetAppliedYAML(
 		"apps/v1",
 		"DaemonSet",
@@ -467,7 +418,7 @@ func (skm stubKubernetesManager) GetUnstructuredLoggingDaemonset() (*unstructure
 	)
 }
 
-func (skm stubKubernetesManager) GetCollectorServiceAccount() (corev1.ServiceAccount, error) {
+func (skm MockKubernetesManager) GetCollectorServiceAccount() (corev1.ServiceAccount, error) {
 	yamlUnstructured, err := skm.GetUnstructuredCollectorServiceAccount()
 	if err != nil {
 		return corev1.ServiceAccount{}, err
@@ -482,7 +433,7 @@ func (skm stubKubernetesManager) GetCollectorServiceAccount() (corev1.ServiceAcc
 	return serviceAccount, nil
 }
 
-func (skm stubKubernetesManager) GetCollectorConfigMap() (corev1.ConfigMap, error) {
+func (skm MockKubernetesManager) GetCollectorConfigMap() (corev1.ConfigMap, error) {
 	yamlUnstructured, err := skm.GetUnstructuredCollectorConfigMap()
 	if err != nil {
 		return corev1.ConfigMap{}, err
@@ -497,7 +448,7 @@ func (skm stubKubernetesManager) GetCollectorConfigMap() (corev1.ConfigMap, erro
 	return configMap, nil
 }
 
-func (skm stubKubernetesManager) GetNodeCollectorDaemonSet() (appsv1.DaemonSet, error) {
+func (skm MockKubernetesManager) GetNodeCollectorDaemonSet() (appsv1.DaemonSet, error) {
 	yamlUnstructured, err := skm.GetUnstructuredNodeCollectorDaemonSet()
 	if err != nil {
 		return appsv1.DaemonSet{}, err
@@ -512,7 +463,7 @@ func (skm stubKubernetesManager) GetNodeCollectorDaemonSet() (appsv1.DaemonSet, 
 	return daemonSet, nil
 }
 
-func (skm stubKubernetesManager) GetClusterCollectorDeployment() (appsv1.Deployment, error) {
+func (skm MockKubernetesManager) GetClusterCollectorDeployment() (appsv1.Deployment, error) {
 	yamlUnstructured, err := skm.GetUnstructuredClusterCollectorDeployment()
 	if err != nil {
 		return appsv1.Deployment{}, err
@@ -527,7 +478,7 @@ func (skm stubKubernetesManager) GetClusterCollectorDeployment() (appsv1.Deploym
 	return deployment, nil
 }
 
-func (skm stubKubernetesManager) GetProxyService() (corev1.Service, error) {
+func (skm MockKubernetesManager) GetProxyService() (corev1.Service, error) {
 	yamlUnstructured, err := skm.GetUnstructuredProxyService()
 	if err != nil {
 		return corev1.Service{}, err
@@ -542,7 +493,7 @@ func (skm stubKubernetesManager) GetProxyService() (corev1.Service, error) {
 	return service, nil
 }
 
-func (skm stubKubernetesManager) GetProxyDeployment() (appsv1.Deployment, error) {
+func (skm MockKubernetesManager) GetProxyDeployment() (appsv1.Deployment, error) {
 	yamlUnstructured, err := skm.GetUnstructuredProxyDeployment()
 	if err != nil {
 		return appsv1.Deployment{}, err
@@ -557,12 +508,12 @@ func (skm stubKubernetesManager) GetProxyDeployment() (appsv1.Deployment, error)
 	return deployment, nil
 }
 
-func (skm stubKubernetesManager) ObjectPassesFilter(object *unstructured.Unstructured) bool {
+func (skm MockKubernetesManager) ObjectPassesFilter(object *unstructured.Unstructured) bool {
 	// TODO: filter returning true if filtered is confusing
 	return !skm.usedFilter(object)
 }
 
-func (skm stubKubernetesManager) ServiceAccountPassesFilter(t *testing.T, err error) bool {
+func (skm MockKubernetesManager) ServiceAccountPassesFilter(t *testing.T, err error) bool {
 	serviceAccountObject, err := skm.GetUnstructuredCollectorServiceAccount()
 	assert.NoError(t, err)
 

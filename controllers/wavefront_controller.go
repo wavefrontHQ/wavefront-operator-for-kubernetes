@@ -252,7 +252,7 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -324,10 +324,15 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		}
 	}
 
+	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		if err == nil && deployment.Status.AvailableReplicas > 0 {
+			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
+		}
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
-		err := r.parseHttpProxyConfigs(wavefront, ctx)
+		err = r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
 			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
 			log.Log.Info(errInfo)
