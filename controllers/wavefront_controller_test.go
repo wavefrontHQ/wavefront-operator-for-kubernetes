@@ -8,7 +8,6 @@ import (
 	"time"
 
 	test_helper "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
-
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,13 +36,13 @@ func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		stubKM := test_helper.NewMockKubernetesManager()
 
-		r, _, _, _ := setupForCreate(defaultWFSpec())
+		spec := defaultWFSpec()
+		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
-
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 15 * time.Second}, results)
 
 		assert.True(t, stubKM.CollectorServiceAccountContains())
 		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:2878"))
@@ -52,6 +51,7 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
 		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 		assert.False(t, stubKM.LoggingDaemonSetContains())
+		assert.NotEmpty(t, test_helper.GetMetrics(r.StatusSender))
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
@@ -64,7 +64,7 @@ func TestReconcileAll(t *testing.T) {
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 15 * time.Second}, results)
 
 		assert.False(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
 		assert.False(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
@@ -994,13 +994,12 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
-	stubKubernetesManager := test_helper.NewMockKubernetesManager()
-
 	r := &controllers.WavefrontReconciler{
 		Client:            apiClient,
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
-		KubernetesManager: stubKubernetesManager,
+		KubernetesManager: test_helper.NewMockKubernetesManager(),
+		StatusSender:      test_helper.NewTestStatusSender(),
 		Appsv1:            fakesAppsV1,
 	}
 

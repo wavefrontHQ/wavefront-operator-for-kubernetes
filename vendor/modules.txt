@@ -1,6 +1,9 @@
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
+# github.com/caio/go-tdigest v3.1.0+incompatible
+## explicit
+github.com/caio/go-tdigest
 # github.com/cespare/xxhash/v2 v2.1.1
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
@@ -99,6 +102,13 @@ github.com/spf13/pflag
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/wavefronthq/wavefront-sdk-go v0.10.1
+## explicit; go 1.17
+github.com/wavefronthq/wavefront-sdk-go/event
+github.com/wavefronthq/wavefront-sdk-go/histogram
+github.com/wavefronthq/wavefront-sdk-go/internal
+github.com/wavefronthq/wavefront-sdk-go/senders
+github.com/wavefronthq/wavefront-sdk-go/version
 # go.uber.org/atomic v1.7.0
 ## explicit; go 1.13
 go.uber.org/atomic
