@@ -591,6 +591,42 @@ func TestReconcileLogging(t *testing.T) {
 		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
 	})
 
+	t.Run("default resources for logging", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
+		assert.True(t, stubKM.LoggingDaemonSetContains("resources"))
+		assert.False(t, stubKM.LoggingDaemonSetContains("limits:", "requests:"))
+	})
+
+	t.Run("resources set for logging", func(t *testing.T) {
+		stubKM := test_helper.NewStubKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+
+		wfSpec.DataCollection.Logging.Resources.Requests.CPU = "200m"
+		wfSpec.DataCollection.Logging.Resources.Requests.Memory = "10Mi"
+		wfSpec.DataCollection.Logging.Resources.Limits.Memory = "256Mi"
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
+		assert.True(t, stubKM.LoggingDaemonSetContains("memory: 10Mi"))
+		assert.True(t, stubKM.LoggingDaemonSetContains("cpu: 200m"))
+	})
+
 	t.Run("Verify log tag allow list", func(t *testing.T) {
 		stubKM := test_helper.NewStubKubernetesManager()
 

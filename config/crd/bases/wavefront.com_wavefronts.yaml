@@ -89,6 +89,49 @@ spec:
                             description: List of log tag patterns to deny
                             type: object
                         type: object
+                      resources:
+                        default:
+                          limits:
+                            memory: 500Mi
+                          requests:
+                            cpu: 100m
+                            memory: 200Mi
+                        description: Resources Compute resources required by the logging
+                          containers.
+                        properties:
+                          limits:
+                            description: Limits CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                          requests:
+                            description: Requests CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                        type: object
                     type: object
                   metrics:
                     description: Metrics has resource configuration for node- and
