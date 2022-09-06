@@ -729,7 +729,7 @@ func TestReconcileLogging(t *testing.T) {
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
@@ -745,7 +745,7 @@ func TestReconcileLogging(t *testing.T) {
 	})
 
 	t.Run("resources set for logging", func(t *testing.T) {
-		stubKM := test_helper.NewStubKubernetesManager()
+		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
