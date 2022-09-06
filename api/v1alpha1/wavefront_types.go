@@ -286,6 +286,10 @@ type Logging struct {
 
 	// Filters to apply towards all logs collected by wavefront-logging.
 	Filters LogFilters `json:"filters,omitempty"`
+
+	// Resources Compute resources required by the logging containers.
+	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {memory: "500Mi"}}
+	Resources Resources `json:"resources,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
