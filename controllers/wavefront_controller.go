@@ -191,39 +191,35 @@ func (r *WavefrontReconciler) readAndCreateResources(spec wf.WavefrontSpec) erro
 	}
 	spec.ControllerManagerUID = string(controllerManagerUID)
 
-	resources, err := r.readAndInterpolateResources(spec, false)
+	toApply, err := r.readAndInterpolateResources(spec, enabledDirs(spec))
 	if err != nil {
 		return err
 	}
 
-	err = r.KubernetesManager.ApplyResources(resources, filterDisabledAndConfigMap(spec))
+	err = r.KubernetesManager.ApplyResources(toApply, filterDisabledAndConfigMap(spec))
+	if err != nil {
+		return err
+	}
+
+	toDelete, err := r.readAndInterpolateResources(spec, disabledDirs(spec))
+	if err != nil {
+		return err
+	}
+	err = r.KubernetesManager.DeleteResources(toDelete)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec, includeAll bool) ([]string, error) {
-	var resources []string
-
-	dirsToInclude := []string{"internal"}
-	if includeAll || spec.DataExport.WavefrontProxy.Enable {
-		dirsToInclude = append(dirsToInclude, "proxy")
-	}
-	if includeAll || spec.DataCollection.Metrics.Enable {
-		dirsToInclude = append(dirsToInclude, "collector")
-	}
-	if includeAll || spec.DataCollection.Logging.Enable {
-		dirsToInclude = append(dirsToInclude, "logging")
-	}
-
+func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec, dirsToInclude []string) ([]string, error) {
 	resourceFiles, err := resourceFiles("yaml", dirsToInclude)
 	if err != nil {
 		return nil, err
 	}
-
+	var resources []string
 	for _, resourceFile := range resourceFiles {
-		_, templateName := filepath.Split(resourceFile)
+		templateName := filepath.Base(resourceFile)
 		resourceTemplate, err := newTemplate(templateName).ParseFS(r.FS, resourceFile)
 		if err != nil {
 			return nil, err
@@ -238,8 +234,42 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec,
 	return resources, nil
 }
 
+func allDirs() []string {
+	return dirList(true, true, true)
+}
+
+func enabledDirs(spec wf.WavefrontSpec) []string {
+	return dirList(
+		spec.DataExport.WavefrontProxy.Enable,
+		spec.DataCollection.Metrics.Enable,
+		spec.DataCollection.Logging.Enable,
+	)
+}
+
+func disabledDirs(spec wf.WavefrontSpec) []string {
+	return dirList(
+		!spec.DataExport.WavefrontProxy.Enable,
+		!spec.DataCollection.Metrics.Enable,
+		!spec.DataCollection.Logging.Enable,
+	)
+}
+
+func dirList(proxy, collector, logging bool) []string {
+	dirsToInclude := []string{"internal"}
+	if proxy {
+		dirsToInclude = append(dirsToInclude, "proxy")
+	}
+	if collector {
+		dirsToInclude = append(dirsToInclude, "collector")
+	}
+	if logging {
+		dirsToInclude = append(dirsToInclude, "logging")
+	}
+	return dirsToInclude
+}
+
 func (r *WavefrontReconciler) readAndDeleteResources() error {
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, true)
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, allDirs())
 	if err != nil {
 		return err
 	}
@@ -252,7 +282,7 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments("wavefront").Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -324,10 +354,15 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		}
 	}
 
+	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		if err == nil && deployment.Status.AvailableReplicas > 0 {
+			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
+		}
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
-		err := r.parseHttpProxyConfigs(wavefront, ctx)
+		err = r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
 			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
 			log.Log.Info(errInfo)
@@ -426,7 +461,6 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 }
 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
-	// TODO: we could make this function a list of functions but this is fine for now
 	return func(object *unstructured.Unstructured) bool {
 		objLabels := object.GetLabels()
 		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {

@@ -6,7 +6,10 @@ DOCKER_IMAGE?=kubernetes-operator-snapshot
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
 
-VERSION_POSTFIX?=-alpha-$(shell git rev-parse --short HEAD)
+ifeq ($(origin VERSION_POSTFIX), undefined)
+VERSION_POSTFIX:=-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
+endif
+
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
@@ -200,8 +203,8 @@ GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 endef
 
 deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	@kind load docker-image ${IMG}
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	kind load docker-image $(IMG)
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 	kubectl create -n wavefront secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 	kubectl create -n wavefront secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true

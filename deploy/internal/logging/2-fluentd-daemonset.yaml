@@ -12,8 +12,19 @@ metadata:
       name: wavefront-controller-manager
       uid: {{ .ControllerManagerUID }}
 spec:
-  selector:
-    matchLabels:
+ selector:
+   matchLabels:
+     name: wavefront-logging
+   strategy:
+     rollingUpdate:
+       maxSurge: 25%
+       maxUnavailable: 25%
+     type: RollingUpdate
+ template:
+   metadata:
+    annotations:
+      proxy-available-replicas: "{{ .DataExport.WavefrontProxy.AvailableReplicas }}"
+    labels:
       name: wavefront-logging
     strategy:
       rollingUpdate:

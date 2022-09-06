@@ -383,6 +383,10 @@ spec:
                         maxLength: 253
                         pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
                         type: string
+                      replicas:
+                        default: 1
+                        description: Replicas number of replicas
+                        type: integer
                       resources:
                         default:
                           limits:
