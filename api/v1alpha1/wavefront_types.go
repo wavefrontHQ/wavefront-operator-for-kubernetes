@@ -290,14 +290,25 @@ type Logging struct {
 	// Resources Compute resources required by the logging containers.
 	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {memory: "500Mi"}}
 	Resources Resources `json:"resources,omitempty"`
+
+	// Labels are a list of key and value pairs
+	Labels []Label `json:"labels,omitempty"`
+}
+
+type Label struct {
+	// Key of the label
+	Key string `json:"key,omitempty"`
+
+	// Value of the label
+	Value string `json:"value,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
 type WavefrontStatus struct {
-	// Human readable message indicating details about the deployment status.
+	// Message is a human-readable message indicating details about all the deployment statuses.
 	Message string `json:"message,omitempty"`
 
-	// Human readable message indicating details about the deployment status.
+	// Status is a quick view of all the deployment statuses.
 	Status string `json:"status,omitempty"`
 
 	ComponentStatuses []ComponentStatus `json:"componentStatuses,omitempty"`

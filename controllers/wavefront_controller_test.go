@@ -806,6 +806,31 @@ func TestReconcileLogging(t *testing.T) {
 		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
 	})
 
+	t.Run("Verify labels are added to logging pods", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+		wfSpec.DataCollection.Logging.Labels = []wf.Label{
+			{
+				Key:   "key1",
+				Value: "value1",
+			},
+			{
+				Key:   "key2",
+				Value: "value2",
+			},
+		}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, stubKM.LoggingConfigMapContains("key1: value1"))
+		assert.True(t, stubKM.LoggingConfigMapContains("key $.key2"))
+	})
+
 	t.Run("can be disabled", func(t *testing.T) {
 		disabledMetricsSpec := defaultWFSpec()
 		disabledMetricsSpec.DataCollection.Logging.Enable = false
