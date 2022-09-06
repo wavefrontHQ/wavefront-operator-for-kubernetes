@@ -39,7 +39,7 @@ spec:
           image: fluent/fluentd-kubernetes-daemonset:v1.15-debian-elasticsearch7-1
           command: ["fluentd"]
           env:
-            - name:  NODE_NAME
+            - name:  K8S_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName

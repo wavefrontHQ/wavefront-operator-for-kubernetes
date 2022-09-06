@@ -63,7 +63,7 @@ data:
       <record>
         service "${record.dig('kubernetes', 'labels', 'service')? record.dig('kubernetes', 'labels', 'service') : 'none'}"
         application "${record.dig('kubernetes', 'labels', 'application')? record.dig('kubernetes', 'labels', 'application') : 'none'}"
-        source "#{ENV['NODE_NAME']}"
+        source "#{ENV['K8S_NODE_NAME']}"
         cluster "#{ENV['CLUSTER_NAME']}"
         timestamp ${(time.sec*1000 + time.nsec/1e6).round}
         pod_name "${record.dig('kubernetes', 'pod_name')}"
