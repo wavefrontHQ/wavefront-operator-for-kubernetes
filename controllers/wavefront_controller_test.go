@@ -836,7 +836,7 @@ func TestReconcileLogging(t *testing.T) {
 		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
 	})
 
-	t.Run("Verify labels are added to logging pods", func(t *testing.T) {
+	t.Run("Verify tags are added to logging pods", func(t *testing.T) {
 		stubKM := test_helper.NewMockKubernetesManager()
 
 		wfSpec := defaultWFSpec()
