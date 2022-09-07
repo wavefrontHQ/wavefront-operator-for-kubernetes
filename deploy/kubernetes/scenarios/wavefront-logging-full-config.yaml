@@ -10,6 +10,12 @@ spec:
   dataCollection:
     logging:
       enable: true
+      resources:
+        requests:
+          cpu: 200m
+          memory: 200Mi
+        limits:
+          memory: 1Gi
       filters:
         tagAllowList:
           # Can be any logging tag (service, application, source, cluster, pod_name, container_name, etc)
