@@ -5,6 +5,7 @@ For use on production environments,
 see the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
 for our original, more established processes.
 
+Logs support is currently in Beta. To enable or disable log support, please update the custom resource config under "logging".
 
 # Overview of Wavefront Operator for Kubernetes
 
@@ -34,7 +35,7 @@ For example, Istio and MySQL metrics, Telegraf configuration, etc. are still sup
 
 ## Architecture
 
-![Wavefront Operator for Kubernetes Architecture](architecture-logging2.png)
+![Wavefront Operator for Kubernetes Architecture](architecture-logging.png)
 
 # Installation
 
@@ -95,8 +96,8 @@ The following tools are required for installing the integration.
    ```
    The command should return the following table displaying Operator instance health:
    ```
-   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   AGE
-   wavefront   Healthy   Running (1/1)   Running (1/1)       Running (1/1)    2m4s
+   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE
+   wavefront   Healthy   Running (1/1)   Running (1/1)       Running (3/3)    Running (3/3)  2m4s
    ```
    NOTE: If `STATUS` is `Unhealthy`, run the below command to get more information
    ```
