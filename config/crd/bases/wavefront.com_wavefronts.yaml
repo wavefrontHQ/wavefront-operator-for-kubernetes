@@ -89,6 +89,12 @@ spec:
                             description: List of log tag patterns to deny
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels are a map of key and value pairs that
+                          are added to log tags
+                        type: object
                       resources:
                         default:
                           limits:
@@ -527,12 +533,11 @@ spec:
                   type: object
                 type: array
               message:
-                description: Human readable message indicating details about the deployment
-                  status.
+                description: Message is a human-readable message indicating details
+                  about all the deployment statuses.
                 type: string
               status:
-                description: Human readable message indicating details about the deployment
-                  status.
+                description: Status is a quick view of all the deployment statuses.
                 type: string
             type: object
         type: object

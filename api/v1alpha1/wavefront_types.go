@@ -291,7 +291,7 @@ type Logging struct {
 	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {memory: "500Mi"}}
 	Resources Resources `json:"resources,omitempty"`
 
-	// Labels are a list of key and value pairs
+	// Labels are a map of key and value pairs that are added to log tags
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
