@@ -22,6 +22,10 @@ data:
 
     sinks:
     - proxyAddress: {{.DataCollection.Metrics.ProxyAddress}}
+      {{- if .DataCollection.Metrics.Tags }}
+      tags:
+{{ .DataCollection.Metrics.Tags | toYaml | indent 8 }}
+      {{- end }}
       filters:
         {{- if .DataCollection.Metrics.Filters.DenyList }}
         metricDenyList:
