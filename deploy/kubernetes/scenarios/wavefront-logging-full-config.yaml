@@ -1,0 +1,25 @@
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: wavefront
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    logging:
+      enable: true
+      filters:
+        tagAllowList:
+          # Can be any logging tag (service, application, source, cluster, pod_name, container_name, etc)
+          service:
+            - my-application-service-1
+            - my-application-service-2
+        tagDenyList:
+          # Can be any logging tag (service, application, source, cluster, pod_name, container_name, etc)
+          namespace_name:
+            - kube-system
+  dataExport:
+    wavefrontProxy:
+      enable: true
