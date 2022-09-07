@@ -64,6 +64,9 @@ type Metrics struct {
 	// +kubebuilder:default:={denyList: {kubernetes.sys_container.*, kubernetes.collector.runtime.*, kubernetes.*.network.rx_rate, kubernetes.*.network.rx_errors_rate, kubernetes.*.network.tx_rate, kubernetes.*.network.tx_errors_rate, kubernetes.*.memory.page_faults, kubernetes.*.memory.page_faults_rate, kubernetes.*.memory.major_page_faults, kubernetes.*.memory.major_page_faults_rate, kubernetes.*.filesystem.inodes, kubernetes.*.filesystem.inodes_free, kubernetes.*.ephemeral_storage.request, kubernetes.*.ephemeral_storage.limit}}
 	Filters Filters `json:"filters,omitempty"`
 
+	// Tags are a map of key value pairs that are added as point tags on all metrics emitted.
+	Tags map[string]string `json:"tags,omitempty"`
+
 	// Default metrics collection interval. Defaults to 60s.
 	// +kubebuilder:default:="60s"
 	DefaultCollectionInterval string `json:"defaultCollectionInterval,omitempty"`
@@ -291,8 +294,8 @@ type Logging struct {
 	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {memory: "500Mi"}}
 	Resources Resources `json:"resources,omitempty"`
 
-	// Labels are a map of key and value pairs that are added to log tags
-	Labels map[string]string `json:"labels,omitempty"`
+	// Tags are a map of key value pairs that are added to all logging emitted.
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront

@@ -255,8 +255,8 @@ func (in *Logging) DeepCopyInto(out *Logging) {
 	*out = *in
 	in.Filters.DeepCopyInto(&out.Filters)
 	out.Resources = in.Resources
-	if in.Labels != nil {
-		in, out := &in.Labels, &out.Labels
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
 		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
@@ -278,6 +278,13 @@ func (in *Logging) DeepCopy() *Logging {
 func (in *Metrics) DeepCopyInto(out *Metrics) {
 	*out = *in
 	in.Filters.DeepCopyInto(&out.Filters)
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	out.ClusterCollector = in.ClusterCollector
 	out.NodeCollector = in.NodeCollector
 }
