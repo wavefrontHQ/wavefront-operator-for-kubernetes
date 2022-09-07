@@ -292,15 +292,7 @@ type Logging struct {
 	Resources Resources `json:"resources,omitempty"`
 
 	// Labels are a list of key and value pairs
-	Labels []Label `json:"labels,omitempty"`
-}
-
-type Label struct {
-	// Key of the label
-	Key string `json:"key,omitempty"`
-
-	// Value of the label
-	Value string `json:"value,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront

@@ -811,24 +811,15 @@ func TestReconcileLogging(t *testing.T) {
 
 		wfSpec := defaultWFSpec()
 		wfSpec.DataCollection.Logging.Enable = true
-		wfSpec.DataCollection.Logging.Labels = []wf.Label{
-			{
-				Key:   "key1",
-				Value: "value1",
-			},
-			{
-				Key:   "key2",
-				Value: "value2",
-			},
-		}
+		wfSpec.DataCollection.Logging.Labels = map[string]string{"key1": "value1", "key2": "value2"}
 
 		r, _, _, _ := setupForCreate(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.True(t, stubKM.LoggingConfigMapContains("key1: value1"))
-		assert.True(t, stubKM.LoggingConfigMapContains("key $.key2"))
+		assert.True(t, stubKM.LoggingConfigMapContains("key1 value1"))
+		assert.True(t, stubKM.LoggingConfigMapContains("key2 value2"))
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
