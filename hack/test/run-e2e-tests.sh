@@ -16,6 +16,7 @@ function run_test() {
   local type=$1
   local should_run_static_analysis="${2:-false}"
   local should_be_healthy="${3:-true}"
+  local should_run_e2e_tests="${4:-true}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
   local proxyLogErrorCount=0
 
@@ -35,8 +36,11 @@ function run_test() {
       run_static_analysis
     fi
 
-    echo "Running test-wavefront-metrics"
-    ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
+    if $should_run_e2e_tests; then
+      echo "Running test-wavefront-metrics"
+      ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
+    fi
+
 
     local health_status=
     for _ in {1..12}; do
@@ -76,7 +80,7 @@ function run_logging_test() {
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
   local WAVEFRONT_LOGGING_URL="https:\/\/springlogs.wavefront.com"
 
-  echo "Running logging CR"
+  green "Running logging CR"
 
   wait_for_cluster_ready
 
@@ -197,15 +201,13 @@ function main() {
 
   cd $REPO_ROOT
 
-  run_test "advanced-proxy"
+  run_test "validation-errors" false false false
 
-  run_test "advanced-collector"
+  run_test "advanced-default-config" false true false
 
-  run_test "advanced-default-config"
+  run_test "advanced"
 
   run_test "basic" true
-
-  run_test "validation-errors" false false
 
   run_logging_test
 }
