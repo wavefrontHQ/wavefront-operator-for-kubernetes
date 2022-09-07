@@ -34,7 +34,7 @@ For example, Istio and MySQL metrics, Telegraf configuration, etc. are still sup
 
 ## Architecture
 
-![Wavefront Operator for Kubernetes Architecture](architecture-logging.png)
+![Wavefront Operator for Kubernetes Architecture](architecture-logging2.png)
 
 # Installation
 
