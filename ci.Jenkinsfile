@@ -6,16 +6,16 @@ pipeline {
   }
 
   stages {
-    stage("Test Go Code") {
-      tools {
-        go 'Go 1.17'
-      }
-      steps {
-        withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
-          sh 'make checkfmt vet test'
-        }
-      }
-    }
+//     stage("Test Go Code") {
+//       tools {
+//         go 'Go 1.17'
+//       }
+//       steps {
+//         withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
+//           sh 'make checkfmt vet test'
+//         }
+//       }
+//     }
     stage("Setup For Publish") {
       tools {
         go 'Go 1.17'
@@ -64,18 +64,12 @@ pipeline {
         HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
         PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
         DOCKER_IMAGE = "kubernetes-operator-snapshot"
+        TOKEN = credentials('GITHUB_TOKEN')
+        GIT_BRANCH = "rc${VERSION_POSTFIX}"
       }
       steps {
           script {
-            if (env.BRANCH_NAME == 'K8SSAAS-1161-add-rc-for-ci') {
-              sh 'make generate-kubernetes-yaml'
-              sh 'git stash'
-              sh 'git checkout rc'
-              sh 'git checkout stash@{0} -- deploy/kubernetes/wavefront-operator.yaml'
-              sh 'git commit -am\"update wavefront-operator.yaml\"'
-              sh 'git push'
-              sh 'git checkout K8SSAAS-1161-add-rc-for-ci'
-            }
+            './hack/jenkins/create-rc-ci.sh'
           }
       }
     }
