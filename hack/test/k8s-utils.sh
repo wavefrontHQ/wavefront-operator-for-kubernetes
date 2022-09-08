@@ -31,7 +31,7 @@ function wait_for_cluster_ready() {
     printf "."
     sleep 1
   done
-  echo "done."
+  echo " done."
 }
 
 function create_cluster_name() {

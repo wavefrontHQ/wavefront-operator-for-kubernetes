@@ -40,14 +40,15 @@ function run_test_wavefront_metrics() {
 function run_health_checks() {
   local type=$1
   local should_be_healthy="${2:-true}"
-  echo "Running health checks ..."
+  printf "Running health checks ..."
 
   local health_status=
-  for _ in {1..12}; do
+  for _ in {1..30}; do
     health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
     if [[ "$health_status" == "Healthy" ]]; then
       break
     fi
+    printf "."
     sleep 5
   done
 
@@ -61,6 +62,8 @@ function run_health_checks() {
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
   fi
+
+  echo " done."
 }
 
 function run_unhealthy_checks() {
@@ -73,7 +76,7 @@ function run_unhealthy_checks() {
     red "Health status for $type: expected = false, actual = $health_status"
     exit 1
   else
-    green "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}')"
+    yellow "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}')"
   fi
 }
 

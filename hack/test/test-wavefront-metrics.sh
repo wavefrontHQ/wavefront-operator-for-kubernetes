@@ -27,7 +27,7 @@ function wait_for_query_match_exact() {
     actual=$(curl_query_to_wf_dashboard "${query_match_exact}")
     printf "."
     if echo "$actual $expected" | awk '{exit ($1 > $2 || $1 < $2)}'; then
-        echo "done."
+        echo " done."
         return 0
     fi
 
@@ -53,7 +53,7 @@ function wait_for_query_non_zero() {
     fi
     sleep $CURL_WAIT
   done
-  echo "done."
+  echo " done."
 
   if [[ $actual == null || $actual == 0 ]]; then
     echo "Checking wavefront dashboard metrics for $query_non_zero failed after attempting $MAX_QUERY_TIMES times."
