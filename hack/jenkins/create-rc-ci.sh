@@ -1,10 +1,11 @@
 #!/bin/bash -e
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+cd ${REPO_ROOT}
 
 git config --global user.email "svc.wf-jenkins@vmware.com"
 git config --global user.name "svc.wf-jenkins"
 git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git
-
-cd ../..
 
 VERSION=$VERSION_POSTFIX make generate-kubernetes-yaml
 
