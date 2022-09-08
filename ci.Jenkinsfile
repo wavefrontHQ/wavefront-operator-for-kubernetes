@@ -68,7 +68,7 @@ pipeline {
         GIT_BRANCH = "rc${VERSION_POSTFIX}"
       }
       steps {
-          './hack/jenkins/create-rc-ci.sh'
+          sh './hack/jenkins/create-rc-ci.sh'
       }
     }
 //     stage("Run Integration Tests") {
