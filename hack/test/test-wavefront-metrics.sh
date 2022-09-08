@@ -19,15 +19,15 @@ function wait_for_query_match_exact() {
   local expected=$2
   local actual
   local loop_count=0
+
+  printf "Querying for exact match %s ..."  "$query_match_exact"
+
   while [[ $loop_count -lt $MAX_QUERY_TIMES ]]; do
     loop_count=$((loop_count + 1))
-    echo "===============BEGIN checking wavefront dashboard metrics for '$query_match_exact' - attempt $loop_count/$MAX_QUERY_TIMES"
     actual=$(curl_query_to_wf_dashboard "${query_match_exact}")
-    echo "Actual is: '$actual'"
-    echo "Expected is '${expected}'"
-    echo "===============END checking wavefront dashboard metrics for $query_match_exact"
-
+    printf "."
     if echo "$actual $expected" | awk '{exit ($1 > $2 || $1 < $2)}'; then
+        echo "done."
         return 0
     fi
 
@@ -41,7 +41,9 @@ function wait_for_query_non_zero() {
   local query_non_zero=$1
   local actual=0
   local loop_count=0
-  printf "Querying for non-zero..."
+
+  printf "Querying for non zero %s ..."  "$query_non_zero"
+
   while true; do
     loop_count=$((loop_count + 1))
     actual=$(curl_query_to_wf_dashboard "${query_non_zero}")
@@ -87,8 +89,8 @@ function main() {
   cd "$(dirname "$0")" # hack/test
 
   local AFTER_UNIX_TS="$(date '+%s')000"
-  local MAX_QUERY_TIMES=30
-  local CURL_WAIT=15
+  local MAX_QUERY_TIMES=90
+  local CURL_WAIT=5
 
   # REQUIRED
   local WAVEFRONT_TOKEN=

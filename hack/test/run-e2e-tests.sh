@@ -17,7 +17,7 @@ function setup_test() {
   local wf_url="${2:-${WAVEFRONT_URL}}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
 
-  echo "$type: Setting Up Cluster Name: $cluster_name"
+  echo "Deploying Wavefront CR with Cluster Name: $cluster_name ..."
 
   wait_for_cluster_ready
 
@@ -32,7 +32,7 @@ function setup_test() {
 function run_test_wavefront_metrics() {
   local type=$1
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
-  echo "$type: Running test wavefront metrics, cluster_name $cluster_name"
+  echo "Running test wavefront metrics, cluster_name $cluster_name ..."
 
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
 }
@@ -40,7 +40,7 @@ function run_test_wavefront_metrics() {
 function run_health_checks() {
   local type=$1
   local should_be_healthy="${2:-true}"
-  echo "$type: Running health checks"
+  echo "Running health checks ..."
 
   local health_status=
   for _ in {1..12}; do
@@ -65,7 +65,7 @@ function run_health_checks() {
 
 function run_unhealthy_checks() {
   local type=$1
-  echo "$type: Running unhealthy checks"
+  echo "Running unhealthy checks ..."
 
   sleep 1
   local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
@@ -79,14 +79,14 @@ function run_unhealthy_checks() {
 
 function clean_up_test() {
   local type=$1
-  echo "$type: Cleaning Up"
+  echo "Cleaning Up ..."
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
 function run_static_analysis() {
   local type=$1
-  echo "$type: Running static analysis"
+  echo "Running static analysis ..."
 
   local resources_yaml_file=$(mktemp)
   local exit_status=0
@@ -149,7 +149,7 @@ function run_test() {
   fi
 
   clean_up_test $type
-  green "Success!"
+  green "Successfully ran $type test!"
 }
 
 function run_logging_test() {
@@ -164,7 +164,7 @@ function run_logging_test() {
 
   run_health_checks $type
 
-  echo "$type: Running logging tests"
+  echo "Running logging checks ..."
   local max_logs_received=0;
   for _ in {1..12}; do
     max_logs_received=$(kubectl -n wavefront logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
@@ -184,7 +184,7 @@ function run_logging_test() {
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
 
   clean_up_test $type
-  green "Success!"
+  green "Successfully ran logging test!"
 }
 
 
