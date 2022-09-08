@@ -12,59 +12,48 @@ function print_usage_and_exit() {
   exit 1
 }
 
-function run_test() {
+function setup_test() {
   local type=$1
-  local should_run_static_analysis="${2:-false}"
-  local should_be_healthy="${3:-true}"
-  local should_run_e2e_tests="${4:-true}"
+  local wf_url="${2:-${WAVEFRONT_URL}}"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
-  local proxyLogErrorCount=0
 
-  green "Running $type CR"
+  echo "$type: Setting Up Cluster Name: $cluster_name"
 
   wait_for_cluster_ready
 
   sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
-   sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+   sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
   wait_for_cluster_ready
+}
 
-  if "$should_be_healthy"; then
-    if "$should_run_static_analysis"; then
-      run_static_analysis
+function run_test_wavefront_metrics() {
+  local type=$1
+  local cluster_name=${CONFIG_CLUSTER_NAME}-$type
+  echo "$type: Running test wavefront metrics, cluster_name $cluster_name"
+
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
+}
+
+function run_health_checks() {
+  local type=$1
+  local should_be_healthy="${2:-true}"
+  echo "$type: Running health checks"
+
+  local health_status=
+  for _ in {1..12}; do
+    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    if [[ "$health_status" == "Healthy" ]]; then
+      break
     fi
+    sleep 5
+  done
 
-    if $should_run_e2e_tests; then
-      echo "Running test-wavefront-metrics"
-      ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
-    fi
-
-
-    local health_status=
-    for _ in {1..12}; do
-      health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
-      if [[ "$health_status" == "Healthy" ]]; then
-        break
-      fi
-      sleep 5
-    done
-
-    if [[ "$health_status" != "Healthy" ]]; then
-      red "Health status for $type: expected = true, actual = $health_status"
-      exit 1
-    fi
-    green "Success!"
-  else
-    sleep 1
-    local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
-    if [[ "$health_status" != "Unhealthy" ]]; then
-      red "Health status for $type: expected = false, actual = $health_status"
-      exit 1
-    else
-      green "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}')"
-    fi
+  if [[ "$health_status" != "Healthy" ]]; then
+    red "Health status for $type: expected = true, actual = $health_status"
+    exit 1
   fi
 
   proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep " ERROR "| wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -72,56 +61,33 @@ function run_test() {
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
   fi
-
-  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
-function run_logging_test() {
-  local cluster_name=${CONFIG_CLUSTER_NAME}-$type
-  local WAVEFRONT_LOGGING_URL="https:\/\/springlogs.wavefront.com"
+function run_unhealthy_checks() {
+  local type=$1
+  echo "$type: Running unhealthy checks"
 
-  green "Running logging CR"
-
-  wait_for_cluster_ready
-
-  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-logging.yaml  |
-  sed "s/YOUR_WAVEFRONT_URL/${WAVEFRONT_LOGGING_URL}/g" > hack/test/_v1alpha1_wavefront_test.yaml
-
-  kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
-
-  wait_for_cluster_ready
-
-  local max_logs_received=0;
-  for _ in {1..12}; do
-    max_logs_received=$(kubectl -n wavefront logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
-    if [[ $max_logs_received -gt 0 ]]; then
-      break
-    fi
-    sleep 5
-  done
-
-  if [[ $max_logs_received -eq 0 ]]; then
-    red "Expected max logs received to be greater than 0, but got $max_logs_received"
-    exit 1
-  fi
-
+  sleep 1
   local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
-  if [[ "$health_status" != "Healthy" ]]; then
-    red "Health status for $type: expected = true, actual = $health_status"
+  if [[ "$health_status" != "Unhealthy" ]]; then
+    red "Health status for $type: expected = false, actual = $health_status"
     exit 1
+  else
+    green "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}')"
   fi
+}
 
-  echo "Running test-wavefront-metrics"
-  local proxy_name=$(kubectl -n wavefront get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
-
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
-
-  green "Success!"
+function clean_up_test() {
+  local type=$1
+  echo "$type: Cleaning Up"
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
 }
 
 function run_static_analysis() {
+  local type=$1
+  echo "$type: Running static analysis"
+
   local resources_yaml_file=$(mktemp)
   local exit_status=0
   kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n wavefront -o yaml \
@@ -159,6 +125,68 @@ function run_static_analysis() {
     exit $exit_status
   fi
 }
+
+function run_test() {
+  local type=$1
+  local checks=$2
+  echo ""
+  green "Running test $type"
+
+  setup_test $type
+
+  if [[ "$checks" =~ .*"unhealthy".* ]]; then
+    run_unhealthy_checks $type
+  elif [[ "$checks" =~ .*"health".* ]]; then
+    run_health_checks $type
+  fi
+
+  if [[ "$checks" =~ .*"static_analysis".* ]]; then
+    run_static_analysis $type
+  fi
+
+  if [[ "$checks" =~ .*"test_wavefront_metrics".* ]]; then
+    run_test_wavefront_metrics $type
+  fi
+
+  clean_up_test $type
+  green "Success!"
+}
+
+function run_logging_test() {
+  local type="logging"
+  local cluster_name=${CONFIG_CLUSTER_NAME}-$type
+  local WAVEFRONT_LOGGING_URL="https:\/\/springlogs.wavefront.com"
+
+  echo ""
+  green "Running test logging"
+
+  setup_test $type "https:\/\/springlogs.wavefront.com"
+
+  run_health_checks $type
+
+  echo "$type: Running logging tests"
+  local max_logs_received=0;
+  for _ in {1..12}; do
+    max_logs_received=$(kubectl -n wavefront logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
+    if [[ $max_logs_received -gt 0 ]]; then
+      break
+    fi
+    sleep 5
+  done
+
+  if [[ $max_logs_received -eq 0 ]]; then
+    red "Expected max logs received to be greater than 0, but got $max_logs_received"
+    exit 1
+  fi
+
+  local proxy_name=$(kubectl -n wavefront get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
+
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
+
+  clean_up_test $type
+  green "Success!"
+}
+
 
 function main() {
 
@@ -201,13 +229,13 @@ function main() {
 
   cd $REPO_ROOT
 
-  run_test "validation-errors" false false false
+  run_test "validation-errors" "unhealthy"
 
-  run_test "advanced-default-config" false true false
+  run_test "advanced-default-config" "health"
 
-  run_test "advanced"
+  run_test "basic" "health|static_analysis"
 
-  run_test "basic" true
+  run_test "advanced" "health|test_wavefront_metrics"
 
   run_logging_test
 }
