@@ -12,8 +12,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
 - name: controller
-  newName: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
-  newTag: 2.0.0-beta-3
+  newName: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot
+  newTag: -alpha-cfa30517
 
 patches:
 - path: patches.yaml
