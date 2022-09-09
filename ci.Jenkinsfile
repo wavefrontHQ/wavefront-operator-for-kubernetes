@@ -68,10 +68,12 @@ pipeline {
         GIT_BRANCH = "rc${VERSION_POSTFIX}"
       }
       steps {
-        script{
-            if (env.BRANCH_NAME == 'PR-147') {
+        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+          script{
+            if (env.BRANCH_NAME == 'main') {
               sh './hack/jenkins/create-rc-ci.sh'
             }
+          }
         }
       }
     }
