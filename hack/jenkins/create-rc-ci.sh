@@ -7,7 +7,7 @@ git config --global user.email "svc.wf-jenkins@vmware.com"
 git config --global user.name "svc.wf-jenkins"
 git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git
 
-VERSION=$VERSION_POSTFIX make generate-kubernetes-yaml
+VERSION=rc$VERSION_POSTFIX make generate-kubernetes-yaml
 
 cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 git fetch
