@@ -110,6 +110,12 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
+	err = validation.ValidateEnvironment(r.Appsv1)
+	if err != nil {
+		log.Log.Error(err, "error validation environment failed")
+		return errorCRTLResult(err)
+	}
+
 	err = r.preprocess(wavefront, ctx)
 	if err != nil {
 		log.Log.Error(err, "error preprocessing Wavefront Spec")
