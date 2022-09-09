@@ -70,3 +70,10 @@ if ! [ -x "$(command -v kustomize)" ]; then
     | sudo tee /usr/local/bin/kustomize >/dev/null
   sudo chmod +x /usr/local/bin/kustomize
 fi
+
+#
+# semver cli
+#
+git config --global http.sslVerify false
+make semver-cli
+git config --global http.sslVerify true
