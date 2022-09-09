@@ -68,7 +68,11 @@ pipeline {
         GIT_BRANCH = "rc${VERSION_POSTFIX}"
       }
       steps {
-          sh './hack/jenkins/create-rc-ci.sh'
+        script{
+            if (env.BRANCH_NAME == 'PR-147') {
+              sh './hack/jenkins/create-rc-ci.sh'
+            }
+        }
       }
     }
 //     stage("Run Integration Tests") {
