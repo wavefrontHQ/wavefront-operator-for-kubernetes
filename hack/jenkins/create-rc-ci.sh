@@ -7,9 +7,9 @@ git config --global user.email "svc.wf-jenkins@vmware.com"
 git config --global user.name "svc.wf-jenkins"
 git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git
 
-source ./release/OPERATOR_VERSION
-VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$VERSION_POSTFIX
-VERSION=$VERSION make generate-kubernetes-yaml
+RELEASE_VERSION=$(cat ./release/OPERATOR_VERSION)
+NEW_VERSION=$(semver-cli inc patch "$RELEASE_VERSION")
+VERSION=$NEW_VERSION$VERSION_POSTFIX make generate-kubernetes-yaml
 
 cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 git fetch
