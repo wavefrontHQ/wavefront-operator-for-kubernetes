@@ -13,8 +13,7 @@ VERSION=$NEW_VERSION$VERSION_POSTFIX make generate-kubernetes-yaml
 
 cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 git fetch
-git checkout config/manager/kustomization.yaml
-git checkout deploy/kubernetes/wavefront-operator.yaml
+git checkout .
 git checkout $GIT_BRANCH || git checkout -b $GIT_BRANCH
 
 ls | grep -v build | xargs rm -rf
@@ -30,5 +29,13 @@ PR_URL=$(curl \
   -d "{\"head\":\"${GIT_BRANCH}\",\"base\":\"rc\",\"title\":\"Add release candidate rc${GIT_BRANCH}\"}" \
   https://api.github.com/repos/wavefrontHQ/wavefront-operator-for-kubernetes/pulls |
   jq -r '.html_url')
+
+PULL_NUMBER=$(echo ${PR_URL} | sed 's:.*/::')
+
+MERGE_PR_URL=$(curl \
+  -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: token ${TOKEN}" \
+  https://api.github.com/repos/OWNER/REPO/pulls/${PULL_NUMBER}/merge)
 
 echo "PR URL: ${PR_URL}"
