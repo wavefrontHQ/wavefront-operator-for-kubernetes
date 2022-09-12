@@ -110,18 +110,13 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	err = validation.ValidateEnvironment(r.Appsv1)
-	if err != nil {
-		log.Log.Error(err, "error validation environment failed")
-		return errorCRTLResult(err)
-	}
-
 	err = r.preprocess(wavefront, ctx)
 	if err != nil {
 		log.Log.Error(err, "error preprocessing Wavefront Spec")
 		return errorCRTLResult(err)
 	}
-	validationError := validation.Validate(wavefront)
+
+	validationError := validation.Validate(r.Appsv1, wavefront)
 	if validationError == nil {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
@@ -470,8 +465,9 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	if validationError != nil {
 		wavefront.Status.Status = health.Unhealthy
-		wavefront.Status.Message = fmt.Sprintf("Invalid spec: %s", validationError.Error())
+		wavefront.Status.Message = fmt.Sprintf(validationError.Error())
 	}
+
 	err := r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
 	log.Log.Error(err, "error sending status metric")
 

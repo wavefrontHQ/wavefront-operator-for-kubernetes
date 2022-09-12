@@ -6,3 +6,5 @@ resources:
 - components/collector/2-collector-rbac.yaml
 - components/logging/1-fluentd-roles.yaml
 - components/logging/2-fluentd-rbac.yaml
+- legacy-installation-detection/1-legacy-install-detection-roles.yaml
+- legacy-installation-detection/2-legacy-install-detection-rbac.yaml

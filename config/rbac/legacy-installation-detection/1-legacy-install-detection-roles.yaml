@@ -1,15 +1,18 @@
----
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  name: manual-install-detection
-  namespace: wavefront-collector
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: null
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: wavefront-legacy-install-detection
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - daemonsets
-  - deployments
-  verbs:
-  - get
-  - list
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+    verbs:
+      - get
+      - list

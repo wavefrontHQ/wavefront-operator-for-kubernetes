@@ -4,11 +4,30 @@ import (
 	"fmt"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
-func Validate(wavefront *wf.Wavefront) error {
+func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
+	err := ValidateEnvironment(appsV1)
+	if err != nil {
+		return err
+	}
+	return ValidateWavefrontSpec(wavefront)
+}
+
+func ValidateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
+	daemonSet, err := appsV1.DaemonSets("wavefront-collector").Get(context.Background(), "wavefront-collector", v1.GetOptions{})
+	if err == nil && daemonSet != nil {
+		return fmt.Errorf("Detected legacy Wavefront installation in the wavefront-collector namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.")
+	}
+	return nil
+}
+
+func ValidateWavefrontSpec(wavefront *wf.Wavefront) error {
 	var errs []error
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
