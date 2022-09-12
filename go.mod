@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/stretchr/testify v1.8.0
-	github.com/wavefronthq/wavefront-sdk-go v0.10.1
+	github.com/wavefronthq/wavefront-sdk-go v0.10.4
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.23.10

@@ -26,12 +26,12 @@ function popd_check() {
 }
 
 function wait_for_cluster_ready() {
-  echo "Waiting for all Pods to be 'Ready'"
-  while ! kubectl wait --for=condition=Ready pod --all -l exclude-me!=true --all-namespaces &> /dev/null; do
-    echo "Waiting for all Pods to be 'Ready'"
-    sleep 5
+  printf "Waiting for all Pods to be 'Ready' ..."
+  while ! kubectl wait --for=condition=Ready pod --all -l exclude-me!=true --all-namespaces --timeout=5s &> /dev/null; do
+    printf "."
+    sleep 1
   done
-  echo "All Pods are Ready"
+  echo " done."
 }
 
 function create_cluster_name() {

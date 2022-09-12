@@ -69,6 +69,9 @@ data:
         pod_name "${record.dig('kubernetes', 'pod_name')}"
         container_name "${record.dig('kubernetes', 'container_name')}"
         namespace_name "${record.dig('kubernetes', 'namespace_name')}"
+        {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
+        {{ $tagKey }} {{ $tagValue }}
+        {{- end }}
       </record>
       remove_keys kubernetes, docker
     </filter>
