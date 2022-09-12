@@ -510,14 +510,14 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: wavefront-controller-manager
-  namespace: wavefront
+  namespace: observability-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
   name: wavefront-manager-role
-  namespace: wavefront
+  namespace: observability-system
 rules:
 - apiGroups:
   - ""
@@ -615,7 +615,7 @@ metadata:
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
   name: wavefront-wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 rules:
 - apiGroups:
   - ""
@@ -716,7 +716,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: wavefront-manager-rolebinding
-  namespace: wavefront
+  namespace: observability-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -724,13 +724,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: wavefront-controller-manager
-  namespace: wavefront
+  namespace: observability-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: wavefront-wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -738,7 +738,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -751,7 +751,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -764,7 +764,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: wavefront-logging
-  namespace: wavefront
+  namespace: observability-system
 ---
 apiVersion: v1
 data:
@@ -776,7 +776,7 @@ data:
 kind: ConfigMap
 metadata:
   name: wavefront-manager-config
-  namespace: wavefront
+  namespace: observability-system
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -784,7 +784,7 @@ metadata:
   labels:
     control-plane: controller-manager
   name: wavefront-controller-manager
-  namespace: wavefront
+  namespace: observability-system
 spec:
   replicas: 1
   selector:

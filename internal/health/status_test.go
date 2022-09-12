@@ -20,7 +20,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -31,7 +31,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -42,7 +42,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -79,7 +79,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -90,7 +90,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -101,7 +101,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -126,7 +126,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -137,7 +137,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,

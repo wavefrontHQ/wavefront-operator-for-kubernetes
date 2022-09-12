@@ -3,7 +3,7 @@ apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
-  namespace: wavefront
+  namespace: observability-system
 spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
@@ -51,7 +51,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: advanced-proxy-preprocessor-rules
-  namespace: wavefront
+  namespace: observability-system
 data:
   rules.yaml: |
     '2878':
@@ -65,7 +65,7 @@ data:
 # kind: Secret
 # metadata:
 #   name: http-proxy-secret
-#   namespace: wavefront
+#   namespace: observability-system
 # type: Opaque
 # stringData:
 #   http-url: YOUR_HTTP_PROXY_URL #i.e. http://10.96.179.49:8080

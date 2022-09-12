@@ -4,7 +4,7 @@ metadata:
   labels:
     app: egress-proxy
   name: egress-proxy
-  namespace: wavefront
+  namespace: observability-system
 spec:
   replicas: 1
   selector:
@@ -43,7 +43,7 @@ metadata:
   labels:
     app: egress-proxy
   name: egress-proxy
-  namespace: wavefront
+  namespace: observability-system
 spec:
   ports:
     - name: proxy
@@ -59,7 +59,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: egress-proxy
-  namespace: wavefront
+  namespace: observability-system
 data:
   config.yaml: |
     # Add all certificates of the upstream server to the certificate chain

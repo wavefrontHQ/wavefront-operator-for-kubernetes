@@ -2,6 +2,7 @@
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 source ${REPO_ROOT}/hack/test/k8s-utils.sh
+NS=observability-system
 
 function print_usage_and_exit() {
   echo "Failure: $1"
@@ -44,7 +45,7 @@ function run_health_checks() {
 
   local health_status=
   for _ in {1..30}; do
-    health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+    health_status=$(kubectl get wavefront -n $NS -o=jsonpath='{.items[0].status.status}')
     if [[ "$health_status" == "Healthy" ]]; then
       break
     fi
@@ -57,7 +58,7 @@ function run_health_checks() {
     exit 1
   fi
 
-  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n wavefront | grep " ERROR "| wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n $NS | grep " ERROR "| wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   if [[ $proxyLogErrorCount -gt 0 ]]; then
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
@@ -71,12 +72,12 @@ function run_unhealthy_checks() {
   echo "Running unhealthy checks ..."
 
   sleep 1
-  local health_status=$(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.status}')
+  local health_status=$(kubectl get wavefront -n $NS -o=jsonpath='{.items[0].status.status}')
   if [[ "$health_status" != "Unhealthy" ]]; then
     red "Health status for $type: expected = false, actual = $health_status"
     exit 1
   else
-    yellow "Success got expected error: $(kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}')"
+    yellow "Success got expected error: $(kubectl get wavefront -n $NS -o=jsonpath='{.items[0].status.message}')"
   fi
 }
 
@@ -93,7 +94,7 @@ function run_static_analysis() {
 
   local resources_yaml_file=$(mktemp)
   local exit_status=0
-  kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n wavefront -o yaml \
+  kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n $NS -o yaml \
   | yq '.items[] | split_doc' - > "$resources_yaml_file"
 
   # Ideally we want to fail when a non-zero error count is identified. Until we get to a zero error count, use the known
@@ -170,7 +171,7 @@ function run_logging_test() {
   echo "Running logging checks ..."
   local max_logs_received=0;
   for _ in {1..12}; do
-    max_logs_received=$(kubectl -n wavefront logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
+    max_logs_received=$(kubectl -n $NS logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
     if [[ $max_logs_received -gt 0 ]]; then
       break
     fi
@@ -182,7 +183,7 @@ function run_logging_test() {
     exit 1
   fi
 
-  local proxy_name=$(kubectl -n wavefront get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
+  local proxy_name=$(kubectl -n $NS get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
 
   ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
 

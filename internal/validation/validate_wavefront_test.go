@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -84,8 +85,8 @@ func defaultWFCR() *wf.Wavefront {
 	return &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "wavefront",
-			Name:      "wavefront",
+			Namespace: util.Namespace,
+			Name:      util.Namespace,
 		},
 		Spec: wf.WavefrontSpec{
 			ClusterName:  "testClusterName",

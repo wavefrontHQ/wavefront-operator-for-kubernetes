@@ -49,15 +49,15 @@ function main() {
 
   kubectl delete -f ./deploy/kubernetes/wavefront-operator.yaml || true
   kubectl apply -f ./deploy/kubernetes/wavefront-operator.yaml
-  kubectl create -n wavefront secret generic wavefront-secret --from-literal token=${WAVEFRONT_TOKEN} || true
-  kubectl create -n wavefront secret generic wavefront-secret-logging --from-literal token=${WAVEFRONT_LOGGING_TOKEN} || true
+  kubectl create -n observability-system secret generic wavefront-secret --from-literal token=${WAVEFRONT_TOKEN} || true
+  kubectl create -n observability-system secret generic wavefront-secret-logging --from-literal token=${WAVEFRONT_LOGGING_TOKEN} || true
 
   cat <<EOF | kubectl apply -f -
   apiVersion: wavefront.com/v1alpha1
   kind: Wavefront
   metadata:
     name: wavefront
-    namespace: wavefront
+    namespace: observability-system
   spec:
     clusterName: $CONFIG_CLUSTER_NAME
     wavefrontUrl: $WAVEFRONT_URL
@@ -70,7 +70,7 @@ function main() {
 EOF
 
   wait_for_cluster_ready
-  kubectl get wavefront -n wavefront
+  kubectl get wavefront -n observability-system
 }
 
 main "$@"

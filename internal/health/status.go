@@ -79,7 +79,7 @@ func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Compone
 	componentStatus := wf.ComponentStatus{
 		Name: name,
 	}
-	daemonSet, err := appsV1.DaemonSets("wavefront").Get(context.Background(), name, v1.GetOptions{})
+	daemonSet, err := appsV1.DaemonSets(util.Namespace).Get(context.Background(), name, v1.GetOptions{})
 
 	if err != nil {
 		componentStatus.Healthy = false
