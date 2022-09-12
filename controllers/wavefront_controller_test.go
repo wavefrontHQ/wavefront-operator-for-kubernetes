@@ -235,6 +235,36 @@ func TestReconcileCollector(t *testing.T) {
 		assert.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
 	})
 
+	t.Run("Tags can be set for default collector configmap", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics.Tags = map[string]string{"key1": "value1", "key2": "value2"}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.CollectorConfigMapContains("key1: value1", "key2: value2"))
+	})
+
+	t.Run("Empty tags map should not populate in default collector configmap", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics.Tags = map[string]string{}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+
+		assert.False(t, stubKM.CollectorConfigMapContains("tags"))
+	})
+
 	t.Run("can be disabled", func(t *testing.T) {
 		disabledMetricsSpec := defaultWFSpec()
 		disabledMetricsSpec.DataCollection.Metrics.Enable = false
@@ -804,6 +834,21 @@ func TestReconcileLogging(t *testing.T) {
 		assert.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
 		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
 		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
+	})
+
+	t.Run("Verify tags are added to logging pods", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Logging.Enable = true
+		wfSpec.DataCollection.Logging.Tags = map[string]string{"key1": "value1", "key2": "value2"}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		assert.NoError(t, err)
+		assert.True(t, stubKM.LoggingConfigMapContains("key1 value1", "key2 value2"))
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {

@@ -13,6 +13,8 @@ spec:
       enable: true
     logging:
       enable: true
+      tags:
+        env: non-production
       filters:
         tagDenyList:
           namespace_name:

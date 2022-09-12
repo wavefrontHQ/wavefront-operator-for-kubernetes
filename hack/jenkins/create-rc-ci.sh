@@ -14,6 +14,7 @@ VERSION=$NEW_VERSION$VERSION_POSTFIX make generate-kubernetes-yaml
 cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 git fetch
 git checkout .
+
 git checkout $GIT_BRANCH || git checkout -b $GIT_BRANCH
 
 ls | grep -v build | xargs rm -rf

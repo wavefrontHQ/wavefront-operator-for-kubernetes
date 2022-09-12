@@ -132,6 +132,12 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      tags:
+                        additionalProperties:
+                          type: string
+                        description: Tags are a map of key value pairs that are added
+                          to all logging emitted.
+                        type: object
                     type: object
                   metrics:
                     description: Metrics has resource configuration for node- and
@@ -305,6 +311,12 @@ spec:
                                     type: string
                                 type: object
                             type: object
+                        type: object
+                      tags:
+                        additionalProperties:
+                          type: string
+                        description: Tags are a map of key value pairs that are added
+                          as point tags on all metrics emitted.
                         type: object
                     type: object
                 type: object
@@ -527,12 +539,11 @@ spec:
                   type: object
                 type: array
               message:
-                description: Human readable message indicating details about the deployment
-                  status.
+                description: Message is a human-readable message indicating details
+                  about all the deployment statuses.
                 type: string
               status:
-                description: Human readable message indicating details about the deployment
-                  status.
+                description: Status is a quick view of all the deployment statuses.
                 type: string
             type: object
         type: object

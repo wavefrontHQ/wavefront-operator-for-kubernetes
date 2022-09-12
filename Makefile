@@ -138,7 +138,7 @@ docker-push: ## Push docker image with the manager.
 ##@ Deployment
 
 ifndef ignore-not-found
-  ignore-not-found = false
+  ignore-not-found = true
 endif
 
 .PHONY: install
@@ -158,8 +158,8 @@ deploy: copy-base-patches manifests kustomize ## Deploy controller to the K8s cl
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	kubectl delete -n wavefront secret wavefront-secret || true
-	kubectl delete -n wavefront secret wavefront-secret-logging || true
+	kubectl delete --ignore-not-found=$(ignore-not-found) -n wavefront secret wavefront-secret || true
+	kubectl delete --ignore-not-found=$(ignore-not-found) -n wavefront secret wavefront-secret-logging || true
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
 copy-base-patches:
