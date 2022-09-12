@@ -62,7 +62,7 @@ The following tools are required for installing the integration.
 2. Create a Kubernetes secret with your Wavefront Token.
    See [Managing API Tokens](https://docs.wavefront.com/wavefront_api.html#managing-api-tokens) page.
    ```
-   kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
+   kubectl create -n observability-system secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
    ```
 3. Create a `wavefront.yaml` file with your Wavefront Custom Resource configuration.  The simplest configuration is:
    ```yaml
@@ -71,7 +71,7 @@ The following tools are required for installing the integration.
    kind: Wavefront
    metadata:
      name: wavefront
-     namespace: wavefront
+     namespace: observability-system
    spec:
      clusterName: YOUR_CLUSTER_NAME
      wavefrontUrl: YOUR_WAVEFRONT_URL
@@ -91,7 +91,7 @@ The following tools are required for installing the integration.
    ```
 5. Run the following command to get status for the Wavefront Integration:
    ```
-   kubectl get wavefront -n wavefront
+   kubectl get wavefront -n observability-system
    ```
    The command should return the following table displaying Operator instance health:
    ```
@@ -100,7 +100,7 @@ The following tools are required for installing the integration.
    ```
    NOTE: If `STATUS` is `Unhealthy`, run the below command to get more information
    ```
-   kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}'
+   kubectl get wavefront -n observability-system -o=jsonpath='{.items[0].status.message}'
    ```
 **Note**: For details on migrating from existing helm chart or manual deploy,
 see [Migration](docs/migration.md).
@@ -151,7 +151,7 @@ Note: This command will not upgrade any existing wavefront/wavefront helm instal
 To remove the Wavefront Integration from your environment, run the following commands:
 
 ```
-helm uninstall wavefront-v2beta -n wavefront
+helm uninstall wavefront-v2beta -n observability-system
 kubectl delete namespace wavefront
 ```
 
