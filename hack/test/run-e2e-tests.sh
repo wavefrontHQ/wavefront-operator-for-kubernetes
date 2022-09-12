@@ -234,8 +234,6 @@ function main() {
 
   run_test "validation-errors" "unhealthy"
 
-  run_test "advanced-default-config" "health"
-
   run_test "basic" "health|static_analysis"
 
   run_test "advanced" "health|test_wavefront_metrics"
