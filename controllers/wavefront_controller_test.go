@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
+
 	test_helper "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
@@ -72,6 +74,8 @@ func TestReconcileAll(t *testing.T) {
 		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
 		assert.False(t, stubKM.AppliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
 		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
+
+		assert.Empty(t, r.StatusSender.WavefrontSender.(*senders.TestSender).GetReceivedLines())
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {

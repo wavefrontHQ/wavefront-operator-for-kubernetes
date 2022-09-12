@@ -466,10 +466,10 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 	if validationError != nil {
 		wavefront.Status.Status = health.Unhealthy
 		wavefront.Status.Message = fmt.Sprintf(validationError.Error())
+	} else {
+		err := r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
+		log.Log.Error(err, "error sending status metric")
 	}
-
-	err := r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
-	log.Log.Error(err, "error sending status metric")
 
 	return r.Status().Update(ctx, wavefront)
 }

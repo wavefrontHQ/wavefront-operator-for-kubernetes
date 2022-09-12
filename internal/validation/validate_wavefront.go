@@ -12,14 +12,14 @@ import (
 )
 
 func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
-	err := ValidateEnvironment(appsV1)
+	err := validateEnvironment(appsV1)
 	if err != nil {
 		return err
 	}
-	return ValidateWavefrontSpec(wavefront)
+	return validateWavefrontSpec(wavefront)
 }
 
-func ValidateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
+func validateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
 	daemonSet, err := appsV1.DaemonSets("wavefront-collector").Get(context.Background(), "wavefront-collector", v1.GetOptions{})
 	if err == nil && daemonSet != nil {
 		return fmt.Errorf("Detected legacy Wavefront installation in the wavefront-collector namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.")
@@ -27,7 +27,7 @@ func ValidateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
 	return nil
 }
 
-func ValidateWavefrontSpec(wavefront *wf.Wavefront) error {
+func validateWavefrontSpec(wavefront *wf.Wavefront) error {
 	var errs []error
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
