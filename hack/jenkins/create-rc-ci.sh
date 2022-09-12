@@ -37,6 +37,7 @@ MERGE_PR_URL=$(curl \
   -X PUT \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: token ${TOKEN}" \
+  -d "{\"method\":\"squash\"}"
   https://api.github.com/repos/wavefrontHQ/wavefront-operator-for-kubernetes/pulls/${PULL_NUMBER}/merge)
 
 echo "PR URL: ${PR_URL}"
