@@ -47,16 +47,16 @@ The following tools are required for installing the integration.
 ## Deploy the Wavefront Collector and Proxy with the Operator
 1. Install the Wavefront Operator
 
-   Note: Today the operator only supports deployment under the wavefront namespace.
+   Note: Today the operator only supports deployment under the observability-system namespace.
    If you already have Wavefront deployments in that namespace, uninstall them before you install the operator.
 
    ```
    helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
    helm repo update
 
-   kubectl create namespace wavefront
+   kubectl create namespace observability-system
 
-   helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
+   helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace observability-system
    ```
 
 2. Create a Kubernetes secret with your Wavefront Token.
