@@ -20,7 +20,7 @@ git checkout $GIT_BRANCH || git checkout -b $GIT_BRANCH
 ls | grep -v build | xargs rm -rf
 mv build/wavefront-operator.yaml wavefront-operator$VERSION_POSTFIX.yaml
 
-git add .
+git add --all .
 git commit -m "add CRD"
 git push --set-upstream origin $GIT_BRANCH
 
