@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: collector
   name: wavefront-node-collector
-  namespace: wavefront
+  namespace: observability-system
   ownerReferences:
     - apiVersion: apps/v1
       kind: Deployment

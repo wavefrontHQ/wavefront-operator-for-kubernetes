@@ -1,6 +1,6 @@
 
 # port forward to the proxy from localhost
-kubectl -n wavefront port-forward svc/egress-proxy 8080:8080
+kubectl -n observability-system port-forward svc/egress-proxy 8080:8080
 
 
 export REPO_ROOT=$(git rev-parse --show-toplevel)

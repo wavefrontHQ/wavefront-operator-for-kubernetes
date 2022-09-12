@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: logging
   name: wavefront-logging
-  namespace: wavefront
+  namespace: observability-system
   ownerReferences:
     - apiVersion: apps/v1
       kind: Deployment

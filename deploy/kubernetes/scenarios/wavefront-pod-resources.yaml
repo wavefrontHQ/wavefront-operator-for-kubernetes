@@ -3,7 +3,7 @@ apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
-  namespace: wavefront
+  namespace: observability-system
 spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
