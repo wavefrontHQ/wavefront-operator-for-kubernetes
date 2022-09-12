@@ -102,6 +102,9 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
+            GCP_CREDS = credentials("GCP_CREDS")
+            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            AKS_CLUSTER_NAME = "k8po-ci"
             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
             AWS_SHARED_CREDENTIALS_FILE = credentials("k8po-ci-aws-creds")
