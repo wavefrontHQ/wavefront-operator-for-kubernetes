@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
 cd ${REPO_ROOT}
