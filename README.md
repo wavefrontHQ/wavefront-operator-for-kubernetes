@@ -138,7 +138,7 @@ You can see all configuration options in the [wavefront-full-config.yaml](./depl
 Upgrade the Wavefront Operator (both Collector and Proxy) to a new version by running the following command :
 
 ```
-helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
+helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace observability-system
 ```
 
 Note: This command will not upgrade any existing wavefront/wavefront helm installation. See [migration.md](./docs/migration.md) for migration instructions.
@@ -149,7 +149,7 @@ To remove the Wavefront Integration from your environment, run the following com
 
 ```
 helm uninstall wavefront-v2beta -n observability-system
-kubectl delete namespace wavefront
+kubectl delete namespace observability-system
 ```
 
 # Contribution
