@@ -47,22 +47,22 @@ The following tools are required for installing the integration.
 ## Deploy the Wavefront Collector and Proxy with the Operator
 1. Install the Wavefront Operator
 
-   Note: Today the operator only supports deployment under the observability-system namespace.
+   Note: Today the operator only supports deployment under the wavefront namespace.
    If you already have Wavefront deployments in that namespace, uninstall them before you install the operator.
 
    ```
    helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
    helm repo update
 
-   kubectl create namespace observability-system
+   kubectl create namespace wavefront
 
-   helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace observability-system
+   helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
    ```
 
 2. Create a Kubernetes secret with your Wavefront Token.
    See [Managing API Tokens](https://docs.wavefront.com/wavefront_api.html#managing-api-tokens) page.
    ```
-   kubectl create -n observability-system secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
+   kubectl create -n wavefront secret generic wavefront-secret --from-literal token=YOUR_WAVEFRONT_TOKEN
    ```
 3. Create a `wavefront.yaml` file with your Wavefront Custom Resource configuration.  The simplest configuration is:
    ```yaml
@@ -71,7 +71,7 @@ The following tools are required for installing the integration.
    kind: Wavefront
    metadata:
      name: wavefront
-     namespace: observability-system
+     namespace: wavefront
    spec:
      clusterName: YOUR_CLUSTER_NAME
      wavefrontUrl: YOUR_WAVEFRONT_URL
@@ -91,7 +91,7 @@ The following tools are required for installing the integration.
    ```
 5. Run the following command to get status for the Wavefront Integration:
    ```
-   kubectl get wavefront -n observability-system
+   kubectl get wavefront -n wavefront
    ```
    The command should return the following table displaying Operator instance health:
    ```
@@ -100,7 +100,7 @@ The following tools are required for installing the integration.
    ```
    NOTE: If `STATUS` is `Unhealthy`, run the below command to get more information
    ```
-   kubectl get wavefront -n observability-system -o=jsonpath='{.items[0].status.message}'
+   kubectl get wavefront -n wavefront -o=jsonpath='{.items[0].status.message}'
    ```
 **Note**: For details on migrating from existing helm chart or manual deploy,
 see [Migration](docs/migration.md).
@@ -138,7 +138,7 @@ You can see all configuration options in the [wavefront-full-config.yaml](./depl
 Upgrade the Wavefront Operator (both Collector and Proxy) to a new version by running the following command :
 
 ```
-helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace observability-system
+helm upgrade wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
 ```
 
 Note: This command will not upgrade any existing wavefront/wavefront helm installation. See [migration.md](./docs/migration.md) for migration instructions.
@@ -148,8 +148,8 @@ Note: This command will not upgrade any existing wavefront/wavefront helm instal
 To remove the Wavefront Integration from your environment, run the following commands:
 
 ```
-helm uninstall wavefront-v2beta -n observability-system
-kubectl delete namespace observability-system
+helm uninstall wavefront-v2beta -n wavefront
+kubectl delete namespace wavefront
 ```
 
 # Contribution
