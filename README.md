@@ -5,8 +5,7 @@ For use on production environments,
 see the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
 for our original, more established processes.
 
-Logs support is currently in Beta. To enable or disable log support, please update the custom resource config under "logging".
-
+**Important:** Tanzu Observability Logs (Beta) is only enabled for selected customers. If you’d like to participate, contact your [Tanzu Observability account representative](https://docs.wavefront.com/wavefront_support_feedback.html#support).
 # Overview of Wavefront Operator for Kubernetes
 
 The Wavefront Operator for Kubernetes
