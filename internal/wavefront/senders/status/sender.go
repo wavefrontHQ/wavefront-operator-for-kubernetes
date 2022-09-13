@@ -2,6 +2,7 @@ package status
 
 import (
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"strconv"
 	"strings"
 
@@ -42,6 +43,8 @@ func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterNa
 		"cluster": clusterName,
 	}
 
+	_ = statusSender.sendMetricsStatus(status, clusterName, copyTags(tags))
+
 	if len(status.Message) > 0 {
 		tags["message"] = truncateMessage(status.Message)
 	}
@@ -54,11 +57,38 @@ func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterNa
 		healthy = 1.0
 	}
 
-	err := statusSender.WavefrontSender.SendMetric("kubernetes.operator.status", healthy, 0, clusterName, tags)
+	err := statusSender.WavefrontSender.SendMetric("kubernetes.operator-system.status", healthy, 0, clusterName, tags)
 	if err != nil {
 		return err
 	}
 	return statusSender.WavefrontSender.Flush()
+}
+
+func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+	healthy := true
+	for _, componentStatus := range status.ComponentStatuses {
+		if componentStatus.Name == util.ClusterCollectorName || componentStatus.Name == util.NodeCollectorName {
+			healthy = healthy && componentStatus.Healthy
+		}
+	}
+	for _, componentStatus := range status.ComponentStatuses {
+		if componentStatus.Name == util.ClusterCollectorName || componentStatus.Name == util.NodeCollectorName {
+			tags["message"] += componentStatus.Message
+		}
+	}
+	if healthy {
+		tags["message"] = "Metric component is healthy"
+	}
+	if healthy {
+		tags["status"] = health.Healthy
+	} else {
+		tags["status"] = health.Unhealthy
+	}
+	var healthValue float64
+	if healthy {
+		healthValue = 1.0
+	}
+	return statusSender.WavefrontSender.SendMetric("kubernetes.operator-system.metrics.status", healthValue, 0, clusterName, tags)
 }
 
 func (statusSender StatusSender) Close() {
@@ -71,4 +101,12 @@ func truncateMessage(message string) string {
 		return message[0:maxPointTagLength]
 	}
 	return message
+}
+
+func copyTags(tags map[string]string) map[string]string {
+	copied := make(map[string]string, len(tags))
+	for name, value := range tags {
+		copied[name] = value
+	}
+	return copied
 }
