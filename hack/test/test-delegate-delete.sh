@@ -1,10 +1,12 @@
-kubectl delete deployment/wavefront-controller-manager -n observability-system
+NS=observability-system
 
-kubectl wait --for=delete pod --all --selector="app.kubernetes.io/name=wavefront"  --namespace="wavefront" --timeout=60s
+kubectl delete deployment/wavefront-controller-manager -n $NS
+
+kubectl wait --for=delete pod --all --selector="app.kubernetes.io/name=wavefront"  --namespace=$NS --timeout=60s
 
 STATUS="$(kubectl get pods -n observability-system 2>&1)"
 
-if [ "${STATUS}" == "No resources found in wavefront namespace." ]; then
+if [ "${STATUS}" == "No resources found in ${NS} namespace." ]; then
 	echo "Success"
 	exit 0
 else
