@@ -13,6 +13,7 @@ endif
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
+NS=observability-system
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
@@ -153,13 +154,13 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 deploy: copy-base-patches manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
-	kubectl create -n wavefront secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
-	kubectl create -n wavefront secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
+	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	kubectl delete --ignore-not-found=$(ignore-not-found) -n wavefront secret wavefront-secret || true
-	kubectl delete --ignore-not-found=$(ignore-not-found) -n wavefront secret wavefront-secret-logging || true
+	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret || true
+	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret-logging || true
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
 copy-base-patches:
@@ -206,8 +207,8 @@ deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy contro
 	kind load docker-image $(IMG)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
-	kubectl create -n wavefront secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
-	kubectl create -n wavefront secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
+	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
 redeploy-kind: undeploy deploy-kind
 

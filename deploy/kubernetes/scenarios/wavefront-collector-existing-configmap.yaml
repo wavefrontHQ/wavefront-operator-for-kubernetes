@@ -3,7 +3,7 @@ apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
-  namespace: wavefront
+  namespace: observability-system
 spec:
   # Note on clusterName Precedence
   #
@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: collector
   name: wavefront-collector-config
-  namespace: wavefront
+  namespace: observability-system
 data:
   # Note: make sure your configuration is named `config.yaml` (manual deploy used `collector.yaml`)
   config.yaml: |

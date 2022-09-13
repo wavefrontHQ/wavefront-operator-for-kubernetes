@@ -20,6 +20,8 @@ import (
 	"flag"
 	"os"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -60,7 +62,7 @@ func main() {
 		MetricsBindAddress:     "0",
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
-		Namespace:              "wavefront",
+		Namespace:              util.Namespace,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -75,7 +77,7 @@ func main() {
 	}
 
 	if err = controller.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to setup manager", "controller", "wavefront")
+		setupLog.Error(err, "unable to setup manager", "controller", util.Namespace)
 		os.Exit(1)
 	}
 

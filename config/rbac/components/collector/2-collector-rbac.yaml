@@ -9,13 +9,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -23,4 +23,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: wavefront-collector
-    namespace: wavefront
+    namespace: observability-system

@@ -1,6 +1,6 @@
 package util
 
-const Namespace = "wavefront"
+const Namespace = "observability-system"
 const ProxyName = "wavefront-proxy"
 const ClusterCollectorName = "wavefront-cluster-collector"
 const NodeCollectorName = "wavefront-node-collector"

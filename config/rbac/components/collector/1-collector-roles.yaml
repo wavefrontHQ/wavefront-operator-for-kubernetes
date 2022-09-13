@@ -69,7 +69,7 @@ metadata:
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
   name: wavefront-collector
-  namespace: wavefront
+  namespace: observability-system
 rules:
   - apiGroups:
       - ""

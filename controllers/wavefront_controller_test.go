@@ -722,7 +722,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -765,7 +765,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -1105,7 +1105,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "wavefront",
+			Namespace: util.Namespace,
 			Name:      "wavefront",
 		},
 		Spec:   spec,
@@ -1161,7 +1161,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 func defaultRequest() reconcile.Request {
 	return reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: "wavefront",
+		Namespace: util.Namespace,
 		Name:      "wavefront",
 	}}
 }
