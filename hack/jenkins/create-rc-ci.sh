@@ -40,5 +40,4 @@ MERGE_PR_URL=$(curl \
   -d "{\"merge_method\":\"squash\"}" \
   https://api.github.com/repos/wavefrontHQ/wavefront-operator-for-kubernetes/pulls/${PULL_NUMBER}/merge)
 
-
 echo "PR URL: ${PR_URL}"
