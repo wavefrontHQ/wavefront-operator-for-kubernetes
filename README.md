@@ -5,7 +5,7 @@ For use on production environments,
 see the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
 for our original, more established processes.
 
-
+**Important:** Tanzu Observability Logs (Beta) is only enabled for selected customers. If you’d like to participate, contact your [Tanzu Observability account representative](https://docs.wavefront.com/wavefront_support_feedback.html#support).
 # Overview of Wavefront Operator for Kubernetes
 
 The Wavefront Operator for Kubernetes
@@ -34,7 +34,7 @@ For example, Istio and MySQL metrics, Telegraf configuration, etc. are still sup
 
 ## Architecture
 
-![Wavefront Operator for Kubernetes Architecture](architecture.png)
+![Wavefront Operator for Kubernetes Architecture](architecture-logging.png)
 
 # Installation
 
@@ -95,8 +95,8 @@ The following tools are required for installing the integration.
    ```
    The command should return the following table displaying Operator instance health:
    ```
-   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   AGE
-   wavefront   Healthy   Running (1/1)   Running (1/1)       Running (1/1)    2m4s
+   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE
+   wavefront   Healthy   Running (1/1)   Running (1/1)       Running (3/3)    Running (3/3)  2m4s
    ```
    NOTE: If `STATUS` is `Unhealthy`, run the below command to get more information
    ```
@@ -130,6 +130,9 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Enabling proxy tracing support](./deploy/kubernetes/scenarios/wavefront-proxy-tracing.yaml)
  * [Using an HTTP Proxy](./deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
 
+Wavefront logging scenarios
+ * [Wavefront logging getting started](./deploy/kubernetes/scenarios/wavefront-logging-getting-started.yaml)
+ * [Wavefront logging full configuration](./deploy/kubernetes/scenarios/wavefront-logging-full-config.yaml)
 
 You can see all configuration options in the [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
 
