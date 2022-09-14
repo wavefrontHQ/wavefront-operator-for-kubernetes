@@ -30,6 +30,7 @@ func (e *ExpectAnyMetricClient) Close() {
 }
 
 func (e *ExpectAnyMetricClient) Verify(t *testing.T) {
+	t.Helper()
 	assert.True(t, e.metricSent, "expected metrics to be sent")
 }
 
