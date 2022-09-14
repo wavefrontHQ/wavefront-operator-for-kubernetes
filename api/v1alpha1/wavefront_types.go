@@ -306,10 +306,10 @@ type WavefrontStatus struct {
 	// Status is a quick view of all the deployment statuses.
 	Status string `json:"status,omitempty"`
 
-	ComponentStatuses []ComponentStatus `json:"componentStatuses,omitempty"`
+	ResourceStatuses []ResourceStatus `json:"resourceStatuses,omitempty"`
 }
 
-type ComponentStatus struct {
+type ResourceStatus struct {
 
 	// Computed running status. (available / desired )
 	Status string `json:"status,omitempty"`
@@ -370,8 +370,8 @@ type DeploymentStatus struct {
 	Healthy bool `json:"-"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="status",type="string",JSONPath=".status.status"
 // +kubebuilder:printcolumn:name="proxy",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-proxy')].status"
 // +kubebuilder:printcolumn:name="cluster-collector",type="string",JSONPath=".status.componentStatuses[?(@.name=='wavefront-cluster-collector')].status"

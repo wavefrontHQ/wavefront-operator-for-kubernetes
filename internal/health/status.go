@@ -21,8 +21,8 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	status := wf.WavefrontStatus{}
 	var componentHealth []bool
 	var unhealthyMessages []string
-	var componentStatuses []wf.ComponentStatus
-	var componentStatus wf.ComponentStatus
+	var componentStatuses []wf.ResourceStatus
+	var componentStatus wf.ResourceStatus
 
 	for name, resourceType := range componentsToCheck {
 		if resourceType == util.Deployment {
@@ -39,7 +39,7 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 		}
 	}
 
-	status.ComponentStatuses = componentStatuses
+	status.ResourceStatuses = componentStatuses
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
 		status.Message = fmt.Sprintf("(%d/%d) wavefront components are healthy", boolCount(true, componentHealth...), len(componentHealth))
@@ -51,8 +51,8 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	return status
 }
 
-func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ComponentStatus {
-	componentStatus := wf.ComponentStatus{
+func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ResourceStatus {
+	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
 
@@ -75,8 +75,8 @@ func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Compon
 	return componentStatus
 }
 
-func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ComponentStatus {
-	componentStatus := wf.ComponentStatus{
+func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ResourceStatus {
+	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
 	daemonSet, err := appsV1.DaemonSets("wavefront").Get(context.Background(), name, v1.GetOptions{})

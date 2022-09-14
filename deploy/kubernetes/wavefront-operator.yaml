@@ -95,6 +95,55 @@ spec:
                             description: List of log tag patterns to deny
                             type: object
                         type: object
+                      resources:
+                        default:
+                          limits:
+                            memory: 500Mi
+                          requests:
+                            cpu: 100m
+                            memory: 200Mi
+                        description: Resources Compute resources required by the logging
+                          containers.
+                        properties:
+                          limits:
+                            description: Limits CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                          requests:
+                            description: Requests CPU and Memory requirements
+                            properties:
+                              cpu:
+                                description: CPU is for specifying CPU requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              ephemeral-storage:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                              memory:
+                                description: Memory is for specifying Memory requirements
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                type: string
+                            type: object
+                        type: object
+                      tags:
+                        additionalProperties:
+                          type: string
+                        description: Tags are a map of key value pairs that are added
+                          to all logging emitted.
+                        type: object
                     type: object
                   metrics:
                     description: Metrics has resource configuration for node- and
@@ -269,6 +318,12 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      tags:
+                        additionalProperties:
+                          type: string
+                        description: Tags are a map of key value pairs that are added
+                          as point tags on all metrics emitted.
+                        type: object
                     type: object
                 type: object
               dataExport:
@@ -346,6 +401,10 @@ spec:
                         maxLength: 253
                         pattern: ^[a-z0-9]([a-z0-9\.\-]*[a-z0-9])?$
                         type: string
+                      replicas:
+                        default: 1
+                        description: Replicas number of replicas
+                        type: integer
                       resources:
                         default:
                           limits:
@@ -470,7 +529,11 @@ spec:
           status:
             description: WavefrontStatus defines the observed state of Wavefront
             properties:
-              componentStatuses:
+              message:
+                description: Message is a human-readable message indicating details
+                  about all the deployment statuses.
+                type: string
+              resourceStatuses:
                 items:
                   properties:
                     message:
@@ -485,13 +548,8 @@ spec:
                       type: string
                   type: object
                 type: array
-              message:
-                description: Human readable message indicating details about the deployment
-                  status.
-                type: string
               status:
-                description: Human readable message indicating details about the deployment
-                  status.
+                description: Status is a quick view of all the deployment statuses.
                 type: string
             type: object
         type: object
@@ -800,7 +858,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-beta-3
+        image: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot:2.0.1-alpha-matthewco-220914153059
         imagePullPolicy: Always
         livenessProbe:
           httpGet:

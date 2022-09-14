@@ -523,7 +523,11 @@ spec:
           status:
             description: WavefrontStatus defines the observed state of Wavefront
             properties:
-              componentStatuses:
+              message:
+                description: Message is a human-readable message indicating details
+                  about all the deployment statuses.
+                type: string
+              resourceStatuses:
                 items:
                   properties:
                     message:
@@ -538,10 +542,6 @@ spec:
                       type: string
                   type: object
                 type: array
-              message:
-                description: Message is a human-readable message indicating details
-                  about all the deployment statuses.
-                type: string
               status:
                 description: Status is a quick view of all the deployment statuses.
                 type: string

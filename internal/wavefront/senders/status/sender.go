@@ -92,58 +92,55 @@ func (s Sender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string
 }
 
 func (s Sender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string) error {
-	return s.sendGroupStatus(
-		status.ComponentStatuses,
+	return s.sendComponentStatus(
+		status.ResourceStatuses,
 		clusterName,
 		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
 		"Metrics",
-		"metrics",
 	)
 }
 
 func (s Sender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string) error {
-	return s.sendGroupStatus(
-		status.ComponentStatuses,
+	return s.sendComponentStatus(
+		status.ResourceStatuses,
 		clusterName,
 		map[string]bool{util.LoggingName: true},
 		"Logging",
-		"logging",
 	)
 }
 
 func (s Sender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) error {
-	return s.sendGroupStatus(
-		status.ComponentStatuses,
+	return s.sendComponentStatus(
+		status.ResourceStatuses,
 		clusterName,
 		map[string]bool{util.ProxyName: true},
 		"Proxy",
-		"proxy",
 	)
 }
 
-func (s Sender) sendGroupStatus(componentStatuses []wf.ComponentStatus, clusterName string, componentsInGroup map[string]bool, groupName string, metricSegment string) error {
-	groupComponentStatuses := filterComponents(componentStatuses, componentsInGroup)
+func (s Sender) sendComponentStatus(resourceStatuses []wf.ResourceStatus, clusterName string, resourcesInComponent map[string]bool, componentName string) error {
+	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
 	tags := map[string]string{}
-	if !componentsPresent(groupComponentStatuses) {
+	if !resourcesPresent(componentStatuses) {
 		tags["status"] = "not enabled"
-		tags["message"] = fmt.Sprintf("%s component is not enabled", groupName)
+		tags["message"] = fmt.Sprintf("%s component is not enabled", componentName)
 		healthValue = 2.0
-	} else if componentsHealthy(groupComponentStatuses) {
+	} else if resourcesHealthy(componentStatuses) {
 		tags["status"] = "healthy"
-		tags["message"] = fmt.Sprintf("%s component is healthy", groupName)
+		tags["message"] = fmt.Sprintf("%s component is healthy", componentName)
 		healthValue = 1.0
 	} else {
 		tags["status"] = "unhealthy"
-		tags["message"] = strings.Join(componentMessages(groupComponentStatuses), "; ")
+		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = 0.0
 	}
-	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricSegment), healthValue, clusterName, tags)
+	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", strings.ToLower(componentName)), healthValue, clusterName, tags)
 }
 
-func componentMessages(componentStatuses []wf.ComponentStatus) []string {
+func resourceMessages(statuses []wf.ResourceStatus) []string {
 	var messages []string
-	for _, status := range componentStatuses {
+	for _, status := range statuses {
 		if len(status.Message) > 0 {
 			messages = append(messages, status.Message)
 		}
@@ -151,26 +148,26 @@ func componentMessages(componentStatuses []wf.ComponentStatus) []string {
 	return messages
 }
 
-func componentsHealthy(componentStatuses []wf.ComponentStatus) bool {
+func resourcesHealthy(statuses []wf.ResourceStatus) bool {
 	healthy := true
-	for _, status := range componentStatuses {
+	for _, status := range statuses {
 		healthy = healthy && status.Healthy
 	}
 	return healthy
 }
 
-func componentsPresent(componentStatuses []wf.ComponentStatus) bool {
+func resourcesPresent(statuses []wf.ResourceStatus) bool {
 	present := false
-	for range componentStatuses {
+	for range statuses {
 		present = true
 	}
 	return present
 }
 
-func filterComponents(componentStatuses []wf.ComponentStatus, componentsInGroup map[string]bool) []wf.ComponentStatus {
-	var filtered []wf.ComponentStatus
-	for _, componentStatus := range componentStatuses {
-		if componentsInGroup[componentStatus.Name] {
+func filterComponents(resourceStatuses []wf.ResourceStatus, resourcesInComponent map[string]bool) []wf.ResourceStatus {
+	var filtered []wf.ResourceStatus
+	for _, componentStatus := range resourceStatuses {
+		if resourcesInComponent[componentStatus.Name] {
 			filtered = append(filtered, componentStatus)
 		}
 	}
