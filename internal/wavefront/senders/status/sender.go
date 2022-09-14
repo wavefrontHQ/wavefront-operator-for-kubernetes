@@ -3,9 +3,10 @@ package status
 import (
 	"errors"
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"strconv"
 	"strings"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"

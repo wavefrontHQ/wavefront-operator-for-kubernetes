@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
+
 	test_helper "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
@@ -39,6 +41,9 @@ func TestReconcileAll(t *testing.T) {
 		spec := defaultWFSpec()
 		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
+		expectMetricsSent := test_helper.NewExpectAnyMetricClient()
+		r.StatusSender = status.NewSender(expectMetricsSent)
+
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
@@ -51,7 +56,8 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
 		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 		assert.False(t, stubKM.LoggingDaemonSetContains())
-		assert.NotEmpty(t, test_helper.GetMetrics(r.StatusSender))
+
+		expectMetricsSent.Verify(t)
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
@@ -1142,7 +1148,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: test_helper.NewMockKubernetesManager(),
-		StatusSender:      test_helper.NewTestStatusSender(),
+		StatusSender:      status.NewSender(&test_helper.StubMetricSender{}),
 		Appsv1:            fakesAppsV1,
 	}
 
