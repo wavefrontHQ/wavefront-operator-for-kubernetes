@@ -2,8 +2,9 @@ package status_test
 
 import (
 	"errors"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
 	"testing"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 	test_helper "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
