@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: proxy
-  namespace: wavefront
+  namespace: observability-system
   ownerReferences:
     - apiVersion: apps/v1
       kind: Deployment
@@ -115,6 +115,11 @@ spec:
             - containerPort: {{ .DataExport.WavefrontProxy.Histogram.DayPort }}
               protocol: TCP
             {{- end }}
+          readinessProbe:
+            timeoutSeconds: 10
+            failureThreshold: 10
+            tcpSocket:
+              port: {{ .DataExport.WavefrontProxy.MetricPort }}
           resources:
 {{ .DataExport.WavefrontProxy.Resources | toYaml | indent 12 }}
           securityContext:

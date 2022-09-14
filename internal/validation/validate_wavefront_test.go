@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -114,8 +115,8 @@ func defaultWFCR() *wf.Wavefront {
 	return &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "wavefront",
-			Name:      "wavefront",
+			Namespace: util.Namespace,
+			Name:      util.Namespace,
 		},
 		Spec: wf.WavefrontSpec{
 			ClusterName:  "testClusterName",

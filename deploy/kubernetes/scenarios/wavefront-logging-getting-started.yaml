@@ -3,21 +3,15 @@ apiVersion: wavefront.com/v1alpha1
 kind: Wavefront
 metadata:
   name: wavefront
-  namespace: wavefront
+  namespace: observability-system
 spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
     metrics:
       enable: true
-      tags:
-        env: non-production
-      filters:
-        denyList:
-        - kubernetes.sys_container.*
-        - kubernetes.collector.runtime.*
-      defaultCollectionInterval: 90s #defaults to 60s
-      #enableDiscovery: true #defaults to true
+    logging:
+      enable: true
   dataExport:
     wavefrontProxy:
       enable: true

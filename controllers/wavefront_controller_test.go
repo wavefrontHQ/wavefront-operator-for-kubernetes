@@ -139,6 +139,68 @@ func TestReconcileCollector(t *testing.T) {
 		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
 	})
 
+	t.Run("can change the default collection interval", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics.DefaultCollectionInterval = "90s"
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.CollectorConfigMapContains("defaultCollectionInterval: 90s"))
+	})
+
+	t.Run("can disable discovery", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics.EnableDiscovery = false
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.CollectorConfigMapContains("enableDiscovery: false"))
+	})
+
+	t.Run("can add custom filters", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics.Filters.AllowList = []string{"allowSomeTag", "allowOtherTag"}
+		wfSpec.DataCollection.Metrics.Filters.DenyList = []string{"denyAnotherTag", "denyThisTag"}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.CollectorConfigMapContains("metricAllowList:\n        - allowSomeTag\n        - allowOtherTag"))
+		assert.True(t, stubKM.CollectorConfigMapContains("metricDenyList:\n        - denyAnotherTag\n        - denyThisTag"))
+	})
+
+	t.Run("can add custom tags", func(t *testing.T) {
+		stubKM := test_helper.NewMockKubernetesManager()
+		wfSpec := defaultWFSpec()
+		wfSpec.DataCollection.Metrics.Tags = map[string]string{"env": "non-production"}
+
+		r, _, _, _ := setupForCreate(wfSpec)
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+
+		assert.NoError(t, err)
+
+		assert.True(t, stubKM.CollectorConfigMapContains("tags:\n        env: non-production"))
+	})
+
 	t.Run("resources set for cluster collector", func(t *testing.T) {
 		stubKM := test_helper.NewMockKubernetesManager()
 
@@ -664,7 +726,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -707,7 +769,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: "wavefront",
+				Namespace: util.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -1047,7 +1109,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "wavefront",
+			Namespace: util.Namespace,
 			Name:      "wavefront",
 		},
 		Spec:   spec,
@@ -1103,7 +1165,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 func defaultRequest() reconcile.Request {
 	return reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: "wavefront",
+		Namespace: util.Namespace,
 		Name:      "wavefront",
 	}}
 }
