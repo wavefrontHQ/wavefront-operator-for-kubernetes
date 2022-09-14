@@ -22,6 +22,9 @@ type Sender struct {
 }
 
 func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
+	if !strings.HasPrefix("http://", wavefrontProxyAddress) {
+		wavefrontProxyAddress = "http://" + wavefrontProxyAddress
+	}
 	client, err := wfsdk.NewSender(wavefrontProxyAddress)
 	if err != nil {
 		return nil, err

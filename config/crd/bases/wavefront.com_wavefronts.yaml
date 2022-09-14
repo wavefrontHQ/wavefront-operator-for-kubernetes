@@ -19,16 +19,16 @@ spec:
     - jsonPath: .status.status
       name: status
       type: string
-    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-proxy')].status
+    - jsonPath: .status.resourceStatuses[?(@.name=='wavefront-proxy')].status
       name: proxy
       type: string
-    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-cluster-collector')].status
+    - jsonPath: .status.resourceStatuses[?(@.name=='wavefront-cluster-collector')].status
       name: cluster-collector
       type: string
-    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-node-collector')].status
+    - jsonPath: .status.resourceStatuses[?(@.name=='wavefront-node-collector')].status
       name: node-collector
       type: string
-    - jsonPath: .status.componentStatuses[?(@.name=='wavefront-logging')].status
+    - jsonPath: .status.resourceStatuses[?(@.name=='wavefront-logging')].status
       name: logging
       type: string
     - jsonPath: .metadata.creationTimestamp

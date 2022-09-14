@@ -12,6 +12,6 @@ spec:
       enable: true
   dataExport:
     externalWavefrontProxy:
-      url: "http://myproxy.com"
+      url: "http://wavefront-proxy:2878"
     wavefrontProxy:
       enable: true
