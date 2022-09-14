@@ -2,6 +2,7 @@ package status_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
@@ -93,83 +94,8 @@ func TestSender(t *testing.T) {
 		assert.EqualError(t, fakeStatusSender.SendStatus(wf.WavefrontStatus{Status: "Healthy"}, "my_cluster"), "flush error")
 	})
 
-	t.Run("for metrics", func(t *testing.T) {
-		t.Run("sends healthy status", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 1.000000 source=\"my_cluster\" message=\"Metrics component is healthy\" status=\"Healthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Healthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.ClusterCollectorName,
-							Healthy: true,
-						},
-						{
-							Name:    util.NodeCollectorName,
-							Healthy: true,
-						},
-					},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
-
-		t.Run("sends unhealthy status when cluster collector is unhealthy", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 0.000000 source=\"my_cluster\" message=\"cluster collector has an error\" status=\"Unhealthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Unhealthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.ClusterCollectorName,
-							Message: "cluster collector has an error",
-							Healthy: false,
-						},
-						{
-							Name:    util.NodeCollectorName,
-							Healthy: true,
-						},
-					},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
-
-		t.Run("sends unhealthy status when node collector is unhealthy", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 0.000000 source=\"my_cluster\" message=\"node collector has an error\" status=\"Unhealthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Unhealthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.ClusterCollectorName,
-							Healthy: true,
-						},
-						{
-							Name:    util.NodeCollectorName,
-							Message: "node collector has an error",
-							Healthy: false,
-						},
-					},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
+	t.Run("metrics component", func(t *testing.T) {
+		ReportsSubComponentMetric(t, "Metrics", "metrics", []string{util.ClusterCollectorName, util.NodeCollectorName})
 
 		t.Run("sends unhealthy status when cluster and node collector are unhealthy", func(t *testing.T) {
 			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 0.000000 source=\"my_cluster\" message=\"cluster collector has an error; node collector has an error\" status=\"Unhealthy\"")
@@ -197,143 +123,75 @@ func TestSender(t *testing.T) {
 
 			expectedMetricLine.Verify(t)
 		})
-
-		t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 2.000000 source=\"my_cluster\" status=\"Not Enabled\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:            health.Unhealthy,
-					Message:           "",
-					ComponentStatuses: []wf.ComponentStatus{},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
 	})
 
-	t.Run("for logging", func(t *testing.T) {
-		t.Run("sends healthy status", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.logging.status 1.000000 source=\"my_cluster\" message=\"Logging component is healthy\" status=\"Healthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Healthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.LoggingName,
-							Healthy: true,
-						},
-					},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
-
-		t.Run("sends unhealthy status when logger is unhealthy", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.logging.status 0.000000 source=\"my_cluster\" message=\"logger has an error\" status=\"Unhealthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Unhealthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.LoggingName,
-							Message: "logger has an error",
-							Healthy: false,
-						},
-					},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
-
-		t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.logging.status 2.000000 source=\"my_cluster\" status=\"Not Enabled\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:            health.Unhealthy,
-					Message:           "",
-					ComponentStatuses: []wf.ComponentStatus{},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
+	t.Run("logging component", func(t *testing.T) {
+		ReportsSubComponentMetric(t, "Logging", "logging", []string{util.LoggingName})
 	})
 
-	t.Run("for proxy", func(t *testing.T) {
-		t.Run("sends healthy status", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.proxy.status 1.000000 source=\"my_cluster\" message=\"Proxy component is healthy\" status=\"Healthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
+	t.Run("proxy component", func(t *testing.T) {
+		ReportsSubComponentMetric(t, "Proxy", "proxy", []string{util.ProxyName})
+	})
+}
 
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Healthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.ProxyName,
-							Healthy: true,
-						},
-					},
-				},
-				"my_cluster",
-			)
+func ReportsSubComponentMetric(t *testing.T, groupName string, metricSegment string, componentNames []string) {
+	metricName := fmt.Sprintf("kubernetes.operator-system.%s.status", metricSegment)
+
+	t.Run("sends healthy status", func(t *testing.T) {
+		expectedMetricLine := test_helper.NewExpectedMetricClient(fmt.Sprintf("%s 1.000000 source=\"my_cluster\" message=\"%s component is healthy\" status=\"Healthy\"", metricName, groupName))
+		fakeStatusSender := status.NewSender(expectedMetricLine)
+
+		wfStatus := wf.WavefrontStatus{Status: health.Healthy}
+		for _, componentName := range componentNames {
+			wfStatus.ComponentStatuses = append(wfStatus.ComponentStatuses, wf.ComponentStatus{
+				Name:    componentName,
+				Healthy: true,
+			})
+		}
+		_ = fakeStatusSender.SendStatus(wfStatus, "my_cluster")
+
+		expectedMetricLine.Verify(t)
+	})
+
+	for _, testComponentName := range componentNames {
+		t.Run(fmt.Sprintf("sends unhealthy status when %s is unhealthy", testComponentName), func(t *testing.T) {
+			errorStr := fmt.Sprintf("%s has an error", testComponentName)
+			expectedMetricLine := test_helper.NewExpectedMetricClient(fmt.Sprintf("%s 0.000000 source=\"my_cluster\" message=\"%s\" status=\"Unhealthy\"", metricName, errorStr))
+			fakeStatusSender := status.NewSender(expectedMetricLine)
+			wfStatus := wf.WavefrontStatus{Status: health.Unhealthy}
+			for _, componentName := range componentNames {
+				if testComponentName == componentName {
+					wfStatus.ComponentStatuses = append(wfStatus.ComponentStatuses, wf.ComponentStatus{
+						Name:    componentName,
+						Message: errorStr,
+						Healthy: false,
+					})
+				} else {
+					wfStatus.ComponentStatuses = append(wfStatus.ComponentStatuses, wf.ComponentStatus{
+						Name:    componentName,
+						Healthy: true,
+					})
+				}
+			}
+
+			_ = fakeStatusSender.SendStatus(wfStatus, "my_cluster")
 
 			expectedMetricLine.Verify(t)
 		})
+	}
 
-		t.Run("sends unhealthy status when proxy is unhealthy", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.proxy.status 0.000000 source=\"my_cluster\" message=\"proxy has an error\" status=\"Unhealthy\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
+	t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
+		expectedMetricLine := test_helper.NewExpectedMetricClient(fmt.Sprintf("%s 2.000000 source=\"my_cluster\" status=\"Not Enabled\"", metricName))
+		fakeStatusSender := status.NewSender(expectedMetricLine)
 
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:  health.Unhealthy,
-					Message: "",
-					ComponentStatuses: []wf.ComponentStatus{
-						{
-							Name:    util.ProxyName,
-							Message: "proxy has an error",
-							Healthy: false,
-						},
-					},
-				},
-				"my_cluster",
-			)
+		_ = fakeStatusSender.SendStatus(
+			wf.WavefrontStatus{
+				Status:            health.Unhealthy,
+				ComponentStatuses: []wf.ComponentStatus{},
+			},
+			"my_cluster",
+		)
 
-			expectedMetricLine.Verify(t)
-		})
-
-		t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.proxy.status 2.000000 source=\"my_cluster\" status=\"Not Enabled\"")
-			fakeStatusSender := status.NewSender(expectedMetricLine)
-
-			_ = fakeStatusSender.SendStatus(
-				wf.WavefrontStatus{
-					Status:            health.Unhealthy,
-					Message:           "",
-					ComponentStatuses: []wf.ComponentStatus{},
-				},
-				"my_cluster",
-			)
-
-			expectedMetricLine.Verify(t)
-		})
+		expectedMetricLine.Verify(t)
 	})
 }
