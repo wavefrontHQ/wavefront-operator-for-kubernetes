@@ -96,7 +96,7 @@ func TestValidateEnvironment(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "wavefront-collector",
-				Namespace: "wavefront-collector",
+				Namespace: util.Namespace,
 			},
 		}
 
@@ -116,7 +116,7 @@ func defaultWFCR() *wf.Wavefront {
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: util.Namespace,
-			Name:      util.Namespace,
+			Name:      "wavefront",
 		},
 		Spec: wf.WavefrontSpec{
 			ClusterName:  "testClusterName",
