@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -21,16 +19,6 @@ type MockKubernetesManager struct {
 	deletedYAMLs []string
 	appliedYAMLs []string
 	usedFilter   func(*unstructured.Unstructured) bool
-}
-
-func NewTestStatusSender() *status.StatusSender {
-	statusSender, _ := status.NewStatusSender("myproxy.svc:2878")
-	statusSender.WavefrontSender = senders.NewTestSender()
-	return statusSender
-}
-
-func GetMetrics(sender *status.StatusSender) string {
-	return strings.TrimSpace(sender.WavefrontSender.(*senders.TestSender).GetReceivedLines())
 }
 
 func NewMockKubernetesManager() *MockKubernetesManager {

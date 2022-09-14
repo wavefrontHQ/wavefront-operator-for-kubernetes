@@ -1,6 +1,7 @@
 package status
 
 import (
+	"errors"
 	"fmt"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"strconv"
@@ -11,21 +12,32 @@ import (
 	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 )
 
-type StatusSender struct {
-	WavefrontSender wfsdk.Sender
+type MetricClient interface {
+	SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error
+	Flush() error
+	Close()
 }
 
-func NewStatusSender(wavefrontProxyAddress string) (*StatusSender, error) {
+type Sender struct {
+	client MetricClient
+}
 
-	s := strings.Split(wavefrontProxyAddress, ":")
-	host, portStr := s[0], s[1]
+func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
+	if len(wavefrontProxyAddress) == 0 {
+		return nil, errors.New("error: host and port required")
+	}
+	parts := strings.Split(wavefrontProxyAddress, ":")
+	if len(parts) < 2 {
+		return nil, errors.New("error parsing proxy port: port required")
+	}
+	host, portStr := parts[0], parts[1]
 	port, err := strconv.Atoi(portStr)
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing proxy port: %s", err.Error())
 	}
 
-	wavefrontSender, err := wfsdk.NewProxySender(&wfsdk.ProxyConfiguration{
+	client, err := wfsdk.NewProxySender(&wfsdk.ProxyConfiguration{
 		Host:        host,
 		MetricsPort: port,
 	})
@@ -33,29 +45,34 @@ func NewStatusSender(wavefrontProxyAddress string) (*StatusSender, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &StatusSender{
-		wavefrontSender,
-	}, nil
+
+	return NewSender(client), nil
 }
 
-func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
-	_ = statusSender.sendMetricsStatus(status, clusterName)
-	_ = statusSender.sendLoggingStatus(status, clusterName)
-	_ = statusSender.sendProxyStatus(status, clusterName)
-
-	err := statusSender.sendOperatorStatus(status, clusterName)
-	if err != nil {
-		return err
-	}
-	return statusSender.WavefrontSender.Flush()
+func NewSender(client MetricClient) *Sender {
+	return &Sender{client: newTagTruncatingClient(client, 255)}
 }
 
-func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string) error {
-	tags := map[string]string{
-		"cluster": clusterName,
+func (s Sender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
+	sends := []func(wf.WavefrontStatus, string) error{
+		s.sendMetricsStatus,
+		s.sendLoggingStatus,
+		s.sendProxyStatus,
+		s.sendOperatorStatus,
 	}
+	for _, send := range sends {
+		err := send(status, clusterName)
+		if err != nil {
+			return err
+		}
+	}
+	return s.client.Flush()
+}
+
+func (s Sender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string) error {
+	tags := map[string]string{}
 	if len(status.Message) > 0 {
-		tags["message"] = truncateMessage(status.Message)
+		tags["message"] = status.Message
 	}
 	if len(status.Status) > 0 {
 		tags["status"] = status.Status
@@ -66,15 +83,15 @@ func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, c
 		healthy = 1.0
 	}
 
-	err := statusSender.WavefrontSender.SendMetric("kubernetes.operator-system.status", healthy, 0, clusterName, tags)
+	err := s.client.SendMetric("kubernetes.operator-system.status", healthy, 0, clusterName, tags)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string) error {
-	return statusSender.sendComponentStatus(
+func (s Sender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string) error {
+	return s.sendComponentStatus(
 		status.ComponentStatuses,
 		clusterName,
 		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
@@ -83,8 +100,8 @@ func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, cl
 	)
 }
 
-func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string) error {
-	return statusSender.sendComponentStatus(
+func (s Sender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string) error {
+	return s.sendComponentStatus(
 		status.ComponentStatuses,
 		clusterName,
 		map[string]bool{util.LoggingName: true},
@@ -93,8 +110,8 @@ func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, cl
 	)
 }
 
-func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) error {
-	return statusSender.sendComponentStatus(
+func (s Sender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) error {
+	return s.sendComponentStatus(
 		status.ComponentStatuses,
 		clusterName,
 		map[string]bool{util.ProxyName: true},
@@ -103,10 +120,8 @@ func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clus
 	)
 }
 
-func (statusSender StatusSender) sendComponentStatus(componentStatuses []wf.ComponentStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
-	tags := map[string]string{
-		"cluster": clusterName,
-	}
+func (s Sender) sendComponentStatus(componentStatuses []wf.ComponentStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
+	tags := map[string]string{}
 	present := false
 	for _, componentStatus := range componentStatuses {
 		if componentSet[componentStatus.Name] {
@@ -145,17 +160,39 @@ func (statusSender StatusSender) sendComponentStatus(componentStatuses []wf.Comp
 	} else if healthy {
 		healthValue = 1.0
 	}
-	return statusSender.WavefrontSender.SendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, 0, clusterName, tags)
+	return s.client.SendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, 0, clusterName, tags)
 }
 
-func (statusSender StatusSender) Close() {
-	statusSender.WavefrontSender.Close()
+func (s Sender) Close() {
+	s.client.Close()
 }
 
-func truncateMessage(message string) string {
-	maxPointTagLength := 255 - len("=") - len("message")
-	if len(message) >= maxPointTagLength {
-		return message[0:maxPointTagLength]
+type tagTruncatingClient struct {
+	client MetricClient
+	maxLen int
+}
+
+func newTagTruncatingClient(client MetricClient, maxLen int) *tagTruncatingClient {
+	return &tagTruncatingClient{
+		client: client,
+		maxLen: maxLen,
 	}
-	return message
+}
+
+func (t tagTruncatingClient) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
+	for name := range tags {
+		maxLen := t.maxLen - len(name) - len("=")
+		if len(tags[name]) > maxLen {
+			tags[name] = tags[name][:maxLen]
+		}
+	}
+	return t.client.SendMetric(name, value, ts, source, tags)
+}
+
+func (t tagTruncatingClient) Flush() error {
+	return t.client.Flush()
+}
+
+func (t tagTruncatingClient) Close() {
+	t.client.Close()
 }
