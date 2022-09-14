@@ -44,7 +44,17 @@ func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterNa
 	}
 
 	_ = statusSender.sendMetricsStatus(status, clusterName, copyTags(tags))
+	_ = statusSender.sendLoggingStatus(status, clusterName, copyTags(tags))
+	_ = statusSender.sendProxyStatus(status, clusterName, copyTags(tags))
 
+	err := statusSender.sendOperatorStatus(status, clusterName, tags)
+	if err != nil {
+		return err
+	}
+	return statusSender.WavefrontSender.Flush()
+}
+
+func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
 	if len(status.Message) > 0 {
 		tags["message"] = truncateMessage(status.Message)
 	}
@@ -61,34 +71,82 @@ func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterNa
 	if err != nil {
 		return err
 	}
-	return statusSender.WavefrontSender.Flush()
+	return nil
 }
 
 func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+	return statusSender.sendComponentStatus(
+		status,
+		clusterName,
+		tags,
+		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
+		"Metrics",
+		"metrics",
+	)
+}
+
+func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+	return statusSender.sendComponentStatus(
+		status,
+		clusterName,
+		tags,
+		map[string]bool{util.LoggingName: true},
+		"Logging",
+		"logging",
+	)
+}
+
+func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+	return statusSender.sendComponentStatus(
+		status,
+		clusterName,
+		tags,
+		map[string]bool{util.ProxyName: true},
+		"Proxy",
+		"proxy",
+	)
+}
+
+func (statusSender StatusSender) sendComponentStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string, componentSet map[string]bool, name string, metricName string) error {
+	present := false
+	for _, componentStatus := range status.ComponentStatuses {
+		if componentSet[componentStatus.Name] {
+			present = true
+		}
+	}
+
 	healthy := true
 	for _, componentStatus := range status.ComponentStatuses {
-		if componentStatus.Name == util.ClusterCollectorName || componentStatus.Name == util.NodeCollectorName {
+		if componentSet[componentStatus.Name] {
 			healthy = healthy && componentStatus.Healthy
 		}
 	}
 	for _, componentStatus := range status.ComponentStatuses {
-		if componentStatus.Name == util.ClusterCollectorName || componentStatus.Name == util.NodeCollectorName {
+		if len(componentStatus.Message) > 0 && componentSet[componentStatus.Name] {
+			if len(tags["message"]) > 0 {
+				tags["message"] += "; "
+			}
 			tags["message"] += componentStatus.Message
 		}
 	}
-	if healthy {
-		tags["message"] = "Metric component is healthy"
+	if healthy && present {
+		tags["message"] = fmt.Sprintf("%s component is healthy", name)
 	}
-	if healthy {
+
+	if !present {
+		tags["status"] = "Not Enabled"
+	} else if healthy {
 		tags["status"] = health.Healthy
 	} else {
 		tags["status"] = health.Unhealthy
 	}
 	var healthValue float64
-	if healthy {
+	if !present {
+		healthValue = 2.0
+	} else if healthy {
 		healthValue = 1.0
 	}
-	return statusSender.WavefrontSender.SendMetric("kubernetes.operator-system.metrics.status", healthValue, 0, clusterName, tags)
+	return statusSender.WavefrontSender.SendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, 0, clusterName, tags)
 }
 
 func (statusSender StatusSender) Close() {
