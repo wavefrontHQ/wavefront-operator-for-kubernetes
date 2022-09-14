@@ -71,7 +71,7 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
-	StatusSender      *status.StatusSender
+	StatusSender      *status.Sender
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=observability-system,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -366,7 +366,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err = r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
-			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
+			errInfo := fmt.Sprintf("error setting up http proxy configuration: %s", err.Error())
 			log.Log.Info(errInfo)
 			return err
 		}
@@ -375,11 +375,11 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	}
 
 	if r.StatusSender == nil {
-		statusSender, err := status.NewStatusSender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
+		sender, err := status.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
-			return err
+			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}
-		r.StatusSender = statusSender
+		r.StatusSender = sender
 	}
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
