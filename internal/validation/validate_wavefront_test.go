@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"testing"
 
@@ -90,21 +91,86 @@ func TestValidateEnvironment(t *testing.T) {
 		appsV1 := setup()
 		assert.NoError(t, validateEnvironment(appsV1))
 	})
-
-	t.Run("Return error when existing collector daemonset", func(t *testing.T) {
+	t.Run("Return error when only proxy deployment found", func(t *testing.T) {
+		namespace := "wavefront"
+		proxyDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-proxy",
+				Namespace: namespace,
+			},
+		}
+		appsV1 := setup(proxyDeployment)
+		validationError := validateEnvironment(appsV1)
+		assert.NotNilf(t, validationError, "expected validation error")
+		assertValidationMessage(t, validationError, namespace)
+	})
+	t.Run("Return error when legacy manual install found in namespace wavefront-collector", func(t *testing.T) {
+		namespace := "wavefront-collector"
 		collectorDaemonSet := &appsv1.DaemonSet{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "wavefront-collector",
-				Namespace: util.Namespace,
+				Namespace: namespace,
 			},
 		}
-
-		appsV1 := setup(collectorDaemonSet)
+		proxyDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-proxy",
+				Namespace: "default",
+			},
+		}
+		appsV1 := setup(collectorDaemonSet, proxyDeployment)
 		validationError := validateEnvironment(appsV1)
 		assert.NotNilf(t, validationError, "expected validation error")
-		assert.Equal(t, "Detected legacy Wavefront installation in the wavefront-collector namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.", validationError.Error())
+		assert.Contains(t, validationError.Error(), "Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.")
 	})
+	t.Run("Return error when legacy tkgi install found in namespace tanzu-observability-saas", func(t *testing.T) {
+		namespace := "tanzu-observability-saas"
+		appsV1 := legacyEnvironmentSetup(namespace)
+		validationError := validateEnvironment(appsV1)
+		assert.NotNilf(t, validationError, "expected validation error")
+		assertValidationMessage(t, validationError, namespace)
+	})
+	t.Run("Return error when collector daemonset found in legacy helm install namespace wavefront", func(t *testing.T) {
+		namespace := "wavefront"
+		appsV1 := legacyEnvironmentSetup(namespace)
+		validationError := validateEnvironment(appsV1)
+		assert.NotNilf(t, validationError, "expected validation error")
+		assertValidationMessage(t, validationError, namespace)
+	})
+	t.Run("Return error when collector deployment found in legacy tkgi install namespace pks-system", func(t *testing.T) {
+		namespace := "pks-system"
+		appsV1 := legacyEnvironmentSetup(namespace)
+		validationError := validateEnvironment(appsV1)
+		assert.NotNilf(t, validationError, "expected validation error")
+		assertValidationMessage(t, validationError, namespace)
+	})
+}
+
+func assertValidationMessage(t *testing.T, validationError error, namespace string) {
+	message := fmt.Sprintf("Detected legacy Wavefront installation in the %s namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.", namespace)
+	assert.Equal(t, message, validationError.Error())
+}
+
+func legacyEnvironmentSetup(namespace string) typedappsv1.AppsV1Interface {
+	collectorDaemonSet := &appsv1.DaemonSet{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "wavefront-collector",
+			Namespace: namespace,
+		},
+	}
+	proxyDeployment := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "wavefront-proxy",
+			Namespace: namespace,
+		},
+	}
+	appsV1 := setup(collectorDaemonSet, proxyDeployment)
+	return appsV1
 }
 
 func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {

@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"golang.org/x/net/context"
@@ -10,6 +11,14 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
+
+var legacyComponentsToCheck = map[string]map[string]string{
+	"wavefront-collector":      {"wavefront-collector": util.DaemonSet, "wavefront-proxy": util.Deployment},
+	"default":                  {"wavefront-proxy": util.Deployment},
+	"wavefront":                {"wavefront-collector": util.DaemonSet, "wavefront-proxy": util.Deployment},
+	"pks-system":               {"wavefront-collector": util.Deployment, "wavefront-proxy": util.Deployment},
+	"tanzu-observability-saas": {"wavefront-collector": util.DaemonSet, "wavefront-proxy": util.Deployment},
+}
 
 func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
 	err := validateEnvironment(appsV1)
@@ -20,11 +29,27 @@ func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error
 }
 
 func validateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
-	daemonSet, err := appsV1.DaemonSets("wavefront-collector").Get(context.Background(), "wavefront-collector", v1.GetOptions{})
-	if err == nil && daemonSet != nil {
-		return fmt.Errorf("Detected legacy Wavefront installation in the wavefront-collector namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.")
+	for namespace, resourceMap := range legacyComponentsToCheck {
+		for resourceName, resourceType := range resourceMap {
+			if resourceType == util.DaemonSet {
+				daemonSet, err := appsV1.DaemonSets(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
+				if err == nil && daemonSet != nil {
+					return legacyEnvironmentError(namespace)
+				}
+			}
+			if resourceType == util.Deployment {
+				deployment, err := appsV1.Deployments(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
+				if err == nil && deployment != nil {
+					return legacyEnvironmentError(namespace)
+				}
+			}
+		}
 	}
 	return nil
+}
+
+func legacyEnvironmentError(namespace string) error {
+	return fmt.Errorf("Detected legacy Wavefront installation in the %s namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.", namespace)
 }
 
 func validateWavefrontSpec(wavefront *wf.Wavefront) error {
