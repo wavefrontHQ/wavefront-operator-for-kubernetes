@@ -122,40 +122,48 @@ func (s Sender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) e
 }
 
 func (s Sender) sendComponentStatus(componentStatuses []wf.ComponentStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
+	var healthValue float64
 	tags := map[string]string{}
-	present := false
-	forComponents(componentStatuses, componentSet, func(_ wf.ComponentStatus) {
-		present = true
-	})
+	if !componentsPresent(componentStatuses, componentSet) {
+		tags["status"] = "not enabled"
+		tags["message"] = fmt.Sprintf("%s component is not enabled", name)
+		healthValue = 2.0
+	} else if componentsHealthy(componentStatuses, componentSet) {
+		tags["status"] = "healthy"
+		tags["message"] = fmt.Sprintf("%s component is healthy", name)
+		healthValue = 1.0
+	} else {
+		tags["status"] = "unhealthy"
+		tags["message"] = strings.Join(componentMessages(componentStatuses, componentSet), "; ")
+		healthValue = 0.0
+	}
+	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, clusterName, tags)
+}
 
-	healthy := true
-	forComponents(componentStatuses, componentSet, func(status wf.ComponentStatus) {
-		healthy = healthy && status.Healthy
-	})
-
+func componentMessages(componentStatuses []wf.ComponentStatus, componentSet map[string]bool) []string {
 	var messages []string
 	forComponents(componentStatuses, componentSet, func(status wf.ComponentStatus) {
 		if len(status.Message) > 0 {
 			messages = append(messages, status.Message)
 		}
 	})
+	return messages
+}
 
-	var healthValue float64
-	if !present {
-		tags["status"] = "not enabled"
-		tags["message"] = fmt.Sprintf("%s component is not enabled", name)
-		healthValue = 2.0
-	} else if healthy {
-		tags["status"] = "healthy"
-		tags["message"] = fmt.Sprintf("%s component is healthy", name)
-		healthValue = 1.0
-	} else if present {
-		tags["status"] = "unhealthy"
-		tags["message"] = strings.Join(messages, "; ")
-		healthValue = 0.0
-	}
+func componentsHealthy(componentStatuses []wf.ComponentStatus, componentSet map[string]bool) bool {
+	healthy := true
+	forComponents(componentStatuses, componentSet, func(status wf.ComponentStatus) {
+		healthy = healthy && status.Healthy
+	})
+	return healthy
+}
 
-	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, clusterName, tags)
+func componentsPresent(componentStatuses []wf.ComponentStatus, componentSet map[string]bool) bool {
+	present := false
+	forComponents(componentStatuses, componentSet, func(_ wf.ComponentStatus) {
+		present = true
+	})
+	return present
 }
 
 func forComponents(componentStatuses []wf.ComponentStatus, componentSet map[string]bool, do func(status wf.ComponentStatus)) {
