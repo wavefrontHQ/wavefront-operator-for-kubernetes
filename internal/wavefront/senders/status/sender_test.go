@@ -8,7 +8,7 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
-	test_helper "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/test"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,7 @@ func TestWavefrontProxySender(t *testing.T) {
 
 func TestSender(t *testing.T) {
 	t.Run("sends empty wavefront status", func(t *testing.T) {
-		expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.status 0.000000 source=\"my_cluster\"")
+		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.operator-system.status 0.000000 source=\"my_cluster\""))
 		fakeStatusSender := status.NewSender(expectedMetricLine)
 
 		_ = fakeStatusSender.SendStatus(wf.WavefrontStatus{}, "my_cluster")
@@ -46,7 +46,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("sends healthy wavefront status", func(t *testing.T) {
-		expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.status 1.000000 source=\"my_cluster\" message=\"1/1 components are healthy\" status=\"Healthy\"")
+		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.operator-system.status 1.000000 source=\"my_cluster\" message=\"1/1 components are healthy\" status=\"Healthy\""))
 		fakeStatusSender := status.NewSender(expectedMetricLine)
 
 		_ = fakeStatusSender.SendStatus(wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"}, "my_cluster")
@@ -55,7 +55,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("sends unhealthy wavefront status", func(t *testing.T) {
-		expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy\" status=\"Unhealthy\"")
+		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy\" status=\"Unhealthy\""))
 		fakeStatusSender := status.NewSender(expectedMetricLine)
 
 		_ = fakeStatusSender.SendStatus(wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"}, "my_cluster")
@@ -64,7 +64,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("sends wavefront status with point tag exceeds length limit", func(t *testing.T) {
-		expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E\" status=\"Unhealthy\"")
+		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E\" status=\"Unhealthy\""))
 		fakeStatusSender := status.NewSender(expectedMetricLine)
 
 		_ = fakeStatusSender.SendStatus(wf.WavefrontStatus{
@@ -79,7 +79,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("reports an error when it fails to send", func(t *testing.T) {
-		fakeStatusSender := status.NewSender(&test_helper.StubMetricClient{
+		fakeStatusSender := status.NewSender(&testhelper.StubMetricClient{
 			SendMetricError: errors.New("send error"),
 		})
 
@@ -87,7 +87,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("reports an error when it fails to flush", func(t *testing.T) {
-		fakeStatusSender := status.NewSender(&test_helper.StubMetricClient{
+		fakeStatusSender := status.NewSender(&testhelper.StubMetricClient{
 			FlushError: errors.New("flush error"),
 		})
 
@@ -98,7 +98,7 @@ func TestSender(t *testing.T) {
 		ReportsSubComponentMetric(t, "Metrics", "metrics", []string{util.ClusterCollectorName, util.NodeCollectorName})
 
 		t.Run("sends unhealthy status when cluster and node collector are unhealthy", func(t *testing.T) {
-			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 0.000000 source=\"my_cluster\" message=\"cluster collector has an error; node collector has an error\" status=\"Unhealthy\"")
+			expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.operator-system.metrics.status 0.000000 source=\"my_cluster\" message=\"cluster collector has an error; node collector has an error\" status=\"Unhealthy\""))
 			fakeStatusSender := status.NewSender(expectedMetricLine)
 
 			_ = fakeStatusSender.SendStatus(
@@ -138,7 +138,7 @@ func ReportsSubComponentMetric(t *testing.T, groupName string, metricSegment str
 	metricName := fmt.Sprintf("kubernetes.operator-system.%s.status", metricSegment)
 
 	t.Run("sends healthy status", func(t *testing.T) {
-		expectedMetricLine := test_helper.NewExpectedMetricClient(fmt.Sprintf("%s 1.000000 source=\"my_cluster\" message=\"%s component is healthy\" status=\"Healthy\"", metricName, groupName))
+		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine(fmt.Sprintf("%s 1.000000 source=\"my_cluster\" message=\"%s component is healthy\" status=\"Healthy\"", metricName, groupName)))
 		fakeStatusSender := status.NewSender(expectedMetricLine)
 
 		wfStatus := wf.WavefrontStatus{Status: health.Healthy}
@@ -156,7 +156,7 @@ func ReportsSubComponentMetric(t *testing.T, groupName string, metricSegment str
 	for _, testComponentName := range componentNames {
 		t.Run(fmt.Sprintf("sends unhealthy status when %s is unhealthy", testComponentName), func(t *testing.T) {
 			errorStr := fmt.Sprintf("%s has an error", testComponentName)
-			expectedMetricLine := test_helper.NewExpectedMetricClient(fmt.Sprintf("%s 0.000000 source=\"my_cluster\" message=\"%s\" status=\"Unhealthy\"", metricName, errorStr))
+			expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine(fmt.Sprintf("%s 0.000000 source=\"my_cluster\" message=\"%s\" status=\"Unhealthy\"", metricName, errorStr)))
 			fakeStatusSender := status.NewSender(expectedMetricLine)
 			wfStatus := wf.WavefrontStatus{Status: health.Unhealthy}
 			for _, componentName := range componentNames {
@@ -181,7 +181,7 @@ func ReportsSubComponentMetric(t *testing.T, groupName string, metricSegment str
 	}
 
 	t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
-		expectedMetricLine := test_helper.NewExpectedMetricClient(fmt.Sprintf("%s 2.000000 source=\"my_cluster\" status=\"Not Enabled\"", metricName))
+		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine(fmt.Sprintf("%s 2.000000 source=\"my_cluster\" status=\"Not Enabled\"", metricName)))
 		fakeStatusSender := status.NewSender(expectedMetricLine)
 
 		_ = fakeStatusSender.SendStatus(
