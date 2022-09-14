@@ -366,7 +366,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 		err = r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
-			errInfo := fmt.Sprintf("Error setting up http proxy configuration: %s", err.Error())
+			errInfo := fmt.Sprintf("error setting up http proxy configuration: %s", err.Error())
 			log.Log.Info(errInfo)
 			return err
 		}
@@ -377,7 +377,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	if r.StatusSender == nil {
 		sender, err := status.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
-			return err
+			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}
 		r.StatusSender = sender
 	}

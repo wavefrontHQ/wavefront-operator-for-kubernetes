@@ -17,22 +17,10 @@ import (
 )
 
 func TestWavefrontProxySender(t *testing.T) {
-	t.Run("errors no host or port is supplied", func(t *testing.T) {
+	t.Run("passes on wfsdk.Sender creation errors", func(t *testing.T) {
 		_, err := status.NewWavefrontProxySender("")
 
-		assert.EqualError(t, err, "error: host and port required")
-	})
-
-	t.Run("errors when the port is not supplied", func(t *testing.T) {
-		_, err := status.NewWavefrontProxySender("somehostwithoutaport")
-
-		assert.EqualError(t, err, "error parsing proxy port: port required")
-	})
-
-	t.Run("errors when the port is valid", func(t *testing.T) {
-		_, err := status.NewWavefrontProxySender("somehost:notaport")
-
-		assert.EqualError(t, err, "error parsing proxy port: strconv.Atoi: parsing \"notaport\": invalid syntax")
+		assert.Error(t, err)
 	})
 }
 

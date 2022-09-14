@@ -1,9 +1,7 @@
 package status
 
 import (
-	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -24,29 +22,10 @@ type Sender struct {
 }
 
 func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
-	if len(wavefrontProxyAddress) == 0 {
-		return nil, errors.New("error: host and port required")
-	}
-	parts := strings.Split(wavefrontProxyAddress, ":")
-	if len(parts) < 2 {
-		return nil, errors.New("error parsing proxy port: port required")
-	}
-	host, portStr := parts[0], parts[1]
-	port, err := strconv.Atoi(portStr)
-
-	if err != nil {
-		return nil, fmt.Errorf("error parsing proxy port: %s", err.Error())
-	}
-
-	client, err := wfsdk.NewProxySender(&wfsdk.ProxyConfiguration{
-		Host:        host,
-		MetricsPort: port,
-	})
-
+	client, err := wfsdk.NewSender(wavefrontProxyAddress)
 	if err != nil {
 		return nil, err
 	}
-
 	return NewSender(client), nil
 }
 
