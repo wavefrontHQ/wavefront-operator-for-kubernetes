@@ -75,7 +75,7 @@ func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, c
 
 func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string) error {
 	return statusSender.sendComponentStatus(
-		status,
+		status.ComponentStatuses,
 		clusterName,
 		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
 		"Metrics",
@@ -85,7 +85,7 @@ func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, cl
 
 func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string) error {
 	return statusSender.sendComponentStatus(
-		status,
+		status.ComponentStatuses,
 		clusterName,
 		map[string]bool{util.LoggingName: true},
 		"Logging",
@@ -95,7 +95,7 @@ func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, cl
 
 func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) error {
 	return statusSender.sendComponentStatus(
-		status,
+		status.ComponentStatuses,
 		clusterName,
 		map[string]bool{util.ProxyName: true},
 		"Proxy",
@@ -103,24 +103,24 @@ func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clus
 	)
 }
 
-func (statusSender StatusSender) sendComponentStatus(status wf.WavefrontStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
+func (statusSender StatusSender) sendComponentStatus(componentStatuses []wf.ComponentStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
 	tags := map[string]string{
 		"cluster": clusterName,
 	}
 	present := false
-	for _, componentStatus := range status.ComponentStatuses {
+	for _, componentStatus := range componentStatuses {
 		if componentSet[componentStatus.Name] {
 			present = true
 		}
 	}
 
 	healthy := true
-	for _, componentStatus := range status.ComponentStatuses {
+	for _, componentStatus := range componentStatuses {
 		if componentSet[componentStatus.Name] {
 			healthy = healthy && componentStatus.Healthy
 		}
 	}
-	for _, componentStatus := range status.ComponentStatuses {
+	for _, componentStatus := range componentStatuses {
 		if len(componentStatus.Message) > 0 && componentSet[componentStatus.Name] {
 			if len(tags["message"]) > 0 {
 				tags["message"] += "; "
