@@ -33,55 +33,59 @@ func (e *ExpectAnyMetricClient) Verify(t *testing.T) {
 	assert.True(t, e.metricSent, "expected metrics to be sent")
 }
 
-type ExpectMetricSender struct {
+type ExpectMetricClient struct {
 	expectedMetricLine string
 
 	actualMetricLines []string
 }
 
-func NewExpectedMetricClient(metricLine string) *ExpectMetricSender {
-	return &ExpectMetricSender{
+func NewExpectedMetricClient(metricLine string) *ExpectMetricClient {
+	return &ExpectMetricClient{
 		expectedMetricLine: metricLine,
 	}
 }
 
-func (e *ExpectMetricSender) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
+func (e *ExpectMetricClient) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
+	e.actualMetricLines = append(e.actualMetricLines, metricLine(name, value, source, tags))
+	return nil
+}
+
+func metricLine(name string, value float64, source string, tags map[string]string) string {
 	buf := bytes.NewBuffer(nil)
-	fmt.Fprintf(buf, "%s %f source=\"%s\"", name, value, source)
+	_, _ = fmt.Fprintf(buf, "%s %f source=\"%s\"", name, value, source)
 	var tagNames []string
 	for name := range tags {
 		tagNames = append(tagNames, name)
 	}
 	sort.Strings(tagNames)
 	for _, name := range tagNames {
-		fmt.Fprintf(buf, " %s=\"%s\"", name, tags[name])
+		_, _ = fmt.Fprintf(buf, " %s=\"%s\"", name, tags[name])
 	}
-	e.actualMetricLines = append(e.actualMetricLines, buf.String())
-	return nil
+	return buf.String()
 }
 
-func (e *ExpectMetricSender) Verify(t *testing.T) {
+func (e *ExpectMetricClient) Verify(t *testing.T) {
 	t.Helper()
 	assert.Contains(t, e.actualMetricLines, e.expectedMetricLine)
 }
 
-func (e ExpectMetricSender) Flush() error {
+func (e ExpectMetricClient) Flush() error {
 	return nil
 }
 
-func (e ExpectMetricSender) Close() {}
+func (e ExpectMetricClient) Close() {}
 
-type StubMetricSender struct {
+type StubMetricClient struct {
 	SendMetricError error
 	FlushError      error
 }
 
-func (s StubMetricSender) SendMetric(_ string, _ float64, _ int64, _ string, _ map[string]string) error {
+func (s StubMetricClient) SendMetric(_ string, _ float64, _ int64, _ string, _ map[string]string) error {
 	return s.SendMetricError
 }
 
-func (s StubMetricSender) Flush() error {
+func (s StubMetricClient) Flush() error {
 	return s.FlushError
 }
 
-func (s StubMetricSender) Close() {}
+func (s StubMetricClient) Close() {}

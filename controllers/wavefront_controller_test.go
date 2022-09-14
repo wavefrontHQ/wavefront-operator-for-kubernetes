@@ -1148,7 +1148,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: test_helper.NewMockKubernetesManager(),
-		StatusSender:      status.NewSender(&test_helper.StubMetricSender{}),
+		StatusSender:      status.NewSender(&test_helper.StubMetricClient{}),
 		Appsv1:            fakesAppsV1,
 	}
 

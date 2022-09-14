@@ -76,7 +76,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("reports an error when it fails to send", func(t *testing.T) {
-		fakeStatusSender := NewSender(&test_helper.StubMetricSender{
+		fakeStatusSender := NewSender(&test_helper.StubMetricClient{
 			SendMetricError: errors.New("send error"),
 		})
 
@@ -84,7 +84,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("reports an error when it fails to flush", func(t *testing.T) {
-		fakeStatusSender := NewSender(&test_helper.StubMetricSender{
+		fakeStatusSender := NewSender(&test_helper.StubMetricClient{
 			FlushError: errors.New("flush error"),
 		})
 
