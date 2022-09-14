@@ -21,20 +21,20 @@ func TestSendWfStatus(t *testing.T) {
 	t.Run("sends empty wavefront status", func(t *testing.T) {
 		fakeStatusSender := NewTestStatusSender()
 		fakeStatusSender.SendStatus(wf.WavefrontStatus{}, "my_cluster")
-		assert.Equal(t, "Metric: kubernetes.operator-system.status 0.000000 source=\"my_cluster\"", getMetrics(fakeStatusSender))
+		assert.Contains(t, getMetrics(fakeStatusSender), "Metric: kubernetes.operator-system.status 0.000000 source=\"my_cluster\"")
 	})
 
 	t.Run("sends healthy wavefront status", func(t *testing.T) {
 		fakeStatusSender := NewTestStatusSender()
 		fakeStatusSender.SendStatus(wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"}, "my_cluster")
-		assert.Equal(t, "Metric: kubernetes.operator-system.status 1.000000 source=\"my_cluster\" message=\"1/1 components are healthy\" status=\"Healthy\"", getMetrics(fakeStatusSender))
+		assert.Contains(t, getMetrics(fakeStatusSender), "Metric: kubernetes.operator-system.status 1.000000 source=\"my_cluster\" message=\"1/1 components are healthy\" status=\"Healthy\"")
 
 	})
 
 	t.Run("sends unhealthy wavefront status", func(t *testing.T) {
 		fakeStatusSender := NewTestStatusSender()
 		fakeStatusSender.SendStatus(wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"}, "my_cluster")
-		assert.Equal(t, "Metric: kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy\" status=\"Unhealthy\"", getMetrics(fakeStatusSender))
+		assert.Contains(t, getMetrics(fakeStatusSender), "Metric: kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy\" status=\"Unhealthy\"")
 	})
 
 	t.Run("sends wavefront status with point tag exceeds length limit", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestSendWfStatus(t *testing.T) {
 				"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; "},
 			"my_cluster",
 		)
-		assert.Equal(t, "Metric: kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E\" status=\"Unhealthy\"", getMetrics(fakeStatusSender))
+		assert.Contains(t, getMetrics(fakeStatusSender), "Metric: kubernetes.operator-system.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E\" status=\"Unhealthy\"")
 	})
 
 	// TODO test truncating messages for all components

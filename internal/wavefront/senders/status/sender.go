@@ -39,22 +39,21 @@ func NewStatusSender(wavefrontProxyAddress string) (*StatusSender, error) {
 }
 
 func (statusSender StatusSender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
-	tags := map[string]string{
-		"cluster": clusterName,
-	}
+	_ = statusSender.sendMetricsStatus(status, clusterName)
+	_ = statusSender.sendLoggingStatus(status, clusterName)
+	_ = statusSender.sendProxyStatus(status, clusterName)
 
-	_ = statusSender.sendMetricsStatus(status, clusterName, copyTags(tags))
-	_ = statusSender.sendLoggingStatus(status, clusterName, copyTags(tags))
-	_ = statusSender.sendProxyStatus(status, clusterName, copyTags(tags))
-
-	err := statusSender.sendOperatorStatus(status, clusterName, tags)
+	err := statusSender.sendOperatorStatus(status, clusterName)
 	if err != nil {
 		return err
 	}
 	return statusSender.WavefrontSender.Flush()
 }
 
-func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string) error {
+	tags := map[string]string{
+		"cluster": clusterName,
+	}
 	if len(status.Message) > 0 {
 		tags["message"] = truncateMessage(status.Message)
 	}
@@ -74,40 +73,40 @@ func (statusSender StatusSender) sendOperatorStatus(status wf.WavefrontStatus, c
 	return nil
 }
 
-func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+func (statusSender StatusSender) sendMetricsStatus(status wf.WavefrontStatus, clusterName string) error {
 	return statusSender.sendComponentStatus(
 		status,
 		clusterName,
-		tags,
 		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
 		"Metrics",
 		"metrics",
 	)
 }
 
-func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+func (statusSender StatusSender) sendLoggingStatus(status wf.WavefrontStatus, clusterName string) error {
 	return statusSender.sendComponentStatus(
 		status,
 		clusterName,
-		tags,
 		map[string]bool{util.LoggingName: true},
 		"Logging",
 		"logging",
 	)
 }
 
-func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string) error {
+func (statusSender StatusSender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) error {
 	return statusSender.sendComponentStatus(
 		status,
 		clusterName,
-		tags,
 		map[string]bool{util.ProxyName: true},
 		"Proxy",
 		"proxy",
 	)
 }
 
-func (statusSender StatusSender) sendComponentStatus(status wf.WavefrontStatus, clusterName string, tags map[string]string, componentSet map[string]bool, name string, metricName string) error {
+func (statusSender StatusSender) sendComponentStatus(status wf.WavefrontStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
+	tags := map[string]string{
+		"cluster": clusterName,
+	}
 	present := false
 	for _, componentStatus := range status.ComponentStatuses {
 		if componentSet[componentStatus.Name] {
