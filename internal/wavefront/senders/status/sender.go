@@ -51,7 +51,7 @@ func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
 }
 
 func NewSender(client MetricClient) *Sender {
-	return &Sender{client: newTagTruncatingClient(client, 255)}
+	return &Sender{client: client}
 }
 
 func (s Sender) SendStatus(status wf.WavefrontStatus, clusterName string) error {
@@ -84,7 +84,7 @@ func (s Sender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string
 		healthy = 1.0
 	}
 
-	err := s.client.SendMetric("kubernetes.operator-system.status", healthy, 0, clusterName, tags)
+	err := s.sendMetric("kubernetes.operator-system.status", healthy, clusterName, tags)
 	if err != nil {
 		return err
 	}
@@ -161,39 +161,23 @@ func (s Sender) sendComponentStatus(componentStatuses []wf.ComponentStatus, clus
 	} else if healthy {
 		healthValue = 1.0
 	}
-	return s.client.SendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, 0, clusterName, tags)
+	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, clusterName, tags)
 }
 
-func (s Sender) Close() {
-	s.client.Close()
+func (s Sender) sendMetric(name string, value float64, source string, tags map[string]string) error {
+	return s.client.SendMetric(name, value, 0, source, truncateTags(tags))
 }
 
-type tagTruncatingClient struct {
-	client MetricClient
-	maxLen int
-}
-
-func newTagTruncatingClient(client MetricClient, maxLen int) *tagTruncatingClient {
-	return &tagTruncatingClient{
-		client: client,
-		maxLen: maxLen,
-	}
-}
-
-func (t tagTruncatingClient) SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error {
+func truncateTags(tags map[string]string) map[string]string {
 	for name := range tags {
-		maxLen := t.maxLen - len(name) - len("=")
+		maxLen := util.MaxTagLength - len(name) - len("=")
 		if len(tags[name]) > maxLen {
 			tags[name] = tags[name][:maxLen]
 		}
 	}
-	return t.client.SendMetric(name, value, ts, source, tags)
+	return tags
 }
 
-func (t tagTruncatingClient) Flush() error {
-	return t.client.Flush()
-}
-
-func (t tagTruncatingClient) Close() {
-	t.client.Close()
+func (s Sender) Close() {
+	s.client.Close()
 }
