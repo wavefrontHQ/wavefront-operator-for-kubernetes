@@ -124,44 +124,46 @@ func (s Sender) sendProxyStatus(status wf.WavefrontStatus, clusterName string) e
 func (s Sender) sendComponentStatus(componentStatuses []wf.ComponentStatus, clusterName string, componentSet map[string]bool, name string, metricName string) error {
 	tags := map[string]string{}
 	present := false
-	for _, componentStatus := range componentStatuses {
-		if componentSet[componentStatus.Name] {
-			present = true
-		}
-	}
+	forComponents(componentStatuses, componentSet, func(_ wf.ComponentStatus) {
+		present = true
+	})
 
 	healthy := true
-	for _, componentStatus := range componentStatuses {
-		if componentSet[componentStatus.Name] {
-			healthy = healthy && componentStatus.Healthy
-		}
-	}
-	for _, componentStatus := range componentStatuses {
-		if len(componentStatus.Message) > 0 && componentSet[componentStatus.Name] {
-			if len(tags["message"]) > 0 {
-				tags["message"] += "; "
-			}
-			tags["message"] += componentStatus.Message
-		}
-	}
-	if healthy && present {
-		tags["message"] = fmt.Sprintf("%s component is healthy", name)
-	}
+	forComponents(componentStatuses, componentSet, func(status wf.ComponentStatus) {
+		healthy = healthy && status.Healthy
+	})
 
-	if !present {
-		tags["status"] = "Not Enabled"
-	} else if healthy {
-		tags["status"] = health.Healthy
-	} else {
-		tags["status"] = health.Unhealthy
-	}
+	var messages []string
+	forComponents(componentStatuses, componentSet, func(status wf.ComponentStatus) {
+		if len(status.Message) > 0 {
+			messages = append(messages, status.Message)
+		}
+	})
+
 	var healthValue float64
 	if !present {
+		tags["status"] = "not enabled"
+		tags["message"] = fmt.Sprintf("%s component is not enabled", name)
 		healthValue = 2.0
 	} else if healthy {
+		tags["status"] = "healthy"
+		tags["message"] = fmt.Sprintf("%s component is healthy", name)
 		healthValue = 1.0
+	} else if present {
+		tags["status"] = "unhealthy"
+		tags["message"] = strings.Join(messages, "; ")
+		healthValue = 0.0
 	}
+
 	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", metricName), healthValue, clusterName, tags)
+}
+
+func forComponents(componentStatuses []wf.ComponentStatus, componentSet map[string]bool, do func(status wf.ComponentStatus)) {
+	for _, componentStatus := range componentStatuses {
+		if componentSet[componentStatus.Name] {
+			do(componentStatus)
+		}
+	}
 }
 
 func (s Sender) sendMetric(name string, value float64, source string, tags map[string]string) error {
