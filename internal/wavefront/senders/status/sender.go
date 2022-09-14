@@ -159,11 +159,3 @@ func truncateMessage(message string) string {
 	}
 	return message
 }
-
-func copyTags(tags map[string]string) map[string]string {
-	copied := make(map[string]string, len(tags))
-	for name, value := range tags {
-		copied[name] = value
-	}
-	return copied
-}
