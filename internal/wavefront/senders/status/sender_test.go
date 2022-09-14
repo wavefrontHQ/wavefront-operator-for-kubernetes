@@ -200,7 +200,7 @@ func TestSender(t *testing.T) {
 			expectedMetricLine := test_helper.NewExpectedMetricClient("kubernetes.operator-system.metrics.status 2.000000 source=\"my_cluster\" status=\"Not Enabled\"")
 			fakeStatusSender := NewSender(expectedMetricLine)
 
-			fakeStatusSender.SendStatus(
+			_ = fakeStatusSender.SendStatus(
 				wf.WavefrontStatus{
 					Status:            health.Unhealthy,
 					Message:           "",
