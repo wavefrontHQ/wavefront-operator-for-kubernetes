@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -191,7 +190,7 @@ func TestValidateEnvironment(t *testing.T) {
 		appsV1 := setup(collectorDaemonSet, proxyDeployment)
 		validationError := validateEnvironment(appsV1)
 		assert.NotNilf(t, validationError, "expected validation error")
-		assert.Contains(t, validationError.Error(), "Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.")
+		assert.Contains(t, validationError.Error(), "Found legacy Wavefront installation in")
 	})
 
 	t.Run("Return error when legacy tkgi install found in namespace tanzu-observability-saas", func(t *testing.T) {
@@ -220,8 +219,7 @@ func TestValidateEnvironment(t *testing.T) {
 }
 
 func assertValidationMessage(t *testing.T, validationError error, namespace string) {
-	message := fmt.Sprintf("Detected legacy Wavefront installation in the %s namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.", namespace)
-	assert.Equal(t, message, validationError.Error())
+	assert.Equal(t, legacyEnvironmentError(namespace).Error(), validationError.Error())
 }
 
 func legacyEnvironmentSetup(namespace string) typedappsv1.AppsV1Interface {
