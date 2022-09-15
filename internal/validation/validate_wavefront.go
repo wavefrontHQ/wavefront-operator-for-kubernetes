@@ -139,5 +139,5 @@ func areAnyComponentsDeployed(appsV1 typedappsv1.AppsV1Interface) bool {
 }
 
 func legacyEnvironmentError(namespace string) error {
-	return fmt.Errorf("Found legacy Wavefront installation in the %s namespace", namespace)
+	return fmt.Errorf("Found legacy Wavefront installation in the '%s' namespace", namespace)
 }
