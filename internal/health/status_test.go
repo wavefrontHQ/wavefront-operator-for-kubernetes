@@ -61,15 +61,15 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		assert.Equal(t, Healthy, status.Status)
 		assert.Equal(t, "(3/3) wavefront components are healthy", status.Message)
 
-		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ComponentStatuses)
+		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ResourceStatuses)
 		assert.True(t, proxyStatus.Healthy)
 		assert.Equal(t, "Running (1/1)", proxyStatus.Status)
 
-		clusterCollectorStatus := getComponentStatusWithName(util.ClusterCollectorName, status.ComponentStatuses)
+		clusterCollectorStatus := getComponentStatusWithName(util.ClusterCollectorName, status.ResourceStatuses)
 		assert.True(t, clusterCollectorStatus.Healthy)
 		assert.Equal(t, "Running (1/1)", clusterCollectorStatus.Status)
 
-		nodeCollectorStatus := getComponentStatusWithName(util.NodeCollectorName, status.ComponentStatuses)
+		nodeCollectorStatus := getComponentStatusWithName(util.NodeCollectorName, status.ResourceStatuses)
 		assert.True(t, nodeCollectorStatus.Healthy)
 		assert.Equal(t, "Running (3/3)", nodeCollectorStatus.Status)
 	})
@@ -167,15 +167,15 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		assert.Equal(t, Unhealthy, status.Status)
 		assert.Equal(t, "", status.Message)
-		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ComponentStatuses)
+		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ResourceStatuses)
 		assert.False(t, proxyStatus.Healthy)
 		assert.Equal(t, "Not running", proxyStatus.Status)
 
-		clusterCollectorStatus := getComponentStatusWithName(util.ClusterCollectorName, status.ComponentStatuses)
+		clusterCollectorStatus := getComponentStatusWithName(util.ClusterCollectorName, status.ResourceStatuses)
 		assert.False(t, clusterCollectorStatus.Healthy)
 		assert.Equal(t, "Not running", clusterCollectorStatus.Status)
 
-		nodeCollectorStatus := getComponentStatusWithName(util.NodeCollectorName, status.ComponentStatuses)
+		nodeCollectorStatus := getComponentStatusWithName(util.NodeCollectorName, status.ResourceStatuses)
 		assert.False(t, nodeCollectorStatus.Healthy)
 		assert.Equal(t, "Not running", nodeCollectorStatus.Status)
 	})
@@ -186,11 +186,11 @@ func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {
 	return k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 }
 
-func getComponentStatusWithName(name string, componentStatuses []wf.ComponentStatus) wf.ComponentStatus {
+func getComponentStatusWithName(name string, componentStatuses []wf.ResourceStatus) wf.ResourceStatus {
 	for _, componentStatus := range componentStatuses {
 		if componentStatus.Name == name {
 			return componentStatus
 		}
 	}
-	return wf.ComponentStatus{}
+	return wf.ResourceStatus{}
 }
