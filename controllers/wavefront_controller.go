@@ -125,7 +125,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	} else {
 		_ = r.readAndDeleteResources()
-		// TODO: should we do something with this error?
 	}
 
 	err = r.reportHealthStatus(ctx, wavefront, validationResult)
@@ -466,7 +465,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 	if !validationResult.IsValid() {
 		wavefront.Status.Status = health.Unhealthy
 		wavefront.Status.Message = validationResult.Message()
-	} else if validationResult.IsValid() || validationResult.IsWarning() {
+	} else if !validationResult.IsError() {
 		r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
 	}
 
