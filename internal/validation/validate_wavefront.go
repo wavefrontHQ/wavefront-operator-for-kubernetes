@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
@@ -20,36 +21,59 @@ var legacyComponentsToCheck = map[string]map[string]string{
 	"tanzu-observability-saas": {"wavefront-collector": util.DaemonSet, "wavefront-proxy": util.Deployment},
 }
 
-func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
+type Result struct {
+	error   error
+	isError bool
+}
+
+func (result Result) Message() string {
+	if result.IsValid() {
+		return ""
+	} else {
+		return result.error.Error()
+	}
+}
+
+func (result Result) IsValid() bool {
+	return result.error == nil
+}
+
+func (result Result) IsError() bool {
+	return result.error != nil && result.isError
+}
+
+func (result Result) IsWarning() bool {
+	return result.error != nil && !result.isError
+}
+
+func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Result {
 	err := validateEnvironment(appsV1)
 	if err != nil {
-		return err
+		return Result{err, !areAnyComponentsDeployed(appsV1)}
 	}
-	return validateWavefrontSpec(wavefront)
+	err = validateWavefrontSpec(wavefront)
+	if err != nil {
+		return Result{err, true}
+	}
+	return Result{}
 }
 
 func validateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
 	for namespace, resourceMap := range legacyComponentsToCheck {
 		for resourceName, resourceType := range resourceMap {
 			if resourceType == util.DaemonSet {
-				daemonSet, err := appsV1.DaemonSets(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
-				if err == nil && daemonSet != nil {
+				if daemonSetExists(appsV1, namespace, resourceName) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
 			if resourceType == util.Deployment {
-				deployment, err := appsV1.Deployments(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
-				if err == nil && deployment != nil {
+				if deploymentExists(appsV1, namespace, resourceName) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
 		}
 	}
 	return nil
-}
-
-func legacyEnvironmentError(namespace string) error {
-	return fmt.Errorf("Detected legacy Wavefront installation in the %s namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.", namespace)
 }
 
 func validateWavefrontSpec(wavefront *wf.Wavefront) error {
@@ -86,4 +110,34 @@ func compareQuantities(request string, limit string) int {
 	requestQuantity, _ := resource.ParseQuantity(request)
 	limitQuanity, _ := resource.ParseQuantity(limit)
 	return requestQuantity.Cmp(limitQuanity)
+}
+
+func deploymentExists(appsV1 typedappsv1.AppsV1Interface, namespace string, resourceName string) bool {
+	_, err := appsV1.Deployments(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
+	return err == nil
+}
+
+func daemonSetExists(appsV1 typedappsv1.AppsV1Interface, namespace string, resourceName string) bool {
+	_, err := appsV1.DaemonSets(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
+	return err == nil
+}
+
+func areAnyComponentsDeployed(appsV1 typedappsv1.AppsV1Interface) bool {
+	exists := deploymentExists(appsV1, util.Namespace, util.ProxyName)
+	if exists {
+		return exists
+	}
+	exists = daemonSetExists(appsV1, util.Namespace, util.NodeCollectorName)
+	if exists {
+		return exists
+	}
+	exists = deploymentExists(appsV1, util.Namespace, util.ClusterCollectorName)
+	if exists {
+		return exists
+	}
+	return false
+}
+
+func legacyEnvironmentError(namespace string) error {
+	return fmt.Errorf("Detected legacy Wavefront installation in the %s namespace. Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.", namespace)
 }

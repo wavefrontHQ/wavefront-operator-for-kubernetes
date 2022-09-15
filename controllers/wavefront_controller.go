@@ -116,8 +116,8 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return errorCRTLResult(err)
 	}
 
-	validationError := validation.Validate(r.Appsv1, wavefront)
-	if validationError == nil {
+	validationResult := validation.Validate(r.Appsv1, wavefront)
+	if !validationResult.IsError() {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
 			log.Log.Error(err, "error creating resources")
@@ -128,7 +128,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// TODO: should we do something with this error?
 	}
 
-	err = r.reportHealthStatus(ctx, wavefront, validationError)
+	err = r.reportHealthStatus(ctx, wavefront, validationResult)
 	if err != nil {
 		log.Log.Error(err, "error report health status")
 		return errorCRTLResult(err)
@@ -445,7 +445,7 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 }
 
 // Reporting Health Status
-func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationError error) error {
+func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationResult validation.Result) error {
 	componentsToCheck := map[string]string{}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
@@ -463,12 +463,11 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	wavefront.Status = health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
-	if validationError != nil {
+	if !validationResult.IsValid() {
 		wavefront.Status.Status = health.Unhealthy
-		wavefront.Status.Message = fmt.Sprintf(validationError.Error())
-	} else {
-		err := r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
-		log.Log.Error(err, "error sending status metric")
+		wavefront.Status.Message = validationResult.Message()
+	} else if validationResult.IsValid() || validationResult.IsWarning() {
+		r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
 	}
 
 	return r.Status().Update(ctx, wavefront)

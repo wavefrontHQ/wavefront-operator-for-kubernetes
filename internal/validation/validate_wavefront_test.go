@@ -2,8 +2,9 @@ package validation
 
 import (
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"testing"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
@@ -13,6 +14,70 @@ import (
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
+
+func TestValidate(t *testing.T) {
+	t.Run("wf spec and environment are valid", func(t *testing.T) {
+		appsV1 := setup()
+		assert.True(t, Validate(appsV1, defaultWFCR()).IsValid())
+		assert.False(t, Validate(appsV1, defaultWFCR()).IsError())
+	})
+
+	t.Run("wf spec is invalid", func(t *testing.T) {
+		wfCR := defaultWFCR()
+		wfCR.Spec.DataExport.ExternalWavefrontProxy.Url = "https://testproxy.com"
+		appsV1 := setup()
+		result := Validate(appsV1, wfCR)
+		assert.False(t, result.IsValid())
+		assert.True(t, result.IsError())
+		assert.NotEmpty(t, result.Message())
+	})
+
+	t.Run("legacy install is running", func(t *testing.T) {
+		appsV1 := legacyEnvironmentSetup("wavefront")
+		result := Validate(appsV1, defaultWFCR())
+		assert.False(t, result.IsValid())
+		assert.True(t, result.IsError())
+		assert.NotEmpty(t, result.Message())
+	})
+
+	t.Run("legacy install is running after operator install", func(t *testing.T) {
+		legacyCollector := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-collector",
+				Namespace: "wavefront-collector",
+			},
+		}
+		legacyDeployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-proxy",
+				Namespace: "wavefront-collector",
+			},
+		}
+		nodeCollector := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      util.NodeCollectorName,
+				Namespace: util.Namespace,
+			},
+		}
+		proxy := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      util.ProxyName,
+				Namespace: util.Namespace,
+			},
+		}
+		appsV1 := setup(legacyCollector, legacyDeployment, nodeCollector, proxy)
+		wfCR := defaultWFCR()
+
+		result := Validate(appsV1, wfCR)
+		assert.False(t, result.IsValid())
+		assert.False(t, result.IsError())
+		assert.NotEmpty(t, result.Message())
+	})
+}
 
 func TestValidateWavefrontSpec(t *testing.T) {
 	t.Run("Has no validation errors", func(t *testing.T) {
@@ -91,6 +156,7 @@ func TestValidateEnvironment(t *testing.T) {
 		appsV1 := setup()
 		assert.NoError(t, validateEnvironment(appsV1))
 	})
+
 	t.Run("Return error when only proxy deployment found", func(t *testing.T) {
 		namespace := "wavefront"
 		proxyDeployment := &appsv1.Deployment{
@@ -105,6 +171,7 @@ func TestValidateEnvironment(t *testing.T) {
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
+
 	t.Run("Return error when legacy manual install found in namespace wavefront-collector", func(t *testing.T) {
 		namespace := "wavefront-collector"
 		collectorDaemonSet := &appsv1.DaemonSet{
@@ -126,6 +193,7 @@ func TestValidateEnvironment(t *testing.T) {
 		assert.NotNilf(t, validationError, "expected validation error")
 		assert.Contains(t, validationError.Error(), "Please uninstall legacy installation before installing with the Wavefront Kubernetes Operator.")
 	})
+
 	t.Run("Return error when legacy tkgi install found in namespace tanzu-observability-saas", func(t *testing.T) {
 		namespace := "tanzu-observability-saas"
 		appsV1 := legacyEnvironmentSetup(namespace)
@@ -133,6 +201,7 @@ func TestValidateEnvironment(t *testing.T) {
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
+
 	t.Run("Return error when collector daemonset found in legacy helm install namespace wavefront", func(t *testing.T) {
 		namespace := "wavefront"
 		appsV1 := legacyEnvironmentSetup(namespace)
@@ -140,6 +209,7 @@ func TestValidateEnvironment(t *testing.T) {
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
+
 	t.Run("Return error when collector deployment found in legacy tkgi install namespace pks-system", func(t *testing.T) {
 		namespace := "pks-system"
 		appsV1 := legacyEnvironmentSetup(namespace)
