@@ -66,7 +66,7 @@ func (s Sender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string
 		healthy = 1.0
 	}
 
-	err := s.sendMetric("kubernetes.operator-system.status", healthy, clusterName, tags)
+	err := s.sendMetric("kubernetes.observability.status", healthy, clusterName, tags)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (s Sender) sendComponentStatus(resourceStatuses []wf.ResourceStatus, cluste
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = 0.0
 	}
-	return s.sendMetric(fmt.Sprintf("kubernetes.operator-system.%s.status", strings.ToLower(componentName)), healthValue, clusterName, tags)
+	return s.sendMetric(fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)), healthValue, clusterName, tags)
 }
 
 func resourceMessages(statuses []wf.ResourceStatus) []string {
