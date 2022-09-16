@@ -30,6 +30,9 @@ spec:
         app.kubernetes.io/name: wavefront
         app.kubernetes.io/component: logging
     spec:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
       serviceAccount: wavefront-logging
       serviceAccountName: wavefront-logging
       tolerations:
@@ -37,8 +40,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: fluentd-wf
-          image: fluent/fluentd-kubernetes-daemonset:v1.15-debian-elasticsearch7-1
-          command: ["fluentd"]
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/fluentd:0.0.2
           env:
             - name:  K8S_NODE_NAME
               valueFrom:
@@ -46,20 +48,26 @@ spec:
                   fieldPath: spec.nodeName
             - name:  CLUSTER_NAME
               value: {{.ClusterName}}
-            - name: FLUENTD_ARGS
+            - name: FLUENTD_OPT
               value: --no-supervisor -q
+            - name: FLUENTD_DAEMON_USER
+              value: root
+            - name: FLUENTD_DAEMON_GROUP
+              value: root
+            - name: FLUENT_UID
+              value: "0"
           resources:
 {{ .DataCollection.Logging.Resources | toYaml | indent 12 }}
           volumeMounts:
             - name: varlog
-              mountPath: /var/log
+              mountPath: /opt/bitnami/fluentd/log
             - name: varlogcontainers
-              mountPath: /var/log/containers
+              mountPath: /opt/bitnami/fluentd/log/containers
             - name: varlibdockercontainers
               mountPath: /var/lib/docker/containers
               readOnly: true
             - name: config-volume
-              mountPath: /etc/fluent
+              mountPath: /opt/bitnami/fluentd/conf
       volumes:
         - name: varlog
           hostPath:
