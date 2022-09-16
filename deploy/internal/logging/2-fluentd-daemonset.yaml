@@ -24,6 +24,7 @@ spec:
     metadata:
       annotations:
         proxy-available-replicas: "{{ .DataExport.WavefrontProxy.AvailableReplicas }}"
+        configHash: "{{ .DataCollection.Logging.ConfigHash }}"
       labels:
         name: wavefront-logging
         app.kubernetes.io/name: wavefront

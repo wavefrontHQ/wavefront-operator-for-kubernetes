@@ -374,6 +374,14 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
+	if wavefront.Spec.DataCollection.Logging.Enable {
+		configHashBytes, err := json.Marshal(wavefront.Spec.DataCollection.Logging)
+		if err != nil {
+			return err
+		}
+		wavefront.Spec.DataCollection.Logging.ConfigHash = hashValue(configHashBytes)
+	}
+
 	if r.StatusSender == nil {
 		sender, err := status.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {

@@ -826,8 +826,12 @@ func TestReconcileLogging(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
+		ds, err := stubKM.GetAppliedDaemonSet("logging", util.LoggingName)
 		assert.NoError(t, err)
-		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
+		assert.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+
+		assert.NoError(t, err)
+		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {
