@@ -23,7 +23,8 @@ function setup_test() {
   wait_for_cluster_ready
 
   sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
-   sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" > hack/test/_v1alpha1_wavefront_test.yaml
+   sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" > hack/test/_v1alpha1_wavefront_test.yaml |
+   sed "s/YOUR_API_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
@@ -234,6 +235,8 @@ function main() {
   cd $REPO_ROOT
 
   run_test "validation-errors" "unhealthy"
+
+  run_test "validation-legacy" "unhealthy"
 
   run_test "basic" "health|static_analysis"
 

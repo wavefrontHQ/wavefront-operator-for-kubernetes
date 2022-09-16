@@ -13,6 +13,10 @@ func AssertAnyLines(t *testing.T, actualLines []string) {
 	assert.NotEmpty(t, actualLines)
 }
 
+func AssertEmpty(t *testing.T, actualLines []string) {
+	assert.Empty(t, actualLines)
+}
+
 func AssertContainsLine(expectedLine string) func(t *testing.T, actualLines []string) {
 	return func(t *testing.T, actualLines []string) {
 		assert.Contains(t, actualLines, expectedLine)

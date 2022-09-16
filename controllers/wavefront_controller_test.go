@@ -67,6 +67,8 @@ func TestReconcileAll(t *testing.T) {
 		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
 		r, _, _, _ := setupForCreate(invalidWFSpec)
 		r.KubernetesManager = stubKM
+		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
+		r.StatusSender = status.NewSender(expectMetricsSent)
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -78,6 +80,8 @@ func TestReconcileAll(t *testing.T) {
 		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
 		assert.False(t, stubKM.AppliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
 		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
+
+		expectMetricsSent.Verify(t)
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
