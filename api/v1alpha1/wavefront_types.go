@@ -296,6 +296,9 @@ type Logging struct {
 
 	// Tags are a map of key value pairs that are added to all logging emitted.
 	Tags map[string]string `json:"tags,omitempty"`
+
+	// ConfigHash is for internal use only
+	ConfigHash string `json:"-"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
