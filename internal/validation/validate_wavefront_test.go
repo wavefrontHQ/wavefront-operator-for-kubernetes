@@ -74,6 +74,7 @@ func TestValidate(t *testing.T) {
 		result := Validate(appsV1, wfCR)
 		assert.False(t, result.IsValid())
 		assert.False(t, result.IsError())
+		assert.True(t, result.IsWarning())
 		assert.NotEmpty(t, result.Message())
 	})
 }
