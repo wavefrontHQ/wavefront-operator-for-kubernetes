@@ -1,4 +1,5 @@
 FROM bitnami/fluentd:1.15.2
+
 ### Install custom Fluentd plugins
 # RUN fluent-gem install 'fluentd'
 # RUN fluent-gem install 'oj'
@@ -16,3 +17,5 @@ RUN fluent-gem install 'fluent-plugin-record-modifier'
 RUN fluent-gem install 'fluent-plugin-kubernetes_metadata_filter'
 # RUN fluent-gem install 'ffi'
 # RUN fluent-gem install 'fluent-plugin-systemd'
+
+USER root
