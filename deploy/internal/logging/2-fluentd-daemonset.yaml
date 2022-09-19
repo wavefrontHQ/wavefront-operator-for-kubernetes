@@ -37,7 +37,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: fluentd-wf
-          image: projects.registry.vmware.com/tanzu_observability_keights_saas/fluentd:0.0.4
+          image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd:1.0.0-1.15.2
           env:
             - name:  K8S_NODE_NAME
               valueFrom:
