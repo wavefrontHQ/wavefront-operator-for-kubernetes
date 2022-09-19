@@ -23,7 +23,7 @@ function setup_test() {
   wait_for_cluster_ready
 
   sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
-   sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" > hack/test/_v1alpha1_wavefront_test.yaml |
+   sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" |
    sed "s/YOUR_API_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
@@ -45,13 +45,13 @@ function run_health_checks() {
   printf "Running health checks ..."
 
   local health_status=
-  for _ in {1..30}; do
-    health_status=$(kubectl get wavefront -n $NS -o=jsonpath='{.items[0].status.status}')
+  for _ in {1..120}; do
+    health_status=$(kubectl get wavefront -n $NS --request-timeout=10s -o=jsonpath='{.items[0].status.status}') || true
     if [[ "$health_status" == "Healthy" ]]; then
       break
     fi
     printf "."
-    sleep 5
+    sleep 1
   done
 
   if [[ "$health_status" != "Healthy" ]]; then
@@ -72,8 +72,15 @@ function run_unhealthy_checks() {
   local type=$1
   echo "Running unhealthy checks ..."
 
-  sleep 1
-  local health_status=$(kubectl get wavefront -n $NS -o=jsonpath='{.items[0].status.status}')
+  for _ in {1..5}; do
+    health_status=$(kubectl get wavefront -n $NS --request-timeout=10s -o=jsonpath='{.items[0].status.status}') || true
+    if [[ "$health_status" == "Unhealthy" ]]; then
+      break
+    fi
+    printf "."
+    sleep 1
+  done
+
   if [[ "$health_status" != "Unhealthy" ]]; then
     red "Health status for $type: expected = false, actual = $health_status"
     exit 1
@@ -86,7 +93,7 @@ function clean_up_test() {
   local type=$1
   echo "Cleaning Up ..."
 
-  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml
+  kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml --timeout=10s
 }
 
 function run_static_analysis() {
