@@ -128,42 +128,42 @@ pipeline {
           }
         }
 
-        stage("AKS Integration Test") {
-          agent {
-            label "aks"
-          }
-          options {
-            timeout(time: 30, unit: 'MINUTES')
-          }
-          tools {
-            go 'Go 1.17'
-          }
-          environment {
-            GCP_CREDS = credentials("GCP_CREDS")
-            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
-            AKS_CLUSTER_NAME = "k8po-ci"
-            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-            HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-            DOCKER_IMAGE = "kubernetes-operator-snapshot"
-            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-            WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
-          }
-          steps {
-            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-              sh './hack/jenkins/setup-for-integration-test.sh'
-              sh './hack/jenkins/install_docker_buildx.sh'
-              sh 'make semver-cli'
-              lock("integration-test-aks") {
-                withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
-                  sh 'kubectl config use k8po-ci'
-                  sh 'make integration-test-ci'
-                  sh 'make undeploy'
-                }
-              }
-            }
-          }
-        }
+//         stage("AKS Integration Test") {
+//           agent {
+//             label "aks"
+//           }
+//           options {
+//             timeout(time: 30, unit: 'MINUTES')
+//           }
+//           tools {
+//             go 'Go 1.17'
+//           }
+//           environment {
+//             GCP_CREDS = credentials("GCP_CREDS")
+//             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+//             AKS_CLUSTER_NAME = "k8po-ci"
+//             VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+//             PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+//             HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+//             DOCKER_IMAGE = "kubernetes-operator-snapshot"
+//             WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+//             WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
+//           }
+//           steps {
+//             withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+//               sh './hack/jenkins/setup-for-integration-test.sh'
+//               sh './hack/jenkins/install_docker_buildx.sh'
+//               sh 'make semver-cli'
+//               lock("integration-test-aks") {
+//                 withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
+//                   sh 'kubectl config use k8po-ci'
+//                   sh 'make integration-test-ci'
+//                   sh 'make undeploy'
+//                 }
+//               }
+//             }
+//           }
+//         }
       }
     }
     stage("Update RC branch") {
