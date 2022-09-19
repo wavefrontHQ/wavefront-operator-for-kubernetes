@@ -1,21 +1,8 @@
 FROM bitnami/fluentd:1.15.2
 
-### Install custom Fluentd plugins
-# RUN fluent-gem install 'fluentd'
-# RUN fluent-gem install 'oj'
-# RUN fluent-gem install 'rexml'
 RUN fluent-gem install 'fluent-plugin-multi-format-parser'
 RUN fluent-gem install 'fluent-plugin-concat'
-# RUN fluent-gem install 'fluent-plugin-grok-parser'
-# RUN fluent-gem install 'fluent-plugin-prometheus'
-# RUN fluent-gem install 'fluent-plugin-json-in-json-2'
 RUN fluent-gem install 'fluent-plugin-record-modifier'
-# RUN fluent-gem install 'fluent-plugin-detect-exceptions'
-# RUN fluent-gem install 'fluent-plugin-rewrite-tag-filter'
-# RUN fluent-gem install 'fluent-plugin-parser-cri'
-# RUN fluent-gem install 'fluent-plugin-dedot_filter'
 RUN fluent-gem install 'fluent-plugin-kubernetes_metadata_filter'
-# RUN fluent-gem install 'ffi'
-# RUN fluent-gem install 'fluent-plugin-systemd'
 
 USER root:root
