@@ -24,10 +24,9 @@ data:
       @type tail
       read_from_head true
       tag kubernetes.*
-      path /opt/bitnami/fluentd/log/containers/*.log
-      #pos_file /opt/bitnami/fluentd/log/fluentd-containers.log.pos
-      pos_file /tmp/fluentd-containers.log.pos
-      exclude_path ["/opt/bitnami/fluentd/log/containers/wavefront-logging*fluent*"]
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      exclude_path ["/var/log/containers/wavefront-logging*fluent*"]
       <parse>
         @type multi_format
         <pattern>

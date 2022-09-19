@@ -37,9 +37,6 @@ spec:
           effect: NoSchedule
       containers:
         - name: fluentd-wf
-          securityContext:
-            capabilities:
-              add: [ "CAP_DAC_READ_SEARCH", "CAP_DAC_OVERRIDE" ]
           image: projects.registry.vmware.com/tanzu_observability_keights_saas/fluentd:0.0.4
           env:
             - name:  K8S_NODE_NAME
@@ -58,9 +55,9 @@ spec:
 {{ .DataCollection.Logging.Resources | toYaml | indent 12 }}
           volumeMounts:
             - name: varlog
-              mountPath: /opt/bitnami/fluentd/log
+              mountPath: /var/log
             - name: varlogcontainers
-              mountPath: /opt/bitnami/fluentd/log/containers
+              mountPath: /var/log/containers
             - name: varlibdockercontainers
               mountPath: /var/lib/docker/containers
               readOnly: true

@@ -18,4 +18,4 @@ RUN fluent-gem install 'fluent-plugin-kubernetes_metadata_filter'
 # RUN fluent-gem install 'ffi'
 # RUN fluent-gem install 'fluent-plugin-systemd'
 
-USER root
+USER root:root
