@@ -51,12 +51,7 @@ The following tools are required for installing the integration.
    If you already have Wavefront deployments in that namespace, uninstall them before you install the operator.
 
    ```
-   helm repo add wavefront-v2beta https://projects.registry.vmware.com/chartrepo/tanzu_observability
-   helm repo update
-
-   kubectl create namespace wavefront
-
-   helm install wavefront-v2beta wavefront-v2beta/wavefront-v2beta --namespace wavefront
+   kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml
    ```
 
 2. Create a Kubernetes secret with your Wavefront Token.
