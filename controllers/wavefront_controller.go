@@ -134,9 +134,10 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if wavefront.Status.Status == health.Unhealthy {
-		requeueAfterTime = 15 * time.Second
+		return ctrl.Result{
+			Requeue: true,
+		}, nil
 	}
-
 	return ctrl.Result{
 		Requeue:      true,
 		RequeueAfter: requeueAfterTime,
@@ -468,17 +469,23 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		componentsToCheck[util.LoggingName] = util.DaemonSet
 	}
 
-	wavefront.Status = health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
+	status := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
 	if !validationResult.IsValid() {
-		wavefront.Status.Status = health.Unhealthy
-		wavefront.Status.Message = validationResult.Message()
+		status.Status = health.Unhealthy
+		status.Message = validationResult.Message()
 	}
 	if !validationResult.IsError() {
-		r.StatusSender.SendStatus(wavefront.Status, wavefront.Spec.ClusterName)
+		r.StatusSender.SendStatus(status, wavefront.Spec.ClusterName)
 	}
 
-	return r.Status().Update(ctx, wavefront)
+	if status.Status != wavefront.Status.Status {
+		log.Log.Info(fmt.Sprintf("Wavefront CR status changed from %s --> %s", wavefront.Status.Status, status.Status))
+		wavefront.Status = status
+		return r.Status().Update(ctx, wavefront)
+	}
+
+	return nil
 }
 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
@@ -492,8 +499,5 @@ func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *uns
 }
 
 func errorCRTLResult(err error) (ctrl.Result, error) {
-	return ctrl.Result{
-		Requeue:      true,
-		RequeueAfter: 10 * time.Second,
-	}, err
+	return ctrl.Result{}, err
 }
