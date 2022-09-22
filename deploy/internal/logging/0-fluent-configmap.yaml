@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: logging
 data:
-  fluent.conf: |-
+  fluentd.conf: |-
     ################################################################
     # This source gets all logs from local docker host
     @include pods-fluent-config.conf
