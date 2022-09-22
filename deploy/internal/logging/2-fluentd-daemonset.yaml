@@ -37,8 +37,8 @@ spec:
           effect: NoSchedule
       containers:
         - name: fluentd-wf
-          image: fluent/fluentd-kubernetes-daemonset:v1.15-debian-elasticsearch7-1
-          command: ["fluentd"]
+          image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd:1.0.3-1.15.2
+          command: ["fluentd", "--config", "/etc/fluentd/fluentd.conf", "--no-supervisor", "--quiet"]
           env:
             - name:  K8S_NODE_NAME
               valueFrom:
@@ -46,8 +46,6 @@ spec:
                   fieldPath: spec.nodeName
             - name:  CLUSTER_NAME
               value: {{.ClusterName}}
-            - name: FLUENTD_ARGS
-              value: --no-supervisor -q
           resources:
 {{ .DataCollection.Logging.Resources | toYaml | indent 12 }}
           volumeMounts:
@@ -59,7 +57,7 @@ spec:
               mountPath: /var/lib/docker/containers
               readOnly: true
             - name: config-volume
-              mountPath: /etc/fluent
+              mountPath: /etc/fluentd
       volumes:
         - name: varlog
           hostPath:
