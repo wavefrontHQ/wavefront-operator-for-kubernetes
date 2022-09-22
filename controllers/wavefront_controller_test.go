@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
@@ -47,7 +46,7 @@ func TestReconcileAll(t *testing.T) {
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
 
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 15 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true}, results)
 
 		assert.True(t, stubKM.CollectorServiceAccountContains())
 		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:2878"))
@@ -72,7 +71,7 @@ func TestReconcileAll(t *testing.T) {
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true, RequeueAfter: 15 * time.Second}, results)
+		assert.Equal(t, ctrl.Result{Requeue: true}, results)
 
 		assert.False(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
 		assert.False(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
