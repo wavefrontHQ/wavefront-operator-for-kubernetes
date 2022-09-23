@@ -89,7 +89,7 @@ The following tools are required for installing the integration.
    ```
    The command should return the following table displaying Operator instance health:
    ```
-   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE
+   NAME                   STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE
    observability-system   Healthy   Running (1/1)   Running (1/1)       Running (3/3)    Running (3/3)  2m4s
    ```
    NOTE: If `STATUS` is `Unhealthy`, run the below command to get more information
