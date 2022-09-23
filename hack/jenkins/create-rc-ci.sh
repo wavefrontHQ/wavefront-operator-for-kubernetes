@@ -15,30 +15,11 @@ cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 git fetch
 git checkout .
 
-git checkout $GIT_BRANCH || git checkout -b $GIT_BRANCH
+git checkout $GIT_BRANCH
 
 ls | grep -v build | xargs rm -rf
-mv build/wavefront-operator.yaml wavefront-operator$VERSION_POSTFIX.yaml
+mv build/wavefront-operator.yaml wavefront-operator-latest.yaml
 
 git add --all .
-git commit -m "add CRD"
-git push --set-upstream origin $GIT_BRANCH
-
-PR_URL=$(curl \
-  -X POST \
-  -H "Authorization: token ${TOKEN}" \
-  -d "{\"head\":\"${GIT_BRANCH}\",\"base\":\"rc\",\"title\":\"Add release candidate rc${GIT_BRANCH}\"}" \
-  https://api.github.com/repos/wavefrontHQ/wavefront-operator-for-kubernetes/pulls |
-  jq -r '.html_url')
-
-PULL_NUMBER=$(echo ${PR_URL} | sed 's:.*/::')
-
-MERGE_PR_URL=$(curl \
-  -X PUT \
-  -H "Accept: application/vnd.github+json" \
-  -H "Authorization: token ${TOKEN}" \
-  -d "{\"merge_method\":\"squash\"}" \
-  https://api.github.com/repos/wavefrontHQ/wavefront-operator-for-kubernetes/pulls/${PULL_NUMBER}/merge)
-
-
-echo "PR URL: ${PR_URL}"
+git commit -m "updates wavefront-operator-latest.yaml"
+git push
