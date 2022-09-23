@@ -142,7 +142,6 @@ To remove the Wavefront Integration from your environment, run the following com
 
 ```
 kubectl delete -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml
-kubectl delete namespace observability-system
 ```
 
 # Contribution
