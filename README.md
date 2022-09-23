@@ -124,10 +124,6 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Enabling proxy tracing support](./deploy/kubernetes/scenarios/wavefront-proxy-tracing.yaml)
  * [Using an HTTP Proxy](./deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
 
-Wavefront logging scenarios
- * [Wavefront logging getting started](./deploy/kubernetes/scenarios/wavefront-logging-getting-started.yaml)
- * [Wavefront logging full configuration](./deploy/kubernetes/scenarios/wavefront-logging-full-config.yaml)
-
 You can see all configuration options in the [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
 
 # Upgrade
