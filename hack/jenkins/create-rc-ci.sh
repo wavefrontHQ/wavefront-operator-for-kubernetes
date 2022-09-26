@@ -18,8 +18,8 @@ git checkout .
 git checkout $GIT_BRANCH
 
 ls | grep -v build | xargs rm -rf
-mv build/wavefront-operator.yaml wavefront-operator-latest.yaml
+mv build/wavefront-operator.yaml wavefront-operator.yaml
 
 git add --all .
-git commit -m "updates wavefront-operator-latest.yaml"
+git commit -m "updates wavefront-operator.yaml"
 git push

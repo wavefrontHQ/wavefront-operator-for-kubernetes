@@ -177,7 +177,7 @@ pipeline {
         PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
         DOCKER_IMAGE = "kubernetes-operator-snapshot"
         TOKEN = credentials('GITHUB_TOKEN')
-        GIT_BRANCH = "rc${VERSION_POSTFIX}"
+        GIT_BRANCH = "rc"
       }
       steps {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {

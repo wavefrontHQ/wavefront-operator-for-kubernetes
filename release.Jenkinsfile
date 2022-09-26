@@ -43,6 +43,7 @@ pipeline {
         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
         sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
+        sh 'mv build/wavefront-operator.yaml  deploy/kubernetes'
       }
     }
     // deploy to GKE and run manual tests
