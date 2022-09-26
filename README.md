@@ -38,17 +38,19 @@ For example, Istio and MySQL metrics, Telegraf configuration, etc. are still sup
 
 # Installation
 
+**Note:**  The Wavefront Operator for Kubernetes helm chart was deprecated, please use the deploy, upgrade and removal instructions below.
+
 ## Prerequisites
 
 The following tools are required for installing the integration.
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 
+
 ## Deploy the Wavefront Collector and Proxy with the Operator
 1. Install the Wavefront Operator
 
-   Note: Today the operator only supports deployment under the observability-system namespace.
-   If you already have Wavefront installed via helm or manual deploy, uninstall them before you install the operator.
-
+   Note: If you already have Wavefront installed via helm or manual deploy, uninstall them before you install the operator
+ 
    ```
    kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml
    ```
