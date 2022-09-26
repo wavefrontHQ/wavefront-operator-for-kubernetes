@@ -38,7 +38,7 @@ For example, Istio and MySQL metrics, Telegraf configuration, etc. are still sup
 
 # Installation
 
-**Note:**  The Wavefront Operator for Kubernetes helm chart was deprecated, please use the deploy, upgrade and removal instructions below.
+**Note:**  The Wavefront Operator for Kubernetes helm chart has been deprecated and will no longer be supported. Please use the deploy, upgrade and removal instructions below.
 
 ## Prerequisites
 
