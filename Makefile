@@ -232,6 +232,7 @@ integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
 
 generate-kubernetes-yaml: copy-base-patches manifests kustomize
+	mkdir -p build
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > $(REPO_DIR)/build/wavefront-operator.yaml
 
