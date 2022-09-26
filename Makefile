@@ -222,7 +222,7 @@ nuke-kind:
 integration-test: install-kube-score install-kube-linter undeploy manifests deploy-kind
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
-integration-test-ci: install-kube-score install-kube-linter undeploy generate-kubernetes-yaml
+integration-test-ci: install-kube-score install-kube-linter generate-kubernetes-yaml undeploy
 	kubectl apply -f $(REPO_DIR)/build/wavefront-operator.yaml
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
