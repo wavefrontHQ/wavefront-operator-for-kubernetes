@@ -222,8 +222,9 @@ nuke-kind:
 integration-test: install-kube-score install-kube-linter undeploy manifests deploy-kind
 	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
 
+ENABLE_LOGGING?=true
 integration-test-ci: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME))
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME) -l $(ENABLE_LOGGING))
 
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)

@@ -121,7 +121,7 @@ pipeline {
               sh 'make semver-cli'
               lock("integration-test-eks") {
                   sh 'make target-eks'
-                  sh 'make integration-test-ci'
+                  sh 'ENABLE_LOGGING=false make integration-test-ci'
                   sh 'make undeploy'
               }
             }

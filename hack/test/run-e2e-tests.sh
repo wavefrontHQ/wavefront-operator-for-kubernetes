@@ -10,6 +10,7 @@ function print_usage_and_exit() {
   echo -e "\t-c wavefront instance name (default: 'nimba')"
   echo -e "\t-t wavefront token (required)"
   echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
+  echo -e "\t-l enable logging (defaults to true)"
   exit 1
 }
 
@@ -210,8 +211,9 @@ function main() {
   local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   local CONFIG_CLUSTER_NAME=$(create_cluster_name)
+  local ENABLE_LOGGING="true"
 
-  while getopts ":c:t:v:n:p:" opt; do
+  while getopts ":c:t:v:n:l:" opt; do
     case $opt in
     c)
       WF_CLUSTER="$OPTARG"
@@ -224,6 +226,9 @@ function main() {
       ;;
     n)
       CONFIG_CLUSTER_NAME="$OPTARG"
+      ;;
+    l)
+      ENABLE_LOGGING="$OPTARG"
       ;;
     \?)
       print_usage_and_exit "Invalid option: -$OPTARG"
@@ -249,7 +254,9 @@ function main() {
 
   run_test "advanced" "health|test_wavefront_metrics"
 
-  run_logging_test
+  if [[ ${ENABLE_LOGGING} == "true" ]]; then
+    run_logging_test
+  fi
 }
 
 main "$@"
