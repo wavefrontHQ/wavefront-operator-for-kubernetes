@@ -18,3 +18,5 @@ mv build/wavefront-operator.yaml wavefront-operator.yaml
 git add --all .
 git commit -m "updates wavefront-operator.yaml"
 git push
+
+git checkout $BRANCH_NAME
