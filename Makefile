@@ -224,7 +224,7 @@ integration-test: install-kube-score install-kube-linter undeploy manifests depl
 
 ENABLE_LOGGING?=true
 integration-test-ci: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME) -l $(ENABLE_LOGGING))
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -l $(ENABLE_LOGGING) -n $(CONFIG_CLUSTER_NAME))
 
 integration-cascade-delete-test: integration-test
 	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)

@@ -254,7 +254,7 @@ function main() {
 
   run_test "advanced" "health|test_wavefront_metrics"
 
-  if [[ ${ENABLE_LOGGING} == "true" ]]; then
+  if [[ "${ENABLE_LOGGING}" == "true" ]]; then
     run_logging_test
   fi
 }
