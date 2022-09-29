@@ -1,8 +1,0 @@
-FROM bitnami/fluentd:1.15.2-debian-11-r14
-
-RUN fluent-gem install fluent-plugin-multi-format-parser
-RUN fluent-gem install fluent-plugin-concat
-RUN fluent-gem install fluent-plugin-record-modifier
-RUN fluent-gem install fluent-plugin-kubernetes_metadata_filter
-
-USER root:root
