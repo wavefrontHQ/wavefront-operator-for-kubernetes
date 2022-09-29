@@ -13,6 +13,7 @@ cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
+git checkout .
 git fetch
 git checkout rc
 git reset --hard origin/rc
