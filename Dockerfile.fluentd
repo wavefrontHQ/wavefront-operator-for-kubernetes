@@ -1,8 +1,22 @@
-FROM bitnami/fluentd:1.15.2-debian-11-r14
-
-RUN fluent-gem install fluent-plugin-multi-format-parser
-RUN fluent-gem install fluent-plugin-concat
-RUN fluent-gem install fluent-plugin-record-modifier
-RUN fluent-gem install fluent-plugin-kubernetes_metadata_filter
+FROM fluent/fluentd:v1.15.2-debian-1.0
 
 USER root:root
+
+WORKDIR /
+
+RUN buildDeps="sudo make gcc g++ libc-dev" \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends $buildDeps \
+ && sudo gem install fluent-plugin-multi-format-parser \
+ && sudo gem install fluent-plugin-concat \
+ && sudo gem install fluent-plugin-record-modifier \
+ && sudo gem install fluent-plugin-kubernetes_metadata_filter \
+ && sudo gem sources --clear-all \
+ && SUDO_FORCE_REMOVE=yes \
+    apt-get purge -y --auto-remove \
+                  -o APT::AutoRemove::RecommendsImportant=false \
+                  $buildDeps \
+ && rm -rf /var/lib/apÏt/lists/* \
+ && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem
+
+ENTRYPOINT ["tini",  "--", "/bin/entrypoint.sh"]
