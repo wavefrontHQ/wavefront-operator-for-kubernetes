@@ -152,7 +152,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 .PHONY: deploy
 deploy:  ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/rc/wavefront-operator-$(shell git rev-parse --abbrev-ref HEAD).yaml
+	kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/rc/wavefront-operator-$(GIT_BRANCH).yaml
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 

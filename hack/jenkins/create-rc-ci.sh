@@ -11,15 +11,13 @@ NEW_VERSION=$(semver-cli inc patch "$RELEASE_VERSION")
 VERSION=$NEW_VERSION$VERSION_POSTFIX make generate-kubernetes-yaml
 cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
 git checkout .
 git fetch
 git checkout rc
 git reset --hard origin/rc
 
 git clean -dfx -e build
-mv build/wavefront-operator.yaml "wavefront-operator-${CURRENT_BRANCH}.yaml"
+mv build/wavefront-operator.yaml "wavefront-operator-${GIT_BRANCH}.yaml"
 
 git add --all .
 git commit -m "add CRD"
