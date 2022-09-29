@@ -5,6 +5,10 @@ pipeline {
     GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
   }
 
+  parameters {
+      string(name: 'OPERATOR_YAML_RC_SHA', defaultValue: '')
+  }
+
   stages {
     stage("Test Go Code") {
       tools {
@@ -69,6 +73,7 @@ pipeline {
       steps {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
           sh './hack/jenkins/create-rc-ci.sh'
+          env.OPERATOR_YAML_RC_SHA = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
         }
       }
     }
