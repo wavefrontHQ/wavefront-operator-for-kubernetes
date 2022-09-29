@@ -151,9 +151,8 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
 .PHONY: deploy
-deploy: copy-base-patches manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+deploy:  ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	kubectl apply -f https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/rc/wavefront-operator$(VERSION_POSTFIX).yaml
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
