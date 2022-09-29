@@ -23,4 +23,4 @@ mv build/wavefront-operator.yaml "wavefront-operator-${CURRENT_BRANCH}.yaml"
 
 git add --all .
 git commit -m "add CRD"
-git push rc
+git push origin rc
