@@ -5,6 +5,10 @@ pipeline {
     GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
   }
 
+  parameters {
+      string(name: 'OPERATOR_YAML_RC_SHA', defaultValue: '')
+  }
+
   stages {
     stage("Test Go Code") {
       tools {
@@ -54,6 +58,28 @@ pipeline {
         }
       }
     }
+    stage("Update RC branch") {
+      tools {
+        go 'Go 1.17'
+      }
+      environment {
+        RELEASE_TYPE = "alpha"
+        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
+        DOCKER_IMAGE = "kubernetes-operator-snapshot"
+        TOKEN = credentials('GITHUB_TOKEN')
+      }
+      steps {
+        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+          sh './hack/jenkins/create-rc-ci.sh'
+          script {
+            env.OPERATOR_YAML_RC_SHA = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+          }
+        }
+      }
+    }
+
     stage("Run Integration Tests") {
       parallel {
         stage("GKE Integration Test") {
@@ -166,29 +192,7 @@ pipeline {
         }
       }
     }
-    stage("Update RC branch") {
-      tools {
-        go 'Go 1.17'
-      }
-      environment {
-        RELEASE_TYPE = "alpha"
-        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-        DOCKER_IMAGE = "kubernetes-operator-snapshot"
-        TOKEN = credentials('GITHUB_TOKEN')
-        GIT_BRANCH = "rc${VERSION_POSTFIX}"
-      }
-      steps {
-        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-          script{
-            if (env.BRANCH_NAME == 'main') {
-              sh './hack/jenkins/create-rc-ci.sh'
-            }
-          }
-        }
-      }
-    }
+
   }
   post {
     // Notify only on null->failure or success->failure or failure->success
