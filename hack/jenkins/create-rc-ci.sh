@@ -27,7 +27,7 @@ git push --set-upstream origin $GIT_BRANCH
 PR_URL=$(curl \
   -X POST \
   -H "Authorization: token ${TOKEN}" \
-  -d "{\"head\":\"${GIT_BRANCH}\",\"base\":\"rc\",\"title\":\"Add release candidate rc${GIT_BRANCH}\"}" \
+  -d "{\"head\":\"${GIT_BRANCH}\",\"base\":\"rc\",\"title\":\"Add release candidate ${GIT_BRANCH}\"}" \
   https://api.github.com/repos/wavefrontHQ/wavefront-operator-for-kubernetes/pulls |
   jq -r '.html_url')
 

@@ -69,11 +69,7 @@ pipeline {
       }
       steps {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-          script{
-            if (env.BRANCH_NAME == 'main') {
-              sh './hack/jenkins/create-rc-ci.sh'
-            }
-          }
+          sh './hack/jenkins/create-rc-ci.sh'
         }
       }
     }
