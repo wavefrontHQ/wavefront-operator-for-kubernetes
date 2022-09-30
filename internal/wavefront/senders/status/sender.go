@@ -2,6 +2,7 @@ package status
 
 import (
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
 	"strings"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -11,14 +12,8 @@ import (
 	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 )
 
-type MetricClient interface {
-	SendMetric(name string, value float64, ts int64, source string, tags map[string]string) error
-	Flush() error
-	Close()
-}
-
 type Sender struct {
-	client MetricClient
+	client senders.MetricClient
 }
 
 func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
@@ -32,7 +27,7 @@ func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
 	return NewSender(client), nil
 }
 
-func NewSender(client MetricClient) *Sender {
+func NewSender(client senders.MetricClient) *Sender {
 	return &Sender{client: client}
 }
 
