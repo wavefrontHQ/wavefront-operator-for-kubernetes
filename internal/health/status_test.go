@@ -59,7 +59,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		status := GenerateWavefrontStatus(appsV1, componentsToCheck)
 		assert.Equal(t, Healthy, status.Status)
-		assert.Equal(t, "(3/3) wavefront components are healthy", status.Message)
+		assert.Equal(t, "All components are healthy", status.Message)
 
 		proxyStatus := getComponentStatusWithName(util.ProxyName, status.ResourceStatuses)
 		assert.True(t, proxyStatus.Healthy)
@@ -153,7 +153,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		status := GenerateWavefrontStatus(appsV1, componentsToCheck)
 
 		assert.Equal(t, Healthy, status.Status)
-		assert.Equal(t, "(2/2) wavefront components are healthy", status.Message)
+		assert.Equal(t, "All components are healthy", status.Message)
 	})
 
 	t.Run("report health status when no components are running", func(t *testing.T) {

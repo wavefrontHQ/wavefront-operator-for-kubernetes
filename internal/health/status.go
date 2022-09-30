@@ -42,7 +42,7 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	status.ResourceStatuses = componentStatuses
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
-		status.Message = fmt.Sprintf("(%d/%d) wavefront components are healthy", boolCount(true, componentHealth...), len(componentHealth))
+		status.Message = "All components are healthy"
 	} else {
 		status.Status = Unhealthy
 		status.Message = strings.Join(unhealthyMessages, "; ")
