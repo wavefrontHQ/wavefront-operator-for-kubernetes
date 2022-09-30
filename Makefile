@@ -264,3 +264,14 @@ docker-login-eks:
 
 target-eks: docker-login-eks
 	@aws eks --region $(AWS_REGION) update-kubeconfig --name k8s-saas-team-dev --profile $(AWS_PROFILE)
+
+# create a new branch from main tot
+# usage: GIT_BRANCH=K8SSAAS-XX make git-co-new
+git-co-new:
+	git checkout main
+	git pull
+	git checkout -b $(GIT_BRANCH)
+
+git-rebase:
+	git fetch origin
+	git rebase origin/main
