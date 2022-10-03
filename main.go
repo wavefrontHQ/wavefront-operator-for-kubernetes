@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	version  string
+	version  string // populated via ldflags at build time
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
