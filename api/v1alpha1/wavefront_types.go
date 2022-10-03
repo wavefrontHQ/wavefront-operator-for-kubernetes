@@ -106,6 +106,9 @@ type ExternalWavefrontProxy struct {
 }
 
 type DataCollection struct {
+	// Allows metrics and logging data collection when a legacy install is detected. Defaults to false.
+	AllowLegacyInstall bool `json:"allowLegacyInstall,omitempty"`
+
 	// Metrics has resource configuration for node- and cluster-deployed collectors
 	Metrics Metrics `json:"metrics,omitempty"`
 

@@ -34,6 +34,15 @@ function wait_for_cluster_ready() {
   echo " done."
 }
 
+function wait_for_proxy_termination() {
+  printf "Waiting for proxy to be terminated ..."
+  while ! kubectl wait --for=delete  -n observability-system pod -l  app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --timeout=5s &> /dev/null; do
+    printf "."
+    sleep 1
+  done
+  echo " done."
+}
+
 function create_cluster_name() {
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   echo $(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")

@@ -72,7 +72,7 @@ function run_unhealthy_checks() {
   local type=$1
   echo "Running unhealthy checks ..."
 
-  for _ in {1..5}; do
+  for _ in {1..10}; do
     health_status=$(kubectl get wavefront -n $NS --request-timeout=10s -o=jsonpath='{.items[0].status.status}') || true
     if [[ "$health_status" == "Unhealthy" ]]; then
       break
@@ -94,6 +94,8 @@ function clean_up_test() {
   echo "Cleaning Up ..."
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml --timeout=10s
+
+  wait_for_proxy_termination
 }
 
 function run_static_analysis() {
@@ -244,6 +246,8 @@ function main() {
   run_test "validation-errors" "unhealthy"
 
   run_test "validation-legacy" "unhealthy"
+
+  run_test "allow-legacy-install" "healthy"
 
   run_test "basic" "health|static_analysis"
 

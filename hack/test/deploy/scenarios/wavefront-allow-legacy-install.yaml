@@ -1,0 +1,65 @@
+# Need to change YOUR_WAVEFRONT_URL, YOUR_API_TOKEN and YOUR_CLUSTER_NAME accordingly
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wavefront-proxy
+    name: wavefront-proxy
+  name: wavefront-proxy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wavefront-proxy
+  template:
+    metadata:
+      labels:
+        app: wavefront-proxy
+    spec:
+      containers:
+        - name: wavefront-proxy
+          image: projects.registry.vmware.com/tanzu_observability/proxy:11.3
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WAVEFRONT_URL
+              value: YOUR_WAVEFRONT_URL/api/
+            - name: WAVEFRONT_TOKEN
+              value: YOUR_API_TOKEN
+          ports:
+            - containerPort: 2878
+              protocol: TCP
+          securityContext:
+            privileged: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wavefront-proxy
+  labels:
+    app: wavefront-proxy
+  namespace: default
+spec:
+  ports:
+    - name: wavefront
+      port: 2878
+      protocol: TCP
+  selector:
+    app: wavefront-proxy
+---
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: observability-system
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    allowLegacyInstall: true
+    metrics:
+      enable: true
+  dataExport:
+    wavefrontProxy:
+      enable: true
