@@ -44,7 +44,8 @@ func (s Sender) SendStatus(status wf.WavefrontStatus, clusterName string) error 
 			return err
 		}
 	}
-	return s.client.Flush()
+
+	return nil
 }
 
 func (s Sender) sendOperatorStatus(status wf.WavefrontStatus, clusterName string) error {
@@ -163,8 +164,4 @@ func truncateTags(tags map[string]string) map[string]string {
 		}
 	}
 	return tags
-}
-
-func (s Sender) Close() {
-	s.client.Close()
 }

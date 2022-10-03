@@ -75,14 +75,6 @@ func TestSender(t *testing.T) {
 		assert.EqualError(t, sender.SendStatus(wf.WavefrontStatus{Status: "Healthy"}, "my_cluster"), "send error")
 	})
 
-	t.Run("reports an error when it fails to flush", func(t *testing.T) {
-		sender := status.NewSender(&testhelper.StubMetricClient{
-			FlushError: errors.New("flush error"),
-		})
-
-		assert.EqualError(t, sender.SendStatus(wf.WavefrontStatus{Status: "Healthy"}, "my_cluster"), "flush error")
-	})
-
 	t.Run("metrics component", func(t *testing.T) {
 		ReportsSubComponentMetric(t, "Metrics", []string{util.ClusterCollectorName, util.NodeCollectorName})
 
