@@ -47,7 +47,7 @@ func (result Result) IsWarning() bool {
 }
 
 func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Result {
-	err := validateEnvironment(appsV1)
+	err := validateEnvironment(appsV1, wavefront)
 	if err != nil {
 		return Result{err, !areAnyComponentsDeployed(appsV1)}
 	}
@@ -58,7 +58,10 @@ func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Resul
 	return Result{}
 }
 
-func validateEnvironment(appsV1 typedappsv1.AppsV1Interface) error {
+func validateEnvironment(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
+	if wavefront.Spec.DataCollection.AllowLegacyInstall {
+		return nil
+	}
 	for namespace, resourceMap := range legacyComponentsToCheck {
 		for resourceName, resourceType := range resourceMap {
 			if resourceType == util.DaemonSet {

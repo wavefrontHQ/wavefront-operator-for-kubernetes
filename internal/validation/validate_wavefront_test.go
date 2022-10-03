@@ -77,6 +77,16 @@ func TestValidate(t *testing.T) {
 		assert.True(t, result.IsWarning())
 		assert.NotEmpty(t, result.Message())
 	})
+
+	t.Run("allow legacy install", func(t *testing.T) {
+		appsV1 := legacyEnvironmentSetup("wavefront")
+		wfCR := defaultWFCR()
+		wfCR.Spec.DataCollection.AllowLegacyInstall = true
+		result := Validate(appsV1, wfCR)
+		assert.True(t, result.IsValid())
+		assert.False(t, result.IsError())
+	})
+
 }
 
 func TestValidateWavefrontSpec(t *testing.T) {
@@ -154,7 +164,7 @@ func TestValidateWavefrontSpec(t *testing.T) {
 func TestValidateEnvironment(t *testing.T) {
 	t.Run("No existing collector daemonset", func(t *testing.T) {
 		appsV1 := setup()
-		assert.NoError(t, validateEnvironment(appsV1))
+		assert.NoError(t, validateEnvironment(appsV1, defaultWFCR()))
 	})
 
 	t.Run("Return error when only proxy deployment found", func(t *testing.T) {
@@ -167,7 +177,7 @@ func TestValidateEnvironment(t *testing.T) {
 			},
 		}
 		appsV1 := setup(proxyDeployment)
-		validationError := validateEnvironment(appsV1)
+		validationError := validateEnvironment(appsV1, defaultWFCR())
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
@@ -189,7 +199,7 @@ func TestValidateEnvironment(t *testing.T) {
 			},
 		}
 		appsV1 := setup(collectorDaemonSet, proxyDeployment)
-		validationError := validateEnvironment(appsV1)
+		validationError := validateEnvironment(appsV1, defaultWFCR())
 		assert.NotNilf(t, validationError, "expected validation error")
 		assert.Contains(t, validationError.Error(), "Found legacy Wavefront installation in")
 	})
@@ -197,7 +207,7 @@ func TestValidateEnvironment(t *testing.T) {
 	t.Run("Return error when legacy tkgi install found in namespace tanzu-observability-saas", func(t *testing.T) {
 		namespace := "tanzu-observability-saas"
 		appsV1 := legacyEnvironmentSetup(namespace)
-		validationError := validateEnvironment(appsV1)
+		validationError := validateEnvironment(appsV1, defaultWFCR())
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
@@ -205,7 +215,7 @@ func TestValidateEnvironment(t *testing.T) {
 	t.Run("Return error when collector daemonset found in legacy helm install namespace wavefront", func(t *testing.T) {
 		namespace := "wavefront"
 		appsV1 := legacyEnvironmentSetup(namespace)
-		validationError := validateEnvironment(appsV1)
+		validationError := validateEnvironment(appsV1, defaultWFCR())
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
@@ -213,10 +223,20 @@ func TestValidateEnvironment(t *testing.T) {
 	t.Run("Return error when collector deployment found in legacy tkgi install namespace pks-system", func(t *testing.T) {
 		namespace := "pks-system"
 		appsV1 := legacyEnvironmentSetup(namespace)
-		validationError := validateEnvironment(appsV1)
+		validationError := validateEnvironment(appsV1, defaultWFCR())
 		assert.NotNilf(t, validationError, "expected validation error")
 		assertValidationMessage(t, validationError, namespace)
 	})
+
+	t.Run("Returns nil when allow legacy install is enabled", func(t *testing.T) {
+		namespace := "wavefront"
+		appsV1 := legacyEnvironmentSetup(namespace)
+		wfCR := defaultWFCR()
+		wfCR.Spec.DataCollection.AllowLegacyInstall = true
+		validationError := validateEnvironment(appsV1, wfCR)
+		assert.Nilf(t, validationError, "expected validation error")
+	})
+
 }
 
 func assertValidationMessage(t *testing.T, validationError error, namespace string) {

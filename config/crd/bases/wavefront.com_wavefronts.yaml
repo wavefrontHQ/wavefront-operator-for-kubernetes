@@ -65,6 +65,10 @@ spec:
               dataCollection:
                 description: DataCollection options
                 properties:
+                  allowLegacyInstall:
+                    description: Allows metrics and logging data collection when a
+                      legacy install is detected. Defaults to false.
+                    type: boolean
                   logging:
                     description: Enable and configure wavefront logging
                     properties:

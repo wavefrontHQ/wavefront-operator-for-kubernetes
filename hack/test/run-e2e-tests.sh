@@ -72,7 +72,7 @@ function run_unhealthy_checks() {
   local type=$1
   echo "Running unhealthy checks ..."
 
-  for _ in {1..5}; do
+  for _ in {1..10}; do
     health_status=$(kubectl get wavefront -n $NS --request-timeout=10s -o=jsonpath='{.items[0].status.status}') || true
     if [[ "$health_status" == "Unhealthy" ]]; then
       break
@@ -244,6 +244,8 @@ function main() {
   run_test "validation-errors" "unhealthy"
 
   run_test "validation-legacy" "unhealthy"
+
+  run_test "allow-legacy-install" "healthy"
 
   run_test "basic" "health|static_analysis"
 
