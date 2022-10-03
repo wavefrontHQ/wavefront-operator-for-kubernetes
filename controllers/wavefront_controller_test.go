@@ -39,7 +39,7 @@ func TestReconcileAll(t *testing.T) {
 		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
 		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertAnyLines)
-		r.MetricClient = expectMetricsSent
+		r.MetricSender = expectMetricsSent
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -65,7 +65,7 @@ func TestReconcileAll(t *testing.T) {
 		r, _, _, _ := setupForCreate(invalidWFSpec)
 		r.KubernetesManager = stubKM
 		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
-		r.MetricClient = expectMetricsSent
+		r.MetricSender = expectMetricsSent
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -1153,7 +1153,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: testhelper.NewMockKubernetesManager(),
-		MetricClient:      &testhelper.StubMetricClient{},
+		MetricSender:      &testhelper.StubMetricClient{},
 		Appsv1:            fakesAppsV1,
 	}
 

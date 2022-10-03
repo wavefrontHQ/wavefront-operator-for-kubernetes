@@ -13,7 +13,7 @@ func TestSender(t *testing.T) {
 			"kubernetes.observability.version 2.010300 source=\"somecluster\"",
 		))
 
-		_ = version.Send(expectedMetricLine, "somecluster", "2.1.3")
+		_ = version.Sender("somecluster", "2.1.3")(expectedMetricLine.SendMetric)
 
 		expectedMetricLine.Verify(t)
 	})
@@ -22,7 +22,7 @@ func TestSender(t *testing.T) {
 		expectNoSend := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
 
 		require.EqualError(t,
-			version.Send(expectNoSend, "somecluster", "2.a.b"),
+			version.Sender("somecluster", "2.a.b")(expectNoSend.SendMetric),
 			version.InvalidVersion.Error(),
 		)
 
@@ -33,7 +33,7 @@ func TestSender(t *testing.T) {
 		expectNoSend := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
 
 		require.EqualError(t,
-			version.Send(expectNoSend, "somecluster", "2.100.0"),
+			version.Sender("somecluster", "2.100.0")(expectNoSend.SendMetric),
 			version.MinorVersionTooLarge.Error(),
 		)
 
@@ -44,7 +44,7 @@ func TestSender(t *testing.T) {
 		expectNoSend := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
 
 		require.EqualError(t,
-			version.Send(expectNoSend, "somecluster", "2.0.100"),
+			version.Sender("somecluster", "2.0.100")(expectNoSend.SendMetric),
 			version.PatchVersionTooLarge.Error(),
 		)
 

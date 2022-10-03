@@ -22,6 +22,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/version"
 	"io/fs"
 	"net/url"
 	"os"
@@ -72,7 +73,7 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
-	MetricClient      senders.MetricClient
+	MetricSender      senders.MultiSender
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=observability-system,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -384,12 +385,12 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Logging.ConfigHash = hashValue(configHashBytes)
 	}
 
-	if r.MetricClient == nil {
-		client, err := senders.NewWavefrontClient(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
+	if r.MetricSender == nil {
+		sender, err := senders.NewWavefrontMultiSender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
 			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}
-		r.MetricClient = client
+		r.MetricSender = sender
 	}
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
@@ -472,12 +473,18 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
+	mySenders := []senders.Sender{version.Sender(wavefront.Spec.ClusterName, "0.0.0")}
 	if !validationResult.IsValid() {
 		wavefrontStatus.Status = health.Unhealthy
 		wavefrontStatus.Message = validationResult.Message()
 	}
 	if !validationResult.IsError() {
-		status.Send(r.MetricClient, wavefront.Spec.ClusterName, wavefrontStatus)
+		mySenders = append(mySenders, status.Sender(wavefront.Spec.ClusterName, wavefrontStatus))
+	}
+
+	err := r.MetricSender(mySenders...)
+	if err != nil {
+		log.Log.Info(fmt.Sprintf("error sending metrics: %s", err.Error()))
 	}
 
 	if wavefrontStatus.Status != wavefront.Status.Status {

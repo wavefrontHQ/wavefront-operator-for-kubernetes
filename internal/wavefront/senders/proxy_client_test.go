@@ -8,7 +8,7 @@ import (
 
 func TestWavefrontProxySender(t *testing.T) {
 	t.Run("passes on wfsdk.Sender creation errors", func(t *testing.T) {
-		_, err := senders.NewWavefrontClient("")
+		_, err := senders.NewWavefrontMultiSender("")
 
 		assert.Error(t, err)
 	})

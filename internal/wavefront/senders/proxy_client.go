@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func NewWavefrontClient(wavefrontProxyAddress string) (MetricClient, error) {
+func NewWavefrontMultiSender(wavefrontProxyAddress string) (MultiSender, error) {
 	if !strings.HasPrefix("http://", wavefrontProxyAddress) {
 		wavefrontProxyAddress = "http://" + wavefrontProxyAddress
 	}
@@ -13,5 +13,5 @@ func NewWavefrontClient(wavefrontProxyAddress string) (MetricClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sender, nil
+	return sendMetrics(sender), nil
 }
