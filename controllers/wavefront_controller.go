@@ -476,7 +476,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		status.Message = validationResult.Message()
 	}
 	if !validationResult.IsError() {
-		r.StatusSender.SendStatus(status, wavefront.Spec.ClusterName)
+		r.StatusSender.SendStatus(nil, wavefront.Spec.ClusterName, status)
 	}
 
 	if status.Status != wavefront.Status.Status {
