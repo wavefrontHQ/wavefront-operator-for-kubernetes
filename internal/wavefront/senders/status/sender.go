@@ -11,8 +11,8 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 )
 
-func Send(client senders.MetricClient, clusterName string, status wf.WavefrontStatus) error {
-	sends := []func(senders.MetricClient, wf.WavefrontStatus, string) error{
+func Send(client senders.MetricSender, clusterName string, status wf.WavefrontStatus) error {
+	sends := []func(senders.MetricSender, wf.WavefrontStatus, string) error{
 		sendMetricsStatus,
 		sendLoggingStatus,
 		sendProxyStatus,
@@ -28,7 +28,7 @@ func Send(client senders.MetricClient, clusterName string, status wf.WavefrontSt
 	return nil
 }
 
-func sendOperatorStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+func sendOperatorStatus(client senders.MetricSender, status wf.WavefrontStatus, clusterName string) error {
 	tags := map[string]string{}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
@@ -49,19 +49,19 @@ func sendOperatorStatus(client senders.MetricClient, status wf.WavefrontStatus, 
 	return nil
 }
 
-func sendMetricsStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+func sendMetricsStatus(client senders.MetricSender, status wf.WavefrontStatus, clusterName string) error {
 	return sendComponentStatus(client, clusterName, map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true}, "Metrics", status.ResourceStatuses)
 }
 
-func sendLoggingStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+func sendLoggingStatus(client senders.MetricSender, status wf.WavefrontStatus, clusterName string) error {
 	return sendComponentStatus(client, clusterName, map[string]bool{util.LoggingName: true}, "Logging", status.ResourceStatuses)
 }
 
-func sendProxyStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+func sendProxyStatus(client senders.MetricSender, status wf.WavefrontStatus, clusterName string) error {
 	return sendComponentStatus(client, clusterName, map[string]bool{util.ProxyName: true}, "Proxy", status.ResourceStatuses)
 }
 
-func sendComponentStatus(client senders.MetricClient, clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) error {
+func sendComponentStatus(client senders.MetricSender, clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) error {
 	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
 	tags := map[string]string{}
@@ -117,7 +117,7 @@ func filterComponents(resourceStatuses []wf.ResourceStatus, resourcesInComponent
 	return filtered
 }
 
-func sendMetric(client senders.MetricClient, value float64, source string, tags map[string]string, name string) error {
+func sendMetric(client senders.MetricSender, value float64, source string, tags map[string]string, name string) error {
 	return client.SendMetric(name, value, 0, source, truncateTags(tags))
 }
 

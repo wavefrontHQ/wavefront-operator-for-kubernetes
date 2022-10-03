@@ -14,7 +14,7 @@ var PatchVersionTooLarge = errors.New("patch version is too large (must be less 
 // semverRegex is taken from https://semver.org
 var semverRegex = regexp.MustCompile("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$")
 
-func Send(client senders.MetricClient, cluster string, version string) error {
+func Send(client senders.MetricSender, cluster string, version string) error {
 	parts := semverRegex.FindStringSubmatch(version)
 	if len(parts) == 0 {
 		return InvalidVersion
