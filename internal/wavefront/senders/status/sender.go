@@ -9,33 +9,14 @@ import (
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
-	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 )
 
-type Sender struct {
-}
-
-func NewWavefrontProxySender(wavefrontProxyAddress string) (*Sender, error) {
-	if !strings.HasPrefix("http://", wavefrontProxyAddress) {
-		wavefrontProxyAddress = "http://" + wavefrontProxyAddress
-	}
-	client, err := wfsdk.NewSender(wavefrontProxyAddress)
-	if err != nil {
-		return nil, err
-	}
-	return NewSender(client), nil
-}
-
-func NewSender(_ senders.MetricClient) *Sender {
-	return &Sender{}
-}
-
-func (s Sender) SendStatus(client senders.MetricClient, clusterName string, status wf.WavefrontStatus) error {
+func Send(client senders.MetricClient, clusterName string, status wf.WavefrontStatus) error {
 	sends := []func(senders.MetricClient, wf.WavefrontStatus, string) error{
-		s.sendMetricsStatus,
-		s.sendLoggingStatus,
-		s.sendProxyStatus,
-		s.sendOperatorStatus,
+		sendMetricsStatus,
+		sendLoggingStatus,
+		sendProxyStatus,
+		sendOperatorStatus,
 	}
 	for _, send := range sends {
 		err := send(client, status, clusterName)
@@ -47,7 +28,7 @@ func (s Sender) SendStatus(client senders.MetricClient, clusterName string, stat
 	return nil
 }
 
-func (s Sender) sendOperatorStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+func sendOperatorStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
 	tags := map[string]string{}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
@@ -61,26 +42,26 @@ func (s Sender) sendOperatorStatus(client senders.MetricClient, status wf.Wavefr
 		healthy = 1.0
 	}
 
-	err := s.sendMetric(client, healthy, clusterName, tags, "kubernetes.observability.status")
+	err := sendMetric(client, healthy, clusterName, tags, "kubernetes.observability.status")
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s Sender) sendMetricsStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
-	return s.sendComponentStatus(client, clusterName, map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true}, "Metrics", status.ResourceStatuses)
+func sendMetricsStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+	return sendComponentStatus(client, clusterName, map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true}, "Metrics", status.ResourceStatuses)
 }
 
-func (s Sender) sendLoggingStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
-	return s.sendComponentStatus(client, clusterName, map[string]bool{util.LoggingName: true}, "Logging", status.ResourceStatuses)
+func sendLoggingStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+	return sendComponentStatus(client, clusterName, map[string]bool{util.LoggingName: true}, "Logging", status.ResourceStatuses)
 }
 
-func (s Sender) sendProxyStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
-	return s.sendComponentStatus(client, clusterName, map[string]bool{util.ProxyName: true}, "Proxy", status.ResourceStatuses)
+func sendProxyStatus(client senders.MetricClient, status wf.WavefrontStatus, clusterName string) error {
+	return sendComponentStatus(client, clusterName, map[string]bool{util.ProxyName: true}, "Proxy", status.ResourceStatuses)
 }
 
-func (s Sender) sendComponentStatus(client senders.MetricClient, clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) error {
+func sendComponentStatus(client senders.MetricClient, clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) error {
 	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
 	tags := map[string]string{}
@@ -97,7 +78,7 @@ func (s Sender) sendComponentStatus(client senders.MetricClient, clusterName str
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = 0.0
 	}
-	return s.sendMetric(client, healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
+	return sendMetric(client, healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
 }
 
 func resourceMessages(statuses []wf.ResourceStatus) []string {
@@ -136,7 +117,7 @@ func filterComponents(resourceStatuses []wf.ResourceStatus, resourcesInComponent
 	return filtered
 }
 
-func (s Sender) sendMetric(client senders.MetricClient, value float64, source string, tags map[string]string, name string) error {
+func sendMetric(client senders.MetricClient, value float64, source string, tags map[string]string, name string) error {
 	return client.SendMetric(name, value, 0, source, truncateTags(tags))
 }
 

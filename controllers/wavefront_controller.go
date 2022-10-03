@@ -21,6 +21,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
 	"io/fs"
 	"net/url"
 	"os"
@@ -384,7 +385,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	}
 
 	if r.StatusSender == nil {
-		sender, err := status.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
+		sender, err := senders.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
 			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}

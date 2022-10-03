@@ -14,15 +14,7 @@ var PatchVersionTooLarge = errors.New("patch version is too large (must be less 
 // semverRegex is taken from https://semver.org
 var semverRegex = regexp.MustCompile("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$")
 
-type Sender struct {
-	client senders.MetricClient
-}
-
-func NewSender(client senders.MetricClient) *Sender {
-	return &Sender{client: client}
-}
-
-func (s *Sender) SendVersion(version string, cluster string) error {
+func Send(client senders.MetricClient, cluster string, version string) error {
 	parts := semverRegex.FindStringSubmatch(version)
 	if len(parts) == 0 {
 		return InvalidVersion
@@ -38,7 +30,7 @@ func (s *Sender) SendVersion(version string, cluster string) error {
 
 		return PatchVersionTooLarge
 	}
-	return s.client.SendMetric(
+	return client.SendMetric(
 		"kubernetes.observability.version",
 		encodeSemver(major, minor, patch),
 		0,
