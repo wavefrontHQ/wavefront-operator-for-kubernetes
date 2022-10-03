@@ -94,6 +94,8 @@ function clean_up_test() {
   echo "Cleaning Up ..."
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml --timeout=10s
+
+  wait_for_proxy_termination
 }
 
 function run_static_analysis() {
