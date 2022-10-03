@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func NewWavefrontProxySender(wavefrontProxyAddress string) (senders.Sender, error) {
+func NewWavefrontClient(wavefrontProxyAddress string) (senders.Sender, error) {
 	if !strings.HasPrefix("http://", wavefrontProxyAddress) {
 		wavefrontProxyAddress = "http://" + wavefrontProxyAddress
 	}

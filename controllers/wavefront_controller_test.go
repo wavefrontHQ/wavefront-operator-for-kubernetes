@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
-
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -41,7 +39,7 @@ func TestReconcileAll(t *testing.T) {
 		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
 		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertAnyLines)
-		r.StatusSender = status.NewSender(expectMetricsSent)
+		r.MetricClient = expectMetricsSent
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -67,7 +65,7 @@ func TestReconcileAll(t *testing.T) {
 		r, _, _, _ := setupForCreate(invalidWFSpec)
 		r.KubernetesManager = stubKM
 		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
-		r.StatusSender = status.NewSender(expectMetricsSent)
+		r.MetricClient = expectMetricsSent
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -1155,7 +1153,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: testhelper.NewMockKubernetesManager(),
-		StatusSender:      status.NewSender(&testhelper.StubMetricClient{}),
+		MetricClient:      &testhelper.StubMetricClient{},
 		Appsv1:            fakesAppsV1,
 	}
 

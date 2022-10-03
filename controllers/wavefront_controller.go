@@ -72,7 +72,7 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
-	StatusSender      *status.Sender
+	MetricClient      senders.MetricClient
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=observability-system,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -384,12 +384,12 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Logging.ConfigHash = hashValue(configHashBytes)
 	}
 
-	if r.StatusSender == nil {
-		sender, err := senders.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
+	if r.MetricClient == nil {
+		client, err := senders.NewWavefrontClient(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
 			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}
-		r.StatusSender = sender
+		r.MetricClient = client
 	}
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
@@ -470,19 +470,19 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		componentsToCheck[util.LoggingName] = util.DaemonSet
 	}
 
-	status := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
+	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
 	if !validationResult.IsValid() {
-		status.Status = health.Unhealthy
-		status.Message = validationResult.Message()
+		wavefrontStatus.Status = health.Unhealthy
+		wavefrontStatus.Message = validationResult.Message()
 	}
 	if !validationResult.IsError() {
-		r.StatusSender.SendStatus(nil, wavefront.Spec.ClusterName, status)
+		status.Send(r.MetricClient, wavefront.Spec.ClusterName, wavefrontStatus)
 	}
 
-	if status.Status != wavefront.Status.Status {
-		log.Log.Info(fmt.Sprintf("Wavefront CR status changed from %s --> %s", wavefront.Status.Status, status.Status))
-		wavefront.Status = status
+	if wavefrontStatus.Status != wavefront.Status.Status {
+		log.Log.Info(fmt.Sprintf("Wavefront CR wavefrontStatus changed from %s --> %s", wavefront.Status.Status, wavefrontStatus.Status))
+		wavefront.Status = wavefrontStatus
 		return r.Status().Update(ctx, wavefront)
 	}
 
