@@ -1,0 +1,17 @@
+package senders
+
+import (
+	"github.com/wavefronthq/wavefront-sdk-go/senders"
+	"strings"
+)
+
+func NewWavefrontProxySender(wavefrontProxyAddress string) (senders.Sender, error) {
+	if !strings.HasPrefix("http://", wavefrontProxyAddress) {
+		wavefrontProxyAddress = "http://" + wavefrontProxyAddress
+	}
+	sender, err := senders.NewSender(wavefrontProxyAddress)
+	if err != nil {
+		return nil, err
+	}
+	return sender, nil
+}
