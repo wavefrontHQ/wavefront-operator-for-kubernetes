@@ -71,6 +71,10 @@ spec:
               dataCollection:
                 description: DataCollection options
                 properties:
+                  allowLegacyInstall:
+                    description: Allows metrics and logging data collection when a
+                      legacy install is detected. Defaults to false.
+                    type: boolean
                   logging:
                     description: Enable and configure wavefront logging
                     properties:
@@ -893,7 +897,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot:2.0.1-alpha-453c59e1
+        image: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot:2.0.1-alpha-4cc6bb0a
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
