@@ -35,6 +35,7 @@ import (
 )
 
 var (
+	version  string // populated via ldflags at build time
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
@@ -70,7 +71,7 @@ func main() {
 	}
 
 	var controller *controllers.WavefrontReconciler
-	controller, err = controllers.NewWavefrontReconciler(mgr.GetClient(), mgr.GetScheme())
+	controller, err = controllers.NewWavefrontReconciler(version, mgr.GetClient(), mgr.GetScheme())
 	if err != nil {
 		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)

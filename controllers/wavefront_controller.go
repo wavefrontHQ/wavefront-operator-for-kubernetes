@@ -29,9 +29,12 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
+
 	kubernetes_manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/status"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -71,7 +74,8 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
-	StatusSender      *status.Sender
+	SendMetrics       metric.Sender
+	OperatorVersion   string
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=observability-system,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -151,7 +155,7 @@ func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
+func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -176,6 +180,7 @@ func NewWavefrontReconciler(client client.Client, scheme *runtime.Scheme) (opera
 	}
 
 	reconciler := &WavefrontReconciler{
+		OperatorVersion:   operatorVersion,
 		Client:            client,
 		Scheme:            scheme,
 		FS:                os.DirFS(DeployDir),
@@ -383,12 +388,12 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Logging.ConfigHash = hashValue(configHashBytes)
 	}
 
-	if r.StatusSender == nil {
-		sender, err := status.NewWavefrontProxySender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
+	if r.SendMetrics == nil {
+		sender, err := metric.NewWavefrontSender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
 			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}
-		r.StatusSender = sender
+		r.SendMetrics = sender
 	}
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
 	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
@@ -469,23 +474,46 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		componentsToCheck[util.LoggingName] = util.DaemonSet
 	}
 
-	status := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
+	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
 	if !validationResult.IsValid() {
-		status.Status = health.Unhealthy
-		status.Message = validationResult.Message()
-	}
-	if !validationResult.IsError() {
-		r.StatusSender.SendStatus(status, wavefront.Spec.ClusterName)
+		wavefrontStatus.Status = health.Unhealthy
+		wavefrontStatus.Message = validationResult.Message()
 	}
 
-	if status.Status != wavefront.Status.Status {
-		log.Log.Info(fmt.Sprintf("Wavefront CR status changed from %s --> %s", wavefront.Status.Status, status.Status))
-		wavefront.Status = status
+	r.reportMetrics(!validationResult.IsError(), wavefront.Spec.ClusterName, wavefrontStatus)
+
+	if wavefrontStatus.Status != wavefront.Status.Status {
+		log.Log.Info(fmt.Sprintf("Wavefront CR wavefrontStatus changed from %s --> %s", wavefront.Status.Status, wavefrontStatus.Status))
+		wavefront.Status = wavefrontStatus
 		return r.Status().Update(ctx, wavefront)
 	}
 
 	return nil
+}
+
+func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName string, wavefrontStatus wf.WavefrontStatus) {
+	var metrics []metric.Metric
+
+	if sendStatusMetrics {
+		statusMetrics, err := status.Metrics(clusterName, wavefrontStatus)
+		if err != nil {
+			log.Log.Error(err, "could not create status metrics")
+		} else {
+			metrics = append(metrics, statusMetrics...)
+		}
+	}
+
+	versionMetrics, err := version.Metrics(clusterName, r.OperatorVersion)
+	if err != nil {
+		log.Log.Error(err, "could not create version metrics")
+	} else {
+		metrics = append(metrics, versionMetrics...)
+	}
+
+	if err = r.SendMetrics(metrics); err != nil {
+		log.Log.Info(fmt.Sprintf("error sending metrics: %s", err.Error()))
+	}
 }
 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {

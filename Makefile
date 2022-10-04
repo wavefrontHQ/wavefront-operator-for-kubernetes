@@ -14,6 +14,7 @@ RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
 NS=observability-system
+LDFLAGS=-X main.version=$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
@@ -103,7 +104,7 @@ GOARCH?=$(go env GOARCH)
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o build/$(GOOS)/$(GOARCH)/manager main.go
+	go build -ldflags "$(LDFLAGS)" -o build/$(GOOS)/$(GOARCH)/manager main.go
 	rm -rf build/$(GOOS)/$(GOARCH)/deploy
 	cp -r deploy build/$(GOOS)/$(GOARCH)
 	cp open_source_licenses.txt build/
