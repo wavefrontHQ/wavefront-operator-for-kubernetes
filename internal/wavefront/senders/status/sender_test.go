@@ -1,72 +1,84 @@
 package status_test
 
 import (
-	"errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
 	"strings"
 	"testing"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/status"
 
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
-
-	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 )
 
 func TestSender(t *testing.T) {
 	t.Run("sends empty wavefront status", func(t *testing.T) {
-		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.observability.status 0.000000 source=\"my_cluster\""))
-
-		_ = status.Sender("my_cluster", wf.WavefrontStatus{})(expectedMetricLine.SendMetric)
-
-		expectedMetricLine.Verify(t)
+		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{})
+		require.NoError(t, err)
+		require.Contains(t, metrics, senders.Metric{
+			Name:   "kubernetes.observability.status",
+			Value:  0,
+			Source: "my_cluster",
+			Tags:   map[string]string{},
+		})
 	})
 
 	t.Run("sends healthy wavefront status", func(t *testing.T) {
-		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.observability.status 1.000000 source=\"my_cluster\" message=\"1/1 components are healthy\" status=\"Healthy\""))
-
-		_ = status.Sender("my_cluster", wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"})(expectedMetricLine.SendMetric)
-
-		expectedMetricLine.Verify(t)
+		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"})
+		require.NoError(t, err)
+		require.Contains(t, metrics, senders.Metric{
+			Name:   "kubernetes.observability.status",
+			Value:  1,
+			Source: "my_cluster",
+			Tags: map[string]string{
+				"status":  "Healthy",
+				"message": "1/1 components are healthy",
+			},
+		})
 	})
 
 	t.Run("sends unhealthy wavefront status", func(t *testing.T) {
-		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.observability.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy\" status=\"Unhealthy\""))
-
-		_ = status.Sender("my_cluster", wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"})(expectedMetricLine.SendMetric)
-
-		expectedMetricLine.Verify(t)
+		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"})
+		require.NoError(t, err)
+		require.Contains(t, metrics, senders.Metric{
+			Name:   "kubernetes.observability.status",
+			Value:  0,
+			Source: "my_cluster",
+			Tags: map[string]string{
+				"status":  "Unhealthy",
+				"message": "0/1 components are healthy",
+			},
+		})
 	})
 
 	t.Run("sends wavefront status with point tag exceeds length limit", func(t *testing.T) {
-		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.observability.status 0.000000 source=\"my_cluster\" message=\"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E\" status=\"Unhealthy\""))
-
-		_ = status.Sender("my_cluster", wf.WavefrontStatus{
+		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{
 			Status: "Unhealthy",
 			Message: "0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; " +
 				"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; " +
-				"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; "})(expectedMetricLine.SendMetric)
+				"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; ",
+		})
 
-		expectedMetricLine.Verify(t)
-	})
-
-	t.Run("reports an error when it fails to send", func(t *testing.T) {
-		alwaysError := func(_ string, _ float64, _ int64, _ string, _ map[string]string) error {
-			return errors.New("send error")
-		}
-		assert.EqualError(t, status.Sender("my_cluster", wf.WavefrontStatus{Status: "Healthy"})(alwaysError), "send error")
+		require.NoError(t, err)
+		require.Contains(t, metrics, senders.Metric{
+			Name:   "kubernetes.observability.status",
+			Value:  0,
+			Source: "my_cluster",
+			Tags: map[string]string{
+				"status":  "Unhealthy",
+				"message": "0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E",
+			},
+		})
 	})
 
 	t.Run("metrics component", func(t *testing.T) {
 		ReportsSubComponentMetric(t, "Metrics", []string{util.ClusterCollectorName, util.NodeCollectorName})
 
 		t.Run("sends unhealthy status when cluster and node collector are unhealthy", func(t *testing.T) {
-			expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine("kubernetes.observability.metrics.status 0.000000 source=\"my_cluster\" message=\"cluster collector has an error; node collector has an error\" status=\"unhealthy\""))
-
-			_ = status.Sender("my_cluster", wf.WavefrontStatus{
+			metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{
 				Status:  health.Unhealthy,
 				Message: "",
 				ResourceStatuses: []wf.ResourceStatus{
@@ -81,9 +93,18 @@ func TestSender(t *testing.T) {
 						Healthy: false,
 					},
 				},
-			})(expectedMetricLine.SendMetric)
+			})
 
-			expectedMetricLine.Verify(t)
+			require.NoError(t, err)
+			require.Contains(t, metrics, senders.Metric{
+				Name:   "kubernetes.observability.metrics.status",
+				Value:  0,
+				Source: "my_cluster",
+				Tags: map[string]string{
+					"status":  "unhealthy",
+					"message": "cluster collector has an error; node collector has an error",
+				},
+			})
 		})
 	})
 
@@ -100,10 +121,6 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 	metricName := fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName))
 
 	t.Run("sends healthy status", func(t *testing.T) {
-		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine(
-			fmt.Sprintf("%s 1.000000 source=\"my_cluster\" message=\"%s component is healthy\" status=\"healthy\"", metricName, componentName),
-		))
-
 		wfStatus := wf.WavefrontStatus{Status: health.Healthy}
 		for _, componentName := range resourceNames {
 			wfStatus.ResourceStatuses = append(wfStatus.ResourceStatuses, wf.ResourceStatus{
@@ -111,17 +128,25 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				Healthy: true,
 			})
 		}
-		_ = status.Sender("my_cluster", wfStatus)(expectedMetricLine.SendMetric)
 
-		expectedMetricLine.Verify(t)
+		metrics, err := status.Metrics("my_cluster", wfStatus)
+
+		require.NoError(t, err)
+		require.Contains(t, metrics, senders.Metric{
+			Name:   metricName,
+			Value:  1,
+			Source: "my_cluster",
+			Tags: map[string]string{
+				"status":  "healthy",
+				"message": fmt.Sprintf("%s component is healthy", componentName),
+			},
+		})
 	})
 
 	for _, testComponentName := range resourceNames {
 		t.Run(fmt.Sprintf("sends unhealthy status when %s is unhealthy", testComponentName), func(t *testing.T) {
 			errorStr := fmt.Sprintf("%s has an error", testComponentName)
-			expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine(
-				fmt.Sprintf("%s 0.000000 source=\"my_cluster\" message=\"%s\" status=\"unhealthy\"", metricName, errorStr),
-			))
+
 			wfStatus := wf.WavefrontStatus{Status: health.Unhealthy}
 			for _, componentName := range resourceNames {
 				if testComponentName == componentName {
@@ -138,22 +163,36 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				}
 			}
 
-			_ = status.Sender("my_cluster", wfStatus)(expectedMetricLine.SendMetric)
+			metrics, err := status.Metrics("my_cluster", wfStatus)
 
-			expectedMetricLine.Verify(t)
+			require.NoError(t, err)
+			require.Contains(t, metrics, senders.Metric{
+				Name:   metricName,
+				Value:  0,
+				Source: "my_cluster",
+				Tags: map[string]string{
+					"status":  "unhealthy",
+					"message": errorStr,
+				},
+			})
 		})
 	}
 
 	t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
-		expectedMetricLine := testhelper.NewMockMetricClient(testhelper.AssertContainsLine(
-			fmt.Sprintf("%s 2.000000 source=\"my_cluster\" message=\"%s component is not enabled\" status=\"not enabled\"", metricName, componentName),
-		))
-
-		_ = status.Sender("my_cluster", wf.WavefrontStatus{
+		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{
 			Status:           health.Unhealthy,
 			ResourceStatuses: []wf.ResourceStatus{},
-		})(expectedMetricLine.SendMetric)
+		})
 
-		expectedMetricLine.Verify(t)
+		require.NoError(t, err)
+		require.Contains(t, metrics, senders.Metric{
+			Name:   metricName,
+			Value:  2,
+			Source: "my_cluster",
+			Tags: map[string]string{
+				"status":  "not enabled",
+				"message": fmt.Sprintf("%s component is not enabled", componentName),
+			},
+		})
 	})
 }

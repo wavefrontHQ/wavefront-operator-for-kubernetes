@@ -11,27 +11,16 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 )
 
-func Sender(clusterName string, status wf.WavefrontStatus) senders.Sender {
-	return func(sendMetric senders.SendMetric) error {
-
-		sends := []func(senders.SendMetric, wf.WavefrontStatus, string) error{
-			sendMetricsStatus,
-			sendLoggingStatus,
-			sendProxyStatus,
-			sendOperatorStatus,
-		}
-		for _, send := range sends {
-			err := send(sendMetric, status, clusterName)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
+func Metrics(clusterName string, status wf.WavefrontStatus) ([]senders.Metric, error) {
+	return []senders.Metric{
+		metricsStatus(status, clusterName),
+		loggingStatus(status, clusterName),
+		proxyStatus(status, clusterName),
+		sendOperatorStatus(status, clusterName),
+	}, nil
 }
 
-func sendOperatorStatus(sendMetric senders.SendMetric, status wf.WavefrontStatus, clusterName string) error {
+func sendOperatorStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
 	tags := map[string]string{}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
@@ -45,26 +34,22 @@ func sendOperatorStatus(sendMetric senders.SendMetric, status wf.WavefrontStatus
 		healthy = 1.0
 	}
 
-	err := sendWithTruncate(sendMetric, healthy, clusterName, tags, "kubernetes.observability.status")
-	if err != nil {
-		return err
-	}
-	return nil
+	return metricWithTruncatedTags(healthy, clusterName, tags, "kubernetes.observability.status")
 }
 
-func sendMetricsStatus(sendMetric senders.SendMetric, status wf.WavefrontStatus, clusterName string) error {
-	return sendComponentStatus(sendMetric, clusterName, map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true}, "Metrics", status.ResourceStatuses)
+func metricsStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
+	return componentStatusMetric(clusterName, map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true}, "Metrics", status.ResourceStatuses)
 }
 
-func sendLoggingStatus(sendMetric senders.SendMetric, status wf.WavefrontStatus, clusterName string) error {
-	return sendComponentStatus(sendMetric, clusterName, map[string]bool{util.LoggingName: true}, "Logging", status.ResourceStatuses)
+func loggingStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
+	return componentStatusMetric(clusterName, map[string]bool{util.LoggingName: true}, "Logging", status.ResourceStatuses)
 }
 
-func sendProxyStatus(sendMetric senders.SendMetric, status wf.WavefrontStatus, clusterName string) error {
-	return sendComponentStatus(sendMetric, clusterName, map[string]bool{util.ProxyName: true}, "Proxy", status.ResourceStatuses)
+func proxyStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
+	return componentStatusMetric(clusterName, map[string]bool{util.ProxyName: true}, "Proxy", status.ResourceStatuses)
 }
 
-func sendComponentStatus(sendMetric senders.SendMetric, clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) error {
+func componentStatusMetric(clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) senders.Metric {
 	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
 	tags := map[string]string{}
@@ -81,7 +66,7 @@ func sendComponentStatus(sendMetric senders.SendMetric, clusterName string, reso
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = 0.0
 	}
-	return sendWithTruncate(sendMetric, healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
+	return metricWithTruncatedTags(healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
 }
 
 func resourceMessages(statuses []wf.ResourceStatus) []string {
@@ -120,8 +105,8 @@ func filterComponents(resourceStatuses []wf.ResourceStatus, resourcesInComponent
 	return filtered
 }
 
-func sendWithTruncate(sendMetric senders.SendMetric, value float64, source string, tags map[string]string, name string) error {
-	return sendMetric(name, value, 0, source, truncateTags(tags))
+func metricWithTruncatedTags(value float64, source string, tags map[string]string, name string) senders.Metric {
+	return senders.Metric{Name: name, Value: value, Source: source, Tags: truncateTags(tags)}
 }
 
 func truncateTags(tags map[string]string) map[string]string {

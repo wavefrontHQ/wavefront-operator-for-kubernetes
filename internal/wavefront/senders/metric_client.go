@@ -22,3 +22,10 @@ func sendMetrics(client metricClient) MultiSender {
 		return client.Flush()
 	}
 }
+
+type Metric struct {
+	Name   string
+	Value  float64
+	Source string
+	Tags   map[string]string
+}

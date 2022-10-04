@@ -473,13 +473,13 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
 
-	mySenders := []senders.Sender{version.Sender(wavefront.Spec.ClusterName, "0.0.0")}
+	mySenders := []senders.Sender{version.Metrics(wavefront.Spec.ClusterName, "0.0.0")}
 	if !validationResult.IsValid() {
 		wavefrontStatus.Status = health.Unhealthy
 		wavefrontStatus.Message = validationResult.Message()
 	}
 	if !validationResult.IsError() {
-		mySenders = append(mySenders, status.Sender(wavefront.Spec.ClusterName, wavefrontStatus))
+		mySenders = append(mySenders, status.Metrics(wavefront.Spec.ClusterName, wavefrontStatus))
 	}
 
 	err := r.MetricSender(mySenders...)
