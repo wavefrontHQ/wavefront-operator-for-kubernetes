@@ -2,7 +2,7 @@ package status
 
 import (
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"strings"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -11,16 +11,16 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 )
 
-func Metrics(clusterName string, status wf.WavefrontStatus) ([]senders.Metric, error) {
-	return []senders.Metric{
+func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, error) {
+	return []metric.Metric{
 		metricsStatus(status, clusterName),
 		loggingStatus(status, clusterName),
 		proxyStatus(status, clusterName),
-		sendOperatorStatus(status, clusterName),
+		operatorStatus(status, clusterName),
 	}, nil
 }
 
-func sendOperatorStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
+func operatorStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
 	tags := map[string]string{}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
@@ -37,19 +37,34 @@ func sendOperatorStatus(status wf.WavefrontStatus, clusterName string) senders.M
 	return metricWithTruncatedTags(healthy, clusterName, tags, "kubernetes.observability.status")
 }
 
-func metricsStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
-	return componentStatusMetric(clusterName, map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true}, "Metrics", status.ResourceStatuses)
+func metricsStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+	return componentStatusMetric(
+		clusterName,
+		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
+		"Metrics",
+		status.ResourceStatuses,
+	)
 }
 
-func loggingStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
-	return componentStatusMetric(clusterName, map[string]bool{util.LoggingName: true}, "Logging", status.ResourceStatuses)
+func loggingStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+	return componentStatusMetric(
+		clusterName,
+		map[string]bool{util.LoggingName: true},
+		"Logging",
+		status.ResourceStatuses,
+	)
 }
 
-func proxyStatus(status wf.WavefrontStatus, clusterName string) senders.Metric {
-	return componentStatusMetric(clusterName, map[string]bool{util.ProxyName: true}, "Proxy", status.ResourceStatuses)
+func proxyStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+	return componentStatusMetric(
+		clusterName,
+		map[string]bool{util.ProxyName: true},
+		"Proxy",
+		status.ResourceStatuses,
+	)
 }
 
-func componentStatusMetric(clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) senders.Metric {
+func componentStatusMetric(clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) metric.Metric {
 	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
 	tags := map[string]string{}
@@ -105,8 +120,8 @@ func filterComponents(resourceStatuses []wf.ResourceStatus, resourcesInComponent
 	return filtered
 }
 
-func metricWithTruncatedTags(value float64, source string, tags map[string]string, name string) senders.Metric {
-	return senders.Metric{Name: name, Value: value, Source: source, Tags: truncateTags(tags)}
+func metricWithTruncatedTags(value float64, source string, tags map[string]string, name string) metric.Metric {
+	return metric.Metric{Name: name, Value: value, Source: source, Tags: truncateTags(tags)}
 }
 
 func truncateTags(tags map[string]string) map[string]string {

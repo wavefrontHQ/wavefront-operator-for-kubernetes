@@ -2,7 +2,7 @@ package version
 
 import (
 	"errors"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"regexp"
 	"strconv"
 )
@@ -14,7 +14,7 @@ var PatchVersionTooLarge = errors.New("patch version is too large (must be less 
 // semverRegex is taken from https://semver.org
 var semverRegex = regexp.MustCompile("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$")
 
-func Metrics(cluster string, version string) ([]senders.Metric, error) {
+func Metrics(cluster string, version string) ([]metric.Metric, error) {
 	parts := semverRegex.FindStringSubmatch(version)
 	if len(parts) == 0 {
 		return nil, InvalidVersion
@@ -29,7 +29,7 @@ func Metrics(cluster string, version string) ([]senders.Metric, error) {
 		return nil, PatchVersionTooLarge
 	}
 
-	return []senders.Metric{
+	return []metric.Metric{
 		{
 			Name:   "kubernetes.observability.version",
 			Value:  encodeSemver(major, minor, patch),

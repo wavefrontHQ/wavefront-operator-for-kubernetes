@@ -2,8 +2,8 @@ package version_test
 
 import (
 	"github.com/stretchr/testify/require"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/senders/version"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ func TestSender(t *testing.T) {
 		metrics, err := version.Metrics("somecluster", "2.1.3")
 
 		require.NoError(t, err)
-		require.Contains(t, metrics, senders.Metric{
+		require.Contains(t, metrics, metric.Metric{
 			Name:   "kubernetes.observability.version",
 			Value:  2.010300,
 			Source: "somecluster",

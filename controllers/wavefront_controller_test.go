@@ -3,7 +3,9 @@ package controllers_test
 import (
 	"context"
 	"fmt"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
@@ -38,8 +40,17 @@ func TestReconcileAll(t *testing.T) {
 		spec := defaultWFSpec()
 		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
-		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertAnyLines)
-		r.MetricSender = expectMetricsSent
+		versionSent := 0.0
+		metricsSent := 0
+		r.SendMetrics = func(metrics []metric.Metric) error {
+			metricsSent += len(metrics)
+			for _, m := range metrics {
+				if m.Name == "kubernetes.observability.version" {
+					versionSent = m.Value
+				}
+			}
+			return nil
+		}
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -54,7 +65,8 @@ func TestReconcileAll(t *testing.T) {
 		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 		assert.False(t, stubKM.LoggingDaemonSetContains())
 
-		expectMetricsSent.Verify(t)
+		assert.Greater(t, metricsSent, 0, "should have sent metrics")
+		assert.Equal(t, 99.9999, versionSent, "should send OperatorVersion")
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
@@ -64,8 +76,15 @@ func TestReconcileAll(t *testing.T) {
 		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
 		r, _, _, _ := setupForCreate(invalidWFSpec)
 		r.KubernetesManager = stubKM
-		expectMetricsSent := testhelper.NewMockMetricClient(testhelper.AssertEmpty)
-		r.MetricSender = expectMetricsSent
+		statusMetricsSent := 0
+		r.SendMetrics = func(metrics []metric.Metric) error {
+			for _, m := range metrics {
+				if strings.HasSuffix(m.Name, ".status") {
+					statusMetricsSent += 1
+				}
+			}
+			return nil
+		}
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
 		assert.NoError(t, err)
@@ -78,7 +97,7 @@ func TestReconcileAll(t *testing.T) {
 		assert.False(t, stubKM.AppliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
 		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
 
-		expectMetricsSent.Verify(t)
+		assert.Equal(t, 0, statusMetricsSent, "should not have sent status metrics")
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
@@ -1149,12 +1168,15 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
+		OperatorVersion:   "99.99.99",
 		Client:            apiClient,
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: testhelper.NewMockKubernetesManager(),
-		MetricSender:      &testhelper.StubMetricClient{},
-		Appsv1:            fakesAppsV1,
+		SendMetrics: func(_ []metric.Metric) error {
+			return nil
+		},
+		Appsv1: fakesAppsV1,
 	}
 
 	return r, wfCR, apiClient, fakesAppsV1
