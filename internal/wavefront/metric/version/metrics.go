@@ -2,9 +2,10 @@ package version
 
 import (
 	"errors"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"regexp"
 	"strconv"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 )
 
 var InvalidVersion = errors.New("invalid version (must be in semantic version format)")

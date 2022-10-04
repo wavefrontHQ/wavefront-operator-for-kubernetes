@@ -3,10 +3,11 @@ package controllers_test
 import (
 	"context"
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"

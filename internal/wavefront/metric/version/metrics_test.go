@@ -1,10 +1,11 @@
 package version_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
-	"testing"
 )
 
 func TestSender(t *testing.T) {

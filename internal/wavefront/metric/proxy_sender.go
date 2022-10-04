@@ -1,8 +1,9 @@
 package metric
 
 import (
-	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 	"strings"
+
+	wfsdk "github.com/wavefronthq/wavefront-sdk-go/senders"
 )
 
 func NewWavefrontSender(wavefrontProxyAddress string) (Sender, error) {

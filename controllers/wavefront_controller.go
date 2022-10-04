@@ -21,8 +21,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
 	"io/fs"
 	"net/url"
 	"os"
@@ -30,6 +28,9 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
 
 	kubernetes_manager "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/kubernetes"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
