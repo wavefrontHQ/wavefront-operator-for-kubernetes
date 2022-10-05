@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
-
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -51,7 +51,9 @@ func main() {
 	var probeAddr string
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	opts := zap.Options{
-		Development: true,
+		Development: true, // Developer true, defaults to console writer instead of JSON
+		Level:       zapcore.InfoLevel,
+		TimeEncoder: zapcore.RFC3339TimeEncoder,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
