@@ -203,7 +203,7 @@ GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 }
 endef
 
-deploy-managed: docker-xplatform-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy-managed: manifests kustomize docker-xplatform-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
