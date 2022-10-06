@@ -203,7 +203,13 @@ GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 }
 endef
 
-deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy-managed: docker-xplatform-build manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
+
+deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the Kind cluster.
 	kind load docker-image $(IMG)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
