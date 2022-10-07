@@ -57,6 +57,7 @@ kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.wavef
 kubectl logs deployment/wavefront-proxy -n observability-system | grep proxyHost
 ```
 The value after --proxyHost should match what you have configured as the http-url in your HTTP proxy secret
+
 2. Determine the name of your HTTP proxy secret
 ```
 kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.dataExport.wavefrontProxy.httpProxy.secret}'
