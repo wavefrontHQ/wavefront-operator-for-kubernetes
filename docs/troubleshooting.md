@@ -44,29 +44,29 @@ kubectl get secrets wavefront-secret -n observability-system -o json | jq '.data
 ```
 
 #### Unknown host or Unable to check in
-*Without an HTTP Proxy*
+- *Without an HTTP Proxy*
 
-Check that you configured the correct Wavefront URL in your Wavefront CR
-```
-kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.wavefrontUrl}'
-```
-*With an HTTP Proxy*
+  - Check that you configured the correct Wavefront URL in your Wavefront CR
+    ```
+    kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.wavefrontUrl}'
+    ```
+- *With an HTTP Proxy*
 
-1. Verify that the proxy recognizes your HTTP proxy configuration
-```
-kubectl logs deployment/wavefront-proxy -n observability-system | grep proxyHost
-```
-The value after --proxyHost should match what you have configured as the http-url in your HTTP proxy secret
+  - Verify that the proxy recognizes your HTTP proxy configuration
+    ```
+    kubectl logs deployment/wavefront-proxy -n observability-system | grep proxyHost
+    ```
+    The value after --proxyHost should match what you have configured as the http-url in your HTTP proxy secret
 
-2. Determine the name of your HTTP proxy secret
-```
-kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.dataExport.wavefrontProxy.httpProxy.secret}'
-```
-3. Verify that the secret has the proper keys and values, check out [our example](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
-```
-kubectl -n observability-system get secret http-proxy-secret -o=json | jq -r '.data | to_entries[] | "echo \(.key|@sh) $(echo \(.value|@sh) | base64 --decode)"' | xargs -I{} sh -c {}
-```
-4. Check your HTTP proxy logs
+  - Determine the name of your HTTP proxy secret
+    ```
+    kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.dataExport.wavefrontProxy.httpProxy.secret}'
+    ```
+  - Verify that the secret has the proper keys and values, check out [our example](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
+    ```
+    kubectl -n observability-system get secret http-proxy-secret -o=json | jq -r '.data | to_entries[] | "echo \(.key|@sh) $(echo \(.value|@sh) | base64 --decode)"' | xargs -I{} sh -c {}
+    ```
+  - Check your HTTP proxy logs
 
 ### Cluster or node collector not running or unhealthy
 
@@ -138,6 +138,6 @@ If there are any configuration or validation errors, the `MESSAGE` column in the
 - Check the Wavefront Collector Troubleshooting dashboard in the Kubernetes integration for collection errors. The `Collection Errors per Type` chart and `Collection Errors per Endpoint` chart can be used to find the sources whose metrics are not being collected
 - Refer to [this](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/blob/main/deploy/kubernetes/scenarios/wavefront-full-config.yaml) example scenario for configuring sources for metric collection
 - Check the cluster collector logs to verify if the source was configured for the metrics to be collected
-```
-kubectl logs deployment/wavefront-cluster-collector -n observability-system
-```
+  ```
+  kubectl logs deployment/wavefront-cluster-collector -n observability-system
+  ```
