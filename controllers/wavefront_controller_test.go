@@ -17,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/controllers"
@@ -39,35 +38,43 @@ func TestReconcileAll(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
 
 		spec := defaultWFSpec()
-		r, _, _, _ := setupForCreate(spec)
+		spec.DataCollection.Logging.Enable = true
+		r, _, _, apps := setupForCreate(spec)
+		ProxyRunning(apps, 0)
 		r.KubernetesManager = stubKM
-		versionSent := 0.0
-		metricsSent := 0
-		r.SendMetrics = func(metrics []metric.Metric) error {
-			metricsSent += len(metrics)
-			for _, m := range metrics {
-				if m.Name == "kubernetes.observability.version" {
-					versionSent = m.Value
-				}
-			}
-			return nil
-		}
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.Equal(t, ctrl.Result{Requeue: true}, results)
+		require.Equal(t, ctrl.Result{Requeue: true}, results)
 
-		assert.True(t, stubKM.CollectorServiceAccountContains())
-		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:2878"))
-		assert.True(t, stubKM.NodeCollectorDaemonSetContains())
-		assert.True(t, stubKM.ClusterCollectorDeploymentContains())
-		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
-		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
-		assert.False(t, stubKM.LoggingDaemonSetContains())
+		require.False(t, stubKM.CollectorServiceAccountContains())
+		require.False(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:2878"))
+		require.False(t, stubKM.NodeCollectorDaemonSetContains())
+		require.False(t, stubKM.ClusterCollectorDeploymentContains())
+		require.False(t, stubKM.LoggingDaemonSetContains())
+		require.True(t, stubKM.ProxyServiceContains("port: 2878"))
+		require.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878"))
 
-		assert.Greater(t, metricsSent, 0, "should have sent metrics")
-		assert.Equal(t, 99.9999, versionSent, "should send OperatorVersion")
+		require.Equal(t, 0, len(mockSender.SentMetrics), "should not have sent metrics")
+
+		ProxyRunning(apps, 1)
+
+		results, err = r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.Equal(t, ctrl.Result{Requeue: true}, results)
+
+		require.True(t, stubKM.CollectorServiceAccountContains())
+		require.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:2878"))
+		require.True(t, stubKM.NodeCollectorDaemonSetContains())
+		require.True(t, stubKM.ClusterCollectorDeploymentContains())
+		require.True(t, stubKM.LoggingDaemonSetContains())
+
+		require.Greater(t, len(mockSender.SentMetrics), 0, "should not have sent metrics")
+		require.Equal(t, 99.9999, VersionSent(mockSender), "should send OperatorVersion")
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
@@ -77,48 +84,45 @@ func TestReconcileAll(t *testing.T) {
 		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
 		r, _, _, _ := setupForCreate(invalidWFSpec)
 		r.KubernetesManager = stubKM
-		statusMetricsSent := 0
-		r.SendMetrics = func(metrics []metric.Metric) error {
-			for _, m := range metrics {
-				if strings.HasSuffix(m.Name, ".status") {
-					statusMetricsSent += 1
-				}
-			}
-			return nil
-		}
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
 
 		results, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.Equal(t, ctrl.Result{Requeue: true}, results)
+		require.NoError(t, err)
+		require.Equal(t, ctrl.Result{Requeue: true}, results)
 
-		assert.False(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
-		assert.False(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
-		assert.False(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
-		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
-		assert.False(t, stubKM.AppliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
-		assert.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
+		require.False(t, stubKM.AppliedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		require.False(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		require.False(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		require.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		require.False(t, stubKM.AppliedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
+		require.False(t, stubKM.AppliedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
 
-		assert.Equal(t, 0, statusMetricsSent, "should not have sent status metrics")
+		require.Equal(t, 0, StatusMetricsSent(mockSender), "should not have sent status metrics")
 	})
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
 
-		// TODO: so much setup for only one usage...
 		r, wfCR, apiClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+		_ = r.MetricConnection.Connect("http://example.com")
 		r.KubernetesManager = stubKM
 
 		err := apiClient.Delete(context.Background(), wfCR)
 
 		_, err = r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.DeletedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
-		assert.True(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
-		assert.True(t, stubKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
-		assert.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
-		assert.True(t, stubKM.DeletedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
-		assert.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
+		require.True(t, stubKM.DeletedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
+		require.True(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		require.True(t, stubKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
+		require.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		require.True(t, stubKM.DeletedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
+		require.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
+
+		require.Equal(t, 1, mockSender.Closes)
 	})
 }
 
@@ -132,18 +136,18 @@ func TestReconcileCollector(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		/* Note: User is responsible for applying ConfigMap; we can't test for new ConfigMap "myconfig" */
 
 		/* It DOES call the ApplyResources function with the ConfigMap, but it's filtered out */
-		assert.True(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
-		assert.False(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		require.True(t, stubKM.AppliedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
+		require.False(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
 
 		configMapObject, err := stubKM.GetUnstructuredCollectorConfigMap()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.False(t, stubKM.ObjectPassesFilter(
+		require.False(t, stubKM.ObjectPassesFilter(
 			configMapObject,
 		))
 	})
@@ -157,9 +161,9 @@ func TestReconcileCollector(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
+		require.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
 	})
 
 	t.Run("can change the default collection interval", func(t *testing.T) {
@@ -172,9 +176,9 @@ func TestReconcileCollector(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("defaultCollectionInterval: 90s"))
+		require.True(t, stubKM.CollectorConfigMapContains("defaultCollectionInterval: 90s"))
 	})
 
 	t.Run("can disable discovery", func(t *testing.T) {
@@ -187,9 +191,9 @@ func TestReconcileCollector(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("enableDiscovery: false"))
+		require.True(t, stubKM.CollectorConfigMapContains("enableDiscovery: false"))
 	})
 
 	t.Run("can add custom filters", func(t *testing.T) {
@@ -203,10 +207,10 @@ func TestReconcileCollector(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("metricAllowList:\n        - allowSomeTag\n        - allowOtherTag"))
-		assert.True(t, stubKM.CollectorConfigMapContains("metricDenyList:\n        - denyAnotherTag\n        - denyThisTag"))
+		require.True(t, stubKM.CollectorConfigMapContains("metricAllowList:\n        - allowSomeTag\n        - allowOtherTag"))
+		require.True(t, stubKM.CollectorConfigMapContains("metricDenyList:\n        - denyAnotherTag\n        - denyThisTag"))
 	})
 
 	t.Run("can add custom tags", func(t *testing.T) {
@@ -219,9 +223,9 @@ func TestReconcileCollector(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("tags:\n        env: non-production"))
+		require.True(t, stubKM.CollectorConfigMapContains("tags:\n        env: non-production"))
 	})
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
@@ -238,9 +242,9 @@ func TestReconcileCollector(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.ClusterCollectorDeploymentContains("memory: 10Mi"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("memory: 10Mi"))
 	})
 
 	t.Run("resources set for node collector", func(t *testing.T) {
@@ -256,9 +260,9 @@ func TestReconcileCollector(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.NodeCollectorDaemonSetContains("memory: 10Mi"))
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("memory: 10Mi"))
 	})
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
@@ -268,15 +272,15 @@ func TestReconcileCollector(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		/* DaemonSet wavefront-node-collector */
-		assert.True(t, stubKM.NodeCollectorDaemonSetContains("resources:"))
-		assert.False(t, stubKM.NodeCollectorDaemonSetContains("limits:", "requests:"))
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("resources:"))
+		require.False(t, stubKM.NodeCollectorDaemonSetContains("limits:", "requests:"))
 
 		/* Deployment wavefront-cluster-collector */
-		assert.True(t, stubKM.ClusterCollectorDeploymentContains("resources:"))
-		assert.False(t, stubKM.ClusterCollectorDeploymentContains("limits:", "requests:"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("resources:"))
+		require.False(t, stubKM.ClusterCollectorDeploymentContains("limits:", "requests:"))
 	})
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
@@ -295,7 +299,7 @@ func TestReconcileCollector(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		configMap, err := stubKM.GetAppliedYAML(
 			"v1",
@@ -306,22 +310,22 @@ func TestReconcileCollector(t *testing.T) {
 			"clusterName: testClusterName",
 			"proxyAddress: wavefront-proxy:2878",
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		configStr, found, err := unstructured.NestedString(configMap.Object, "data", "config.yaml")
-		assert.Equal(t, true, found)
-		assert.NoError(t, err)
+		require.Equal(t, true, found)
+		require.NoError(t, err)
 
 		// TODO: anything to make this more readable?
 		var configs map[string]interface{}
 		err = yaml.Unmarshal([]byte(configStr), &configs)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		sinks := configs["sinks"]
 		sinkArray := sinks.([]interface{})
 		sinkMap := sinkArray[0].(map[string]interface{})
 		filters := sinkMap["filters"].(map[string]interface{})
-		assert.Equal(t, 2, len(filters["metricDenyList"].([]interface{})))
-		assert.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
+		require.Equal(t, 2, len(filters["metricDenyList"].([]interface{})))
+		require.Equal(t, 2, len(filters["metricAllowList"].([]interface{})))
 	})
 
 	t.Run("Tags can be set for default collector configmap", func(t *testing.T) {
@@ -334,9 +338,9 @@ func TestReconcileCollector(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("key1: value1", "key2: value2"))
+		require.True(t, stubKM.CollectorConfigMapContains("key1: value1", "key2: value2"))
 	})
 
 	t.Run("Empty tags map should not populate in default collector configmap", func(t *testing.T) {
@@ -349,9 +353,9 @@ func TestReconcileCollector(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.False(t, stubKM.CollectorConfigMapContains("tags"))
+		require.False(t, stubKM.CollectorConfigMapContains("tags"))
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
@@ -397,11 +401,31 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878", "configHash: \"\""))
+		require.True(t, stubKM.ProxyDeploymentContains("value: testWavefrontUrl/api/", "name: testToken", "containerPort: 2878", "configHash: \"\""))
 
-		assert.True(t, stubKM.ProxyServiceContains("port: 2878"))
+		require.True(t, stubKM.ProxyServiceContains("port: 2878"))
+	})
+
+	t.Run("does not create proxy when it is configured to use an external proxy", func(t *testing.T) {
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		wfSpec := defaultWFSpec()
+		wfSpec.DataExport.WavefrontProxy.Enable = false
+		wfSpec.DataExport.ExternalWavefrontProxy.Url = "https://example.com"
+		r, _, _, apps := setupForCreate(wfSpec)
+		ProxyRunning(apps, 0)
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+		r.KubernetesManager = stubKM
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.False(t, stubKM.ProxyDeploymentContains())
+		require.False(t, stubKM.ProxyServiceContains())
+		require.Greater(t, len(mockSender.SentMetrics), 0)
 	})
 
 	t.Run("updates proxy and service", func(t *testing.T) {
@@ -411,9 +435,9 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.True(t, stubKM.ProxyDeploymentContains("name: updatedToken", "value: testWavefrontUrl/api/"))
+		require.True(t, stubKM.ProxyDeploymentContains("name: updatedToken", "value: testWavefrontUrl/api/"))
 	})
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
@@ -426,12 +450,12 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsPortInContainers(t, "pushListenerPorts", *stubKM, 1234)
 		containsPortInServicePort(t, 1234, *stubKM)
 
-		assert.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:1234"))
+		require.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "proxyAddress: wavefront-proxy:1234"))
 	})
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
@@ -443,7 +467,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsPortInContainers(t, "deltaCounterPorts", *stubKM, 50000)
 		containsPortInServicePort(t, 50000, *stubKM)
@@ -461,7 +485,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsPortInContainers(t, "traceListenerPorts", *stubKM, 30000)
 		containsPortInServicePort(t, 30000, *stubKM)
@@ -483,7 +507,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsPortInContainers(t, "traceJaegerListenerPorts", *stubKM, 30001)
 		containsPortInServicePort(t, 30001, *stubKM)
@@ -508,7 +532,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsPortInContainers(t, "traceZipkinListenerPorts", *stubKM, 9411)
 		containsPortInServicePort(t, 9411, *stubKM)
@@ -529,7 +553,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsPortInContainers(t, "histogramDistListenerPorts", *stubKM, 40000)
 		containsPortInServicePort(t, 40000, *stubKM)
@@ -554,7 +578,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsProxyArg(t, "--prefix dev", *stubKM)
 		containsProxyArg(t, "--customSourceTags mySource", *stubKM)
@@ -571,12 +595,12 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsProxyArg(t, "--preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml", *stubKM)
 
 		deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		volumeMountHasPath(t, deployment, "preprocessor", "/etc/wavefront/preprocessor")
 		volumeHasConfigMap(t, deployment, "preprocessor", "preprocessor-rules")
@@ -595,13 +619,13 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
-		assert.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
+		require.Equal(t, "1Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String())
+		require.Equal(t, "4Gi", deployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 	})
 
 	t.Run("adjusting proxy replicas", func(t *testing.T) {
@@ -630,39 +654,20 @@ func TestReconcileProxy(t *testing.T) {
 			wfSpec.DataExport.WavefrontProxy.Replicas = 1
 			wfSpec.DataCollection.Logging.Enable = true
 
-			r, _, _, _ := setupForCreate(wfSpec, &appsv1.Deployment{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       util.Deployment,
-					APIVersion: "apps/v1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: util.Namespace,
-					Name:      util.ProxyName,
-				},
-				Spec: appsv1.DeploymentSpec{},
-				Status: appsv1.DeploymentStatus{
-					AvailableReplicas: 0,
-				},
-			})
+			r, _, _, apps := setupForCreate(wfSpec)
 			r.KubernetesManager = stubKM
 
 			_, err := r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
 
-			nodeCollector, err := stubKM.GetAppliedDaemonSet("collector", util.NodeCollectorName)
+			ProxyRunning(apps, 0)
+
+			_, err = r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
 
-			require.Equal(t, "1", nodeCollector.Spec.Template.Annotations["proxy-available-replicas"])
-
-			clusterCollector, err := stubKM.GetAppliedDeployment("collector", util.ClusterCollectorName)
-			require.NoError(t, err)
-
-			require.Equal(t, "1", clusterCollector.Spec.Template.Annotations["proxy-available-replicas"])
-
-			logging, err := stubKM.GetAppliedDaemonSet("logging", util.LoggingName)
-			require.NoError(t, err)
-
-			require.Equal(t, "1", logging.Spec.Template.Annotations["proxy-available-replicas"])
+			require.False(t, stubKM.ClusterCollectorDeploymentContains())
+			require.False(t, stubKM.NodeCollectorDaemonSetContains())
+			require.False(t, stubKM.LoggingDaemonSetContains())
 		})
 
 		t.Run("defaults to one when no proxies exists", func(t *testing.T) {
@@ -701,20 +706,8 @@ func TestReconcileProxy(t *testing.T) {
 			wfSpec.DataExport.WavefrontProxy.Replicas = 2
 			wfSpec.DataCollection.Logging.Enable = true
 
-			r, _, _, _ := setupForCreate(wfSpec, &appsv1.Deployment{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       util.Deployment,
-					APIVersion: "apps/v1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: util.Namespace,
-					Name:      util.ProxyName,
-				},
-				Spec: appsv1.DeploymentSpec{},
-				Status: appsv1.DeploymentStatus{
-					AvailableReplicas: 2,
-				},
-			})
+			r, _, _, apps := setupForCreate(wfSpec)
+			ProxyRunning(apps, 2)
 			r.KubernetesManager = stubKM
 
 			_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -764,10 +757,10 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsProxyArg(t, "--proxyHost myproxyhost_url ", *stubKM)
 		containsProxyArg(t, "--proxyPort 8080", *stubKM)
@@ -777,7 +770,7 @@ func TestReconcileProxy(t *testing.T) {
 		volumeMountHasPath(t, deployment, "http-proxy-ca", "/tmp/ca")
 		volumeHasSecret(t, deployment, "http-proxy-ca", "testHttpProxySecret")
 
-		assert.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+		require.NotEmpty(t, deployment.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 	})
 
 	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
@@ -804,7 +797,7 @@ func TestReconcileProxy(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		containsProxyArg(t, "--proxyHost myproxyhost_url ", *stubKM)
 		containsProxyArg(t, "--proxyPort 8080", *stubKM)
@@ -844,11 +837,11 @@ func TestReconcileLogging(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		ds, err := stubKM.GetAppliedDaemonSet("logging", util.LoggingName)
-		assert.NoError(t, err)
-		assert.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+		require.NoError(t, err)
+		require.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
 
-		assert.NoError(t, err)
-		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
+		require.NoError(t, err)
+		require.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {
@@ -861,10 +854,10 @@ func TestReconcileLogging(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
-		assert.True(t, stubKM.LoggingDaemonSetContains("resources"))
-		assert.False(t, stubKM.LoggingDaemonSetContains("limits:", "requests:"))
+		require.NoError(t, err)
+		require.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
+		require.True(t, stubKM.LoggingDaemonSetContains("resources"))
+		require.False(t, stubKM.LoggingDaemonSetContains("limits:", "requests:"))
 	})
 
 	t.Run("resources set for logging", func(t *testing.T) {
@@ -881,10 +874,10 @@ func TestReconcileLogging(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
-		assert.True(t, stubKM.LoggingDaemonSetContains("memory: 10Mi"))
-		assert.True(t, stubKM.LoggingDaemonSetContains("cpu: 200m"))
+		require.NoError(t, err)
+		require.True(t, stubKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", "wavefront-logging"))
+		require.True(t, stubKM.LoggingDaemonSetContains("memory: 10Mi"))
+		require.True(t, stubKM.LoggingDaemonSetContains("cpu: 200m"))
 	})
 
 	t.Run("Verify log tag allow list", func(t *testing.T) {
@@ -901,11 +894,11 @@ func TestReconcileLogging(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.True(t, stubKM.LoggingConfigMapContains("key $.namespace_name"))
-		assert.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
-		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^kube-sys$|^wavefront$)/"))
-		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^pet-clinic$)/"))
+		require.NoError(t, err)
+		require.True(t, stubKM.LoggingConfigMapContains("key $.namespace_name"))
+		require.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
+		require.True(t, stubKM.LoggingConfigMapContains("pattern /(^kube-sys$|^wavefront$)/"))
+		require.True(t, stubKM.LoggingConfigMapContains("pattern /(^pet-clinic$)/"))
 	})
 
 	t.Run("Verify log tag deny list", func(t *testing.T) {
@@ -922,11 +915,11 @@ func TestReconcileLogging(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.True(t, stubKM.LoggingConfigMapContains("key $.namespace_name"))
-		assert.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
-		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
-		assert.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
+		require.NoError(t, err)
+		require.True(t, stubKM.LoggingConfigMapContains("key $.namespace_name"))
+		require.True(t, stubKM.LoggingConfigMapContains("key $.pod_name"))
+		require.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
+		require.True(t, stubKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
 	})
 
 	t.Run("Verify tags are added to logging pods", func(t *testing.T) {
@@ -940,8 +933,8 @@ func TestReconcileLogging(t *testing.T) {
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
-		assert.NoError(t, err)
-		assert.True(t, stubKM.LoggingConfigMapContains("key1 value1", "key2 value2"))
+		require.NoError(t, err)
+		require.True(t, stubKM.LoggingConfigMapContains("key1 value1", "key2 value2"))
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
@@ -966,6 +959,42 @@ func TestReconcileLogging(t *testing.T) {
 	})
 }
 
+func VersionSent(mockSender *testhelper.MockSender) float64 {
+	var versionSent float64
+	for _, m := range mockSender.SentMetrics {
+		if m.Name == "kubernetes.observability.version" {
+			versionSent = m.Value
+		}
+	}
+	return versionSent
+}
+
+func StatusMetricsSent(mockSender *testhelper.MockSender) int {
+	var statusMetricsSent int
+	for _, m := range mockSender.SentMetrics {
+		if strings.HasSuffix(m.Name, ".status") {
+			statusMetricsSent += 1
+		}
+	}
+	return statusMetricsSent
+}
+
+func ProxyRunning(apps typedappsv1.AppsV1Interface, availableReplicas int) {
+	_, _ = apps.Deployments(util.Namespace).Update(context.Background(), &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       util.Deployment,
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      util.ProxyName,
+			Namespace: util.Namespace,
+		},
+		Status: appsv1.DeploymentStatus{
+			AvailableReplicas: int32(availableReplicas),
+		},
+	}, metav1.UpdateOptions{})
+}
+
 func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, existingResources ...runtime.Object) {
 	t.Run("on CR creation", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
@@ -979,7 +1008,7 @@ func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, exi
 		for _, e := range existingResources {
 			objMeta := e.(metav1.ObjectMetaAccessor).GetObjectMeta()
 			gvk := e.GetObjectKind().GroupVersionKind()
-			assert.Falsef(t, stubKM.AppliedContains(
+			require.Falsef(t, stubKM.AppliedContains(
 				gvk.GroupVersion().String(), gvk.Kind,
 				objMeta.GetLabels()["app.kubernetes.io/name"],
 				objMeta.GetLabels()["app.kubernetes.io/component"],
@@ -1000,7 +1029,7 @@ func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, exi
 		for _, e := range existingResources {
 			objMeta := e.(metav1.ObjectMetaAccessor).GetObjectMeta()
 			gvk := e.GetObjectKind().GroupVersionKind()
-			assert.True(t, mockKM.DeletedContains(
+			require.True(t, mockKM.DeletedContains(
 				gvk.GroupVersion().String(), gvk.Kind,
 				objMeta.GetLabels()["app.kubernetes.io/name"],
 				objMeta.GetLabels()["app.kubernetes.io/component"],
@@ -1013,31 +1042,31 @@ func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, exi
 func volumeMountHasPath(t *testing.T, deployment appsv1.Deployment, name, path string) {
 	for _, volumeMount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
 		if volumeMount.Name == name {
-			assert.Equal(t, path, volumeMount.MountPath)
+			require.Equal(t, path, volumeMount.MountPath)
 			return
 		}
 	}
-	assert.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
+	require.Failf(t, "could not find volume mount", "could not find volume mount named %s on deployment %s", name, deployment.Name)
 }
 
 func volumeHasConfigMap(t *testing.T, deployment appsv1.Deployment, name string, configMapName string) {
 	for _, volume := range deployment.Spec.Template.Spec.Volumes {
 		if volume.Name == name {
-			assert.Equal(t, configMapName, volume.ConfigMap.Name)
+			require.Equal(t, configMapName, volume.ConfigMap.Name)
 			return
 		}
 	}
-	assert.Failf(t, "could not find volume", "could not find volume named %s on deployment %s", name, deployment.Name)
+	require.Failf(t, "could not find volume", "could not find volume named %s on deployment %s", name, deployment.Name)
 }
 
 func volumeHasSecret(t *testing.T, deployment appsv1.Deployment, name string, secretName string) {
 	for _, volume := range deployment.Spec.Template.Spec.Volumes {
 		if volume.Name == name {
-			assert.Equal(t, secretName, volume.Secret.SecretName)
+			require.Equal(t, secretName, volume.Secret.SecretName)
 			return
 		}
 	}
-	assert.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
+	require.Failf(t, "could not find secret", "could not find secret named %s on deployment %s", name, deployment.Name)
 }
 
 func containsPortInServicePort(t *testing.T, port int32, stubKM testhelper.MockKubernetesManager) {
@@ -1048,19 +1077,19 @@ func containsPortInServicePort(t *testing.T, port int32, stubKM testhelper.MockK
 		"proxy",
 		"wavefront-proxy",
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var service v1.Service
 
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(serviceYAMLUnstructured.Object, &service)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	for _, servicePort := range service.Spec.Ports {
 		if servicePort.Port == port {
 			return
 		}
 	}
-	assert.Fail(t, fmt.Sprintf("Did not find the port: %d", port))
+	require.Fail(t, fmt.Sprintf("Did not find the port: %d", port))
 }
 
 func containsPortInContainers(t *testing.T, proxyArgName string, stubKM testhelper.MockKubernetesManager, port int32) bool {
@@ -1071,11 +1100,11 @@ func containsPortInContainers(t *testing.T, proxyArgName string, stubKM testhelp
 		"proxy",
 		util.ProxyName,
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var deployment appsv1.Deployment
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentYAMLUnstructured.Object, &deployment)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	foundPort := false
 	for _, containerPort := range deployment.Spec.Template.Spec.Containers[0].Ports {
@@ -1086,10 +1115,10 @@ func containsPortInContainers(t *testing.T, proxyArgName string, stubKM testhelp
 
 		fmt.Printf("%+v", containerPort)
 	}
-	assert.True(t, foundPort, fmt.Sprintf("Did not find the port: %d", port))
+	require.True(t, foundPort, fmt.Sprintf("Did not find the port: %d", port))
 
 	proxyArgsEnvValue := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-	assert.Contains(t, proxyArgsEnvValue, fmt.Sprintf("--%s %d", proxyArgName, port))
+	require.Contains(t, proxyArgsEnvValue, fmt.Sprintf("--%s %d", proxyArgName, port))
 	return true
 }
 
@@ -1104,10 +1133,10 @@ func getEnvValueForName(envs []v1.EnvVar, name string) string {
 
 func containsProxyArg(t *testing.T, proxyArg string, stubKM testhelper.MockKubernetesManager) {
 	deployment, err := stubKM.GetAppliedDeployment("proxy", util.ProxyName)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-	assert.Contains(t, value, fmt.Sprintf("%s", proxyArg))
+	require.Contains(t, value, fmt.Sprintf("%s", proxyArg))
 }
 
 func defaultWFSpec() wf.WavefrontSpec {
@@ -1162,8 +1191,20 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 			Namespace: util.Namespace,
 			UID:       "testUID",
 		},
-		Spec:   appsv1.DeploymentSpec{},
-		Status: appsv1.DeploymentStatus{},
+	})
+
+	initObjs = append(initObjs, &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       util.Deployment,
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      util.ProxyName,
+			Namespace: util.Namespace,
+		},
+		Status: appsv1.DeploymentStatus{
+			AvailableReplicas: 1,
+		},
 	})
 
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
@@ -1174,10 +1215,8 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		Scheme:            nil,
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: testhelper.NewMockKubernetesManager(),
-		SendMetrics: func(_ []metric.Metric) error {
-			return nil
-		},
-		Appsv1: fakesAppsV1,
+		MetricConnection:  metric.NewConnection(testhelper.StubSenderFactory(nil, nil)),
+		Appsv1:            fakesAppsV1,
 	}
 
 	return r, wfCR, apiClient, fakesAppsV1

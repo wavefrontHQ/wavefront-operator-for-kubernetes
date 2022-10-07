@@ -6,5 +6,3 @@ type Metric struct {
 	Source string
 	Tags   map[string]string
 }
-
-type Sender func([]Metric) error

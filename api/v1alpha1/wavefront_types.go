@@ -50,6 +50,9 @@ type WavefrontSpec struct {
 
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
+
+	// CanExportData is for internal use
+	CanExportData bool `json:"-"`
 }
 
 type Metrics struct {
