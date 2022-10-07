@@ -45,6 +45,7 @@ kubectl get secrets wavefront-secret -n observability-system -o json | jq '.data
 
 #### Unknown host or Unable to check in
 *Without an HTTP Proxy*
+
 Check that you configured the correct Wavefront URL in your Wavefront CR
 ```
 kubectl -n observability-system get wavefront -o=jsonpath='{.items[*].spec.wavefrontUrl}'
