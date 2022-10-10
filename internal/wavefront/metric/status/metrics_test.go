@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
+
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
-
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/status"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
@@ -17,9 +17,9 @@ import (
 
 func TestSender(t *testing.T) {
 	t.Run("sends empty wavefront status", func(t *testing.T) {
-		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{})
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{})
 		require.NoError(t, err)
-		require.Contains(t, metrics, metric.Metric{
+		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
 			Value:  0,
 			Source: "my_cluster",
@@ -28,9 +28,9 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("sends healthy wavefront status", func(t *testing.T) {
-		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"})
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"})
 		require.NoError(t, err)
-		require.Contains(t, metrics, metric.Metric{
+		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
 			Value:  1,
 			Source: "my_cluster",
@@ -42,9 +42,9 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("sends unhealthy wavefront status", func(t *testing.T) {
-		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"})
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"})
 		require.NoError(t, err)
-		require.Contains(t, metrics, metric.Metric{
+		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
 			Value:  0,
 			Source: "my_cluster",
@@ -56,7 +56,7 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("sends wavefront status with point tag exceeds length limit", func(t *testing.T) {
-		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
 			Status: "Unhealthy",
 			Message: "0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; " +
 				"0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; " +
@@ -64,7 +64,7 @@ func TestSender(t *testing.T) {
 		})
 
 		require.NoError(t, err)
-		require.Contains(t, metrics, metric.Metric{
+		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
 			Value:  0,
 			Source: "my_cluster",
@@ -79,7 +79,7 @@ func TestSender(t *testing.T) {
 		ReportsSubComponentMetric(t, "Metrics", []string{util.ClusterCollectorName, util.NodeCollectorName})
 
 		t.Run("sends unhealthy status when cluster and node collector are unhealthy", func(t *testing.T) {
-			metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+			ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
 				Status:  health.Unhealthy,
 				Message: "",
 				ResourceStatuses: []wf.ResourceStatus{
@@ -97,7 +97,7 @@ func TestSender(t *testing.T) {
 			})
 
 			require.NoError(t, err)
-			require.Contains(t, metrics, metric.Metric{
+			require.Contains(t, ms, metric.Metric{
 				Name:   "kubernetes.observability.metrics.status",
 				Value:  0,
 				Source: "my_cluster",
@@ -130,10 +130,10 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			})
 		}
 
-		metrics, err := status.Metrics("my_cluster", wfStatus)
+		ms, err := status.Metrics("my_cluster", wfStatus)
 
 		require.NoError(t, err)
-		require.Contains(t, metrics, metric.Metric{
+		require.Contains(t, ms, metric.Metric{
 			Name:   metricName,
 			Value:  1,
 			Source: "my_cluster",
@@ -164,10 +164,10 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				}
 			}
 
-			metrics, err := status.Metrics("my_cluster", wfStatus)
+			ms, err := status.Metrics("my_cluster", wfStatus)
 
 			require.NoError(t, err)
-			require.Contains(t, metrics, metric.Metric{
+			require.Contains(t, ms, metric.Metric{
 				Name:   metricName,
 				Value:  0,
 				Source: "my_cluster",
@@ -180,13 +180,13 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 	}
 
 	t.Run("sends not enabled status if component statuses are not present", func(t *testing.T) {
-		metrics, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
 			Status:           health.Unhealthy,
 			ResourceStatuses: []wf.ResourceStatus{},
 		})
 
 		require.NoError(t, err)
-		require.Contains(t, metrics, metric.Metric{
+		require.Contains(t, ms, metric.Metric{
 			Name:   metricName,
 			Value:  2,
 			Source: "my_cluster",

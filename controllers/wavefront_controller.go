@@ -74,7 +74,7 @@ type WavefrontReconciler struct {
 	FS                fs.FS
 	Appsv1            typedappsv1.AppsV1Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
-	SendMetrics       metric.Sender
+	MetricConnection  *metric.Connection
 	OperatorVersion   string
 }
 
@@ -184,6 +184,7 @@ func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme
 		FS:                os.DirFS(DeployDir),
 		Appsv1:            clientSet.AppsV1(),
 		KubernetesManager: kubernetesManager,
+		MetricConnection:  metric.NewConnection(metric.WavefrontSenderFactory()),
 	}
 
 	return reconciler, nil
@@ -247,8 +248,8 @@ func allDirs() []string {
 func enabledDirs(spec wf.WavefrontSpec) []string {
 	return dirList(
 		spec.DataExport.WavefrontProxy.Enable,
-		spec.DataCollection.Metrics.Enable,
-		spec.DataCollection.Logging.Enable,
+		spec.CanExportData && spec.DataCollection.Metrics.Enable,
+		spec.CanExportData && spec.DataCollection.Logging.Enable,
 	)
 }
 
@@ -275,6 +276,7 @@ func dirList(proxy, collector, logging bool) []string {
 }
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
+	r.MetricConnection.Close()
 	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, allDirs())
 	if err != nil {
 		return err
@@ -365,6 +367,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
 		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
+			wavefront.Spec.CanExportData = true
 		}
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
@@ -375,6 +378,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 			return err
 		}
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
+		wavefront.Spec.CanExportData = true
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 	}
 
@@ -386,15 +390,15 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataCollection.Logging.ConfigHash = hashValue(configHashBytes)
 	}
 
-	if r.SendMetrics == nil {
-		sender, err := metric.NewWavefrontSender(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
+	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
+	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
+
+	if wavefront.Spec.CanExportData {
+		err := r.MetricConnection.Connect(wavefront.Spec.DataCollection.Metrics.ProxyAddress)
 		if err != nil {
 			return fmt.Errorf("error setting up proxy connection: %s", err.Error())
 		}
-		r.SendMetrics = sender
 	}
-	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\r", "")
-	wavefront.Spec.DataExport.WavefrontProxy.Args = strings.ReplaceAll(wavefront.Spec.DataExport.WavefrontProxy.Args, "\n", "")
 	return nil
 }
 
@@ -509,7 +513,7 @@ func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName 
 		metrics = append(metrics, versionMetrics...)
 	}
 
-	if err = r.SendMetrics(metrics); err != nil {
+	if err = r.MetricConnection.Send(metrics); err != nil {
 		log.Log.Info(fmt.Sprintf("error sending metrics: %s", err.Error()))
 	}
 }
