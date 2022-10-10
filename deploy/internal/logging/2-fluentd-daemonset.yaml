@@ -15,11 +15,10 @@ spec:
   selector:
     matchLabels:
       name: wavefront-logging
-    strategy:
-      rollingUpdate:
-        maxSurge: 25%
-        maxUnavailable: 25%
-      type: RollingUpdate
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
   template:
     metadata:
       annotations:
