@@ -7,6 +7,8 @@ metadata:
 spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
+  # Allows the operator based Wavefront installation to be run in parallel with a legacy Wavefront (helm or manual) installation. Defaults to false.
+  allowLegacyInstall: true
   dataCollection:
     metrics:
       enable: true
