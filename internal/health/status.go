@@ -1,13 +1,13 @@
 package health
 
 import (
+	"context"
 	"fmt"
 	strings "strings"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
-	"golang.org/x/net/context"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
@@ -97,24 +97,6 @@ func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Resourc
 	}
 
 	return componentStatus
-}
-
-func resetDaemonSetStatus(daemonSetStatus *wf.DaemonSetStatus) {
-	daemonSetStatus.DaemonSetName = ""
-	daemonSetStatus.Healthy = false
-	daemonSetStatus.Status = ""
-	daemonSetStatus.Message = ""
-	daemonSetStatus.DesiredNumberScheduled = 0
-	daemonSetStatus.NumberReady = 0
-}
-
-func resetDeploymentStatus(deploymentStatus *wf.DeploymentStatus) {
-	deploymentStatus.DeploymentName = ""
-	deploymentStatus.Healthy = false
-	deploymentStatus.Status = ""
-	deploymentStatus.Message = ""
-	deploymentStatus.Replicas = 0
-	deploymentStatus.AvailableReplicas = 0
 }
 
 func boolCount(b bool, statuses ...bool) int {
