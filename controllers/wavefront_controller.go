@@ -129,13 +129,13 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		_ = r.readAndDeleteResources()
 	}
 
-	err = r.reportHealthStatus(ctx, wavefront, validationResult)
+	wavefrontStatus, err := r.reportHealthStatus(ctx, wavefront, validationResult)
 	if err != nil {
 		log.Log.Error(err, "error report health status")
 		return errorCRTLResult(err)
 	}
 
-	if wavefront.Status.Status == health.Unhealthy {
+	if wavefrontStatus.Status == health.Unhealthy {
 		return ctrl.Result{
 			Requeue: true,
 		}, nil
@@ -460,7 +460,7 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 }
 
 // Reporting Health Status
-func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationResult validation.Result) error {
+func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationResult validation.Result) (wf.WavefrontStatus, error) {
 	componentsToCheck := map[string]string{}
 
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
@@ -487,11 +487,12 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	if wavefrontStatus.Status != wavefront.Status.Status {
 		log.Log.Info(fmt.Sprintf("Wavefront CR wavefrontStatus changed from %s --> %s", wavefront.Status.Status, wavefrontStatus.Status))
-		wavefront.Status = wavefrontStatus
-		return r.Status().Update(ctx, wavefront)
+		newWavefront := *wavefront
+		newWavefront.Status = wavefrontStatus
+		return wavefrontStatus, r.Status().Patch(ctx, &newWavefront, client.MergeFrom(wavefront))
 	}
 
-	return nil
+	return wavefrontStatus, nil
 }
 
 func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName string, wavefrontStatus wf.WavefrontStatus) {
