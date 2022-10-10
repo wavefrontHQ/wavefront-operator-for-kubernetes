@@ -59,7 +59,7 @@ func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Resul
 }
 
 func validateEnvironment(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
-	if wavefront.Spec.DataCollection.AllowLegacyInstall {
+	if wavefront.Spec.AllowLegacyInstall {
 		return nil
 	}
 	for namespace, resourceMap := range legacyComponentsToCheck {

@@ -48,6 +48,9 @@ type WavefrontSpec struct {
 	// DataCollection options
 	DataCollection DataCollection `json:"dataCollection,omitempty"`
 
+	//  Allows the operator based Wavefront installation to be run in parallel with a legacy Wavefront (helm or manual) installation. Defaults to false.
+	AllowLegacyInstall bool `json:"allowLegacyInstall,omitempty"`
+
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
 
@@ -109,9 +112,6 @@ type ExternalWavefrontProxy struct {
 }
 
 type DataCollection struct {
-	// Allows metrics and logging data collection when a legacy install is detected. Defaults to false.
-	AllowLegacyInstall bool `json:"allowLegacyInstall,omitempty"`
-
 	// Metrics has resource configuration for node- and cluster-deployed collectors
 	Metrics Metrics `json:"metrics,omitempty"`
 

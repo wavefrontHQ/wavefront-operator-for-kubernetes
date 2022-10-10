@@ -56,8 +56,8 @@ metadata:
 spec:
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
+  allowLegacyInstall: true
   dataCollection:
-    allowLegacyInstall: true
     metrics:
       enable: true
   dataExport:

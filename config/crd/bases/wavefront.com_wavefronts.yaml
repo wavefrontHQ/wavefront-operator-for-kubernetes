@@ -57,6 +57,11 @@ spec:
           spec:
             description: WavefrontSpec defines the desired state of Wavefront
             properties:
+              allowLegacyInstall:
+                description: Allows the operator based Wavefront installation to be
+                  run in parallel with a legacy Wavefront (helm or manual) installation.
+                  Defaults to false.
+                type: boolean
               clusterName:
                 description: ClusterName is a unique name for the Kubernetes cluster
                   to be identified via a metric tag on Wavefront (Required).
@@ -65,10 +70,6 @@ spec:
               dataCollection:
                 description: DataCollection options
                 properties:
-                  allowLegacyInstall:
-                    description: Allows metrics and logging data collection when a
-                      legacy install is detected. Defaults to false.
-                    type: boolean
                   logging:
                     description: Enable and configure wavefront logging
                     properties:
