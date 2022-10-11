@@ -5,7 +5,7 @@ For use on production environments,
 see the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
 for our original, more established processes.
 
-**Important:** Tanzu Observability Logs (Beta) is enabled only for selected customers. If you’d like to participate, contact your Tanzu Observability account representative.
+**Important:** Observability Logs (Beta) is enabled only for selected customers. If you’d like to participate, contact your Observability account representative.
 
 # Overview of Wavefront Operator for Kubernetes
 
@@ -15,7 +15,6 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 
 ## Quick Reference
 - [Operator Installation](#installation)
-- [Operator Validation](#component-status-validation)
 - [Operator Configuration](#configuration)
 - [Operator Upgrade](#upgrade)
 - [Operator Removal](#removal)
@@ -28,7 +27,6 @@ The operator simplifies operational aspects of managing the Wavefront integratio
  - Centralized configuration.
  - Enhanced configuration validation to surface what needs to be corrected in order to deploy successfully.
  - Efficient Kubernetes resource usage supports scaling  out the cluster (leader) node and worker nodes independently.
- - Unified installation mechanism and form factor across VMware Tanzu product lines.
 
 **Note:** The Collector that is deployed by the Operator still supports configuration via configmap.
 For example, Istio and MySQL metrics, Telegraf configuration, etc. are still supported.
@@ -49,7 +47,7 @@ The following tools are required for installing the integration.
 
 ## Deploy the Wavefront Collector and Proxy with the Operator
 
-1. Install the Wavefront Operator
+1. Install the Wavefront Operator into `observability-system` namespace.
 
    **Note**: If you already have Wavefront installed via helm or manual deploy, *uninstall* before you install the operator.
  
@@ -84,7 +82,7 @@ The following tools are required for installing the integration.
 
 4. (Logging Beta) **Optionally** add the configuration for logging to the `wavefront.yaml` file. For example: 
 
-   ```
+   ```yaml
    # Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
    apiVersion: wavefront.com/v1alpha1
    kind: Wavefront
@@ -92,7 +90,6 @@ The following tools are required for installing the integration.
      name: wavefront
      namespace: observability-system
    spec:
-     wavefrontTokenSecret: wavefront-secret-logging
      clusterName: YOUR_CLUSTER_NAME
      wavefrontUrl: YOUR_WAVEFRONT_URL
      dataCollection:
@@ -100,12 +97,6 @@ The following tools are required for installing the integration.
          enable: true
        logging:
          enable: true
-         tags:
-           env: non-production
-         filters:
-           tagDenyList:
-             namespace_name:
-               - kube-system
      dataExport:
        wavefrontProxy:
          enable: true
@@ -116,21 +107,17 @@ The following tools are required for installing the integration.
    ```
    kubectl apply -f <path_to_your_wavefront.yaml>
    ```
-5. Run the following command to get status for the Wavefront integration:
+6. Run the following command to get status for the Wavefront integration:
    ```
    kubectl get wavefront -n observability-system
    ```
    The command should return a table like the following, displaying Operator instance health:
    ```
-   NAME                   STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE
-   observability-system   Healthy   Running (1/1)   Running (1/1)       Running (3/3)    Running (3/3)  2m4s
+   NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE    MESSAGE
+   wavefront   Healthy   Running (1/1)   Running (1/1)       Running (3/3)    Running (3/3)  2m4s   All components are healthy
    ```
-   
-   If `STATUS` is `Unhealthy`, run the following command to get more information:
-   ```
-   kubectl get wavefront -n observability-system -o=jsonpath='{.items[0].status.message}'
-   ```
-   
+   If `STATUS` is `Unhealthy`, check [troubleshooting](docs/troubleshooting.md).
+
 **Note**: For details on migrating from existing helm chart or manual deploy,
 see [Migration](docs/migration.md).
 
