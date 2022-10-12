@@ -3,6 +3,7 @@ package health
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	strings "strings"
 	"time"
 
@@ -41,7 +42,8 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 			unhealthyMessages = append(unhealthyMessages, componentStatus.Message)
 		}
 	}
-
+	log.Log.Info(fmt.Sprintf("wavefrontStartTime is : %+v", wavefrontStartTime))
+	log.Log.Info(fmt.Sprintf("time.Now() is : %+v", time.Now()))
 	status.ResourceStatuses = componentStatuses
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
