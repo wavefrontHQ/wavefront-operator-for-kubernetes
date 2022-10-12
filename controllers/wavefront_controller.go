@@ -22,9 +22,11 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/fs"
+	"k8s.io/client-go/util/workqueue"
 	"net/url"
 	"os"
 	"path/filepath"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"strings"
 	"text/template"
 	"time"
@@ -98,8 +100,9 @@ type WavefrontReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 
+const maxReconcileInterval = 60 * time.Second
+
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	requeueAfterTime := 60 * time.Second
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
@@ -142,7 +145,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	return ctrl.Result{
 		Requeue:      true,
-		RequeueAfter: requeueAfterTime,
+		RequeueAfter: maxReconcileInterval,
 	}, nil
 }
 
@@ -150,6 +153,9 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&wf.Wavefront{}).
+		WithOptions(controller.Options{
+			RateLimiter: workqueue.NewItemExponentialFailureRateLimiter(1*time.Second, maxReconcileInterval),
+		}).
 		Complete(r)
 }
 
