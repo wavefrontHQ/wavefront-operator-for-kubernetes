@@ -22,14 +22,15 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/fs"
-	"k8s.io/client-go/util/workqueue"
 	"net/url"
 	"os"
 	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"strings"
 	"text/template"
 	"time"
+
+	"k8s.io/client-go/util/workqueue"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
