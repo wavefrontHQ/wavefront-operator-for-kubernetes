@@ -3,7 +3,6 @@ package health
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	strings "strings"
 	"time"
 
@@ -21,7 +20,7 @@ const (
 	MaxInstallTime = time.Minute * 2
 )
 
-func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string, wavefrontStartTime time.Time) wf.WavefrontStatus {
+func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string, wfCRCreationTime time.Time) wf.WavefrontStatus {
 	status := wf.WavefrontStatus{}
 	var componentHealth []bool
 	var unhealthyMessages []string
@@ -42,13 +41,12 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 			unhealthyMessages = append(unhealthyMessages, componentStatus.Message)
 		}
 	}
-	log.Log.Info(fmt.Sprintf("wavefrontStartTime is : %+v", wavefrontStartTime))
-	log.Log.Info(fmt.Sprintf("time.Now() is : %+v", time.Now()))
+
 	status.ResourceStatuses = componentStatuses
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
 		status.Message = "All components are healthy"
-	} else if wavefrontStartTime.Add(MaxInstallTime).Before(time.Now()) {
+	} else if wfCRCreationTime.Add(MaxInstallTime).After(time.Now()) {
 		status.Status = Installing
 		status.Message = "Installing components"
 	} else {

@@ -116,7 +116,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			util.ClusterCollectorName: util.Deployment,
 			util.NodeCollectorName:    util.DaemonSet,
 		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now())
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck, pastMaxInstallTime())
 
 		assert.Equal(t, Unhealthy, status.Status)
 		assert.Equal(t, "not enough instances of wavefront-proxy are running (0/1)", status.Message)
@@ -164,7 +164,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			util.ClusterCollectorName: util.Deployment,
 			util.NodeCollectorName:    util.DaemonSet,
 		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now())
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck, pastMaxInstallTime())
 
 		assert.Equal(t, Unhealthy, status.Status)
 		assert.Equal(t, "", status.Message)
@@ -188,7 +188,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			util.ClusterCollectorName: util.Deployment,
 			util.NodeCollectorName:    util.DaemonSet,
 		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now().Add(-MaxInstallTime))
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now().Add(-MaxInstallTime).Add(time.Second*10))
 
 		assert.Equal(t, Installing, status.Status)
 		assert.Equal(t, "Installing components", status.Message)
@@ -201,24 +201,14 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			util.ClusterCollectorName: util.Deployment,
 			util.NodeCollectorName:    util.DaemonSet,
 		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now().Add(-MaxInstallTime).Add(time.Second*1))
+		status := GenerateWavefrontStatus(appsV1, componentsToCheck, pastMaxInstallTime().Add(time.Second*10))
 
 		assert.Equal(t, Unhealthy, status.Status)
 	})
+}
 
-	t.Run("report health status as installing before MaxInstallTime has elapsed", func(t *testing.T) {
-		appsV1 := setup()
-		componentsToCheck := map[string]string{
-			util.ProxyName:            util.Deployment,
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now().Add(-MaxInstallTime).Add(-time.Second*1))
-
-		assert.Equal(t, Installing, status.Status)
-		assert.Equal(t, "Installing components", status.Message)
-	})
-
+func pastMaxInstallTime() time.Time {
+	return time.Now().Add(-MaxInstallTime).Add(-time.Second * 10)
 }
 
 func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {
