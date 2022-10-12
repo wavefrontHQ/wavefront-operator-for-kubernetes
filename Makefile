@@ -155,12 +155,10 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 deploy:  ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/$(OPERATOR_YAML_RC_SHA)/wavefront-operator-$(GIT_BRANCH).yaml
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
-	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
 .PHONY: undeploy
 undeploy: copy-base-patches manifests kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret || true
-	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret-logging || true
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
 
 copy-base-patches:
@@ -207,14 +205,12 @@ deploy-managed: docker-xplatform-build manifests kustomize ## Deploy controller 
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
-	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
 deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the Kind cluster.
 	kind load docker-image $(IMG)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
-	kubectl create -n $(NS) secret generic wavefront-secret-logging --from-literal token=$(WAVEFRONT_LOGGING_TOKEN) || true
 
 redeploy-kind: undeploy deploy-kind
 
