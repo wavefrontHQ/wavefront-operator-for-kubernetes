@@ -169,12 +169,11 @@ function run_test() {
 function run_logging_test() {
   local type="logging"
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
-  local WAVEFRONT_LOGGING_URL="https:\/\/springlogs.wavefront.com"
 
   echo ""
   green "Running test logging"
 
-  setup_test $type "https:\/\/springlogs.wavefront.com"
+  setup_test $type
 
   run_health_checks $type
 
@@ -192,10 +191,6 @@ function run_logging_test() {
     red "Expected max logs received to be greater than 0, but got $max_logs_received"
     exit 1
   fi
-
-  local proxy_name=$(kubectl -n $NS get pod -l app.kubernetes.io/component=proxy -o jsonpath="{.items[0].metadata.name}")
-
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_LOGGING_TOKEN} -c springlogs -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh" -l "${proxy_name}"
 
   clean_up_test $type
   green "Successfully ran logging test!"

@@ -135,7 +135,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	wavefrontStatus, err := r.reportHealthStatus(ctx, wavefront, validationResult)
 	if err != nil {
-		log.Log.Error(err, "error report health status")
+		log.Log.Error(err, "error reporting health status")
 		return errorCRTLResult(err)
 	}
 
@@ -494,12 +494,10 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 
 	if wavefrontStatus.Status != wavefront.Status.Status {
 		log.Log.Info(fmt.Sprintf("Wavefront CR wavefrontStatus changed from %s --> %s", wavefront.Status.Status, wavefrontStatus.Status))
-		newWavefront := *wavefront
-		newWavefront.Status = wavefrontStatus
-		return wavefrontStatus, r.Status().Patch(ctx, &newWavefront, client.MergeFrom(wavefront))
 	}
-
-	return wavefrontStatus, nil
+	newWavefront := *wavefront
+	newWavefront.Status = wavefrontStatus
+	return wavefrontStatus, r.Status().Patch(ctx, &newWavefront, client.MergeFrom(wavefront))
 }
 
 func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName string, wavefrontStatus wf.WavefrontStatus) {

@@ -5,7 +5,6 @@ metadata:
   name: wavefront
   namespace: observability-system
 spec:
-  wavefrontTokenSecret: wavefront-secret-logging
   clusterName: YOUR_CLUSTER_NAME
   wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:

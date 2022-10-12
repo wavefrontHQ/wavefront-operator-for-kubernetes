@@ -20,5 +20,5 @@ git clean -dfx -e build
 mv build/wavefront-operator.yaml "wavefront-operator-${GIT_BRANCH}.yaml"
 
 git add --all .
-git commit -m "add CRD"
-git push origin rc
+git commit -m "add CRD" || exit 0
+git push origin rc || exit 0

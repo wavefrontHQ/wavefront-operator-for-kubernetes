@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
@@ -75,6 +77,32 @@ func TestReconcileAll(t *testing.T) {
 
 		require.Greater(t, len(mockSender.SentMetrics), 0, "should not have sent metrics")
 		require.Equal(t, 99.9999, VersionSent(mockSender), "should send OperatorVersion")
+	})
+
+	t.Run("transitions status when sub-components change (even if overall health is still unhealthy)", func(t *testing.T) {
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		spec := defaultWFSpec()
+		spec.DataCollection.Logging.Enable = true
+		r, wfCR, objClient, _ := setupForCreate(spec)
+		wfCR.Status.Status = health.Unhealthy
+		require.NoError(t, objClient.Update(context.Background(), wfCR))
+		r.KubernetesManager = stubKM
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		var reconciledWFCR wf.Wavefront
+
+		require.NoError(t, objClient.Get(context.Background(), types.NamespacedName{
+			Namespace: wfCR.Namespace,
+			Name:      wfCR.Name,
+		}, &reconciledWFCR))
+
+		require.Contains(t, reconciledWFCR.Status.Status, health.Unhealthy)
+		require.Contains(t, reconciledWFCR.Status.ResourceStatuses, wf.ResourceStatus{Status: "Running (1/1)", Name: "wavefront-proxy"})
 	})
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
@@ -1204,6 +1232,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: 1,
+			Replicas:          1,
 		},
 	})
 
