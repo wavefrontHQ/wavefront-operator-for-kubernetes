@@ -490,7 +490,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 	}
 	newWavefront := *wavefront
 	newWavefront.Status = wavefrontStatus
-	return wavefrontStatus, r.Status().Update(ctx, &newWavefront)
+	return wavefrontStatus, r.Status().Patch(ctx, &newWavefront, client.MergeFrom(wavefront))
 }
 
 func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName string, wavefrontStatus wf.WavefrontStatus) {
