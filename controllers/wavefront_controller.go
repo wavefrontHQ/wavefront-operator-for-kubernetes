@@ -139,7 +139,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return errorCRTLResult(err)
 	}
 
-	if wavefrontStatus.Status == health.Unhealthy {
+	if wavefrontStatus.Status != health.Healthy {
 		return ctrl.Result{
 			Requeue: true,
 		}, nil
@@ -483,7 +483,7 @@ func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront 
 		componentsToCheck[util.LoggingName] = util.DaemonSet
 	}
 
-	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck)
+	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck, wavefront.GetCreationTimestamp().Time)
 
 	if !validationResult.IsValid() {
 		wavefrontStatus.Status = health.Unhealthy
