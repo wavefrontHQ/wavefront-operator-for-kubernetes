@@ -6,8 +6,8 @@ pipeline {
   }
 
   environment {
-//     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
-    VERSION = "${params.VERSION}"
+    BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
+//     VERSION = "${params.VERSION}"
     GIT_BRANCH = getCurrentBranchName()
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
     GITHUB_TOKEN = credentials('GITHUB_TOKEN')
@@ -28,8 +28,7 @@ pipeline {
           sh 'git config --global user.email "svc.wf-jenkins@vmware.com"'
           sh 'git config --global user.name "svc.wf-jenkins"'
           sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
-//           sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
-          sh 'echo "${VERSION}" > release/OPERATOR_VERSION'
+          sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
         }
       }
     }
@@ -40,36 +39,36 @@ pipeline {
         DOCKER_IMAGE = 'kubernetes-operator'
       }
       steps {
-//         script {
-//           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
-//         }
+        script {
+          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
+        }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
         sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
       }
     }
     // deploy to GKE and run manual tests
-    stage("Deploy and Test") {
-      environment {
-        GCP_CREDS = credentials("GCP_CREDS")
-        GKE_CLUSTER_NAME = "k8po-jenkins-ci"
-        WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-        WF_CLUSTER = 'nimba'
-      }
-      steps {
+//     stage("Deploy and Test") {
+//       environment {
+//         GCP_CREDS = credentials("GCP_CREDS")
+//         GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+//         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+//         WF_CLUSTER = 'nimba'
+//       }
+//       steps {
 //         script {
 //           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
 //         }
-        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-          lock("integration-test-gke") {
-            sh './hack/jenkins/setup-for-integration-test.sh'
-            sh 'make gke-connect-to-cluster'
-            sh './hack/test/deploy/deploy-local.sh -t $WAVEFRONT_TOKEN'
-            sh './hack/test/run-e2e-tests.sh -t $WAVEFRONT_TOKEN'
-            sh 'make undeploy'
-          }
-        }
-      }
-    }
+//         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+//           lock("integration-test-gke") {
+//             sh './hack/jenkins/setup-for-integration-test.sh'
+//             sh 'make gke-connect-to-cluster'
+//             sh './hack/test/deploy/deploy-local.sh -t $WAVEFRONT_TOKEN'
+//             sh './hack/test/run-e2e-tests.sh -t $WAVEFRONT_TOKEN'
+//             sh 'make undeploy'
+//           }
+//         }
+//       }
+//     }
     stage("Merge bumped versions") {
       steps {
         sh './hack/jenkins/merge-version-bump.sh'
