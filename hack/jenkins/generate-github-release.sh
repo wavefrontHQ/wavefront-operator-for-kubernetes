@@ -3,11 +3,14 @@ set -e
 
 cd "$(dirname "$-1")"
 
+operator_yaml="deploy/kubernetes/wavefront-operator.yaml"
+
 VERSION=$(cat ./release/OPERATOR_VERSION)
-GIT_HUB_REPO=wavefrontHQ/wavefront-operator-for-kubernetes
+GITHUB_REPO=wavefrontHQ/wavefront-operator-for-kubernetes
+AUTH="Authorization: token ${TOKEN}"
 
 curl --fail -X POST -H "Content-Type:application/json" \
--H "Authorization: token ${TOKEN}" \
+-H "$AUTH" \
 -d "{
       \"tag_name\": \"v$VERSION\",
       \"target_commitish\": \"$GIT_BRANCH\",
@@ -15,4 +18,11 @@ curl --fail -X POST -H "Content-Type:application/json" \
       \"body\": \"Description for v$VERSION\",
       \"draft\": true,
       \"prerelease\": false}" \
-"https://api.github.com/repos/$GIT_HUB_REPO/releases"
+"https://api.github.com/repos/$GITHUB_REPO/releases"
+
+id=$(curl -sH "$AUTH" "https://api.github.com/repos/$GITHUB_REPO/releases/tags/v${VERSION}" | jq ".id")
+
+curl --data-binary @"$operator_yaml" \
+  -H "$AUTH" \
+  -H "Content-Type: application/octet-stream" \
+"https://uploads.github.com/repos/$GITHUB_REPO/releases/$id/assets?name=$(basename $operator_yaml)"
