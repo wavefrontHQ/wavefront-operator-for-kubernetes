@@ -12,6 +12,13 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 )
 
+const (
+	UNHEALTHY_VALUE = iota * 1.0
+	INSTALLING_VALUE
+	HEALTHY_VALUE
+	NOT_ENABLED_VALUE
+)
+
 func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, error) {
 	return []metric.Metric{
 		metricsStatus(status, clusterName),
@@ -30,9 +37,11 @@ func operatorStatus(status wf.WavefrontStatus, clusterName string) metric.Metric
 		tags["status"] = status.Status
 	}
 
-	healthy := 0.0
-	if status.Status == health.Healthy {
-		healthy = 1.0
+	healthy := UNHEALTHY_VALUE
+	if status.Status == health.Installing {
+		healthy = INSTALLING_VALUE
+	} else if status.Status == health.Healthy {
+		healthy = HEALTHY_VALUE
 	}
 
 	return metricWithTruncatedTags(healthy, clusterName, tags, "kubernetes.observability.status")
@@ -72,15 +81,15 @@ func componentStatusMetric(clusterName string, resourcesInComponent map[string]b
 	if !resourcesPresent(componentStatuses) {
 		tags["status"] = "not enabled"
 		tags["message"] = fmt.Sprintf("%s component is not enabled", componentName)
-		healthValue = 2.0
+		healthValue = NOT_ENABLED_VALUE
 	} else if resourcesHealthy(componentStatuses) {
 		tags["status"] = "healthy"
 		tags["message"] = fmt.Sprintf("%s component is healthy", componentName)
-		healthValue = 1.0
+		healthValue = HEALTHY_VALUE
 	} else {
 		tags["status"] = "unhealthy"
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
-		healthValue = 0.0
+		healthValue = UNHEALTHY_VALUE
 	}
 	return metricWithTruncatedTags(healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
 }

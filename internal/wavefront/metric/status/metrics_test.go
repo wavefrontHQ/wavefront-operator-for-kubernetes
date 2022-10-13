@@ -21,9 +21,23 @@ func TestSender(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
-			Value:  0,
+			Value:  status.UNHEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags:   map[string]string{},
+		})
+	})
+
+	t.Run("sends installing wavefront status", func(t *testing.T) {
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: health.Installing, Message: "Installing Components"})
+		require.NoError(t, err)
+		require.Contains(t, ms, metric.Metric{
+			Name:   "kubernetes.observability.status",
+			Value:  status.INSTALLING_VALUE,
+			Source: "my_cluster",
+			Tags: map[string]string{
+				"status":  "Installing",
+				"message": "Installing Components",
+			},
 		})
 	})
 
@@ -32,7 +46,7 @@ func TestSender(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
-			Value:  1,
+			Value:  status.HEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
 				"status":  "Healthy",
@@ -46,7 +60,7 @@ func TestSender(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
-			Value:  0,
+			Value:  status.UNHEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
 				"status":  "Unhealthy",
@@ -66,7 +80,7 @@ func TestSender(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, ms, metric.Metric{
 			Name:   "kubernetes.observability.status",
-			Value:  0,
+			Value:  status.UNHEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
 				"status":  "Unhealthy",
@@ -99,7 +113,7 @@ func TestSender(t *testing.T) {
 			require.NoError(t, err)
 			require.Contains(t, ms, metric.Metric{
 				Name:   "kubernetes.observability.metrics.status",
-				Value:  0,
+				Value:  status.UNHEALTHY_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
 					"status":  "unhealthy",
@@ -135,7 +149,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 		require.NoError(t, err)
 		require.Contains(t, ms, metric.Metric{
 			Name:   metricName,
-			Value:  1,
+			Value:  status.HEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
 				"status":  "healthy",
@@ -169,7 +183,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			require.NoError(t, err)
 			require.Contains(t, ms, metric.Metric{
 				Name:   metricName,
-				Value:  0,
+				Value:  status.UNHEALTHY_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
 					"status":  "unhealthy",
@@ -188,7 +202,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 		require.NoError(t, err)
 		require.Contains(t, ms, metric.Metric{
 			Name:   metricName,
-			Value:  2,
+			Value:  status.NOT_ENABLED_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
 				"status":  "not enabled",
