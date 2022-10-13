@@ -40,9 +40,9 @@ pipeline {
         DOCKER_IMAGE = 'kubernetes-operator'
       }
       steps {
-        script {
+//         script {
 //           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
-        }
+//         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
         sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
       }
@@ -56,9 +56,9 @@ pipeline {
         WF_CLUSTER = 'nimba'
       }
       steps {
-        script {
+//         script {
 //           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
-        }
+//         }
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
           lock("integration-test-gke") {
             sh './hack/jenkins/setup-for-integration-test.sh'
