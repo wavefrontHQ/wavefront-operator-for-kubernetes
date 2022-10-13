@@ -121,6 +121,35 @@ func TestSender(t *testing.T) {
 				},
 			})
 		})
+		t.Run("sends installing status when cluster and node collector are unhealthy and wavefront status is installing", func(t *testing.T) {
+			ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+				Status:  health.Installing,
+				Message: "",
+				ResourceStatuses: []wf.ResourceStatus{
+					{
+						Name:    util.ClusterCollectorName,
+						Message: "cluster collector has an error",
+						Healthy: false,
+					},
+					{
+						Name:    util.NodeCollectorName,
+						Message: "node collector has an error",
+						Healthy: false,
+					},
+				},
+			})
+
+			require.NoError(t, err)
+			require.Contains(t, ms, metric.Metric{
+				Name:   "kubernetes.observability.metrics.status",
+				Value:  status.INSTALLING_VALUE,
+				Source: "my_cluster",
+				Tags: map[string]string{
+					"status":  health.Unhealthy,
+					"message": "cluster collector has an error; node collector has an error",
+				},
+			})
+		})
 	})
 
 	t.Run("logging component", func(t *testing.T) {
