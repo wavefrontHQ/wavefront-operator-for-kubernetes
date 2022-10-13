@@ -127,14 +127,16 @@ func TestSender(t *testing.T) {
 				Message: "",
 				ResourceStatuses: []wf.ResourceStatus{
 					{
-						Name:    util.ClusterCollectorName,
-						Message: "cluster collector has an error",
-						Healthy: false,
+						Name:       util.ClusterCollectorName,
+						Message:    "cluster collector has an error",
+						Healthy:    false,
+						Installing: true,
 					},
 					{
-						Name:    util.NodeCollectorName,
-						Message: "node collector has an error",
-						Healthy: false,
+						Name:       util.NodeCollectorName,
+						Message:    "node collector has an error",
+						Healthy:    false,
+						Installing: true,
 					},
 				},
 			})
@@ -145,7 +147,7 @@ func TestSender(t *testing.T) {
 				Value:  status.INSTALLING_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
-					"status":  health.Unhealthy,
+					"status":  "installing",
 					"message": "cluster collector has an error; node collector has an error",
 				},
 			})
@@ -216,6 +218,42 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				Source: "my_cluster",
 				Tags: map[string]string{
 					"status":  "unhealthy",
+					"message": errorStr,
+				},
+			})
+		})
+	}
+
+	for _, testComponentName := range resourceNames {
+		t.Run(fmt.Sprintf("sends installing status when %s is unhealthy and is installing", testComponentName), func(t *testing.T) {
+			errorStr := fmt.Sprintf("%s has an error", testComponentName)
+
+			wfStatus := wf.WavefrontStatus{Status: health.Unhealthy}
+			for _, componentName := range resourceNames {
+				if testComponentName == componentName {
+					wfStatus.ResourceStatuses = append(wfStatus.ResourceStatuses, wf.ResourceStatus{
+						Name:       componentName,
+						Message:    errorStr,
+						Healthy:    false,
+						Installing: true,
+					})
+				} else {
+					wfStatus.ResourceStatuses = append(wfStatus.ResourceStatuses, wf.ResourceStatus{
+						Name:    componentName,
+						Healthy: true,
+					})
+				}
+			}
+
+			ms, err := status.Metrics("my_cluster", wfStatus)
+
+			require.NoError(t, err)
+			require.Contains(t, ms, metric.Metric{
+				Name:   metricName,
+				Value:  status.INSTALLING_VALUE,
+				Source: "my_cluster",
+				Tags: map[string]string{
+					"status":  "installing",
 					"message": errorStr,
 				},
 			})

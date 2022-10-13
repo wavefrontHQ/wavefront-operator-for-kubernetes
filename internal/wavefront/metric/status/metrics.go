@@ -86,12 +86,24 @@ func componentStatusMetric(clusterName string, resourcesInComponent map[string]b
 		tags["status"] = "healthy"
 		tags["message"] = fmt.Sprintf("%s component is healthy", componentName)
 		healthValue = HEALTHY_VALUE
+	} else if resourceInstalling(componentStatuses) {
+		tags["status"] = "installing"
+		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
+		healthValue = INSTALLING_VALUE
 	} else {
 		tags["status"] = "unhealthy"
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = UNHEALTHY_VALUE
 	}
 	return metricWithTruncatedTags(healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
+}
+
+func resourceInstalling(statuses []wf.ResourceStatus) bool {
+	installing := false
+	for _, status := range statuses {
+		installing = installing || status.Installing
+	}
+	return installing
 }
 
 func resourceMessages(statuses []wf.ResourceStatus) []string {
