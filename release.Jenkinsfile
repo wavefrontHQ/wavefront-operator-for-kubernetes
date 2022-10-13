@@ -6,7 +6,8 @@ pipeline {
   }
 
   environment {
-    BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
+//     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
+    VERSION = "${params.VERSION}"
     GIT_BRANCH = getCurrentBranchName()
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
     GITHUB_TOKEN = credentials('GITHUB_TOKEN')
@@ -27,7 +28,8 @@ pipeline {
           sh 'git config --global user.email "svc.wf-jenkins@vmware.com"'
           sh 'git config --global user.name "svc.wf-jenkins"'
           sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
-          sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
+//           sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
+          sh 'echo "${env.VERSION}" > release/OPERATOR_VERSION'
         }
       }
     }
@@ -39,7 +41,7 @@ pipeline {
       }
       steps {
         script {
-          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
+//           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
         sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
@@ -55,7 +57,7 @@ pipeline {
       }
       steps {
         script {
-          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
+//           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
         }
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
           lock("integration-test-gke") {
