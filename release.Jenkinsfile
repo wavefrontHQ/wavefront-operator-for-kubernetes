@@ -29,7 +29,7 @@ pipeline {
           sh 'git config --global user.name "svc.wf-jenkins"'
           sh 'git remote set-url origin https://${GITHUB_TOKEN}@github.com/wavefronthq/wavefront-operator-for-kubernetes.git'
 //           sh './hack/jenkins/bump-version.sh -s "${BUMP_COMPONENT}"'
-          sh 'echo "${env.VERSION}" > release/OPERATOR_VERSION'
+          sh 'echo "${VERSION}" > release/OPERATOR_VERSION'
         }
       }
     }
