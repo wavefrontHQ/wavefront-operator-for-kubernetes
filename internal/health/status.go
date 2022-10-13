@@ -49,6 +49,9 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	} else if wfCRCreationTime.Add(MaxInstallTime).After(time.Now()) {
 		status.Status = Installing
 		status.Message = "Installing components"
+		for i, _ := range status.ResourceStatuses {
+			status.ResourceStatuses[i].Installing = true
+		}
 	} else {
 		status.Status = Unhealthy
 		status.Message = strings.Join(unhealthyMessages, "; ")

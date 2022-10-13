@@ -192,6 +192,9 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 		assert.Equal(t, Installing, status.Status)
 		assert.Equal(t, "Installing components", status.Message)
+		for _, resourceStatus := range status.ResourceStatuses {
+			assert.True(t, resourceStatus.Installing)
+		}
 	})
 
 	t.Run("report health status as unhealthy after MaxInstallTime has elapsed", func(t *testing.T) {
