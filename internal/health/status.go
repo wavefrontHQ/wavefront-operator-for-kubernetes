@@ -17,7 +17,7 @@ const (
 	Healthy        = "Healthy"
 	Unhealthy      = "Unhealthy"
 	Installing     = "Installing"
-	MaxInstallTime = time.Minute * 2
+	MaxInstallTime = time.Minute * 5
 )
 
 func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string, wfCRCreationTime time.Time) wf.WavefrontStatus {
