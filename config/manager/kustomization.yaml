@@ -13,7 +13,7 @@ kind: Kustomization
 images:
 - name: controller
   newName: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
-  newTag: 2.0.0-beta-3
+  newTag: 2.0.1
 
 patches:
 - path: patches.yaml
