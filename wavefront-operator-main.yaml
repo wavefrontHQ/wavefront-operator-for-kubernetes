@@ -519,6 +519,10 @@ spec:
                         type: object
                     type: object
                 type: object
+              imageRegistry:
+                default: projects.registry.vmware.com/tanzu_observability
+                description: ImageRegistry is your custom image registry.
+                type: string
               wavefrontTokenSecret:
                 default: wavefront-secret
                 description: WavefrontTokenSecret is the name of the secret that contains
@@ -898,7 +902,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot:2.0.1-alpha-28918581
+        image: projects.registry.vmware.com/tanzu_observability_keights_saas/kubernetes-operator-snapshot:2.0.1-alpha-089869dc
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
