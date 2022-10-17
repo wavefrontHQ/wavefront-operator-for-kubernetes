@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	strings "strings"
+	"time"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
@@ -13,11 +14,13 @@ import (
 )
 
 const (
-	Healthy   = "Healthy"
-	Unhealthy = "Unhealthy"
+	Healthy        = "Healthy"
+	Unhealthy      = "Unhealthy"
+	Installing     = "Installing"
+	MaxInstallTime = time.Minute * 5
 )
 
-func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string) wf.WavefrontStatus {
+func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string, wfCRCreationTime time.Time) wf.WavefrontStatus {
 	status := wf.WavefrontStatus{}
 	var componentHealth []bool
 	var unhealthyMessages []string
@@ -43,6 +46,12 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
 		status.Message = "All components are healthy"
+	} else if wfCRCreationTime.Add(MaxInstallTime).After(time.Now()) {
+		status.Status = Installing
+		status.Message = "Installing components"
+		for i, _ := range status.ResourceStatuses {
+			status.ResourceStatuses[i].Installing = true
+		}
 	} else {
 		status.Status = Unhealthy
 		status.Message = strings.Join(unhealthyMessages, "; ")

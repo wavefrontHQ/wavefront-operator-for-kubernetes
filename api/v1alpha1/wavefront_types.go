@@ -334,6 +334,9 @@ type ResourceStatus struct {
 
 	// Health status internal use only
 	Healthy bool `json:"-"`
+
+	// Installing internal use only
+	Installing bool `json:"-"`
 }
 
 type DaemonSetStatus struct {
