@@ -159,7 +159,7 @@ func TestReconcileAll(t *testing.T) {
 
 		spec := defaultWFSpec()
 		spec.DataCollection.Logging.Enable = true
-		spec.ImageRegistry="docker.io"
+		spec.ImageRegistry = "docker.io"
 		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
