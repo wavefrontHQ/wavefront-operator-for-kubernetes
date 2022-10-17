@@ -9,7 +9,7 @@ VERSION=$(cat ./release/OPERATOR_VERSION)
 GITHUB_REPO=wavefrontHQ/wavefront-operator-for-kubernetes
 AUTH="Authorization: token ${GITHUB_TOKEN}"
 
-curl --fail -X POST -H "Content-Type:application/json" \
+id=$(curl --fail -X POST -H "Content-Type:application/json" \
 -H "$AUTH" \
 -d "{
       \"tag_name\": \"v$VERSION\",
@@ -18,9 +18,10 @@ curl --fail -X POST -H "Content-Type:application/json" \
       \"body\": \"Description for v$VERSION\",
       \"draft\": true,
       \"prerelease\": false}" \
-"https://api.github.com/repos/$GITHUB_REPO/releases"
+"https://api.github.com/repos/$GITHUB_REPO/releases" | jq ".id")
 
-id=$(curl -sH "$AUTH" "https://api.github.com/repos/$GITHUB_REPO/releases/tags/v${VERSION}" | jq ".id")
+##curl -sH "$AUTH" "https://api.github.com/repos/$GITHUB_REPO/releases/tags/v${VERSION}"
+#id=$(curl -sH "$AUTH" "https://api.github.com/repos/$GITHUB_REPO/releases/tags/v${VERSION}" | jq ".id")
 
 curl --data-binary @"$operator_yaml" \
   -H "$AUTH" \
