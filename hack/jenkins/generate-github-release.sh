@@ -20,9 +20,6 @@ id=$(curl --fail -X POST -H "Content-Type:application/json" \
       \"prerelease\": false}" \
 "https://api.github.com/repos/$GITHUB_REPO/releases" | jq ".id")
 
-##curl -sH "$AUTH" "https://api.github.com/repos/$GITHUB_REPO/releases/tags/v${VERSION}"
-#id=$(curl -sH "$AUTH" "https://api.github.com/repos/$GITHUB_REPO/releases/tags/v${VERSION}" | jq ".id")
-
 curl --data-binary @"$operator_yaml" \
   -H "$AUTH" \
   -H "Content-Type: application/octet-stream" \
