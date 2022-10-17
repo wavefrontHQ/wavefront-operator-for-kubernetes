@@ -7,7 +7,7 @@ operator_yaml="deploy/kubernetes/wavefront-operator.yaml"
 
 VERSION=$(cat ./release/OPERATOR_VERSION)
 GITHUB_REPO=wavefrontHQ/wavefront-operator-for-kubernetes
-AUTH="Authorization: token ${TOKEN}"
+AUTH="Authorization: token ${GITHUB_TOKEN}"
 
 curl --fail -X POST -H "Content-Type:application/json" \
 -H "$AUTH" \
