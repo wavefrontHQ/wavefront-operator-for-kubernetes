@@ -28,6 +28,10 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// ImageRegistry is your custom image registry.
+	// +kubebuilder:default:=projects.registry.vmware.com/tanzu_observability
+	ImageRegistry string `json:"imageRegistry,omitempty"`
+
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
 	// +kubebuilder:validation:MinLength:=3
 	ClusterName string `json:"clusterName,required"`

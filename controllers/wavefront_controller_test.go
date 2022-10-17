@@ -152,6 +152,27 @@ func TestReconcileAll(t *testing.T) {
 
 		require.Equal(t, 1, mockSender.Closes)
 	})
+
+	t.Run("Can Configure Custom Registry", func(t *testing.T) {
+
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		spec := defaultWFSpec()
+		spec.DataCollection.Logging.Enable = true
+		spec.ImageRegistry = "docker.io"
+		r, _, _, _ := setupForCreate(spec)
+		r.KubernetesManager = stubKM
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("image: docker.io/kubernetes-collector"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("image: docker.io/kubernetes-collector"))
+		require.True(t, stubKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
+		require.True(t, stubKM.ProxyDeploymentContains("image: docker.io/proxy"))
+	})
 }
 
 func TestReconcileCollector(t *testing.T) {
