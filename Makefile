@@ -272,6 +272,7 @@ target-eks: docker-login-eks
 # usage: make git-co JIRA=XXXX
 git-co:
 	@test $${JIRA?Please set variable JIRA}
+	git stash
 	git checkout main
 	git pull
 	git checkout -b K8SSAAS-$(JIRA)

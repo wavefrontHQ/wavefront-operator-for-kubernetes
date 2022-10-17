@@ -159,6 +159,20 @@ func TestValidateWavefrontSpec(t *testing.T) {
 		require.NotNilf(t, validationError, "expected validation error")
 		require.Equal(t, "[invalid spec.dataCollection.metrics.clusterCollector.resources.requests.cpu: 500m must be less than or equal to cpu limit, invalid spec.dataCollection.metrics.clusterCollector.resources.requests.memory: 500Mi must be less than or equal to memory limit]", validationError.Error())
 	})
+
+	t.Run("Test No Proxy configuration", func(t *testing.T) {
+		wfCR := defaultWFCR()
+		wfCR.Spec.DataExport.WavefrontProxy.Enable = false
+		validationError := validateWavefrontSpec(wfCR)
+		require.NotNilf(t, validationError, "expected validation error")
+	})
+
+	t.Run("Test External Proxy configuration", func(t *testing.T) {
+		wfCR := defaultWFCR()
+		wfCR.Spec.DataExport.WavefrontProxy.Enable = false
+		wfCR.Spec.DataExport.ExternalWavefrontProxy.Url = "https://external-wf-proxy"
+		require.Empty(t, validateWavefrontSpec(wfCR))
+	})
 }
 
 func TestValidateEnvironment(t *testing.T) {

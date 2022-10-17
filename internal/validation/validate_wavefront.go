@@ -86,6 +86,8 @@ func validateWavefrontSpec(wavefront *wf.Wavefront) error {
 			errs = append(errs, fmt.Errorf("'externalWavefrontProxy.url' and 'wavefrontProxy.enable' should not be set at the same time"))
 		}
 		errs = append(errs, validateResources(&wavefront.Spec.DataExport.WavefrontProxy.Resources, "spec.dataExport.wavefrontProxy")...)
+	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) == 0 {
+		errs = append(errs, fmt.Errorf("invalid proxy configuration: either set dataExport.proxy.enable to true or configure dataExport.externalWavefrontProxy.url"))
 	}
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		errs = append(errs, validateResources(&wavefront.Spec.DataCollection.Metrics.NodeCollector.Resources, "spec.dataCollection.metrics.nodeCollector")...)
