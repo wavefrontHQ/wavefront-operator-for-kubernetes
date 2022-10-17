@@ -25,4 +25,4 @@ curl \
   -H "Authorization: token ${GITHUB_TOKEN}" \
   -H "Accept: application/vnd.github.v3+json" \
   "${PR_URL}/merge" \
-  -d "{\"commit_title\":\"Bump version to ${VERSION}\"}"
+  -d "{\"commit_title\":\"Bump version to ${VERSION}\", \"merge_method\":\"squash\"}"
