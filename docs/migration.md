@@ -4,9 +4,19 @@ If you would like to test out the new operator in parallel with your existing ma
 
 ## Migrate from Helm Installation
 
-The following table lists the mapping of configurable parameters of the Wavefront Helm chart to Wavefront Operator Custom Resource.
+### 1. Install the operator
 
-See [Custom Resource Scenarios](/deploy/kubernetes/scenarios) for examples or refer to [config/crd/bases/wavefront.com_wavefronts.yaml](../config/crd/bases/wavefront.com_wavefronts.yaml) for information on all Custom Resource fields.
+Follow [the operator installation instructions](../README.md#deploy-the-wavefront-collector-and-proxy-with-the-operator).
+
+In your `wavefront.yaml`,
+ * set `spec.allowLegacyInstall` to `true`
+ * set `spec.clusterName` to `<YOUR HELM CLUSTER NAME>-operator` 
+
+### 2. Modify Your `wavefront.yaml`
+
+Modify your `wavefront.yaml` to match your helm installation based on the information below.
+The following table lists the mapping of configurable parameters of the Wavefront Helm chart to Wavefront Operator Custom Resource.
+See [Custom Resource Scenarios](../deploy/kubernetes/scenarios) for examples or refer to [config/crd/bases/wavefront.com_wavefronts.yaml](../config/crd/bases/wavefront.com_wavefronts.yaml) for information on all Custom Resource fields.
 
 | Helm collector parameter           | Wavefront operator Custom Resource `spec`.                                                         | Description                                                                                                                                                    |
 |------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -46,8 +56,51 @@ See [Custom Resource Scenarios](/deploy/kubernetes/scenarios) for examples or re
 | `proxy.args`                       | `dataExport.wavefrontProxy.args`                                                                   | Additional Wavefront proxy properties can be passed as command line arguments in the `--<property_name> <value>` format. Multiple properties can be specified. |
 | `proxy.preprocessor.rules.yaml`    | `dataExport.wavefrontProxy.preprocessor`                                                           | Name of the configmap containing a rules.yaml key with proxy preprocessing rules                                                                               |
 
-
 If you have collector configuration with parameters not covered above, please reach out to us.
+
+### 3. Re-apply your `wavefront.yaml`
+
+```shell
+kubectl apply -f <path_to_your_wavefront.yaml>
+```
+
+### 4. Verify The Operator Status
+
+Check the status of your installation:
+
+```shell
+kubectl get wavefront -n observability-system
+```
+
+You should eventually see a table that looks something like the following:
+
+```
+NAME        STATUS    PROXY           CLUSTER-COLLECTOR   NODE-COLLECTOR   LOGGING        AGE    MESSAGE
+wavefront   Healthy   Running (1/1)   Running (1/1)       Running (3/3)                   2m4s   All components are healthy
+```
+
+If `STATUS` is `Unhealthy`, check [troubleshooting](troubleshooting.md).
+
+### 5. Check That You Are Receiving Metrics From The Operator
+
+ * Go to the Kubernetes Summary Dashboard, set the cluster to `<YOUR HELM CLUSTER NAME>-operator`, and verify that you are receiving metrics. It may take some time for metrics to populate this dashboard.
+ * Verify that other important metrics are present with a `cluster="<YOUR HELM CLUSTER NAME>-operator"` tag.
+
+### 6. Uninstall Helm
+
+```shell
+helm uninstall wavefront --namespace wavefront
+```
+
+### 7. Cleanup `wavefront.yaml`
+
+In your `wavefront.yaml`,
+ * (Optional) Update `spec.clusterName` to `<YOUR HELM CLUSTER NAME>`
+ * Update `spec.allowLegacyInstall` to `false`
+
+```shell
+kubectl apply -f <path_to_your_wavefront.yaml>
+```
 
 ## Migrate from Manual Installation 
 
