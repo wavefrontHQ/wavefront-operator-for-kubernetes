@@ -9,8 +9,8 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
 )
 
-func TestSender(t *testing.T) {
-	t.Run("sends simple semantic versions to wavefront", func(t *testing.T) {
+func TestMetrics(t *testing.T) {
+	t.Run("encodes a valid SemVer into a metric value", func(t *testing.T) {
 		ms, err := version.Metrics("somecluster", "2.1.3")
 
 		require.NoError(t, err)

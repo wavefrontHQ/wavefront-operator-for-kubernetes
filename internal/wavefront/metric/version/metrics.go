@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/processor"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 )
 
@@ -15,7 +17,7 @@ var PatchVersionTooLarge = errors.New("patch version is too large (must be less 
 // semverRegex is taken from https://semver.org
 var semverRegex = regexp.MustCompile("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$")
 
-func Metrics(cluster string, version string) ([]metric.Metric, error) {
+func Metrics(clusterName string, version string) ([]metric.Metric, error) {
 	parts := semverRegex.FindStringSubmatch(version)
 	if len(parts) == 0 {
 		return nil, InvalidVersion
@@ -30,14 +32,10 @@ func Metrics(cluster string, version string) ([]metric.Metric, error) {
 		return nil, PatchVersionTooLarge
 	}
 
-	return []metric.Metric{
-		{
-			Name:   "kubernetes.observability.version",
-			Value:  encodeSemver(major, minor, patch),
-			Source: cluster,
-			Tags:   map[string]string{"cluster": cluster},
-		},
-	}, nil
+	return processor.Common(clusterName)([]metric.Metric{{
+		Name:  "kubernetes.observability.version",
+		Value: encodeSemver(major, minor, patch),
+	}}), nil
 }
 
 func encodeSemver(major float64, minor float64, patch float64) float64 {
