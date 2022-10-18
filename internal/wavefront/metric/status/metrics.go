@@ -29,7 +29,7 @@ func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, er
 }
 
 func operatorStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
-	tags := map[string]string{}
+	tags := map[string]string{"cluster": clusterName}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
 	}
@@ -77,7 +77,7 @@ func proxyStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
 func componentStatusMetric(clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) metric.Metric {
 	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
-	tags := map[string]string{}
+	tags := map[string]string{"cluster": clusterName}
 	if !resourcesPresent(componentStatuses) {
 		tags["status"] = "not enabled"
 		tags["message"] = fmt.Sprintf("%s component is not enabled", componentName)

@@ -23,7 +23,7 @@ func TestSender(t *testing.T) {
 			Name:   "kubernetes.observability.status",
 			Value:  status.UNHEALTHY_VALUE,
 			Source: "my_cluster",
-			Tags:   map[string]string{},
+			Tags:   map[string]string{"cluster": "my_cluster"},
 		})
 	})
 
@@ -35,6 +35,7 @@ func TestSender(t *testing.T) {
 			Value:  status.INSTALLING_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
+				"cluster": "my_cluster",
 				"status":  "Installing",
 				"message": "Installing Components",
 			},
@@ -49,6 +50,7 @@ func TestSender(t *testing.T) {
 			Value:  status.HEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
+				"cluster": "my_cluster",
 				"status":  "Healthy",
 				"message": "1/1 components are healthy",
 			},
@@ -63,6 +65,7 @@ func TestSender(t *testing.T) {
 			Value:  status.UNHEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
+				"cluster": "my_cluster",
 				"status":  "Unhealthy",
 				"message": "0/1 components are healthy",
 			},
@@ -83,6 +86,7 @@ func TestSender(t *testing.T) {
 			Value:  status.UNHEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
+				"cluster": "my_cluster",
 				"status":  "Unhealthy",
 				"message": "0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. Error: this is a dummy error message with its length exceeds 256 and characters; 0/1 components are healthy. E",
 			},
@@ -116,6 +120,7 @@ func TestSender(t *testing.T) {
 				Value:  status.UNHEALTHY_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
+					"cluster": "my_cluster",
 					"status":  "unhealthy",
 					"message": "cluster collector has an error; node collector has an error",
 				},
@@ -147,6 +152,7 @@ func TestSender(t *testing.T) {
 				Value:  status.INSTALLING_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
+					"cluster": "my_cluster",
 					"status":  "installing",
 					"message": "cluster collector has an error; node collector has an error",
 				},
@@ -183,6 +189,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			Value:  status.HEALTHY_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
+				"cluster": "my_cluster",
 				"status":  "healthy",
 				"message": fmt.Sprintf("%s component is healthy", componentName),
 			},
@@ -217,6 +224,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				Value:  status.UNHEALTHY_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
+					"cluster": "my_cluster",
 					"status":  "unhealthy",
 					"message": errorStr,
 				},
@@ -253,6 +261,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				Value:  status.INSTALLING_VALUE,
 				Source: "my_cluster",
 				Tags: map[string]string{
+					"cluster": "my_cluster",
 					"status":  "installing",
 					"message": errorStr,
 				},
@@ -272,6 +281,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			Value:  status.NOT_ENABLED_VALUE,
 			Source: "my_cluster",
 			Tags: map[string]string{
+				"cluster": "my_cluster",
 				"status":  "not enabled",
 				"message": fmt.Sprintf("%s component is not enabled", componentName),
 			},

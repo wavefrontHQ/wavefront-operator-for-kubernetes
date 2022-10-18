@@ -18,7 +18,7 @@ func TestSender(t *testing.T) {
 			Name:   "kubernetes.observability.version",
 			Value:  2.010300,
 			Source: "somecluster",
-			Tags:   nil,
+			Tags:   map[string]string{"cluster": "somecluster"},
 		})
 	})
 

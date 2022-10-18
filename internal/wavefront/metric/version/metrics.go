@@ -35,6 +35,7 @@ func Metrics(cluster string, version string) ([]metric.Metric, error) {
 			Name:   "kubernetes.observability.version",
 			Value:  encodeSemver(major, minor, patch),
 			Source: cluster,
+			Tags:   map[string]string{"cluster": cluster},
 		},
 	}, nil
 }
