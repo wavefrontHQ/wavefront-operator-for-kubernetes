@@ -111,14 +111,6 @@ func TestConnection(t *testing.T) {
 		require.Equal(t, 1, len(mockSenders["http://example.com/2"].SentMetrics))
 	})
 
-	//t.Run("does not send metrics when it is not connected", func(t *testing.T) {
-	//	conn := metric.NewConnection(testhelper.StubSenderFactory(nil, nil))
-	//
-	//	conn.Send([]metric.Metric{{Name: "some.metric"}})
-	//	conn.FlushMetrics()
-	//	require.Empty(t, )
-	//})
-
 	t.Run("sends metrics to the wfsdk.Sender", func(t *testing.T) {
 		metrics := []metric.Metric{{Name: "some.metric"}}
 		mockSender := &testhelper.MockSender{}
@@ -141,14 +133,6 @@ func TestConnection(t *testing.T) {
 
 		require.Equal(t, 1, mockSender.Flushes)
 	})
-
-	//t.Run("handles send errors", func(t *testing.T) {
-	//	expectedErr := errors.New("send error")
-	//	conn := NewTestConnection(&testhelper.StubSender{SendMetricErr: expectedErr})
-	//	_ = conn.Connect("example.com")
-	//
-	//	require.Error(t, conn.Send([]metric.Metric{{Name: "some.metric"}}), expectedErr.Error())
-	//})
 
 	t.Run("does not send more metrics to the sender after closing", func(t *testing.T) {
 		mockSender := &testhelper.MockSender{}
