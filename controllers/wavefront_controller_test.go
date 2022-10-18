@@ -67,6 +67,8 @@ func TestReconcileAll(t *testing.T) {
 		results, err = r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
 
+		r.MetricConnection.FlushMetrics()
+
 		require.Equal(t, ctrl.Result{Requeue: true}, results)
 
 		require.True(t, stubKM.CollectorServiceAccountContains())
@@ -471,6 +473,8 @@ func TestReconcileProxy(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
+
+		r.MetricConnection.FlushMetrics()
 
 		require.False(t, stubKM.ProxyDeploymentContains())
 		require.False(t, stubKM.ProxyServiceContains())

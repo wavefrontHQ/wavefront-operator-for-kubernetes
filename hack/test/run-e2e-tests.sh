@@ -51,7 +51,7 @@ function run_health_checks() {
       break
     fi
     printf "."
-    sleep 1
+    sleep 2
   done
 
   if [[ "$health_status" != "Healthy" ]]; then
@@ -238,17 +238,17 @@ function main() {
 
   cd $REPO_ROOT
 
-  run_test "validation-errors" "unhealthy"
-
-  run_test "validation-legacy" "unhealthy"
+#  run_test "validation-errors" "unhealthy"
+#
+#  run_test "validation-legacy" "unhealthy"
 
   run_test "allow-legacy-install" "healthy"
 
-  run_test "basic" "health|static_analysis"
-
-  run_test "advanced" "health|test_wavefront_metrics"
-
-  run_logging_test
+#  run_test "basic" "health|static_analysis"
+#
+#  run_test "advanced" "health|test_wavefront_metrics"
+#
+#  run_logging_test
 }
 
 main "$@"
