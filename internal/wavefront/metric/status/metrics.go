@@ -20,15 +20,15 @@ const (
 )
 
 func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, error) {
-	return []metric.Metric{
-		metricsStatus(status, clusterName),
-		loggingStatus(status, clusterName),
-		proxyStatus(status, clusterName),
-		operatorStatus(status, clusterName),
-	}, nil
+	return metric.Common(clusterName, []metric.Metric{
+		metricsStatus(status),
+		loggingStatus(status),
+		proxyStatus(status),
+		operatorStatus(status),
+	}), nil
 }
 
-func operatorStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+func operatorStatus(status wf.WavefrontStatus) metric.Metric {
 	tags := map[string]string{}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
@@ -44,37 +44,34 @@ func operatorStatus(status wf.WavefrontStatus, clusterName string) metric.Metric
 		healthy = HEALTHY_VALUE
 	}
 
-	return metricWithTruncatedTags(healthy, clusterName, tags, "kubernetes.observability.status")
+	return metric.Metric{Name: "kubernetes.observability.status", Value: healthy, Tags: tags}
 }
 
-func metricsStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+func metricsStatus(status wf.WavefrontStatus) metric.Metric {
 	return componentStatusMetric(
-		clusterName,
 		map[string]bool{util.ClusterCollectorName: true, util.NodeCollectorName: true},
 		"Metrics",
 		status.ResourceStatuses,
 	)
 }
 
-func loggingStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+func loggingStatus(status wf.WavefrontStatus) metric.Metric {
 	return componentStatusMetric(
-		clusterName,
 		map[string]bool{util.LoggingName: true},
 		"Logging",
 		status.ResourceStatuses,
 	)
 }
 
-func proxyStatus(status wf.WavefrontStatus, clusterName string) metric.Metric {
+func proxyStatus(status wf.WavefrontStatus) metric.Metric {
 	return componentStatusMetric(
-		clusterName,
 		map[string]bool{util.ProxyName: true},
 		"Proxy",
 		status.ResourceStatuses,
 	)
 }
 
-func componentStatusMetric(clusterName string, resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) metric.Metric {
+func componentStatusMetric(resourcesInComponent map[string]bool, componentName string, resourceStatuses []wf.ResourceStatus) metric.Metric {
 	componentStatuses := filterComponents(resourceStatuses, resourcesInComponent)
 	var healthValue float64
 	tags := map[string]string{}
@@ -95,7 +92,11 @@ func componentStatusMetric(clusterName string, resourcesInComponent map[string]b
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = UNHEALTHY_VALUE
 	}
-	return metricWithTruncatedTags(healthValue, clusterName, tags, fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)))
+	return metric.Metric{
+		Name:  fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)),
+		Value: healthValue,
+		Tags:  tags,
+	}
 }
 
 func resourceInstalling(statuses []wf.ResourceStatus) bool {
@@ -140,18 +141,4 @@ func filterComponents(resourceStatuses []wf.ResourceStatus, resourcesInComponent
 		}
 	}
 	return filtered
-}
-
-func metricWithTruncatedTags(value float64, source string, tags map[string]string, name string) metric.Metric {
-	return metric.Metric{Name: name, Value: value, Source: source, Tags: truncateTags(tags)}
-}
-
-func truncateTags(tags map[string]string) map[string]string {
-	for name := range tags {
-		maxLen := util.MaxTagLength - len(name) - len("=")
-		if len(tags[name]) > maxLen {
-			tags[name] = tags[name][:maxLen]
-		}
-	}
-	return tags
 }

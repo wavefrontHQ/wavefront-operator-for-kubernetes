@@ -3,23 +3,26 @@ package version_test
 import (
 	"testing"
 
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"
 )
 
-func TestSender(t *testing.T) {
-	t.Run("sends simple semantic versions to wavefront", func(t *testing.T) {
+func TestMetrics(t *testing.T) {
+	t.Run("have common attributes", func(t *testing.T) {
 		ms, err := version.Metrics("somecluster", "2.1.3")
 
 		require.NoError(t, err)
-		require.Contains(t, ms, metric.Metric{
-			Name:   "kubernetes.observability.version",
-			Value:  2.010300,
-			Source: "somecluster",
-			Tags:   nil,
-		})
+		testhelper.RequireAllMetricsHaveCommonAttributes(t, ms, "somecluster")
+	})
+
+	t.Run("encodes a valid SemVer into a metric value", func(t *testing.T) {
+		ms, err := version.Metrics("somecluster", "2.1.3")
+
+		require.NoError(t, err)
+		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.version")
+		testhelper.RequireMetricValue(t, m, 2.010300)
 	})
 
 	t.Run("rejects bad semvers", func(t *testing.T) {
