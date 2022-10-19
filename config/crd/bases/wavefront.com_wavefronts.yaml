@@ -513,10 +513,6 @@ spec:
                         type: object
                     type: object
                 type: object
-              imageRegistry:
-                default: projects.registry.vmware.com/tanzu_observability
-                description: ImageRegistry is your custom image registry.
-                type: string
               wavefrontTokenSecret:
                 default: wavefront-secret
                 description: WavefrontTokenSecret is the name of the secret that contains

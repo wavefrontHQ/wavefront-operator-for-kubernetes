@@ -28,10 +28,6 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ImageRegistry is your custom image registry.
-	// +kubebuilder:default:=projects.registry.vmware.com/tanzu_observability
-	ImageRegistry string `json:"imageRegistry,omitempty"`
-
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
 	// +kubebuilder:validation:MinLength:=3
 	ClusterName string `json:"clusterName,required"`
@@ -54,6 +50,9 @@ type WavefrontSpec struct {
 
 	//  Allows the operator based Wavefront installation to be run in parallel with a legacy Wavefront (helm or manual) installation. Defaults to false.
 	AllowLegacyInstall bool `json:"allowLegacyInstall,omitempty"`
+
+	// ImageRegistry for internal use
+	ImageRegistry string `json:"-"`
 
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`

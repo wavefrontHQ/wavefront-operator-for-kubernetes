@@ -357,6 +357,11 @@ func hashValue(bytes []byte) string {
 
 // Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
+	deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	wavefront.Spec.ImageRegistry = filepath.Dir(deployment.Spec.Template.Spec.Containers[0].Image)
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 			wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"

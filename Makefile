@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-PREFIX?=projects.registry.vmware.com/tanzu_observability_keights_saas
+PREFIX?=projects.registry.vmware.com/tanzu_observability
 DOCKER_IMAGE?=kubernetes-operator-snapshot
 
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
