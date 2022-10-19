@@ -3,6 +3,11 @@ pipeline {
 
   environment {
     GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
+    HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
+    PREFIX = 'projects.registry.vmware.com/tanzu_observability'
+    DOCKER_IMAGE = "kubernetes-operator-snapshot"
+    VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
+    WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
   }
 
   parameters {
@@ -27,10 +32,6 @@ pipeline {
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
         GKE_CLUSTER_NAME = "k8po-jenkins-ci"
-        WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-        DOCKER_IMAGE = "kubernetes-operator-snapshot"
       }
       steps {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
@@ -46,10 +47,6 @@ pipeline {
       }
       environment {
         RELEASE_TYPE = "alpha"
-        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-        DOCKER_IMAGE = "kubernetes-operator-snapshot"
       }
       steps {
         withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
@@ -64,10 +61,6 @@ pipeline {
       }
       environment {
         RELEASE_TYPE = "alpha"
-        VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-        HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-        PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-        DOCKER_IMAGE = "kubernetes-operator-snapshot"
         TOKEN = credentials('GITHUB_TOKEN')
       }
       steps {
@@ -95,12 +88,6 @@ pipeline {
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
             GCP_CREDS = credentials("GCP_CREDS")
-            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-            HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-            DOCKER_IMAGE = "kubernetes-operator-snapshot"
-            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-            WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
             GCP_PROJECT = "wavefront-gcp-dev"
           }
           steps {
@@ -128,17 +115,8 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
-            GCP_CREDS = credentials("GCP_CREDS")
-            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
-            AKS_CLUSTER_NAME = "k8po-ci"
-            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
             AWS_SHARED_CREDENTIALS_FILE = credentials("k8po-ci-aws-creds")
             AWS_CONFIG_FILE = credentials("k8po-ci-aws-profile")
-            HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-            DOCKER_IMAGE = "kubernetes-operator-snapshot"
-            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-            WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
           }
           steps {
             withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
@@ -165,15 +143,7 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
-            GCP_CREDS = credentials("GCP_CREDS")
-            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
             AKS_CLUSTER_NAME = "k8po-ci"
-            VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
-            PREFIX = "projects.registry.vmware.com/tanzu_observability_keights_saas"
-            HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-            DOCKER_IMAGE = "kubernetes-operator-snapshot"
-            WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-            WAVEFRONT_LOGGING_TOKEN = credentials("WAVEFRONT_TOKEN_SPRINGLOGS")
           }
           steps {
             withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {

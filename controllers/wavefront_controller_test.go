@@ -155,6 +155,26 @@ func TestReconcileAll(t *testing.T) {
 		require.Equal(t, 1, mockSender.Closes)
 	})
 
+	t.Run("Defaults Custom Registry", func(t *testing.T) {
+
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		spec := defaultWFSpec()
+		spec.DataCollection.Logging.Enable = true
+		r, _, _, _ := setupForCreate(spec)
+		r.KubernetesManager = stubKM
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
+		require.True(t, stubKM.LoggingDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd"))
+		require.True(t, stubKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
+	})
+
 	t.Run("Can Configure Custom Registry", func(t *testing.T) {
 
 		stubKM := testhelper.NewMockKubernetesManager()
