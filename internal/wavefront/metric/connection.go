@@ -2,6 +2,9 @@ package metric
 
 import (
 	"strings"
+	"time"
+
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type Sender interface {
@@ -16,10 +19,26 @@ type Connection struct {
 	newSender SenderFactory
 	addr      string
 	sender    Sender
+	metrics   map[string]Metric
 }
 
 func NewConnection(newSender SenderFactory) *Connection {
-	return &Connection{newSender: newSender}
+	c := &Connection{
+		newSender: newSender,
+		metrics:   map[string]Metric{},
+	}
+	go startFlushLoop(c)
+	return c
+}
+
+func startFlushLoop(c *Connection) {
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			c.FlushMetrics()
+		}
+	}
 }
 
 func (c *Connection) connected() bool {
@@ -45,17 +64,28 @@ func (c *Connection) Connect(addr string) error {
 	return nil
 }
 
-func (c *Connection) Send(metrics []Metric) error {
-	if c.sender == nil {
-		return nil
-	}
+func (c *Connection) Send(metrics []Metric) {
 	for _, metric := range metrics {
+		c.metrics[metric.Name] = metric
+	}
+}
+
+func (c *Connection) FlushMetrics() {
+	if c.sender == nil {
+		return
+	}
+
+	for _, metric := range c.metrics {
 		err := c.sender.SendMetric(metric.Name, metric.Value, 0, metric.Source, metric.Tags)
 		if err != nil {
-			return err
+			log.Log.Error(err, "error sending metrics")
 		}
 	}
-	return c.sender.Flush()
+
+	err := c.sender.Flush()
+	if err != nil {
+		log.Log.Error(err, "error flushing metrics")
+	}
 }
 
 func (c *Connection) Close() {

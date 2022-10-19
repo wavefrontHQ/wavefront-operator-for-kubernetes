@@ -107,7 +107,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
-		log.Log.Error(err, "error getting wavefront operator crd")
 		return errorCRTLResult(err)
 	}
 
@@ -118,7 +117,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	err = r.preprocess(wavefront, ctx)
 	if err != nil {
-		log.Log.Error(err, "error preprocessing Wavefront Spec")
 		return errorCRTLResult(err)
 	}
 
@@ -126,7 +124,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if !validationResult.IsError() {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
-			log.Log.Error(err, "error creating resources")
 			return errorCRTLResult(err)
 		}
 	} else {
@@ -135,7 +132,6 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	wavefrontStatus, err := r.reportHealthStatus(ctx, wavefront, validationResult)
 	if err != nil {
-		log.Log.Error(err, "error reporting health status")
 		return errorCRTLResult(err)
 	}
 
@@ -519,9 +515,7 @@ func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName 
 		metrics = append(metrics, versionMetrics...)
 	}
 
-	if err = r.MetricConnection.Send(metrics); err != nil {
-		log.Log.Info(fmt.Sprintf("error sending metrics: %s", err.Error()))
-	}
+	r.MetricConnection.Send(metrics)
 }
 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {

@@ -51,7 +51,7 @@ function run_health_checks() {
       break
     fi
     printf "."
-    sleep 1
+    sleep 2
   done
 
   if [[ "$health_status" != "Healthy" ]]; then
