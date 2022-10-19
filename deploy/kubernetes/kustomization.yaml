@@ -6,4 +6,4 @@ resources:
 
 images:
 - name: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
-  newName: YOUR_IMAGE_REGISTRY
+  newName: YOUR_IMAGE_REGISTRY/kubernetes-operator
