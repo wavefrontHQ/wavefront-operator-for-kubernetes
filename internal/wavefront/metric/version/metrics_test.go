@@ -1,8 +1,9 @@
 package version_test
 
 import (
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 	"testing"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/version"

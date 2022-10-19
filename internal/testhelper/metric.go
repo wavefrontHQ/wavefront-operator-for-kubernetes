@@ -1,9 +1,10 @@
 package testhelper
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
-	"testing"
 )
 
 func StubSenderFactory(sender metric.Sender, err error) metric.SenderFactory {

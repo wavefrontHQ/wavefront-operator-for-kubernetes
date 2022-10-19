@@ -2,9 +2,10 @@ package status_test
 
 import (
 	"fmt"
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 	"strings"
 	"testing"
+
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper"
 
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
