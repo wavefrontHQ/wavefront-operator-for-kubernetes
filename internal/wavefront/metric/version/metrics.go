@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/processor"
-
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 )
 
@@ -31,8 +29,7 @@ func Metrics(clusterName string, version string) ([]metric.Metric, error) {
 	if patch >= 100.0 {
 		return nil, PatchVersionTooLarge
 	}
-
-	return processor.Common(clusterName)([]metric.Metric{{
+	return metric.Common(clusterName, []metric.Metric{{
 		Name:  "kubernetes.observability.version",
 		Value: encodeSemver(major, minor, patch),
 	}}), nil

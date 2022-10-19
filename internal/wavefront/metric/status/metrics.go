@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric/processor"
-
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -22,7 +20,7 @@ const (
 )
 
 func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, error) {
-	return processor.Common(clusterName)([]metric.Metric{
+	return metric.Common(clusterName, []metric.Metric{
 		metricsStatus(status),
 		loggingStatus(status),
 		proxyStatus(status),
