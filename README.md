@@ -1,9 +1,7 @@
-## Beta Notice
+## Initial Availability Notice
 
-This project is in the beta phase and not ready for use on production environments.
-For use on production environments,
-see the Installation and Configuration sections of the [collector repo](https://github.com/wavefrontHQ/wavefront-collector-for-kubernetes)
-for our original, more established processes.
+This project is in the initial availability phase.
+It is suitable for production usage.
 
 **Important:** Observability Logs (Beta) is enabled only for selected customers. If you’d like to participate, contact your Observability account representative.
 
@@ -118,8 +116,7 @@ The following tools are required for installing the integration.
    ```
    If `STATUS` is `Unhealthy`, check [troubleshooting](docs/troubleshooting.md).
 
-**Note**: For details on migrating from existing helm chart or manual deploy,
-see [Migration](docs/migration.md).
+**Note**: For details on migrating from existing helm chart or manual deploy, see [Migration](docs/migration.md).
 
 # Configuration
 

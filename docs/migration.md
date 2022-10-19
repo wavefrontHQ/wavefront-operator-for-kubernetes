@@ -1,5 +1,5 @@
 # Migration
-This is a beta trial migration doc for the operator from collector manual and helm installation. 
+This is a migration doc for the operator from collector manual and helm installations.
 If you would like to test out the new operator in parallel with your existing manual or helm installation, use the [wavefront-allow-legacy-intall.yaml](../deploy/kubernetes/scenarios/wavefront-allow-legacy-install.yaml) template.
 
 ## Migrate from Helm Installation
