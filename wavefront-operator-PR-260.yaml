@@ -898,7 +898,7 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.1-alpha-d22de378
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.1-alpha-f385ee6a
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
