@@ -8,6 +8,7 @@ pipeline {
     DOCKER_IMAGE = "kubernetes-operator-snapshot"
     VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
     WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+    GCP_CREDS = credentials("GCP_CREDS")
   }
 
   parameters {
@@ -87,7 +88,6 @@ pipeline {
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
-            GCP_CREDS = credentials("GCP_CREDS")
             GCP_PROJECT = "wavefront-gcp-dev"
           }
           steps {
