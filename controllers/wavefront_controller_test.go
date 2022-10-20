@@ -195,6 +195,27 @@ func TestReconcileAll(t *testing.T) {
 		require.True(t, stubKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
 		require.True(t, stubKM.ProxyDeploymentContains("image: docker.io/proxy"))
 	})
+
+	t.Run("Child components inherits controller's namespace", func(t *testing.T) {
+		os.Setenv("NAMESPACE", "test-namespace")
+
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		spec := defaultWFSpec()
+		spec.DataCollection.Logging.Enable = true
+		r, _, _, _ := setupForCreate(spec)
+		r.KubernetesManager = stubKM
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("namespace: test-namespace"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("namespace: test-namespace"))
+		require.True(t, stubKM.LoggingDaemonSetContains("namespace: test-namespace"))
+		require.True(t, stubKM.ProxyDeploymentContains("namespace: test-namespace"))
+	})
 }
 
 func TestReconcileCollector(t *testing.T) {

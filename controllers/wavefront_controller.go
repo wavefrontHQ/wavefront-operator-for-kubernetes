@@ -361,6 +361,9 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	if err != nil {
 		return err
 	}
+
+	wavefront.Spec.Namespace = util.Namespace()
+
 	wavefront.Spec.ImageRegistry = filepath.Dir(deployment.Spec.Template.Spec.Containers[0].Image)
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {

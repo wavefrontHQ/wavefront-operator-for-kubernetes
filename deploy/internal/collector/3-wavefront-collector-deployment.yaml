@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wavefront-cluster-collector
-  namespace: observability-system
+  namespace: {{ .Namespace }}
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: collector
