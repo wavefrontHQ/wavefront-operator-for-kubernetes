@@ -8,7 +8,6 @@ pipeline {
     DOCKER_IMAGE = "kubernetes-operator-snapshot"
     VERSION_POSTFIX = "-alpha-${GIT_COMMIT.substring(0, 8)}"
     WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-    GCP_CREDS = credentials("GCP_CREDS")
   }
 
   parameters {
@@ -88,6 +87,7 @@ pipeline {
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            GCP_CREDS = credentials("GCP_CREDS")
             GCP_PROJECT = "wavefront-gcp-dev"
           }
           steps {
@@ -115,6 +115,7 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
+            GCP_CREDS = credentials("GCP_CREDS")
             AWS_SHARED_CREDENTIALS_FILE = credentials("k8po-ci-aws-creds")
             AWS_CONFIG_FILE = credentials("k8po-ci-aws-profile")
           }
@@ -143,6 +144,7 @@ pipeline {
             go 'Go 1.17'
           }
           environment {
+            GCP_CREDS = credentials("GCP_CREDS")
             AKS_CLUSTER_NAME = "k8po-ci"
           }
           steps {
