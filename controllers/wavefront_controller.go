@@ -293,7 +293,7 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(util.Namespace()).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -357,7 +357,7 @@ func hashValue(bytes []byte) string {
 
 // Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
-	deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(util.Namespace()).Get(context.Background(), util.OperatorName, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		deployment, err := r.Appsv1.Deployments(util.Namespace()).Get(context.Background(), util.ProxyName, v1.GetOptions{})
 		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
 			wavefront.Spec.CanExportData = true
@@ -426,7 +426,7 @@ func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx
 
 func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx context.Context) (*corev1.Secret, error) {
 	secret := client.ObjectKey{
-		Namespace: util.Namespace,
+		Namespace: util.Namespace(),
 		Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
 	}
 	httpProxySecret := &corev1.Secret{}

@@ -815,7 +815,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -858,7 +858,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -1053,14 +1053,14 @@ func StatusMetricsSent(mockSender *testhelper.MockSender) int {
 }
 
 func ProxyRunning(apps typedappsv1.AppsV1Interface, availableReplicas int) {
-	_, _ = apps.Deployments(util.Namespace).Update(context.Background(), &appsv1.Deployment{
+	_, _ = apps.Deployments(util.Namespace()).Update(context.Background(), &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       util.Deployment,
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ProxyName,
-			Namespace: util.Namespace,
+			Namespace: util.Namespace(),
 		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: int32(availableReplicas),
@@ -1069,14 +1069,14 @@ func ProxyRunning(apps typedappsv1.AppsV1Interface, availableReplicas int) {
 }
 
 func UpdateOperatorRegistry(apps typedappsv1.AppsV1Interface, imageRegistry string) {
-	_, _ = apps.Deployments(util.Namespace).Update(context.Background(), &appsv1.Deployment{
+	_, _ = apps.Deployments(util.Namespace()).Update(context.Background(), &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       util.Deployment,
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "wavefront-controller-manager",
-			Namespace: util.Namespace,
+			Namespace: util.Namespace(),
 			UID:       "testUID",
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -1261,7 +1261,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: util.Namespace,
+			Namespace: util.Namespace(),
 			Name:      "wavefront",
 		},
 		Spec:   spec,
@@ -1284,7 +1284,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "wavefront-controller-manager",
-			Namespace: util.Namespace,
+			Namespace: util.Namespace(),
 			UID:       "testUID",
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -1305,7 +1305,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ProxyName,
-			Namespace: util.Namespace,
+			Namespace: util.Namespace(),
 		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: 1,
@@ -1340,7 +1340,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 func defaultRequest() reconcile.Request {
 	return reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: util.Namespace,
+		Namespace: util.Namespace(),
 		Name:      "wavefront",
 	}}
 }

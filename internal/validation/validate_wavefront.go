@@ -128,15 +128,15 @@ func daemonSetExists(appsV1 typedappsv1.AppsV1Interface, namespace string, resou
 }
 
 func areAnyComponentsDeployed(appsV1 typedappsv1.AppsV1Interface) bool {
-	exists := deploymentExists(appsV1, util.Namespace, util.ProxyName)
+	exists := deploymentExists(appsV1, util.Namespace(), util.ProxyName)
 	if exists {
 		return exists
 	}
-	exists = daemonSetExists(appsV1, util.Namespace, util.NodeCollectorName)
+	exists = daemonSetExists(appsV1, util.Namespace(), util.NodeCollectorName)
 	if exists {
 		return exists
 	}
-	exists = deploymentExists(appsV1, util.Namespace, util.ClusterCollectorName)
+	exists = deploymentExists(appsV1, util.Namespace(), util.ClusterCollectorName)
 	if exists {
 		return exists
 	}

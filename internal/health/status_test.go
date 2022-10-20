@@ -21,7 +21,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -32,7 +32,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -43,7 +43,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -80,7 +80,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -91,7 +91,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -102,7 +102,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -127,7 +127,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -138,7 +138,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,

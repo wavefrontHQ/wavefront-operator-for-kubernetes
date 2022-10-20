@@ -65,7 +65,7 @@ func main() {
 		MetricsBindAddress:     "0",
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
-		Namespace:              util.Namespace,
+		Namespace:              util.Namespace(),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -80,7 +80,7 @@ func main() {
 	}
 
 	if err = controller.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to setup manager", "controller", util.Namespace)
+		setupLog.Error(err, "unable to setup manager", "controller", util.Namespace())
 		os.Exit(1)
 	}
 

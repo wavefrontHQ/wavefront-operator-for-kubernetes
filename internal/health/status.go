@@ -65,7 +65,7 @@ func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Resour
 		Name: name,
 	}
 
-	deployment, err := appsV1.Deployments(util.Namespace).Get(context.Background(), name, v1.GetOptions{})
+	deployment, err := appsV1.Deployments(util.Namespace()).Get(context.Background(), name, v1.GetOptions{})
 
 	if err != nil {
 		componentStatus.Healthy = false
@@ -88,7 +88,7 @@ func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Resourc
 	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
-	daemonSet, err := appsV1.DaemonSets(util.Namespace).Get(context.Background(), name, v1.GetOptions{})
+	daemonSet, err := appsV1.DaemonSets(util.Namespace()).Get(context.Background(), name, v1.GetOptions{})
 
 	if err != nil {
 		componentStatus.Healthy = false

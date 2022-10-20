@@ -58,14 +58,14 @@ func TestValidate(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 		}
 		proxy := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: util.Namespace,
+				Namespace: util.Namespace(),
 			},
 		}
 		appsV1 := setup(legacyCollector, legacyDeployment, nodeCollector, proxy)
@@ -284,7 +284,7 @@ func defaultWFCR() *wf.Wavefront {
 	return &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: util.Namespace,
+			Namespace: util.Namespace(),
 			Name:      "wavefront",
 		},
 		Spec: wf.WavefrontSpec{
