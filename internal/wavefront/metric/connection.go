@@ -2,6 +2,7 @@ package metric
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -17,6 +18,7 @@ type SenderFactory func(addr string) (Sender, error)
 
 type Connection struct {
 	newSender SenderFactory
+	mu        sync.Mutex
 	addr      string
 	sender    Sender
 	metrics   map[string]Metric
@@ -27,16 +29,16 @@ func NewConnection(newSender SenderFactory) *Connection {
 		newSender: newSender,
 		metrics:   map[string]Metric{},
 	}
-	go startFlushLoop(c)
+	go flushLoop(c)
 	return c
 }
 
-func startFlushLoop(c *Connection) {
+func flushLoop(c *Connection) {
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			c.FlushMetrics()
+			c.Flush()
 		}
 	}
 }
@@ -46,14 +48,14 @@ func (c *Connection) connected() bool {
 }
 
 func (c *Connection) Connect(addr string) error {
-	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
-		addr = "http://" + addr
-	}
+	addr = normalizeAddr(addr)
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.addr == addr {
 		return nil
 	}
 	if c.connected() {
-		c.Close()
+		c.close()
 	}
 	sender, err := c.newSender(addr)
 	if err != nil {
@@ -64,35 +66,62 @@ func (c *Connection) Connect(addr string) error {
 	return nil
 }
 
+func normalizeAddr(addr string) string {
+	if strings.HasPrefix(addr, "http://") || strings.HasPrefix(addr, "https://") {
+		return addr
+	}
+	return "http://" + addr
+}
+
 func (c *Connection) Send(metrics []Metric) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, metric := range metrics {
 		c.metrics[metric.Name] = metric
 	}
 }
 
-func (c *Connection) FlushMetrics() {
-	if c.sender == nil {
+func (c *Connection) Flush() {
+	sendBatch(c.extractBatch())
+}
+
+func sendBatch(sender Sender, metrics map[string]Metric) {
+	if sender == nil {
 		return
 	}
-
-	for _, metric := range c.metrics {
-		err := c.sender.SendMetric(metric.Name, metric.Value, 0, metric.Source, metric.Tags)
+	for _, metric := range metrics {
+		err := sender.SendMetric(metric.Name, metric.Value, 0, metric.Source, metric.Tags)
 		if err != nil {
 			log.Log.Error(err, "error sending metrics")
 		}
 	}
-
-	err := c.sender.Flush()
+	err := sender.Flush()
 	if err != nil {
 		log.Log.Error(err, "error flushing metrics")
 	}
 }
 
-func (c *Connection) Close() {
-	if !c.connected() {
-		return
+func (c *Connection) extractBatch() (Sender, map[string]Metric) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	dst := make(map[string]Metric, len(c.metrics))
+	for key, metric := range c.metrics {
+		dst[key] = metric
 	}
-	c.sender.Close()
+	return c.sender, dst
+}
+
+func (c *Connection) Close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.close()
+}
+
+// close is not thread safe and must only be called when already holding c.mu
+func (c *Connection) close() {
+	if c.connected() {
+		c.sender.Close()
+	}
 	c.sender = nil
 	c.addr = ""
 }
