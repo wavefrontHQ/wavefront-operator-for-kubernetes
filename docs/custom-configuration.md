@@ -4,11 +4,14 @@ Install the Wavefront Operator into `observability-system` namespace.
 
 **Note**: All the integration components use the same image registry in the operator.
 
-1. Copy the following images to YOUR_IMAGE_REGISTRY
-- Wavefront kubernetes operator:`projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-rc01` to `YOUR_IMAGE_REGISTRY/kubernetes-operator:2.0.0-rc01`
-- Wavefront kubernetes collector: `projects.registry.vmware.com/tanzu_observability/kubernetes-collector:1.12.0` to `YOUR_IMAGE_REGISTRY/kubernetes-collector:1.12.0`
-- Wavefront Proxy: `projects.registry.vmware.com/tanzu_observability/proxy:12.0` to `YOUR_IMAGE_REGISTRY/proxy:12.0`
-- Wavefront logging:`projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd:1.0.4-1.15.2` to `YOUR_IMAGE_REGISTRY/kubernetes-operator-fluentd:1.0.4-1.15.2`
+1. Copy the following images over to `YOUR_IMAGE_REGISTRY`, keeping the same repos and tags.
+
+| Component                      | From                                                                                        | To                                                             |
+|--------------------------------|---------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| Wavefront kubernetes operator  | `projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.0-rc01`           | `YOUR_IMAGE_REGISTRY/kubernetes-operator:2.0.0-rc01`           |
+| Wavefront kubernetes collector | `projects.registry.vmware.com/tanzu_observability/kubernetes-collector:1.12.0`              | `YOUR_IMAGE_REGISTRY/kubernetes-collector:1.12.0`              |
+| Wavefront Proxy                | `projects.registry.vmware.com/tanzu_observability/proxy:12.0`                               | `YOUR_IMAGE_REGISTRY/proxy:12.0`                               |
+| Wavefront logging              | `projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd:1.0.4-1.15.2` | `YOUR_IMAGE_REGISTRY/kubernetes-operator-fluentd:1.0.4-1.15.2` |
 
 2. Create a local directory called `observability`
 3. Download [wavefront-operator.yaml](https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/main/deploy/kubernetes/wavefront-operator.yaml) into the `observability` directory.
