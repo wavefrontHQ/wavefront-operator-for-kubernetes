@@ -155,14 +155,34 @@ func TestReconcileAll(t *testing.T) {
 		require.Equal(t, 1, mockSender.Closes)
 	})
 
+	t.Run("Defaults Custom Registry", func(t *testing.T) {
+
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		spec := defaultWFSpec()
+		spec.DataCollection.Logging.Enable = true
+		r, _, _, _ := setupForCreate(spec)
+		r.KubernetesManager = stubKM
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
+		require.True(t, stubKM.LoggingDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd"))
+		require.True(t, stubKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
+	})
+
 	t.Run("Can Configure Custom Registry", func(t *testing.T) {
 
 		stubKM := testhelper.NewMockKubernetesManager()
 
 		spec := defaultWFSpec()
 		spec.DataCollection.Logging.Enable = true
-		spec.ImageRegistry = "docker.io"
-		r, _, _, _ := setupForCreate(spec)
+		r, _, _, apps := setupForCreate(spec)
+		UpdateOperatorRegistry(apps, "docker.io")
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -1048,6 +1068,29 @@ func ProxyRunning(apps typedappsv1.AppsV1Interface, availableReplicas int) {
 	}, metav1.UpdateOptions{})
 }
 
+func UpdateOperatorRegistry(apps typedappsv1.AppsV1Interface, imageRegistry string) {
+	_, _ = apps.Deployments(util.Namespace).Update(context.Background(), &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       util.Deployment,
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "wavefront-controller-manager",
+			Namespace: util.Namespace,
+			UID:       "testUID",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{v1.Container{
+						Image: imageRegistry + "/kubernetes-operator:2.0.1",
+					}},
+				},
+			},
+		},
+	}, metav1.UpdateOptions{})
+}
+
 func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, existingResources ...runtime.Object) {
 	t.Run("on CR creation", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
@@ -1243,6 +1286,15 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 			Name:      "wavefront-controller-manager",
 			Namespace: util.Namespace,
 			UID:       "testUID",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{v1.Container{
+						Image: "projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.1",
+					}},
+				},
+			},
 		},
 	})
 
