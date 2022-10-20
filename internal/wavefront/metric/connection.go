@@ -54,9 +54,7 @@ func (c *Connection) Connect(addr string) error {
 	if c.addr == addr {
 		return nil
 	}
-	if c.connected() {
-		c.close()
-	}
+	c.close()
 	sender, err := c.newSender(addr)
 	if err != nil {
 		return err
