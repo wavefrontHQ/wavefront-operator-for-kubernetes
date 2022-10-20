@@ -234,6 +234,9 @@ generate-kubernetes-yaml: copy-base-patches manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 
+clean-cluster:
+	(cd $(REPO_DIR)/hack/test && ./clean-cluster.sh)
+
 #----- GKE -----#
 GCP_PROJECT?=wavefront-gcp-dev
 
