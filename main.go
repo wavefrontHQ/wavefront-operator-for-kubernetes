@@ -20,7 +20,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -47,6 +46,15 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+func namespace() string {
+	namespace, present := os.LookupEnv("NAMESPACE")
+	if !present {
+		return "observability-system"
+	}
+
+	return namespace
+}
+
 func main() {
 	var probeAddr string
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -65,7 +73,7 @@ func main() {
 		MetricsBindAddress:     "0",
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
-		Namespace:              util.Namespace(),
+		Namespace:              namespace(),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -80,7 +88,7 @@ func main() {
 	}
 
 	if err = controller.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to setup manager", "controller", util.Namespace())
+		setupLog.Error(err, "unable to setup manager", "controller", namespace())
 		os.Exit(1)
 	}
 

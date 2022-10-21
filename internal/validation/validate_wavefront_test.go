@@ -40,6 +40,7 @@ func TestValidate(t *testing.T) {
 	})
 
 	t.Run("legacy install is running after operator install", func(t *testing.T) {
+		wfCR := defaultWFCR()
 		legacyCollector := &appsv1.DaemonSet{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
@@ -58,18 +59,17 @@ func TestValidate(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wfCR.Spec.Namespace,
 			},
 		}
 		proxy := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: util.Namespace(),
+				Namespace: wfCR.Spec.Namespace,
 			},
 		}
 		appsV1 := setup(legacyCollector, legacyDeployment, nodeCollector, proxy)
-		wfCR := defaultWFCR()
 
 		result := Validate(appsV1, wfCR)
 		require.False(t, result.IsValid())
@@ -284,7 +284,7 @@ func defaultWFCR() *wf.Wavefront {
 	return &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: util.Namespace(),
+			Namespace: "testNamespace",
 			Name:      "wavefront",
 		},
 		Spec: wf.WavefrontSpec{

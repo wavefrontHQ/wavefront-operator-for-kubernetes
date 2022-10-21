@@ -17,11 +17,12 @@ import (
 
 func TestReconcileReportHealthStatus(t *testing.T) {
 	t.Run("report health status when all components are healthy", func(t *testing.T) {
+		wavefront := defaultWF()
 		proxyDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -32,7 +33,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -43,7 +44,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -52,13 +53,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
-		componentsToCheck := map[string]string{
-			util.ProxyName:            util.Deployment,
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
+		wavefront.Spec.DataExport.WavefrontProxy.Enable = true
+		wavefront.Spec.DataCollection.Metrics.Enable = true
 
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now())
+		status := GenerateWavefrontStatus(appsV1, wavefront)
 		assert.Equal(t, Healthy, status.Status)
 		assert.Equal(t, "All components are healthy", status.Message)
 
@@ -76,11 +74,13 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 	})
 
 	t.Run("report health status when one component is unhealthy", func(t *testing.T) {
+		wavefront := defaultWF()
+
 		proxyDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -91,7 +91,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -102,7 +102,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -111,23 +111,23 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		appsV1 := setup(proxyDeployment, collectorDeployment, collectorDaemonSet)
-		componentsToCheck := map[string]string{
-			util.ProxyName:            util.Deployment,
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, pastMaxInstallTime())
+		wavefront.Spec.DataExport.WavefrontProxy.Enable = true
+		wavefront.Spec.DataCollection.Metrics.Enable = true
+
+		status := GenerateWavefrontStatus(appsV1, wavefront)
 
 		assert.Equal(t, Unhealthy, status.Status)
 		assert.Equal(t, "not enough instances of wavefront-proxy are running (0/1)", status.Message)
 	})
 
 	t.Run("report health status with less components", func(t *testing.T) {
+		wavefront := defaultWF()
+
 		collectorDeployment := &appsv1.Deployment{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -138,7 +138,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: util.Namespace(),
+				Namespace: wavefront.Spec.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -147,11 +147,9 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 
 		appsV1 := setup(collectorDeployment, collectorDaemonSet)
-		componentsToCheck := map[string]string{
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now())
+		wavefront.Spec.DataCollection.Metrics.Enable = true
+
+		status := GenerateWavefrontStatus(appsV1, wavefront)
 
 		assert.Equal(t, Healthy, status.Status)
 		assert.Equal(t, "All components are healthy", status.Message)
@@ -159,12 +157,8 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 
 	t.Run("report health status when no components are running", func(t *testing.T) {
 		appsV1 := setup()
-		componentsToCheck := map[string]string{
-			util.ProxyName:            util.Deployment,
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, pastMaxInstallTime())
+
+		status := GenerateWavefrontStatus(appsV1, defaultWF())
 
 		assert.Equal(t, Unhealthy, status.Status)
 		assert.Equal(t, "", status.Message)
@@ -182,13 +176,13 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 	})
 
 	t.Run("report health status as installing until MaxInstallTime has elapsed", func(t *testing.T) {
+		wavefront := defaultWF()
 		appsV1 := setup()
-		componentsToCheck := map[string]string{
-			util.ProxyName:            util.Deployment,
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, time.Now().Add(-MaxInstallTime).Add(time.Second*10))
+
+		wavefront.CreationTimestamp.Time = time.Now().Add(-MaxInstallTime).Add(time.Second * 10)
+		wavefront.Spec.DataCollection.Metrics.Enable = true
+		wavefront.Spec.DataExport.WavefrontProxy.Enable = true
+		status := GenerateWavefrontStatus(appsV1, wavefront)
 
 		assert.Equal(t, Installing, status.Status)
 		assert.Equal(t, "Installing components", status.Message)
@@ -198,13 +192,13 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 	})
 
 	t.Run("report health status as unhealthy after MaxInstallTime has elapsed", func(t *testing.T) {
+		wavefront := defaultWF()
 		appsV1 := setup()
-		componentsToCheck := map[string]string{
-			util.ProxyName:            util.Deployment,
-			util.ClusterCollectorName: util.Deployment,
-			util.NodeCollectorName:    util.DaemonSet,
-		}
-		status := GenerateWavefrontStatus(appsV1, componentsToCheck, pastMaxInstallTime().Add(time.Second*10))
+
+		wavefront.CreationTimestamp.Time = pastMaxInstallTime().Add(time.Second * 10)
+		wavefront.Spec.DataCollection.Metrics.Enable = true
+		wavefront.Spec.DataExport.WavefrontProxy.Enable = true
+		status := GenerateWavefrontStatus(appsV1, wavefront)
 
 		assert.Equal(t, Unhealthy, status.Status)
 	})
@@ -225,4 +219,12 @@ func getComponentStatusWithName(name string, componentStatuses []wf.ResourceStat
 		}
 	}
 	return wf.ResourceStatus{}
+}
+
+func defaultWF() *wf.Wavefront {
+	return &wf.Wavefront{
+		Spec: wf.WavefrontSpec{
+			Namespace: "testNamespace",
+		},
+	}
 }

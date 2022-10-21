@@ -20,7 +20,22 @@ const (
 	MaxInstallTime = time.Minute * 5
 )
 
-func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToCheck map[string]string, wfCRCreationTime time.Time) wf.WavefrontStatus {
+func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) wf.WavefrontStatus {
+	componentsToCheck := map[string]string{}
+
+	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
+		componentsToCheck[util.ProxyName] = util.Deployment
+	}
+
+	if wavefront.Spec.DataCollection.Metrics.Enable {
+		componentsToCheck[util.ClusterCollectorName] = util.Deployment
+		componentsToCheck[util.NodeCollectorName] = util.DaemonSet
+	}
+
+	if wavefront.Spec.DataCollection.Logging.Enable {
+		componentsToCheck[util.LoggingName] = util.DaemonSet
+	}
+
 	status := wf.WavefrontStatus{}
 	var componentHealth []bool
 	var unhealthyMessages []string
@@ -29,11 +44,11 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 
 	for name, resourceType := range componentsToCheck {
 		if resourceType == util.Deployment {
-			componentStatus = deploymentStatus(appsV1, name)
+			componentStatus = deploymentStatus(appsV1.Deployments(wavefront.Spec.Namespace), name)
 			componentStatuses = append(componentStatuses, componentStatus)
 		}
 		if resourceType == util.DaemonSet {
-			componentStatus = daemonSetStatus(appsV1, name)
+			componentStatus = daemonSetStatus(appsV1.DaemonSets(wavefront.Spec.Namespace), name)
 			componentStatuses = append(componentStatuses, componentStatus)
 		}
 		componentHealth = append(componentHealth, componentStatus.Healthy)
@@ -46,7 +61,7 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
 		status.Message = "All components are healthy"
-	} else if wfCRCreationTime.Add(MaxInstallTime).After(time.Now()) {
+	} else if wavefront.GetCreationTimestamp().Time.Add(MaxInstallTime).After(time.Now()) {
 		status.Status = Installing
 		status.Message = "Installing components"
 		for i, _ := range status.ResourceStatuses {
@@ -60,12 +75,12 @@ func GenerateWavefrontStatus(appsV1 typedappsv1.AppsV1Interface, componentsToChe
 	return status
 }
 
-func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ResourceStatus {
+func deploymentStatus(deployments typedappsv1.DeploymentInterface, name string) wf.ResourceStatus {
 	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
 
-	deployment, err := appsV1.Deployments(util.Namespace()).Get(context.Background(), name, v1.GetOptions{})
+	deployment, err := deployments.Get(context.Background(), name, v1.GetOptions{})
 
 	if err != nil {
 		componentStatus.Healthy = false
@@ -84,11 +99,11 @@ func deploymentStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.Resour
 	return componentStatus
 }
 
-func daemonSetStatus(appsV1 typedappsv1.AppsV1Interface, name string) wf.ResourceStatus {
+func daemonSetStatus(daemonsets typedappsv1.DaemonSetInterface, name string) wf.ResourceStatus {
 	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
-	daemonSet, err := appsV1.DaemonSets(util.Namespace()).Get(context.Background(), name, v1.GetOptions{})
+	daemonSet, err := daemonsets.Get(context.Background(), name, v1.GetOptions{})
 
 	if err != nil {
 		componentStatus.Healthy = false
