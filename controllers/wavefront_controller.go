@@ -105,6 +105,7 @@ type WavefrontReconciler struct {
 const maxReconcileInterval = 60 * time.Second
 
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	r.Namespace = req.Namespace
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
@@ -157,7 +158,7 @@ func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func NewWavefrontReconciler(operatorVersion string, namespace string, client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
+func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -189,7 +190,6 @@ func NewWavefrontReconciler(operatorVersion string, namespace string, client cli
 		Appsv1:            clientSet.AppsV1(),
 		KubernetesManager: kubernetesManager,
 		MetricConnection:  metric.NewConnection(metric.WavefrontSenderFactory()),
-		Namespace:         namespace,
 	}
 
 	return reconciler, nil
@@ -282,7 +282,7 @@ func dirList(proxy, collector, logging bool) []string {
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
 	r.MetricConnection.Close()
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, allDirs())
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{Namespace: r.Namespace}, allDirs())
 	if err != nil {
 		return err
 	}

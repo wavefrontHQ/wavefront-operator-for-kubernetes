@@ -1339,7 +1339,6 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
-		Namespace:         spec.Namespace,
 		OperatorVersion:   "99.99.99",
 		Client:            apiClient,
 		Scheme:            nil,
