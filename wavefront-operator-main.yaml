@@ -898,7 +898,13 @@ spec:
       containers:
       - command:
         - /manager
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.1-alpha-3bd300a0
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.1-alpha-88d4bdc5
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
