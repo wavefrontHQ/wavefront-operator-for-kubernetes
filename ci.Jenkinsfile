@@ -74,6 +74,10 @@ pipeline {
     }
 
     stage("Run Integration Tests") {
+      environment {
+        DEPLOY_SOURCE="rc"
+      }
+
       parallel {
         stage("GKE Integration Test") {
           agent {
@@ -98,7 +102,7 @@ pipeline {
               lock("integration-test-gke") {
                 sh 'make gke-connect-to-cluster'
                 sh 'make clean-cluster'
-                sh 'make integration-test-ci'
+                sh 'make integration-test'
                 sh 'make clean-cluster'
               }
             }
@@ -128,7 +132,7 @@ pipeline {
               lock("integration-test-eks") {
                   sh 'make target-eks'
                   sh 'make clean-cluster'
-                  sh 'make integration-test-ci'
+                  sh 'make integration-test'
                   sh 'make clean-cluster'
               }
             }
@@ -158,7 +162,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'aks-kube-config', variable: 'KUBECONFIG')]) {
                   sh 'kubectl config use k8po-ci'
                   sh 'make clean-cluster'
-                  sh 'make integration-test-ci'
+                  sh 'make integration-test'
                   sh 'make clean-cluster'
                 }
               }
