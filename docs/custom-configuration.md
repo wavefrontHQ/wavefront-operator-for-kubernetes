@@ -43,11 +43,24 @@ Install the Wavefront Operator into `observability-system` namespace.
   # Need to change YOUR_NAMESPACE
   apiVersion: kustomize.config.k8s.io/v1beta1
   kind: Kustomization
-   
+
   resources:
   - wavefront-operator.yaml
-   
+
   namespace: YOUR_NAMESPACE
+  patches:
+  - target:
+       kind: RoleBinding
+    patch: |-
+       - op: replace
+         path: /subjects/0/namespace
+         value: YOUR_NAMESPACE
+  - target:
+       kind: ClusterRoleBinding
+    patch: |-
+       - op: replace
+         path: /subjects/0/namespace
+         value: YOUR_NAMESPACE
   ```
 4. Deploy the wavefront operator
   ```

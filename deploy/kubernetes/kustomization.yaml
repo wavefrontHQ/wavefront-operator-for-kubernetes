@@ -7,3 +7,18 @@ resources:
 images:
 - name: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
   newName: YOUR_IMAGE_REGISTRY/kubernetes-operator
+
+namespace: YOUR_NAMESPACE
+patches:
+- target:
+    kind: RoleBinding
+  patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: YOUR_NAMESPACE
+- target:
+    kind: ClusterRoleBinding
+  patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: YOUR_NAMESPACE
