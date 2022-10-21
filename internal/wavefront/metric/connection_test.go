@@ -3,6 +3,7 @@ package metric_test
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -174,32 +175,45 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("handles concurrency", func(t *testing.T) {
+		const runs = 100_000
 		conn := NewTestConnection(&testhelper.StubSender{})
 
-		const runs = 100_000
+		require.NotPanics(t, func() {
+			wg := &sync.WaitGroup{}
 
-		go func() {
-			for i := 0; i < runs; i++ {
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
 				require.NoError(t, conn.Connect(fmt.Sprintf("http://foo.bar/%d", i)))
-			}
-		}()
+			})
 
-		go func() {
-			for i := 0; i < runs; i++ {
-				conn.Send([]metric.Metric{{Name: "a"}, {Name: "b"}})
-			}
-		}()
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Send([]metric.Metric{{Name: "a", Value: float64(i)}, {Name: "b", Value: float64(i + 1)}})
+			})
 
-		go func() {
-			for i := 0; i < runs; i++ {
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
 				conn.Flush()
-			}
-		}()
+			})
 
-		for i := 0; i < runs; i++ {
-			conn.Close()
-		}
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Flush()
+			})
+
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Close()
+			})
+
+			wg.Wait()
+		})
 	})
+}
+
+func runRepeatedlyInGoroutine(wg *sync.WaitGroup, n int, do func(int)) {
+	wg.Add(1)
+	go func() {
+		for i := 0; i < n; i++ {
+			do(i)
+		}
+		wg.Done()
+	}()
 }
 
 func NewTestConnection(sender metric.Sender) *metric.Connection {

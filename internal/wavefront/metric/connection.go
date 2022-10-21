@@ -54,7 +54,7 @@ func (c *Connection) Connect(addr string) error {
 	if c.addr == addr {
 		return nil
 	}
-	c.close()
+	c.closeUnsynchronized()
 	sender, err := c.newSender(addr)
 	if err != nil {
 		return err
@@ -112,11 +112,10 @@ func (c *Connection) extractBatch() (Sender, map[string]Metric) {
 func (c *Connection) Close() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.close()
+	c.closeUnsynchronized()
 }
 
-// close is not thread safe and must only be called when already holding c.mu
-func (c *Connection) close() {
+func (c *Connection) closeUnsynchronized() {
 	if c.connected() {
 		c.sender.Close()
 	}
