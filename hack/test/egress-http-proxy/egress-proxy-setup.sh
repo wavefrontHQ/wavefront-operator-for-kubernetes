@@ -3,8 +3,8 @@
 REPO_ROOT=$(git rev-parse --show-toplevel)
 source ${REPO_ROOT}/hack/test/k8s-utils.sh
 
-# create the wavefront
-kubectl create namespace wavefront || true
+# create the namespace observability-system 
+kubectl create namespace observability-system || true
 
 # deploy the mitmproxy
 kubectl apply -f ${REPO_ROOT}/hack/test/egress-http-proxy/egress-proxy.yaml
