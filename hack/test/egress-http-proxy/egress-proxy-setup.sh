@@ -20,7 +20,7 @@ echo "http://${MITM_IP}:8080"
 
 # get the ca cert efor the mitmpproxy
 export MITM_POD="$(kubectl -n observability-system get pods --selector=app=egress-proxy -o jsonpath='{.items[*].metadata.name}')"
-kubectl cp wavefront/${MITM_POD}:root/.mitmproxy/mitmproxy-ca-cert.pem ${REPO_ROOT}/hack/test/egress-http-proxy/mitmproxy-ca-cert.pem
+kubectl cp observability-system/${MITM_POD}:root/.mitmproxy/mitmproxy-ca-cert.pem ${REPO_ROOT}/hack/test/egress-http-proxy/mitmproxy-ca-cert.pem
 
 green "HTTP Proxy CAcert:"
 cat ${REPO_ROOT}/hack/test/egress-http-proxy/mitmproxy-ca-cert.pem
