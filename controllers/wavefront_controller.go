@@ -79,7 +79,7 @@ type WavefrontReconciler struct {
 	KubernetesManager kubernetes_manager.KubernetesManager
 	MetricConnection  *metric.Connection
 	OperatorVersion   string
-	Namespace         string
+	namespace         string
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=observability-system,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -105,7 +105,7 @@ type WavefrontReconciler struct {
 const maxReconcileInterval = 60 * time.Second
 
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	r.Namespace = req.Namespace
+	r.namespace = req.Namespace
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
@@ -282,7 +282,7 @@ func dirList(proxy, collector, logging bool) []string {
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
 	r.MetricConnection.Close()
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{Namespace: r.Namespace}, allDirs())
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{Namespace: r.namespace}, allDirs())
 	if err != nil {
 		return err
 	}
@@ -295,7 +295,7 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments(r.Namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -359,12 +359,12 @@ func hashValue(bytes []byte) string {
 
 // Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
-	deployment, err := r.Appsv1.Deployments(r.Namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	wavefront.Spec.Namespace = r.Namespace
+	wavefront.Spec.Namespace = r.namespace
 
 	wavefront.Spec.ImageRegistry = filepath.Dir(deployment.Spec.Template.Spec.Containers[0].Image)
 	if wavefront.Spec.DataCollection.Metrics.Enable {
@@ -377,7 +377,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deployment, err := r.Appsv1.Deployments(r.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
 		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
 			wavefront.Spec.CanExportData = true
@@ -431,7 +431,7 @@ func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx
 
 func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx context.Context) (*corev1.Secret, error) {
 	secret := client.ObjectKey{
-		Namespace: r.Namespace,
+		Namespace: r.namespace,
 		Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
 	}
 	httpProxySecret := &corev1.Secret{}
