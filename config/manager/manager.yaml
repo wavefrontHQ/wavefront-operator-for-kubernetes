@@ -34,6 +34,12 @@ spec:
         image: controller:latest
         imagePullPolicy: Always
         name: manager
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

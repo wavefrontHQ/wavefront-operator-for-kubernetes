@@ -42,7 +42,7 @@ func TestReconcileAll(t *testing.T) {
 		spec := defaultWFSpec()
 		spec.DataCollection.Logging.Enable = true
 		r, _, _, apps := setupForCreate(spec)
-		ProxyRunning(apps, 0)
+		ProxyRunning(apps, spec.Namespace, 0)
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -62,7 +62,7 @@ func TestReconcileAll(t *testing.T) {
 
 		require.Equal(t, 0, len(mockSender.SentMetrics), "should not have sent metrics")
 
-		ProxyRunning(apps, 1)
+		ProxyRunning(apps, spec.Namespace, 1)
 
 		results, err = r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
@@ -182,7 +182,7 @@ func TestReconcileAll(t *testing.T) {
 		spec := defaultWFSpec()
 		spec.DataCollection.Logging.Enable = true
 		r, _, _, apps := setupForCreate(spec)
-		UpdateOperatorRegistry(apps, "docker.io")
+		UpdateOperatorRegistry(apps, spec.Namespace, "docker.io")
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -194,6 +194,28 @@ func TestReconcileAll(t *testing.T) {
 		require.True(t, stubKM.ClusterCollectorDeploymentContains("image: docker.io/kubernetes-collector"))
 		require.True(t, stubKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
 		require.True(t, stubKM.ProxyDeploymentContains("image: docker.io/proxy"))
+	})
+
+	t.Run("Child components inherits controller's namespace", func(t *testing.T) {
+		stubKM := testhelper.NewMockKubernetesManager()
+
+		spec := defaultWFSpec()
+		spec.Namespace = "customNamespace"
+		spec.DataCollection.Logging.Enable = true
+		r, _, _, _ := setupForCreate(spec)
+		r.KubernetesManager = stubKM
+		mockSender := &testhelper.MockSender{}
+		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
+
+		request := defaultRequest()
+		request.Namespace = "customNamespace"
+		_, err := r.Reconcile(context.Background(), request)
+		require.NoError(t, err)
+
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("namespace: customNamespace"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("namespace: customNamespace"))
+		require.True(t, stubKM.LoggingDaemonSetContains("namespace: customNamespace"))
+		require.True(t, stubKM.ProxyDeploymentContains("namespace: customNamespace"))
 	})
 }
 
@@ -486,7 +508,7 @@ func TestReconcileProxy(t *testing.T) {
 		wfSpec.DataExport.WavefrontProxy.Enable = false
 		wfSpec.DataExport.ExternalWavefrontProxy.Url = "https://example.com"
 		r, _, _, apps := setupForCreate(wfSpec)
-		ProxyRunning(apps, 0)
+		ProxyRunning(apps, wfSpec.Namespace, 0)
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
 		r.KubernetesManager = stubKM
@@ -733,7 +755,7 @@ func TestReconcileProxy(t *testing.T) {
 			_, err := r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
 
-			ProxyRunning(apps, 0)
+			ProxyRunning(apps, wfSpec.Namespace, 0)
 
 			_, err = r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
@@ -780,7 +802,7 @@ func TestReconcileProxy(t *testing.T) {
 			wfSpec.DataCollection.Logging.Enable = true
 
 			r, _, _, apps := setupForCreate(wfSpec)
-			ProxyRunning(apps, 2)
+			ProxyRunning(apps, wfSpec.Namespace, 2)
 			r.KubernetesManager = stubKM
 
 			_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -815,7 +837,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: util.Namespace,
+				Namespace: wfSpec.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -858,7 +880,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: util.Namespace,
+				Namespace: wfSpec.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -1052,15 +1074,15 @@ func StatusMetricsSent(mockSender *testhelper.MockSender) int {
 	return statusMetricsSent
 }
 
-func ProxyRunning(apps typedappsv1.AppsV1Interface, availableReplicas int) {
-	_, _ = apps.Deployments(util.Namespace).Update(context.Background(), &appsv1.Deployment{
+func ProxyRunning(apps typedappsv1.AppsV1Interface, namespace string, availableReplicas int) {
+	_, _ = apps.Deployments(namespace).Update(context.Background(), &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       util.Deployment,
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ProxyName,
-			Namespace: util.Namespace,
+			Namespace: namespace,
 		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: int32(availableReplicas),
@@ -1068,15 +1090,15 @@ func ProxyRunning(apps typedappsv1.AppsV1Interface, availableReplicas int) {
 	}, metav1.UpdateOptions{})
 }
 
-func UpdateOperatorRegistry(apps typedappsv1.AppsV1Interface, imageRegistry string) {
-	_, _ = apps.Deployments(util.Namespace).Update(context.Background(), &appsv1.Deployment{
+func UpdateOperatorRegistry(apps typedappsv1.AppsV1Interface, namespace string, imageRegistry string) {
+	_, _ = apps.Deployments(namespace).Update(context.Background(), &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       util.Deployment,
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "wavefront-controller-manager",
-			Namespace: util.Namespace,
+			Namespace: namespace,
 			UID:       "testUID",
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -1237,6 +1259,7 @@ func containsProxyArg(t *testing.T, proxyArg string, stubKM testhelper.MockKuber
 
 func defaultWFSpec() wf.WavefrontSpec {
 	return wf.WavefrontSpec{
+		Namespace:            "testNamespace",
 		ClusterName:          "testClusterName",
 		WavefrontUrl:         "testWavefrontUrl",
 		WavefrontTokenSecret: "testToken",
@@ -1261,7 +1284,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	var wfCR = &wf.Wavefront{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: util.Namespace,
+			Namespace: spec.Namespace,
 			Name:      "wavefront",
 		},
 		Spec:   spec,
@@ -1284,7 +1307,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "wavefront-controller-manager",
-			Namespace: util.Namespace,
+			Namespace: spec.Namespace,
 			UID:       "testUID",
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -1305,7 +1328,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ProxyName,
-			Namespace: util.Namespace,
+			Namespace: spec.Namespace,
 		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: 1,
@@ -1340,7 +1363,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 func defaultRequest() reconcile.Request {
 	return reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: util.Namespace,
+		Namespace: "testNamespace",
 		Name:      "wavefront",
 	}}
 }

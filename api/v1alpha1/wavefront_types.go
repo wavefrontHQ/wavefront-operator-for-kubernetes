@@ -59,6 +59,9 @@ type WavefrontSpec struct {
 
 	// CanExportData is for internal use
 	CanExportData bool `json:"-"`
+
+	// Namespace is for internal use
+	Namespace string `json:"-"`
 }
 
 type Metrics struct {
