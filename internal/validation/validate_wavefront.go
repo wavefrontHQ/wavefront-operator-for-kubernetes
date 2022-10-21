@@ -49,7 +49,7 @@ func (result Result) IsWarning() bool {
 func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Result {
 	err := validateEnvironment(appsV1, wavefront)
 	if err != nil {
-		return Result{err, !areAnyComponentsDeployed(appsV1, "")}
+		return Result{err, !areAnyComponentsDeployed(appsV1, wavefront.Spec.Namespace)}
 	}
 	err = validateWavefrontSpec(wavefront)
 	if err != nil {

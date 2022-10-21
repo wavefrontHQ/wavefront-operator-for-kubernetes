@@ -157,7 +157,7 @@ func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
+func NewWavefrontReconciler(operatorVersion string, namespace string, client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -189,6 +189,7 @@ func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme
 		Appsv1:            clientSet.AppsV1(),
 		KubernetesManager: kubernetesManager,
 		MetricConnection:  metric.NewConnection(metric.WavefrontSenderFactory()),
+		Namespace:         namespace,
 	}
 
 	return reconciler, nil

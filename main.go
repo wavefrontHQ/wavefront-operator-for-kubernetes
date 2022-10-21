@@ -47,12 +47,12 @@ func init() {
 }
 
 func namespace() string {
-	namespace, present := os.LookupEnv("NAMESPACE")
-	if !present {
-		return "observability-system"
+	ns := os.Getenv("NAMESPACE")
+	if len(ns) == 0 {
+		panic("NAMESPACE must be set in environment")
 	}
 
-	return namespace
+	return ns
 }
 
 func main() {
@@ -81,7 +81,7 @@ func main() {
 	}
 
 	var controller *controllers.WavefrontReconciler
-	controller, err = controllers.NewWavefrontReconciler(version, mgr.GetClient(), mgr.GetScheme())
+	controller, err = controllers.NewWavefrontReconciler(version, namespace(), mgr.GetClient(), mgr.GetScheme())
 	if err != nil {
 		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)

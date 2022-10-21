@@ -200,20 +200,22 @@ func TestReconcileAll(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
 
 		spec := defaultWFSpec()
+		spec.Namespace = "customNamespace"
 		spec.DataCollection.Logging.Enable = true
 		r, _, _, _ := setupForCreate(spec)
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
-		r.Namespace = "test-namespace"
 
-		_, err := r.Reconcile(context.Background(), defaultRequest())
+		request := defaultRequest()
+		request.Namespace = "customNamespace"
+		_, err := r.Reconcile(context.Background(), request)
 		require.NoError(t, err)
 
-		require.True(t, stubKM.NodeCollectorDaemonSetContains("namespace: test-namespace"))
-		require.True(t, stubKM.ClusterCollectorDeploymentContains("namespace: test-namespace"))
-		require.True(t, stubKM.LoggingDaemonSetContains("namespace: test-namespace"))
-		require.True(t, stubKM.ProxyDeploymentContains("namespace: test-namespace"))
+		require.True(t, stubKM.NodeCollectorDaemonSetContains("namespace: customNamespace"))
+		require.True(t, stubKM.ClusterCollectorDeploymentContains("namespace: customNamespace"))
+		require.True(t, stubKM.LoggingDaemonSetContains("namespace: customNamespace"))
+		require.True(t, stubKM.ProxyDeploymentContains("namespace: customNamespace"))
 	})
 }
 
@@ -1257,6 +1259,7 @@ func containsProxyArg(t *testing.T, proxyArg string, stubKM testhelper.MockKuber
 
 func defaultWFSpec() wf.WavefrontSpec {
 	return wf.WavefrontSpec{
+		Namespace:            "testNamespace",
 		ClusterName:          "testClusterName",
 		WavefrontUrl:         "testWavefrontUrl",
 		WavefrontTokenSecret: "testToken",
@@ -1336,6 +1339,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
 
 	r := &controllers.WavefrontReconciler{
+		Namespace:         spec.Namespace,
 		OperatorVersion:   "99.99.99",
 		Client:            apiClient,
 		Scheme:            nil,
@@ -1360,6 +1364,7 @@ func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers
 
 func defaultRequest() reconcile.Request {
 	return reconcile.Request{NamespacedName: types.NamespacedName{
-		Name: "wavefront",
+		Namespace: "testNamespace",
+		Name:      "wavefront",
 	}}
 }

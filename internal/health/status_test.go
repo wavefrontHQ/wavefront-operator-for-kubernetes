@@ -158,7 +158,10 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 	t.Run("report health status when no components are running", func(t *testing.T) {
 		appsV1 := setup()
 
-		status := GenerateWavefrontStatus(appsV1, defaultWF())
+		wfCR := defaultWF()
+		wfCR.Spec.DataExport.WavefrontProxy.Enable = true
+		wfCR.Spec.DataCollection.Metrics.Enable = true
+		status := GenerateWavefrontStatus(appsV1, wfCR)
 
 		assert.Equal(t, Unhealthy, status.Status)
 		assert.Equal(t, "", status.Message)
