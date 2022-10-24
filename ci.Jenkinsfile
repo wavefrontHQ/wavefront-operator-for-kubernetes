@@ -51,7 +51,7 @@ pipeline {
       steps {
         withEnv(["PATH+EXTRA=${HOME}/go/bin"]) {
           sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-          sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build'
+          sh 'make docker-xplatform-build'
         }
       }
     }
@@ -94,16 +94,38 @@ pipeline {
             GCP_CREDS = credentials("GCP_CREDS")
             GCP_PROJECT = "wavefront-gcp-dev"
           }
-          steps {
-            withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-              sh './hack/jenkins/setup-for-integration-test.sh'
-              sh './hack/jenkins/install_docker_buildx.sh'
-              sh 'make semver-cli'
-              lock("integration-test-gke") {
-                sh 'make gke-connect-to-cluster'
+          stages {
+            stage("setup env") {
+              script {
+                withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+                  sh './hack/jenkins/setup-for-integration-test.sh'
+                  sh './hack/jenkins/install_docker_buildx.sh'
+                  sh 'make semver-cli'
+                  sh 'make gke-connect-to-cluster'
+                  sh 'make clean-cluster'
+                }
+              }
+            }
+
+            stage("run e2e") {
+              script {
+                sh 'make integration-test'
                 sh 'make clean-cluster'
-                sh 'make integration-test undeploy'
-                sh 'make docker-copy-images integration-test KUSTOMIZATION_SOURCE=custom NS=custom-namespace SOURCE_PREFIX="$PREFIX" PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"'
+              }
+            }
+
+            stage("run e2e with customization") {
+              environment {
+                KUSTOMIZATION_SOURCE="custom"
+                NS="custom-namespace"
+                SOURCE_PREFIX="projects.registry.vmware.com/tanzu_observability"
+                PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"
+                HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+              }
+              script {
+                sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
+                sh 'make docker-copy-images'
+                sh 'make integration-test'
                 sh 'make clean-cluster'
               }
             }
