@@ -138,6 +138,7 @@ ifndef ignore-not-found
   ignore-not-found = true
 endif
 
+.PHONY: copy-base-patches
 copy-base-patches:
 	cp config/manager/patches-base.yaml config/manager/patches.yaml
 
