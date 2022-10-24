@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   tools {
-    docker 'Docker 20.10.20'
+    dockerTool 'Docker 20.10.20'
   }
 
 
