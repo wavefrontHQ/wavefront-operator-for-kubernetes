@@ -3,7 +3,7 @@ module github.com/wavefrontHQ/wavefront-operator-for-kubernetes
 go 1.17
 
 require (
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/wavefronthq/wavefront-sdk-go v0.10.4
 	go.uber.org/zap v1.23.0
 	gopkg.in/yaml.v2 v2.4.0
