@@ -13,7 +13,7 @@ endif
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
-NS=observability-system
+NS?=observability-system
 LDFLAGS=-X main.version=$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
@@ -204,8 +204,8 @@ base-kustomization-yaml: $(OPERATOR_BUILD_DIR)
 
 .PHONY: custom-kustomization-yaml
 custom-kustomization-yaml: $(OPERATOR_BUILD_DIR)
-	sed "s/YOUR_IMAGE_REGISTRY/$(PREFIX)/g" $(REPO_ROOT)/deploy/kubernetes/kustomization.yaml | \
-		sed "s/YOUR_NAMESPACE/$(NS)/g" > $(KUSTOMIZATION_BUILD_YAML)
+	sed "s%YOUR_IMAGE_REGISTRY%$(PREFIX)%g" $(REPO_DIR)/deploy/kubernetes/kustomization.yaml | \
+		sed "s%YOUR_NAMESPACE%$(NS)%g" > $(KUSTOMIZATION_BUILD_YAML)
 
 .PHONY: kubernetes-yaml
 kubernetes-yaml: manifests kustomize $(OPERATOR_BUILD_DIR)
@@ -247,7 +247,7 @@ undeploy: operator-yaml
 
 .PHONY: integration-test
 integration-test: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME))
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME) -d $(NS))
 
 .PHONY: clean-cluster
 clean-cluster:
