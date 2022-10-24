@@ -182,19 +182,22 @@ OPERATOR_BUILD_DIR:=$(REPO_DIR)/build/operator
 OPERATOR_BUILD_YAML:=$(OPERATOR_BUILD_DIR)/wavefront-operator.yaml
 DEPLOY_SOURCE?=kind
 
+KUSTOMIZATION_SOURCE?=base
+
+.PHONY: base-kustomize-yaml
+base-kustomize-yaml:
+	mkdir -p $(OPERATOR_BUILD_DIR)
+	cp $(REPO_DIR)/hack/build/kustomization.yaml $(OPERATOR_BUILD_DIR)
+
 .PHONY: kubernetes-yaml
 kubernetes-yaml: manifests kustomize
-	mkdir -p $(OPERATOR_BUILD_DIR)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/default > $(OPERATOR_BUILD_YAML)
-	cp $(REPO_DIR)/hack/build/kustomization.yaml $(OPERATOR_BUILD_DIR)
 
 .PHONY: rc-kubernetes-yaml
 rc-kubernetes-yaml:
-	mkdir -p $(OPERATOR_BUILD_DIR)
 	curl https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/$(OPERATOR_YAML_RC_SHA)/wavefront-operator-$(GIT_BRANCH).yaml \
 		-o $(OPERATOR_BUILD_YAML)
-	cp $(REPO_DIR)/hack/build/kustomization.yaml $(OPERATOR_BUILD_DIR)
 
 .PHONY: xplatform-kubernetes-yaml
 xplatform-kubernetes-yaml: docker-xplatform-build copy-base-patches kubernetes-yaml
@@ -212,12 +215,12 @@ copy-kind-patches:
 	cp config/manager/patches-kind.yaml config/manager/patches.yaml
 
 .PHONY: deploy
-deploy: $(DEPLOY_SOURCE)-kubernetes-yaml
+deploy: $(KUSTOMIZATION_SOURCE)-kustomize-yaml $(DEPLOY_SOURCE)-kubernetes-yaml
 	kubectl apply -k $(OPERATOR_BUILD_DIR)
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 
 .PHONY: undeploy
-undeploy: $(DEPLOY_SOURCE)-kubernetes-yaml
+undeploy: $(KUSTOMIZATION_SOURCE)-kustomize-yaml $(DEPLOY_SOURCE)-kubernetes-yaml
 	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret || true
 	kubectl delete --ignore-not-found=$(ignore-not-found) -k $(OPERATOR_BUILD_DIR) || true
 
