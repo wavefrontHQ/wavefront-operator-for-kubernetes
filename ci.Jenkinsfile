@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   tools {
-    dockerTool 'Docker 20.10.20'
+    dockerTool 'Docker 20.10.9'
   }
 
 
@@ -42,6 +42,8 @@ pipeline {
         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
           sh './hack/jenkins/setup-for-integration-test.sh'
           sh './hack/jenkins/install_docker_buildx.sh'
+          sh 'which docker'
+          sh 'docker version'
           sh 'make semver-cli'
         }
       }
@@ -93,7 +95,7 @@ pipeline {
           }
           tools {
             go 'Go 1.17'
-            dockerTool 'Docker 20.10.20'
+            dockerTool 'Docker 20.10.9'
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
