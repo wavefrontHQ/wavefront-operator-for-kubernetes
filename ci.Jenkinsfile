@@ -95,7 +95,7 @@ pipeline {
           }
           tools {
             go 'Go 1.17'
-            dockerTool 'Docker 20.10.9'
+            dockerTool 'Docker 20.10.19'
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
@@ -105,7 +105,7 @@ pipeline {
           stages {
             stage("run E2E") {
               steps {
-                withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.19"]) {
+                withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.19/docker"]) {
                   sh './hack/jenkins/setup-for-integration-test.sh'
                   sh './hack/jenkins/install_docker_buildx.sh'
                   sh 'make semver-cli'
