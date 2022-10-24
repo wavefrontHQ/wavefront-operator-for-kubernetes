@@ -121,6 +121,7 @@ pipeline {
               }
               steps {
                 lock("integration-test-gke") {
+                  sh 'docker logout $PREFIX'
                   sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
                   sh 'make docker-copy-images'
                   sh 'make clean-cluster'
