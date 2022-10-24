@@ -95,26 +95,23 @@ pipeline {
             GCP_PROJECT = "wavefront-gcp-dev"
           }
           stages {
-            stage("setup env") {
-              script {
+            stage("run E2E") {
+              steps {
                 withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
                   sh './hack/jenkins/setup-for-integration-test.sh'
                   sh './hack/jenkins/install_docker_buildx.sh'
                   sh 'make semver-cli'
-                  sh 'make gke-connect-to-cluster'
-                  sh 'make clean-cluster'
+                  lock("integration-test-gke") {
+                      sh 'make gke-connect-to-cluster'
+                      sh 'make clean-cluster'
+                      sh 'make integration-test'
+                      sh 'make clean-cluster'
+                  }
                 }
               }
             }
 
-            stage("run e2e") {
-              script {
-                sh 'make integration-test'
-                sh 'make clean-cluster'
-              }
-            }
-
-            stage("run e2e with customization") {
+            stage("run E2E with customization") {
               environment {
                 KUSTOMIZATION_SOURCE="custom"
                 NS="custom-namespace"
@@ -122,11 +119,13 @@ pipeline {
                 PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"
                 HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
               }
-              script {
-                sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-                sh 'make docker-copy-images'
-                sh 'make integration-test'
-                sh 'make clean-cluster'
+              steps {
+                lock("integration-test-gke") {
+                  sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
+                  sh 'make docker-copy-images'
+                  sh 'make integration-test'
+                  sh 'make clean-cluster'
+                }
               }
             }
           }
