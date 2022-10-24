@@ -18,7 +18,7 @@ function copy-image-ref() {
     local image_ref="$1"
     local src_prefix="$2"
     local dst_prefix="$3"
-    docker buildx imagetools create -t "$dst_prefix/$image_ref" "$src_prefix/$image_ref"
+    docker buildx imagetools create --append -t "$dst_prefix/$image_ref" "$src_prefix/$image_ref"
 }
 
 function main() {
