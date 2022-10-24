@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -e
-rm "$HOME/.docker/cli-plugins/docker-buildx"
 if [[ ! -f "$HOME/.docker/cli-plugins/docker-buildx" ]]; then
   echo "installing docker buildx..."
   wget -q -O docker-buildx https://github.com/docker/buildx/releases/download/v0.9.1/buildx-v0.9.1.linux-amd64
