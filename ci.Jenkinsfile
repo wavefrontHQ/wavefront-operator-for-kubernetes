@@ -102,7 +102,8 @@ pipeline {
               lock("integration-test-gke") {
                 sh 'make gke-connect-to-cluster'
                 sh 'make clean-cluster'
-                sh 'make integration-test'
+                sh 'make integration-test undeploy'
+                sh 'make docker-copy-images integration-test KUSTOMIZATION_SOURCE=custom NS=custom-namespace SOURCE_PREFIX="$PREFIX" PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"'
                 sh 'make clean-cluster'
               }
             }

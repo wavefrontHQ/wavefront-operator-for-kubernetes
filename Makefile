@@ -132,6 +132,11 @@ docker-xplatform-build:
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
+docker-copy-images:
+	@test $${SOURCE_PREFIX?Please set variable SOURCE_PREFIX}
+	./hack/component-image-refs.sh | ./hack/docker/copy-image-refs.sh -d $(PREFIX) -s $(SOURCE_PREFIX)
+	echo "$(DOCKER_IMAGE):$(VERSION)" | ./hack/docker/copy-image-refs.sh -d $(PREFIX) -s $(SOURCE_PREFIX)
+
 ##@ Deployment
 
 ifndef ignore-not-found
@@ -179,32 +184,44 @@ GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 endef
 
 OPERATOR_BUILD_DIR:=$(REPO_DIR)/build/operator
-OPERATOR_BUILD_YAML:=$(OPERATOR_BUILD_DIR)/wavefront-operator.yaml
+KUBERNETES_BUILD_YAML:=$(OPERATOR_BUILD_DIR)/wavefront-operator.yaml
+KUSTOMIZATION_BUILD_YAML:=$(OPERATOR_BUILD_DIR)/kustomization.yaml
 DEPLOY_SOURCE?=kind
 
 KUSTOMIZATION_SOURCE?=base
 
-.PHONY: base-kustomize-yaml
-base-kustomize-yaml:
+$(OPERATOR_BUILD_DIR):
 	mkdir -p $(OPERATOR_BUILD_DIR)
+
+$(KUBERNETES_BUILD_YAML): $(DEPLOY_SOURCE)-kubernetes-yaml
+
+$(KUSTOMIZATION_BUILD_YAML): $(KUSTOMIZATION_SOURCE)-kustomization-yaml
+
+.PHONY: base-kustomization-yaml
+base-kustomization-yaml: $(OPERATOR_BUILD_DIR)
 	cp $(REPO_DIR)/hack/build/kustomization.yaml $(OPERATOR_BUILD_DIR)
 
+.PHONY: custom-kustomization-yaml
+custom-kustomization-yaml: $(OPERATOR_BUILD_DIR)
+	sed "s/YOUR_IMAGE_REGISTRY/$(PREFIX)/g" $(REPO_ROOT)/deploy/kubernetes/kustomization.yaml | \
+		sed "s/YOUR_NAMESPACE/$(NS)/g" > $(KUSTOMIZATION_BUILD_YAML)
+
 .PHONY: kubernetes-yaml
-kubernetes-yaml: manifests kustomize
+kubernetes-yaml: manifests kustomize $(OPERATOR_BUILD_DIR)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/default > $(OPERATOR_BUILD_YAML)
+	$(KUSTOMIZE) build config/default > $(KUBERNETES_BUILD_YAML)
 
 .PHONY: rc-kubernetes-yaml
-rc-kubernetes-yaml:
+rc-kubernetes-yaml: $(OPERATOR_BUILD_DIR)
 	curl https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/$(OPERATOR_YAML_RC_SHA)/wavefront-operator-$(GIT_BRANCH).yaml \
-		-o $(OPERATOR_BUILD_YAML)
+		-o $(KUBERNETES_BUILD_YAML)
 
 .PHONY: xplatform-kubernetes-yaml
 xplatform-kubernetes-yaml: docker-xplatform-build copy-base-patches kubernetes-yaml
 
 .PHONY: released-kubernetes-yaml
 released-kubernetes-yaml: copy-base-patches kubernetes-yaml
-	cp $(OPERATOR_BUILD_YAML) $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
+	cp $(KUBERNETES_BUILD_YAML) $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 
 .PHONY: kind-kubernetes-yaml
 kind-kubernetes-yaml: docker-build copy-kind-patches kubernetes-yaml
@@ -214,13 +231,16 @@ kind-kubernetes-yaml: docker-build copy-kind-patches kubernetes-yaml
 copy-kind-patches:
 	cp config/manager/patches-kind.yaml config/manager/patches.yaml
 
+.PHONY: operator-yaml
+operator-yaml: $(KUBERNETES_BUILD_YAML) $(KUSTOMIZATION_BUILD_YAML)
+
 .PHONY: deploy
-deploy: $(KUSTOMIZATION_SOURCE)-kustomize-yaml $(DEPLOY_SOURCE)-kubernetes-yaml
+deploy: operator-yaml
 	kubectl apply -k $(OPERATOR_BUILD_DIR)
 	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 
 .PHONY: undeploy
-undeploy: $(KUSTOMIZATION_SOURCE)-kustomize-yaml $(DEPLOY_SOURCE)-kubernetes-yaml
+undeploy: operator-yaml
 	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret || true
 	kubectl delete --ignore-not-found=$(ignore-not-found) -k $(OPERATOR_BUILD_DIR) || true
 
