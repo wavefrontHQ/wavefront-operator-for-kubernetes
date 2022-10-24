@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  tools {
+    docker 'Docker 20.10.20'
+  }
+
+
   environment {
     GITHUB_CREDS_PSW = credentials("GITHUB_TOKEN")
     HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability-robot")
