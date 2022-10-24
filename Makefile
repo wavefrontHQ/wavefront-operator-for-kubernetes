@@ -196,10 +196,10 @@ rc-kubernetes-yaml:
 	cp $(REPO_DIR)/hack/build/kustomization.yaml $(OPERATOR_BUILD_DIR)
 
 .PHONY: xplatform-kubernetes-yaml
-xplatform-kubernetes-yaml: docker-xplatform-build kubernetes-yaml
+xplatform-kubernetes-yaml: docker-xplatform-build copy-base-patches kubernetes-yaml
 
 .PHONY: released-kubernetes-yaml
-released-kubernetes-yaml: kubernetes-yaml
+released-kubernetes-yaml: copy-base-patches kubernetes-yaml
 	cp $(OPERATOR_BUILD_YAML) $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 
 .PHONY: kind-kubernetes-yaml
