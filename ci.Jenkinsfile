@@ -93,6 +93,7 @@ pipeline {
           }
           tools {
             go 'Go 1.17'
+            dockerTool 'Docker 20.10.20'
           }
           environment {
             GKE_CLUSTER_NAME = "k8po-jenkins-ci"
