@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   tools {
-    dockerTool 'Docker 20.10.9'
+    dockerTool 'Docker 20.10.19'
   }
 
 
@@ -39,7 +39,7 @@ pipeline {
         GKE_CLUSTER_NAME = "k8po-jenkins-ci"
       }
       steps {
-        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.9/docker"]) {
+        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.19/docker"]) {
           sh './hack/jenkins/setup-for-integration-test.sh'
           sh './hack/jenkins/install_docker_buildx.sh'
           sh 'which docker'
@@ -105,7 +105,7 @@ pipeline {
           stages {
             stage("run E2E") {
               steps {
-                withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.9"]) {
+                withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.19"]) {
                   sh './hack/jenkins/setup-for-integration-test.sh'
                   sh './hack/jenkins/install_docker_buildx.sh'
                   sh 'make semver-cli'
@@ -129,7 +129,7 @@ pipeline {
               }
               steps {
                 lock("integration-test-gke") {
-                  withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.9/docker"]) {
+                  withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin", "PATH+DOCKER=${HOME}/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/Docker_20.10.19/docker"]) {
                     sh 'docker logout $PREFIX'
                     sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
                     sh 'make docker-copy-images'
