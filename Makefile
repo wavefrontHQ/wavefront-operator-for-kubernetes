@@ -134,6 +134,7 @@ docker-push: ## Push docker image with the manager.
 
 docker-copy-images:
 	@test $${SOURCE_PREFIX?Please set variable SOURCE_PREFIX}
+	docker buildx create --use --node wavefront_operator_builder_$(BUILDER_SUFFIX)
 	./hack/component-image-refs.sh | ./hack/docker/copy-image-refs.sh -d $(PREFIX) -s $(SOURCE_PREFIX)
 	echo "$(DOCKER_IMAGE):$(VERSION)" | ./hack/docker/copy-image-refs.sh -d $(PREFIX) -s $(SOURCE_PREFIX)
 
