@@ -2,7 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: controller-manager
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: wavefront
   name: observability-system
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -106,6 +107,7 @@ spec:
                       resources:
                         default:
                           limits:
+                            cpu: 1000m
                             memory: 500Mi
                           requests:
                             cpu: 100m
@@ -880,20 +882,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    control-plane: controller-manager
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: wavefront
   name: wavefront-controller-manager
   namespace: observability-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      control-plane: controller-manager
+      app.kubernetes.io/component: controller-manager
+      app.kubernetes.io/name: wavefront
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: controller-manager
+        app.kubernetes.io/component: controller-manager
+        app.kubernetes.io/name: wavefront
     spec:
       containers:
       - command:
@@ -904,7 +909,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.1-alpha-24ec1720
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.2-alpha-95314833
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
