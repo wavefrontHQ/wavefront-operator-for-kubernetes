@@ -42,7 +42,7 @@ pipeline {
           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-        sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make xplatform-kubernetes-yaml released-operator-yaml'
+        sh 'make docker-xplatform-build released-kubernetes-yaml'
       }
     }
     // deploy to GKE and run manual tests

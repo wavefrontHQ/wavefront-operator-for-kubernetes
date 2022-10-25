@@ -62,7 +62,7 @@ pipeline {
 
     stage("Run Integration Tests") {
       environment {
-        DEPLOY_SOURCE="rc"
+        OPERATOR_YAML_TYPE="rc"
       }
 
       parallel {
@@ -95,7 +95,7 @@ pipeline {
 
             stage("with customization") {
               environment {
-                KUSTOMIZATION_SOURCE="custom"
+                KUSTOMIZATION_TYPE="custom"
                 NS="custom-namespace"
                 SOURCE_PREFIX="projects.registry.vmware.com/tanzu_observability"
                 PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"

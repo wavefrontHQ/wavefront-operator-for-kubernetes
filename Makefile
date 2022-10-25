@@ -193,18 +193,15 @@ GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 endef
 
 OPERATOR_BUILD_DIR:=$(REPO_DIR)/build/operator
-KUBERNETES_BUILD_YAML:=$(OPERATOR_BUILD_DIR)/wavefront-operator.yaml
-KUSTOMIZATION_BUILD_YAML:=$(OPERATOR_BUILD_DIR)/kustomization.yaml
-DEPLOY_SOURCE?=kind
 
-KUSTOMIZATION_SOURCE?=base
+OPERATOR_YAML_TYPE?=kind
+KUBERNETES_YAML:=$(OPERATOR_BUILD_DIR)/wavefront-operator.yaml
+
+KUSTOMIZATION_TYPE?=base
+KUSTOMIZATION_YAML:=$(OPERATOR_BUILD_DIR)/kustomization.yaml
 
 $(OPERATOR_BUILD_DIR):
 	mkdir -p $(OPERATOR_BUILD_DIR)
-
-$(KUBERNETES_BUILD_YAML): $(DEPLOY_SOURCE)-kubernetes-yaml
-
-$(KUSTOMIZATION_BUILD_YAML): $(KUSTOMIZATION_SOURCE)-kustomization-yaml
 
 .PHONY: base-kustomization-yaml
 base-kustomization-yaml: $(OPERATOR_BUILD_DIR)
@@ -213,24 +210,24 @@ base-kustomization-yaml: $(OPERATOR_BUILD_DIR)
 .PHONY: custom-kustomization-yaml
 custom-kustomization-yaml: $(OPERATOR_BUILD_DIR)
 	sed "s%YOUR_IMAGE_REGISTRY%$(PREFIX)%g" $(REPO_DIR)/deploy/kubernetes/kustomization.yaml | \
-		sed "s%YOUR_NAMESPACE%$(NS)%g" > $(KUSTOMIZATION_BUILD_YAML)
+		sed "s%YOUR_NAMESPACE%$(NS)%g" > $(KUSTOMIZATION_YAML)
 
 .PHONY: kubernetes-yaml
 kubernetes-yaml: manifests kustomize $(OPERATOR_BUILD_DIR)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/default > $(KUBERNETES_BUILD_YAML)
+	$(KUSTOMIZE) build config/default > $(KUBERNETES_YAML)
 
 .PHONY: rc-kubernetes-yaml
 rc-kubernetes-yaml: $(OPERATOR_BUILD_DIR)
 	curl https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/$(OPERATOR_YAML_RC_SHA)/wavefront-operator-$(GIT_BRANCH).yaml \
-		-o $(KUBERNETES_BUILD_YAML)
+		-o $(KUBERNETES_YAML)
 
 .PHONY: xplatform-kubernetes-yaml
 xplatform-kubernetes-yaml: docker-xplatform-build copy-base-patches kubernetes-yaml
 
 .PHONY: released-kubernetes-yaml
 released-kubernetes-yaml: copy-base-patches kubernetes-yaml
-	cp $(KUBERNETES_BUILD_YAML) $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
+	cp $(KUBERNETES_YAML) $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
 
 .PHONY: kind-kubernetes-yaml
 kind-kubernetes-yaml: docker-build copy-kind-patches kubernetes-yaml
@@ -241,7 +238,7 @@ copy-kind-patches:
 	cp config/manager/patches-kind.yaml config/manager/patches.yaml
 
 .PHONY: operator-yaml
-operator-yaml: $(KUBERNETES_BUILD_YAML) $(KUSTOMIZATION_BUILD_YAML)
+operator-yaml: $(OPERATOR_YAML_TYPE)-kubernetes-yaml $(KUSTOMIZATION_TYPE)-kustomization-yaml
 
 .PHONY: deploy
 deploy: operator-yaml
