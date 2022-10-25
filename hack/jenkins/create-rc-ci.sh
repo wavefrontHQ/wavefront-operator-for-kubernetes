@@ -17,8 +17,9 @@ git checkout rc
 git reset --hard origin/rc
 
 git clean -dfx -e build
-mv build/wavefront-operator.yaml "wavefront-operator-${GIT_BRANCH}.yaml"
+OPERATOR_FILE="wavefront-operator-${GIT_BRANCH}.yaml"
+mv build/wavefront-operator.yaml "$OPERATOR_FILE"
 
 git add --all .
-git commit -m "add CRD" || exit 0
+git commit -m "build $OPERATOR_FILE from $GIT_COMMIT" || exit 0
 git push origin rc || exit 0
