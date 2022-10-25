@@ -176,7 +176,7 @@ pipeline {
     regression {
       script {
         println "currentBuild.result"
-        if currentBuild.result != Result.ABORTED {
+        if (currentBuild.result != Result.ABORTED) {
           slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "CI OPERATOR BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
         }
     }
