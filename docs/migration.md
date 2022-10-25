@@ -1,6 +1,6 @@
 # Migration
-This is a beta trial migration doc for the operator from collector manual and helm installation. 
-If you would like to test out the new operator in parallel with your existing manual or helm installation, use the [wavefront-allow-legacy-intall.yaml](../deploy/kubernetes/scenarios/wavefront-allow-legacy-install.yaml) template.
+This is a migration doc for the Operator from the manual and Helm Collector and proxy installation.
+If you want to test the new Operator in parallel with your existing manual or Helm installation, use the [wavefront-allow-legacy-intall.yaml](../deploy/kubernetes/scenarios/wavefront-allow-legacy-install.yaml) template.
 
 ## Migrate from Helm Installation
 
@@ -56,7 +56,7 @@ See [Custom Resource Scenarios](../deploy/kubernetes/scenarios) for examples or 
 | `proxy.args`                       | `dataExport.wavefrontProxy.args`                                                                   | Additional Wavefront proxy properties can be passed as command line arguments in the `--<property_name> <value>` format. Multiple properties can be specified. |
 | `proxy.preprocessor.rules.yaml`    | `dataExport.wavefrontProxy.preprocessor`                                                           | Name of the configmap containing a rules.yaml key with proxy preprocessing rules                                                                               |
 
-If you have collector configuration with parameters not covered above, please reach out to us.
+If you have a Collector configuration with parameters not covered above, please open an issue in this repository.
 
 ### 3. Re-apply your `wavefront.yaml`
 
@@ -170,5 +170,4 @@ See [wavefront-pod-resources.yaml](../deploy/kubernetes/scenarios/wavefront-pod-
 
 ### Future Support
 
-If you come across something that cannot be configured with the new Operator,
-please contact us.
+If you have feedback, or come across something that cannot be configured with the Operator, please open an issue in this repository.
