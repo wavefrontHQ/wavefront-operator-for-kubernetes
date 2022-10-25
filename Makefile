@@ -13,7 +13,7 @@ endif
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
-NS=observability-system
+NS?=observability-system
 LDFLAGS=-X main.version=$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
@@ -114,11 +114,6 @@ clean:
 	rm -rf bin
 	rm -rf build
 
-
-.PHONY: run
-run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
-
 .PHONY: docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 make build -o fmt -o vet
@@ -137,30 +132,19 @@ docker-xplatform-build:
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
+docker-copy-images:
+	@test $${SOURCE_PREFIX?Please set variable SOURCE_PREFIX}
+	docker buildx create --use --node wavefront_operator_copier_$(BUILDER_SUFFIX)
+	./hack/component-image-refs.sh | ./hack/docker/copy-image-refs.sh -d $(PREFIX) -s $(SOURCE_PREFIX)
+	echo "$(DOCKER_IMAGE):$(VERSION)" | ./hack/docker/copy-image-refs.sh -d $(PREFIX) -s $(SOURCE_PREFIX)
+
 ##@ Deployment
 
 ifndef ignore-not-found
   ignore-not-found = true
 endif
 
-.PHONY: install
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
-
-.PHONY: uninstall
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
-
-.PHONY: deploy
-deploy:  ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/$(OPERATOR_YAML_RC_SHA)/wavefront-operator-$(GIT_BRANCH).yaml
-	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
-
-.PHONY: undeploy
-undeploy: copy-base-patches manifests kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret || true
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f - || true
-
+.PHONY: copy-base-patches
 copy-base-patches:
 	cp config/manager/patches-base.yaml config/manager/patches.yaml
 
@@ -175,6 +159,14 @@ KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
 
+IMGPKG = $(REPO_DIR)/bin/imgpkg
+$(IMGPKG):
+	curl --create-dirs --output $(IMGPKG) -L https://github.com/vmware-tanzu/carvel-imgpkg/releases/download/v0.33.0/imgpkg-$(shell go env GOOS)-$(shell go env GOARCH)
+	chmod +x $(IMGPKG)
+
+.PHONY: imgpkg
+imgpkg: $(IMGPKG)
+
 KUBE_LINTER = $(shell pwd)/bin/kube-linter
 .PHONY: install-kube-linter
 install-kube-linter: ## Download kube-linter locally if necessary.
@@ -184,7 +176,6 @@ KUBE_SCORE = $(shell pwd)/bin/kube-score
 .PHONY: install-kube-score
 install-kube-score: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUBE_SCORE),github.com/zegl/kube-score/cmd/kube-score@v1.14.0)
-
 
 ENVTEST = $(shell pwd)/bin/setup-envtest
 .PHONY: envtest
@@ -201,41 +192,77 @@ GOOS= GOARCH= GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 }
 endef
 
-deploy-managed: docker-xplatform-build manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
-	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+OPERATOR_BUILD_DIR:=$(REPO_DIR)/build/operator
 
-deploy-kind: copy-kind-patches docker-build manifests kustomize ## Deploy controller to the Kind cluster.
+OPERATOR_YAML_TYPE?=kind
+KUBERNETES_YAML:=$(OPERATOR_BUILD_DIR)/wavefront-operator.yaml
+
+KUSTOMIZATION_TYPE?=base
+KUSTOMIZATION_YAML:=$(OPERATOR_BUILD_DIR)/kustomization.yaml
+
+$(OPERATOR_BUILD_DIR):
+	mkdir -p $(OPERATOR_BUILD_DIR)
+
+.PHONY: base-kustomization-yaml
+base-kustomization-yaml: $(OPERATOR_BUILD_DIR)
+	cp $(REPO_DIR)/hack/build/kustomization.yaml $(OPERATOR_BUILD_DIR)
+
+.PHONY: custom-kustomization-yaml
+custom-kustomization-yaml: $(OPERATOR_BUILD_DIR)
+	sed "s%YOUR_IMAGE_REGISTRY%$(PREFIX)%g" $(REPO_DIR)/deploy/kubernetes/kustomization.yaml | \
+		sed "s%YOUR_NAMESPACE%$(NS)%g" > $(KUSTOMIZATION_YAML)
+
+.PHONY: kubernetes-yaml
+kubernetes-yaml: manifests kustomize $(OPERATOR_BUILD_DIR)
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/default > $(KUBERNETES_YAML)
+
+.PHONY: rc-kubernetes-yaml
+rc-kubernetes-yaml: $(OPERATOR_BUILD_DIR)
+	curl https://raw.githubusercontent.com/wavefrontHQ/wavefront-operator-for-kubernetes/$(OPERATOR_YAML_RC_SHA)/wavefront-operator-$(GIT_BRANCH).yaml \
+		-o $(KUBERNETES_YAML)
+
+.PHONY: xplatform-kubernetes-yaml
+xplatform-kubernetes-yaml: docker-xplatform-build copy-base-patches kubernetes-yaml
+
+.PHONY: released-kubernetes-yaml
+released-kubernetes-yaml: copy-base-patches kubernetes-yaml
+	cp $(KUBERNETES_YAML) $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
+
+.PHONY: kind-kubernetes-yaml
+kind-kubernetes-yaml: docker-build copy-kind-patches kubernetes-yaml
 	kind load docker-image $(IMG)
-	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
-	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
 
-redeploy-kind: undeploy deploy-kind
-
+.PHONY: copy-kind-patches
 copy-kind-patches:
 	cp config/manager/patches-kind.yaml config/manager/patches.yaml
 
+.PHONY: operator-yaml
+operator-yaml: $(OPERATOR_YAML_TYPE)-kubernetes-yaml $(KUSTOMIZATION_TYPE)-kustomization-yaml
+
+.PHONY: deploy
+deploy: operator-yaml
+	kubectl apply -k $(OPERATOR_BUILD_DIR)
+	kubectl create -n $(NS) secret generic wavefront-secret --from-literal token=$(WAVEFRONT_TOKEN) || true
+
+.PHONY: undeploy
+undeploy: operator-yaml
+	kubectl delete --ignore-not-found=$(ignore-not-found) -n $(NS) secret wavefront-secret || true
+	kubectl delete --ignore-not-found=$(ignore-not-found) -k $(OPERATOR_BUILD_DIR) || true
+
+.PHONY: integration-test
+integration-test: install-kube-score install-kube-linter undeploy deploy
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -d $(NS) -n $(CONFIG_CLUSTER_NAME))
+
+.PHONY: clean-cluster
+clean-cluster:
+	(cd $(REPO_DIR)/hack/test && ./clean-cluster.sh)
+
+#----- KIND ----#
+.PHONY: nuke-kind
 nuke-kind:
 	kind delete cluster
 	kind create cluster
-
-integration-test: install-kube-score install-kube-linter undeploy manifests deploy-kind
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN))
-
-integration-test-ci: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME))
-
-integration-cascade-delete-test: integration-test
-	(cd $(REPO_DIR)/hack/test && ./test-delegate-delete.sh)
-
-generate-kubernetes-yaml: copy-base-patches manifests kustomize
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default > $(REPO_DIR)/deploy/kubernetes/wavefront-operator.yaml
-
-clean-cluster:
-	(cd $(REPO_DIR)/hack/test && ./clean-cluster.sh)
 
 #----- GKE -----#
 GCP_PROJECT?=wavefront-gcp-dev

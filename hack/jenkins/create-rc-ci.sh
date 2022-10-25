@@ -8,7 +8,7 @@ git remote set-url origin https://${TOKEN}@github.com/wavefronthq/wavefront-oper
 RELEASE_VERSION=$(cat ./release/OPERATOR_VERSION)
 NEW_VERSION=$(semver-cli inc patch "$RELEASE_VERSION")
 
-VERSION=$NEW_VERSION$VERSION_POSTFIX make generate-kubernetes-yaml
+VERSION=$NEW_VERSION$VERSION_POSTFIX make released-kubernetes-yaml
 cp deploy/kubernetes/wavefront-operator.yaml build/wavefront-operator.yaml
 
 git checkout .
