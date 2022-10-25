@@ -178,7 +178,7 @@ pipeline {
   post {
     always {
         println "${currentBuild.result}"
-        println "${RESULT.ABORTED}"
+        println "${Result.ABORTED}"
     }
     regression {
       script {
