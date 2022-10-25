@@ -4,6 +4,7 @@ set -ex
 REPO_ROOT=$(git rev-parse --show-toplevel)
 source "${REPO_ROOT}/hack/test/k8s-utils.sh"
 cd "${REPO_ROOT}"
+IMGPKG=${IMGPKG:-$REPO_ROOT/bin/imgpkg}
 
 function print_usage_and_exit() {
   echo "Failure: $1"
@@ -18,10 +19,12 @@ function copy-image-ref() {
     local image_ref="$1"
     local src_prefix="$2"
     local dst_prefix="$3"
-    docker buildx imagetools create --append -t "$dst_prefix/$image_ref" "$src_prefix/$image_ref"
+    local image_name=$(echo "$image_ref" | cut -d':' -f1)
+    ${IMGPKG} copy -i "$src_prefix/$image_ref" --to-repo "$dst_prefix/$image_name"
 }
 
 function main() {
+  make imgpkg
   local src_prefix=
   local dst_prefix=
 

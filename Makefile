@@ -159,6 +159,14 @@ KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
 
+IMGPKG = $(REPO_DIR)/bin/imgpkg
+$(IMGPKG):
+	curl --create-dirs --output $(IMGPKG) -L https://github.com/vmware-tanzu/carvel-imgpkg/releases/download/v0.33.0/imgpkg-$(shell go env GOOS)-$(shell go env GOARCH)
+	chmod +x $(IMGPKG)
+
+.PHONY: imgpkg
+imgpkg: $(IMGPKG)
+
 KUBE_LINTER = $(shell pwd)/bin/kube-linter
 .PHONY: install-kube-linter
 install-kube-linter: ## Download kube-linter locally if necessary.
@@ -247,7 +255,7 @@ undeploy: operator-yaml
 
 .PHONY: integration-test
 integration-test: install-kube-score install-kube-linter undeploy deploy
-	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -n $(CONFIG_CLUSTER_NAME) -d $(NS))
+	(cd $(REPO_DIR)/hack/test && ./run-e2e-tests.sh -t $(WAVEFRONT_TOKEN) -d $(NS) -n $(CONFIG_CLUSTER_NAME))
 
 .PHONY: clean-cluster
 clean-cluster:
