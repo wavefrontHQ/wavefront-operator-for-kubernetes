@@ -102,6 +102,9 @@ pipeline {
                 HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
               }
               steps {
+                sh './hack/jenkins/setup-for-integration-test.sh'
+                sh './hack/jenkins/install_docker_buildx.sh'
+                sh 'make semver-cli'
                 lock("integration-test-gke") {
                   sh 'make gke-connect-to-cluster'
                   sh 'docker logout $PREFIX'
