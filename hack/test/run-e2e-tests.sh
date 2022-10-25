@@ -21,7 +21,7 @@ function setup_test() {
 
   echo "Deploying Wavefront CR with Cluster Name: $cluster_name ..."
 
-  wait_for_cluster_ready
+  wait_for_cluster_ready "$NS"
 
   sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
    sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" |
@@ -30,7 +30,7 @@ function setup_test() {
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
-  wait_for_cluster_ready
+  wait_for_cluster_ready "$NS"
 }
 
 function run_test_wavefront_metrics() {
@@ -97,7 +97,7 @@ function clean_up_test() {
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml --timeout=10s
 
-  wait_for_proxy_termination
+  wait_for_proxy_termination "$NS"
 }
 
 function run_static_analysis() {

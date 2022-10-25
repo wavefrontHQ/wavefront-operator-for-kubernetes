@@ -27,7 +27,8 @@ function popd_check() {
 
 function wait_for_cluster_ready() {
   printf "Waiting for all Pods to be 'Ready' ..."
-  while ! kubectl wait --for=condition=Ready pod --all -l exclude-me!=true -n observability-system --timeout=5s &> /dev/null; do
+  local ns=${1:-observability-system}
+  while ! kubectl wait --for=condition=Ready pod --all -l exclude-me!=true -n "$ns" --timeout=5s &> /dev/null; do
     printf "."
     sleep 1
   done
@@ -36,7 +37,8 @@ function wait_for_cluster_ready() {
 
 function wait_for_proxy_termination() {
   printf "Waiting for proxy to be terminated ..."
-  while ! kubectl wait --for=delete  -n observability-system pod -l  app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --timeout=5s &> /dev/null; do
+  local ns=${1:-observability-system}
+  while ! kubectl wait --for=delete  -n "$ns" pod -l  app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --timeout=5s &> /dev/null; do
     printf "."
     sleep 1
   done

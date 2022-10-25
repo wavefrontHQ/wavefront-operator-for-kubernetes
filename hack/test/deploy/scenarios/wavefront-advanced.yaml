@@ -68,7 +68,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: advanced-proxy-preprocessor-rules
-  namespace: observability-system
+  namespace: YOUR_NAMESPACE
 data:
   rules.yaml: |
     '2878':
@@ -84,7 +84,7 @@ metadata:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: collector
   name: wavefront-collector-config
-  namespace: observability-system
+  namespace: YOUR_NAMESPACE
 data:
   config.yaml: |
     clusterName: YOUR_CLUSTER_NAME
