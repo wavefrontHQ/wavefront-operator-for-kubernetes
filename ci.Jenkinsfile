@@ -23,8 +23,12 @@ pipeline {
 
   stages {
     stage("Test Go Code") {
+      options {
+        timeout(time: 30, unit: 'SECONDS')
+      }
       steps {
-        sh 'make checkfmt vet test'
+        sh 'sleep 60'
+//         sh 'make checkfmt vet test'
       }
     }
 //     stage("Setup For Publish") {
@@ -172,6 +176,10 @@ pipeline {
 //     }
   }
   post {
+    always {
+        println "${currentBuild.result}"
+        println "${RESULT.ABORTED}"
+    }
     regression {
       script {
         println "${currentBuild.result}"
