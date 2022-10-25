@@ -303,7 +303,7 @@ type Logging struct {
 	Filters LogFilters `json:"filters,omitempty"`
 
 	// Resources Compute resources required by the logging containers.
-	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {memory: "500Mi"}}
+	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {cpu: "1000m", memory: "500Mi"}}
 	Resources Resources `json:"resources,omitempty"`
 
 	// Tags are a map of key value pairs that are added to all logging emitted.
