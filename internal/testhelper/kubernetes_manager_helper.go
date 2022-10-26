@@ -282,7 +282,7 @@ func (skm MockKubernetesManager) NodeCollectorDaemonSetContains(checks ...string
 		"apps/v1",
 		"DaemonSet",
 		"wavefront",
-		"collector",
+		"node-collector",
 		"wavefront-node-collector",
 		checks...,
 	)
@@ -318,7 +318,7 @@ func (skm MockKubernetesManager) ClusterCollectorDeploymentContains(checks ...st
 		"apps/v1",
 		"Deployment",
 		"wavefront",
-		"collector",
+		"cluster-collector",
 		"wavefront-cluster-collector",
 		checks...,
 	)

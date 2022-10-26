@@ -147,8 +147,8 @@ func TestReconcileAll(t *testing.T) {
 
 		require.True(t, stubKM.DeletedContains("v1", "ServiceAccount", "wavefront", "collector", "wavefront-collector"))
 		require.True(t, stubKM.DeletedContains("v1", "ConfigMap", "wavefront", "collector", "default-wavefront-collector-config"))
-		require.True(t, stubKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "collector", "wavefront-node-collector"))
-		require.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "collector", "wavefront-cluster-collector"))
+		require.True(t, stubKM.DeletedContains("apps/v1", "DaemonSet", "wavefront", "node-collector", "wavefront-node-collector"))
+		require.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "cluster-collector", "wavefront-cluster-collector"))
 		require.True(t, stubKM.DeletedContains("v1", "Service", "wavefront", "proxy", "wavefront-proxy"))
 		require.True(t, stubKM.DeletedContains("apps/v1", "Deployment", "wavefront", "proxy", "wavefront-proxy"))
 
@@ -465,7 +465,7 @@ func TestReconcileCollector(t *testing.T) {
 					Name: util.NodeCollectorName,
 					Labels: map[string]string{
 						"app.kubernetes.io/name":      "wavefront",
-						"app.kubernetes.io/component": "collector",
+						"app.kubernetes.io/component": "node-collector",
 					},
 				},
 			},
@@ -478,7 +478,7 @@ func TestReconcileCollector(t *testing.T) {
 					Name: util.ClusterCollectorName,
 					Labels: map[string]string{
 						"app.kubernetes.io/name":      "wavefront",
-						"app.kubernetes.io/component": "collector",
+						"app.kubernetes.io/component": "cluster-collector",
 					},
 				},
 			},
@@ -778,12 +778,12 @@ func TestReconcileProxy(t *testing.T) {
 			_, err := r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
 
-			nodeCollector, err := stubKM.GetAppliedDaemonSet("collector", util.NodeCollectorName)
+			nodeCollector, err := stubKM.GetAppliedDaemonSet("node-collector", util.NodeCollectorName)
 			require.NoError(t, err)
 
 			require.Equal(t, "1", nodeCollector.Spec.Template.Annotations["proxy-available-replicas"])
 
-			clusterCollector, err := stubKM.GetAppliedDeployment("collector", util.ClusterCollectorName)
+			clusterCollector, err := stubKM.GetAppliedDeployment("cluster-collector", util.ClusterCollectorName)
 			require.NoError(t, err)
 
 			require.Equal(t, "1", clusterCollector.Spec.Template.Annotations["proxy-available-replicas"])
@@ -808,12 +808,12 @@ func TestReconcileProxy(t *testing.T) {
 			_, err := r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
 
-			nodeCollector, err := stubKM.GetAppliedDaemonSet("collector", util.NodeCollectorName)
+			nodeCollector, err := stubKM.GetAppliedDaemonSet("node-collector", util.NodeCollectorName)
 			require.NoError(t, err)
 
 			require.Equal(t, "2", nodeCollector.Spec.Template.Annotations["proxy-available-replicas"])
 
-			clusterCollector, err := stubKM.GetAppliedDeployment("collector", util.ClusterCollectorName)
+			clusterCollector, err := stubKM.GetAppliedDeployment("cluster-collector", util.ClusterCollectorName)
 			require.NoError(t, err)
 
 			require.Equal(t, "2", clusterCollector.Spec.Template.Annotations["proxy-available-replicas"])
@@ -1336,7 +1336,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 	})
 
-	fakesAppsV1 := k8sfake.NewSimpleClientset(initObjs...).AppsV1()
+	fakeClient := k8sfake.NewSimpleClientset(initObjs...)
 
 	r := &controllers.WavefrontReconciler{
 		OperatorVersion:   "99.99.99",
@@ -1345,10 +1345,10 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		FS:                os.DirFS(controllers.DeployDir),
 		KubernetesManager: testhelper.NewMockKubernetesManager(),
 		MetricConnection:  metric.NewConnection(testhelper.StubSenderFactory(nil, nil)),
-		Appsv1:            fakesAppsV1,
+		TypedClient:       fakeClient,
 	}
 
-	return r, wfCR, apiClient, fakesAppsV1
+	return r, wfCR, apiClient, fakeClient.AppsV1()
 }
 
 func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {

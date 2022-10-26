@@ -3,7 +3,7 @@ kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/name: wavefront
-    app.kubernetes.io/component: collector
+    app.kubernetes.io/component: node-collector
   name: wavefront-node-collector
   namespace: {{ .Namespace }}
   ownerReferences:
