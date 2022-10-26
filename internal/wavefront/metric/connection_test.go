@@ -2,6 +2,8 @@ package metric_test
 
 import (
 	"errors"
+	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,7 +53,7 @@ func TestConnection(t *testing.T) {
 		_ = conn.Connect("example.com")
 
 		conn.Send([]metric.Metric{{Name: "some.metric"}})
-		conn.FlushMetrics()
+		conn.Flush()
 
 		require.Equal(t, 0, len(mockSender.SentMetrics))
 	})
@@ -105,7 +107,7 @@ func TestConnection(t *testing.T) {
 		_ = conn.Connect("http://example.com/2")
 
 		conn.Send([]metric.Metric{{Name: "some.metric"}})
-		conn.FlushMetrics()
+		conn.Flush()
 
 		require.Equal(t, 0, len(mockSenders["http://example.com/1"].SentMetrics))
 		require.Equal(t, 1, len(mockSenders["http://example.com/2"].SentMetrics))
@@ -118,7 +120,7 @@ func TestConnection(t *testing.T) {
 		_ = conn.Connect("example.com")
 
 		conn.Send(metrics)
-		conn.FlushMetrics()
+		conn.Flush()
 
 		require.Equal(t, metrics, mockSender.SentMetrics)
 	})
@@ -129,7 +131,7 @@ func TestConnection(t *testing.T) {
 		_ = conn.Connect("example.com")
 
 		conn.Send([]metric.Metric{{Name: "some.metric"}})
-		conn.FlushMetrics()
+		conn.Flush()
 
 		require.Equal(t, 1, mockSender.Flushes)
 	})
@@ -140,7 +142,7 @@ func TestConnection(t *testing.T) {
 		conn.Close()
 
 		conn.Send([]metric.Metric{{Name: "some.metric"}})
-		conn.FlushMetrics()
+		conn.Flush()
 
 		require.Equal(t, 0, len(mockSender.SentMetrics))
 	})
@@ -167,10 +169,51 @@ func TestConnection(t *testing.T) {
 		_ = conn.Connect("example.com")
 
 		conn.Send([]metric.Metric{{Name: "some.metric"}})
-		conn.FlushMetrics()
+		conn.Flush()
 
 		require.Equal(t, 1, len(mockSender.SentMetrics))
 	})
+
+	t.Run("handles concurrency", func(t *testing.T) {
+		const runs = 100_000
+		conn := NewTestConnection(&testhelper.StubSender{})
+
+		require.NotPanics(t, func() {
+			wg := &sync.WaitGroup{}
+
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				require.NoError(t, conn.Connect(fmt.Sprintf("http://foo.bar/%d", i)))
+			})
+
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Send([]metric.Metric{{Name: "a", Value: float64(i)}, {Name: "b", Value: float64(i + 1)}})
+			})
+
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Flush()
+			})
+
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Flush()
+			})
+
+			runRepeatedlyInGoroutine(wg, runs, func(i int) {
+				conn.Close()
+			})
+
+			wg.Wait()
+		})
+	})
+}
+
+func runRepeatedlyInGoroutine(wg *sync.WaitGroup, n int, do func(int)) {
+	wg.Add(1)
+	go func() {
+		for i := 0; i < n; i++ {
+			do(i)
+		}
+		wg.Done()
+	}()
 }
 
 func NewTestConnection(sender metric.Sender) *metric.Connection {

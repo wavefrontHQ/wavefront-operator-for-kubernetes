@@ -10,6 +10,7 @@ function print_usage_and_exit() {
   echo -e "\t-c wavefront instance name (default: 'nimba')"
   echo -e "\t-t wavefront token (required)"
   echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
+  echo -e "\t-d namespace to create CR in"
   exit 1
 }
 
@@ -20,15 +21,16 @@ function setup_test() {
 
   echo "Deploying Wavefront CR with Cluster Name: $cluster_name ..."
 
-  wait_for_cluster_ready
+  wait_for_cluster_ready "$NS"
 
   sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
    sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" |
-   sed "s/YOUR_API_TOKEN/${WAVEFRONT_TOKEN}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+   sed "s/YOUR_API_TOKEN/${WAVEFRONT_TOKEN}/g" |
+    sed "s/YOUR_NAMESPACE/${NS}/g" > hack/test/_v1alpha1_wavefront_test.yaml
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
-  wait_for_cluster_ready
+  wait_for_cluster_ready "$NS"
 }
 
 function run_test_wavefront_metrics() {
@@ -95,7 +97,7 @@ function clean_up_test() {
 
   kubectl delete -f hack/test/_v1alpha1_wavefront_test.yaml --timeout=10s
 
-  wait_for_proxy_termination
+  wait_for_proxy_termination "$NS"
 }
 
 function run_static_analysis() {
@@ -208,7 +210,7 @@ function main() {
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   local CONFIG_CLUSTER_NAME=$(create_cluster_name)
 
-  while getopts ":c:t:v:n:p:" opt; do
+  while getopts ":c:t:v:n:d:" opt; do
     case $opt in
     c)
       WF_CLUSTER="$OPTARG"
@@ -221,6 +223,9 @@ function main() {
       ;;
     n)
       CONFIG_CLUSTER_NAME="$OPTARG"
+      ;;
+    d)
+      NS="$OPTARG"
       ;;
     \?)
       print_usage_and_exit "Invalid option: -$OPTARG"

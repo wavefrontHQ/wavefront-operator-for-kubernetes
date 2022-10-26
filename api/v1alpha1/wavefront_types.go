@@ -28,10 +28,6 @@ type WavefrontSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ImageRegistry is your custom image registry.
-	// +kubebuilder:default:=projects.registry.vmware.com/tanzu_observability
-	ImageRegistry string `json:"imageRegistry,omitempty"`
-
 	// ClusterName is a unique name for the Kubernetes cluster to be identified via a metric tag on Wavefront (Required).
 	// +kubebuilder:validation:MinLength:=3
 	ClusterName string `json:"clusterName,required"`
@@ -55,11 +51,17 @@ type WavefrontSpec struct {
 	//  Allows the operator based Wavefront installation to be run in parallel with a legacy Wavefront (helm or manual) installation. Defaults to false.
 	AllowLegacyInstall bool `json:"allowLegacyInstall,omitempty"`
 
+	// ImageRegistry for internal use
+	ImageRegistry string `json:"-"`
+
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
 
 	// CanExportData is for internal use
 	CanExportData bool `json:"-"`
+
+	// Namespace is for internal use
+	Namespace string `json:"-"`
 }
 
 type Metrics struct {
@@ -301,7 +303,7 @@ type Logging struct {
 	Filters LogFilters `json:"filters,omitempty"`
 
 	// Resources Compute resources required by the logging containers.
-	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {memory: "500Mi"}}
+	// +kubebuilder:default:={requests: {cpu: "100m", memory: "200Mi"}, limits: {cpu: "1000m", memory: "500Mi"}}
 	Resources Resources `json:"resources,omitempty"`
 
 	// Tags are a map of key value pairs that are added to all logging emitted.

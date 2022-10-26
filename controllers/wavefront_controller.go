@@ -79,6 +79,7 @@ type WavefrontReconciler struct {
 	KubernetesManager kubernetes_manager.KubernetesManager
 	MetricConnection  *metric.Connection
 	OperatorVersion   string
+	namespace         string
 }
 
 // +kubebuilder:rbac:groups=wavefront.com,namespace=observability-system,resources=wavefronts,verbs=get;list;watch;create;update;patch;delete
@@ -104,6 +105,7 @@ type WavefrontReconciler struct {
 const maxReconcileInterval = 60 * time.Second
 
 func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	r.namespace = req.Namespace
 	wavefront := &wf.Wavefront{}
 	err := r.Client.Get(ctx, req.NamespacedName, wavefront)
 	if err != nil && !errors.IsNotFound(err) {
@@ -280,7 +282,7 @@ func dirList(proxy, collector, logging bool) []string {
 
 func (r *WavefrontReconciler) readAndDeleteResources() error {
 	r.MetricConnection.Close()
-	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{}, allDirs())
+	resources, err := r.readAndInterpolateResources(wf.WavefrontSpec{Namespace: r.namespace}, allDirs())
 	if err != nil {
 		return err
 	}
@@ -293,7 +295,7 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -357,6 +359,14 @@ func hashValue(bytes []byte) string {
 
 // Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
+	deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	wavefront.Spec.Namespace = r.namespace
+
+	wavefront.Spec.ImageRegistry = filepath.Dir(deployment.Spec.Template.Spec.Containers[0].Image)
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 			wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"
@@ -367,7 +377,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deployment, err := r.Appsv1.Deployments(util.Namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
 		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
 			wavefront.Spec.CanExportData = true
@@ -421,7 +431,7 @@ func (r *WavefrontReconciler) parseHttpProxyConfigs(wavefront *wf.Wavefront, ctx
 
 func (r *WavefrontReconciler) findHttpProxySecret(wavefront *wf.Wavefront, ctx context.Context) (*corev1.Secret, error) {
 	secret := client.ObjectKey{
-		Namespace: util.Namespace,
+		Namespace: r.namespace,
 		Name:      wavefront.Spec.DataExport.WavefrontProxy.HttpProxy.Secret,
 	}
 	httpProxySecret := &corev1.Secret{}
@@ -464,22 +474,8 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 
 // Reporting Health Status
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationResult validation.Result) (wf.WavefrontStatus, error) {
-	componentsToCheck := map[string]string{}
 
-	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		componentsToCheck[util.ProxyName] = util.Deployment
-	}
-
-	if wavefront.Spec.DataCollection.Metrics.Enable {
-		componentsToCheck[util.ClusterCollectorName] = util.Deployment
-		componentsToCheck[util.NodeCollectorName] = util.DaemonSet
-	}
-
-	if wavefront.Spec.DataCollection.Logging.Enable {
-		componentsToCheck[util.LoggingName] = util.DaemonSet
-	}
-
-	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, componentsToCheck, wavefront.GetCreationTimestamp().Time)
+	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, wavefront)
 
 	if !validationResult.IsValid() {
 		wavefrontStatus.Status = health.Unhealthy

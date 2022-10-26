@@ -100,6 +100,7 @@ spec:
                       resources:
                         default:
                           limits:
+                            cpu: 1000m
                             memory: 500Mi
                           requests:
                             cpu: 100m
@@ -513,10 +514,6 @@ spec:
                         type: object
                     type: object
                 type: object
-              imageRegistry:
-                default: projects.registry.vmware.com/tanzu_observability
-                description: ImageRegistry is your custom image registry.
-                type: string
               wavefrontTokenSecret:
                 default: wavefront-secret
                 description: WavefrontTokenSecret is the name of the secret that contains

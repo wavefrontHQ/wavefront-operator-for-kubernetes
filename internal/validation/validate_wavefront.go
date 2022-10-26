@@ -49,7 +49,7 @@ func (result Result) IsWarning() bool {
 func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Result {
 	err := validateEnvironment(appsV1, wavefront)
 	if err != nil {
-		return Result{err, !areAnyComponentsDeployed(appsV1)}
+		return Result{err, !areAnyComponentsDeployed(appsV1, wavefront.Spec.Namespace)}
 	}
 	err = validateWavefrontSpec(wavefront)
 	if err != nil {
@@ -65,12 +65,12 @@ func validateEnvironment(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavef
 	for namespace, resourceMap := range legacyComponentsToCheck {
 		for resourceName, resourceType := range resourceMap {
 			if resourceType == util.DaemonSet {
-				if daemonSetExists(appsV1, namespace, resourceName) {
+				if daemonSetExists(appsV1.DaemonSets(namespace), resourceName) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
 			if resourceType == util.Deployment {
-				if deploymentExists(appsV1, namespace, resourceName) {
+				if deploymentExists(appsV1.Deployments(namespace), resourceName) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
@@ -117,26 +117,26 @@ func compareQuantities(request string, limit string) int {
 	return requestQuantity.Cmp(limitQuanity)
 }
 
-func deploymentExists(appsV1 typedappsv1.AppsV1Interface, namespace string, resourceName string) bool {
-	_, err := appsV1.Deployments(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
+func deploymentExists(deployments typedappsv1.DeploymentInterface, resourceName string) bool {
+	_, err := deployments.Get(context.Background(), resourceName, v1.GetOptions{})
 	return err == nil
 }
 
-func daemonSetExists(appsV1 typedappsv1.AppsV1Interface, namespace string, resourceName string) bool {
-	_, err := appsV1.DaemonSets(namespace).Get(context.Background(), resourceName, v1.GetOptions{})
+func daemonSetExists(daemonsets typedappsv1.DaemonSetInterface, resourceName string) bool {
+	_, err := daemonsets.Get(context.Background(), resourceName, v1.GetOptions{})
 	return err == nil
 }
 
-func areAnyComponentsDeployed(appsV1 typedappsv1.AppsV1Interface) bool {
-	exists := deploymentExists(appsV1, util.Namespace, util.ProxyName)
+func areAnyComponentsDeployed(appsV1 typedappsv1.AppsV1Interface, namespace string) bool {
+	exists := deploymentExists(appsV1.Deployments(namespace), util.ProxyName)
 	if exists {
 		return exists
 	}
-	exists = daemonSetExists(appsV1, util.Namespace, util.NodeCollectorName)
+	exists = daemonSetExists(appsV1.DaemonSets(namespace), util.NodeCollectorName)
 	if exists {
 		return exists
 	}
-	exists = deploymentExists(appsV1, util.Namespace, util.ClusterCollectorName)
+	exists = deploymentExists(appsV1.Deployments(namespace), util.ClusterCollectorName)
 	if exists {
 		return exists
 	}

@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: proxy
-  namespace: observability-system
+  namespace: {{ .Namespace }}
   ownerReferences:
     - apiVersion: apps/v1
       kind: Deployment
@@ -36,7 +36,7 @@ spec:
         runAsGroup: 65534
       containers:
         - name: wavefront-proxy
-          image: {{ .ImageRegistry }}/proxy:11.4
+          image: {{ .ImageRegistry }}/proxy:12.0
           imagePullPolicy: Always
           env:
             - name: WAVEFRONT_URL

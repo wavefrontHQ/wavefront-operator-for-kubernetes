@@ -2,7 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: controller-manager
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: controller-manager
   name: system
 ---
 apiVersion: apps/v1
@@ -11,18 +12,21 @@ metadata:
   name: controller-manager
   namespace: system
   labels:
-    control-plane: controller-manager
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: controller-manager
 spec:
   selector:
     matchLabels:
-      control-plane: controller-manager
+      app.kubernetes.io/name: wavefront
+      app.kubernetes.io/component: controller-manager
   replicas: 1
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: controller-manager
+        app.kubernetes.io/name: wavefront
+        app.kubernetes.io/component: controller-manager
     spec:
       securityContext:
         runAsNonRoot: true
@@ -34,6 +38,12 @@ spec:
         image: controller:latest
         imagePullPolicy: Always
         name: manager
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

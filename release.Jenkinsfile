@@ -42,7 +42,7 @@ pipeline {
           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
         }
         sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-        sh 'HARBOR_CREDS_USR=$(echo $HARBOR_CREDS_USR | sed \'s/\\$/\\$\\$/\') make docker-xplatform-build generate-kubernetes-yaml'
+        sh 'make docker-xplatform-build released-kubernetes-yaml'
       }
     }
     // deploy to GKE and run manual tests
@@ -61,9 +61,10 @@ pipeline {
           lock("integration-test-gke") {
             sh './hack/jenkins/setup-for-integration-test.sh'
             sh 'make gke-connect-to-cluster'
+            sh 'make clean-cluster'
             sh './hack/test/deploy/deploy-local.sh -t $WAVEFRONT_TOKEN'
             sh './hack/test/run-e2e-tests.sh -t $WAVEFRONT_TOKEN'
-            sh 'make undeploy'
+            sh 'make clean-cluster'
           }
         }
       }
@@ -81,14 +82,6 @@ pipeline {
   }
 
   post {
-    // Notify only on null->failure or success->failure or any->success
-    failure {
-      script {
-        if(currentBuild.previousBuild == null) {
-          slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "RELEASE BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
-        }
-      }
-    }
     regression {
       slackSend (channel: '#tobs-k8po-team', color: '#FF0000', message: "RELEASE BUILD FAILED: <${env.BUILD_URL}|${env.JOB_NAME} [${env.BUILD_NUMBER}]>")
     }
