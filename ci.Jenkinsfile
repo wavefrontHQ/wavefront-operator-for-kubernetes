@@ -100,6 +100,7 @@ pipeline {
                 SOURCE_PREFIX="projects.registry.vmware.com/tanzu_observability"
                 PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"
                 HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
+                INTEGRATION_TEST_ARGS="-r advanced"
               }
               steps {
                 sh './hack/jenkins/setup-for-integration-test.sh'

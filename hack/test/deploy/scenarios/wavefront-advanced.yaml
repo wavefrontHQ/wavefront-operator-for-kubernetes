@@ -28,6 +28,14 @@ spec:
           limits:
             cpu: 200m
             memory: 256Mi
+    logging:
+      enable: true
+      tags:
+        env: non-production
+      filters:
+        tagDenyList:
+          namespace_name:
+            - kube-system
   dataExport:
     wavefrontProxy:
       enable: true

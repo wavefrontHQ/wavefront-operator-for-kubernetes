@@ -11,6 +11,7 @@ function print_usage_and_exit() {
   echo -e "\t-t wavefront token (required)"
   echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
   echo -e "\t-d namespace to create CR in"
+  echo -e "\t-r tests to run (runs all by default)"
   exit 1
 }
 
@@ -142,44 +143,8 @@ function run_static_analysis() {
   fi
 }
 
-function run_test() {
-  local type=$1
-  local checks=$2
-  echo ""
-  green "Running test $type"
-
-  setup_test $type
-
-  if [[ "$checks" =~ .*"unhealthy".* ]]; then
-    run_unhealthy_checks $type
-  elif [[ "$checks" =~ .*"health".* ]]; then
-    run_health_checks $type
-  fi
-
-  if [[ "$checks" =~ .*"static_analysis".* ]]; then
-    run_static_analysis $type
-  fi
-
-  if [[ "$checks" =~ .*"test_wavefront_metrics".* ]]; then
-    run_test_wavefront_metrics $type
-  fi
-
-  clean_up_test $type
-  green "Successfully ran $type test!"
-}
-
-function run_logging_test() {
-  local type="logging"
-  local cluster_name=${CONFIG_CLUSTER_NAME}-$type
-
-  echo ""
-  green "Running test logging"
-
-  setup_test $type
-
-  run_health_checks $type
-
-  echo "Running logging checks ..."
+function run_logging_checks() {
+  printf "Running logging checks ..."
   local max_logs_received=0;
   for _ in {1..12}; do
     max_logs_received=$(kubectl -n $NS logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
@@ -193,11 +158,39 @@ function run_logging_test() {
     red "Expected max logs received to be greater than 0, but got $max_logs_received"
     exit 1
   fi
-
-  clean_up_test $type
-  green "Successfully ran logging test!"
+  echo " done."
 }
 
+function run_test() {
+  local type=$1
+  shift
+  local checks=("$@")
+  echo ""
+  green "Running test $type"
+
+  setup_test $type
+
+  if [[ " ${checks[*]} " =~ " unhealthy " ]]; then
+    run_unhealthy_checks $type
+  elif [[ " ${checks[*]} " =~ " health " ]]; then
+    run_health_checks $type
+  fi
+
+  if [[ " ${checks[*]} " =~ " static_analysis " ]]; then
+    run_static_analysis $type
+  fi
+
+  if [[ " ${checks[*]} " =~ " test_wavefront_metrics " ]]; then
+    run_test_wavefront_metrics $type
+  fi
+
+  if [[ " ${checks[*]} " =~ " logging " ]]; then
+    run_logging_checks
+  fi
+
+  clean_up_test $type
+  green "Successfully ran $type test!"
+}
 
 function main() {
 
@@ -209,8 +202,9 @@ function main() {
   local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   local CONFIG_CLUSTER_NAME=$(create_cluster_name)
+  local tests_to_run=()
 
-  while getopts ":c:t:v:n:d:" opt; do
+  while getopts ":c:t:v:n:d:r:" opt; do
     case $opt in
     c)
       WF_CLUSTER="$OPTARG"
@@ -224,6 +218,9 @@ function main() {
     n)
       CONFIG_CLUSTER_NAME="$OPTARG"
       ;;
+    r)
+      tests_to_run+=("$OPTARG")
+      ;;
     d)
       NS="$OPTARG"
       ;;
@@ -233,6 +230,16 @@ function main() {
     esac
   done
 
+  if [[ ${#tests_to_run[@]} -eq 0 ]]; then
+    tests_to_run=(
+      "validation-errors"
+      "validation-legacy"
+      "allow-legacy-install"
+      "basic"
+      "advanced"
+    )
+  fi
+
   if [[ -z ${WAVEFRONT_TOKEN} ]]; then
     print_usage_and_exit "wavefront token required"
   fi
@@ -241,19 +248,23 @@ function main() {
     CONFIG_CLUSTER_NAME=$(create_cluster_name)
   fi
 
-  cd $REPO_ROOT
+  cd "$REPO_ROOT"
 
-  run_test "validation-errors" "unhealthy"
-
-  run_test "validation-legacy" "unhealthy"
-
-  run_test "allow-legacy-install" "healthy"
-
-  run_test "basic" "health|static_analysis"
-
-  run_test "advanced" "health|test_wavefront_metrics"
-
-  run_logging_test
+  if [[ " ${tests_to_run[*]} " =~ " validation-errors " ]]; then
+    run_test "validation-errors" "unhealthy"
+  fi
+  if [[ " ${tests_to_run[*]} " =~ " validation-legacy " ]]; then
+    run_test "validation-legacy" "unhealthy"
+  fi
+  if [[ " ${tests_to_run[*]} " =~ " allow-legacy-install " ]]; then
+    run_test "allow-legacy-install" "healthy"
+  fi
+  if [[ " ${tests_to_run[*]} " =~ " basic " ]]; then
+    run_test "basic" "health" "static_analysis"
+  fi
+  if [[ " ${tests_to_run[*]} " =~ " advanced " ]]; then
+    run_test "advanced" "health" "test_wavefront_metrics" "logging"
+  fi
 }
 
 main "$@"
