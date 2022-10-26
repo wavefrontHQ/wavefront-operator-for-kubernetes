@@ -46,9 +46,6 @@ import (
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 	baseYaml "gopkg.in/yaml.v2"
 
-	"k8s.io/client-go/kubernetes"
-	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -59,6 +56,7 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 
@@ -75,7 +73,7 @@ type WavefrontReconciler struct {
 
 	Scheme            *runtime.Scheme
 	FS                fs.FS
-	Appsv1            typedappsv1.AppsV1Interface
+	TypedClient       kubernetes.Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
 	MetricConnection  *metric.Connection
 	OperatorVersion   string
@@ -95,6 +93,7 @@ type WavefrontReconciler struct {
 // +kubebuilder:rbac:groups="",namespace=observability-system,resources=serviceaccounts,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=observability-system,resources=configmaps,verbs=get;create;update;patch;delete
 // +kubebuilder:rbac:groups="",namespace=observability-system,resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",namespace=observability-system,resources=pods,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -122,7 +121,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return errorCRTLResult(err)
 	}
 
-	validationResult := validation.Validate(r.Appsv1, wavefront)
+	validationResult := validation.Validate(r.TypedClient.AppsV1(), wavefront)
 	if !validationResult.IsError() {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
@@ -187,7 +186,7 @@ func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme
 		Client:            client,
 		Scheme:            scheme,
 		FS:                os.DirFS(DeployDir),
-		Appsv1:            clientSet.AppsV1(),
+		TypedClient:       clientSet,
 		KubernetesManager: kubernetesManager,
 		MetricConnection:  metric.NewConnection(metric.WavefrontSenderFactory()),
 	}
@@ -295,7 +294,7 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 }
 
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.TypedClient.AppsV1().Deployments(r.namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -359,7 +358,7 @@ func hashValue(bytes []byte) string {
 
 // Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
-	deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
+	deployment, err := r.TypedClient.AppsV1().Deployments(r.namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -377,7 +376,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deployment, err := r.Appsv1.Deployments(r.namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		deployment, err := r.TypedClient.AppsV1().Deployments(r.namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
 		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
 			wavefront.Spec.CanExportData = true
@@ -475,7 +474,7 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 // Reporting Health Status
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationResult validation.Result) (wf.WavefrontStatus, error) {
 
-	wavefrontStatus := health.GenerateWavefrontStatus(r.Appsv1, wavefront)
+	wavefrontStatus := health.GenerateWavefrontStatus(r.TypedClient, wavefront)
 
 	if !validationResult.IsValid() {
 		wavefrontStatus.Status = health.Unhealthy
