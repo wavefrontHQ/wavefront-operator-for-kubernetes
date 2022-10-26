@@ -7,6 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/testhelper/wftest"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/health"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
@@ -25,7 +28,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -38,11 +40,8 @@ import (
 func TestReconcileAll(t *testing.T) {
 	t.Run("creates proxy, proxy service, collector and collector service", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		spec := defaultWFSpec()
-		spec.DataCollection.Logging.Enable = true
-		r, _, _, apps := setupForCreate(spec)
-		ProxyRunning(apps, spec.Namespace, 0)
+		r, wfCR, _, apps := setupScenario(wftest.CR())
+		ProxyRunning(apps, wfCR.Namespace, 0)
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -62,7 +61,7 @@ func TestReconcileAll(t *testing.T) {
 
 		require.Equal(t, 0, len(mockSender.SentMetrics), "should not have sent metrics")
 
-		ProxyRunning(apps, spec.Namespace, 1)
+		ProxyRunning(apps, wfCR.Namespace, 1)
 
 		results, err = r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
@@ -83,11 +82,9 @@ func TestReconcileAll(t *testing.T) {
 
 	t.Run("transitions status when sub-components change (even if overall health is still unhealthy)", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		spec := defaultWFSpec()
-		spec.DataCollection.Logging.Enable = true
-		r, wfCR, objClient, _ := setupForCreate(spec)
-		wfCR.Status.Status = health.Unhealthy
+		r, wfCR, objClient, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Status.Status = health.Unhealthy
+		}))
 		require.NoError(t, objClient.Update(context.Background(), wfCR))
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
@@ -109,10 +106,10 @@ func TestReconcileAll(t *testing.T) {
 
 	t.Run("doesn't create any resources if wavefront spec is invalid", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		invalidWFSpec := defaultWFSpec()
-		invalidWFSpec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
-		r, _, _, _ := setupForCreate(invalidWFSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Enable = true
+			w.Spec.DataExport.ExternalWavefrontProxy.Url = "http://some_url.com"
+		}))
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -133,8 +130,7 @@ func TestReconcileAll(t *testing.T) {
 
 	t.Run("delete CRD should delete resources", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		r, wfCR, apiClient, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		r, wfCR, apiClient, _ := setupStandard("testWavefrontUrl", "updatedToken", "testClusterName")
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
 		_ = r.MetricConnection.Connect("http://example.com")
@@ -156,12 +152,8 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("Defaults Custom Registry", func(t *testing.T) {
-
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		spec := defaultWFSpec()
-		spec.DataCollection.Logging.Enable = true
-		r, _, _, _ := setupForCreate(spec)
+		r, _, _, _ := setupScenario(wftest.CR())
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -176,13 +168,9 @@ func TestReconcileAll(t *testing.T) {
 	})
 
 	t.Run("Can Configure Custom Registry", func(t *testing.T) {
-
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		spec := defaultWFSpec()
-		spec.DataCollection.Logging.Enable = true
-		r, _, _, apps := setupForCreate(spec)
-		UpdateOperatorRegistry(apps, spec.Namespace, "docker.io")
+		r, wfCR, _, apps := setupScenario(wftest.CR())
+		UpdateOperatorRegistry(apps, wfCR.Namespace, "docker.io")
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
@@ -198,17 +186,15 @@ func TestReconcileAll(t *testing.T) {
 
 	t.Run("Child components inherits controller's namespace", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		spec := defaultWFSpec()
-		spec.Namespace = "customNamespace"
-		spec.DataCollection.Logging.Enable = true
-		r, _, _, _ := setupForCreate(spec)
+		r, wfCR, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Namespace = "customNamespace"
+		}))
 		r.KubernetesManager = stubKM
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
 
 		request := defaultRequest()
-		request.Namespace = "customNamespace"
+		request.Namespace = wfCR.Namespace
 		_, err := r.Reconcile(context.Background(), request)
 		require.NoError(t, err)
 
@@ -222,10 +208,10 @@ func TestReconcileAll(t *testing.T) {
 func TestReconcileCollector(t *testing.T) {
 	t.Run("does not create configmap if user specified one", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.CustomConfig = "myconfig"
-		r, _, _, _ := setupForCreate(wfSpec)
+		wfCR := wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.CustomConfig = "myconfig"
+		})
+		r, _, _, _ := setupScenario(wfCR)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -245,26 +231,11 @@ func TestReconcileCollector(t *testing.T) {
 		))
 	})
 
-	t.Run("defaults values for default collector config", func(t *testing.T) {
-		stubKM := testhelper.NewMockKubernetesManager()
-		wfSpec := defaultWFSpec()
-
-		r, _, _, _ := setupForCreate(wfSpec)
-		r.KubernetesManager = stubKM
-
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-
-		require.NoError(t, err)
-
-		require.True(t, stubKM.CollectorConfigMapContains("clusterName: testClusterName", "defaultCollectionInterval: 60s", "enableDiscovery: true"))
-	})
-
 	t.Run("can change the default collection interval", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.DefaultCollectionInterval = "90s"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.DefaultCollectionInterval = "90s"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -276,10 +247,9 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("can disable discovery", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.EnableDiscovery = false
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.EnableDiscovery = false
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -291,11 +261,10 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("can add custom filters", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.Filters.AllowList = []string{"allowSomeTag", "allowOtherTag"}
-		wfSpec.DataCollection.Metrics.Filters.DenyList = []string{"denyAnotherTag", "denyThisTag"}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.Filters.AllowList = []string{"allowSomeTag", "allowOtherTag"}
+			w.Spec.DataCollection.Metrics.Filters.DenyList = []string{"denyAnotherTag", "denyThisTag"}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -308,10 +277,9 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("can add custom tags", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.Tags = map[string]string{"env": "non-production"}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.Tags = map[string]string{"env": "non-production"}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -323,14 +291,12 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("resources set for cluster collector", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Requests.CPU = "200m"
-		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Requests.Memory = "10Mi"
-		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Limits.CPU = "200m"
-		wfSpec.DataCollection.Metrics.ClusterCollector.Resources.Limits.Memory = "256Mi"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.ClusterCollector.Resources.Requests.CPU = "200m"
+			w.Spec.DataCollection.Metrics.ClusterCollector.Resources.Requests.Memory = "10Mi"
+			w.Spec.DataCollection.Metrics.ClusterCollector.Resources.Limits.CPU = "200m"
+			w.Spec.DataCollection.Metrics.ClusterCollector.Resources.Limits.Memory = "256Mi"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -342,14 +308,12 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("resources set for node collector", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Requests.CPU = "200m"
-		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Requests.Memory = "10Mi"
-		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Limits.CPU = "200m"
-		wfSpec.DataCollection.Metrics.NodeCollector.Resources.Limits.Memory = "256Mi"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.NodeCollector.Resources.Requests.CPU = "200m"
+			w.Spec.DataCollection.Metrics.NodeCollector.Resources.Requests.Memory = "10Mi"
+			w.Spec.DataCollection.Metrics.NodeCollector.Resources.Limits.CPU = "200m"
+			w.Spec.DataCollection.Metrics.NodeCollector.Resources.Limits.Memory = "256Mi"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -360,8 +324,7 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("no resources set for node and cluster collector", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		r, _, _, _ := setupForCreate(defaultWFSpec())
+		r, _, _, _ := setupScenario(wftest.CR())
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -378,17 +341,15 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("Values from metrics.filters is propagated to default collector configmap", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics = wf.Metrics{
-			Enable: true,
-			Filters: wf.Filters{
-				DenyList:  []string{"first_deny", "second_deny"},
-				AllowList: []string{"first_allow", "second_allow"},
-			},
-		}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics = wf.Metrics{
+				Enable: true,
+				Filters: wf.Filters{
+					DenyList:  []string{"first_deny", "second_deny"},
+					AllowList: []string{"first_allow", "second_allow"},
+				},
+			}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -423,11 +384,9 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("Tags can be set for default collector configmap", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.Tags = map[string]string{"key1": "value1", "key2": "value2"}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.Tags = map[string]string{"key1": "value1", "key2": "value2"}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -438,11 +397,9 @@ func TestReconcileCollector(t *testing.T) {
 
 	t.Run("Empty tags map should not populate in default collector configmap", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Metrics.Tags = map[string]string{}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Metrics.Tags = map[string]string{}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -452,10 +409,10 @@ func TestReconcileCollector(t *testing.T) {
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
-		disabledMetricsSpec := defaultWFSpec()
-		disabledMetricsSpec.DataCollection.Metrics.Enable = false
-
-		BehavesLikeItCanBeDisabled(t, disabledMetricsSpec,
+		CanBeDisabled(t,
+			wftest.CR(func(w *wf.Wavefront) {
+				w.Spec.DataCollection.Metrics.Enable = false
+			}),
 			&appsv1.DaemonSet{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "apps/v1",
@@ -490,7 +447,7 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("creates proxy and proxy service", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
 
-		r, _, _, _ := setupForCreate(defaultWFSpec())
+		r, _, _, _ := setupScenario(wftest.CR())
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -503,12 +460,11 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("does not create proxy when it is configured to use an external proxy", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Enable = false
-		wfSpec.DataExport.ExternalWavefrontProxy.Url = "https://example.com"
-		r, _, _, apps := setupForCreate(wfSpec)
-		ProxyRunning(apps, wfSpec.Namespace, 0)
+		r, wfCR, _, apps := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Enable = false
+			w.Spec.DataExport.ExternalWavefrontProxy.Url = "https://example.com"
+		}))
+		ProxyRunning(apps, wfCR.Namespace, 0)
 		mockSender := &testhelper.MockSender{}
 		r.MetricConnection = metric.NewConnection(testhelper.StubSenderFactory(mockSender, nil))
 		r.KubernetesManager = stubKM
@@ -526,7 +482,7 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("updates proxy and service", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
 
-		r, _, _, _ := setup("testWavefrontUrl", "updatedToken", "testClusterName")
+		r, _, _, _ := setupStandard("testWavefrontUrl", "updatedToken", "testClusterName")
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -537,11 +493,9 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined metric port", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.MetricPort = 1234
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.MetricPort = 1234
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -555,10 +509,9 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined delta counter port", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.DeltaCounterPort = 50000
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -570,13 +523,15 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined Wavefront tracing", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.Port = 30000
-		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingRate = ".1"
-		wfSpec.DataExport.WavefrontProxy.Tracing.Wavefront.SamplingDuration = 45
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Tracing = wf.Tracing{
+				Wavefront: wf.WavefrontTracing{
+					Port:             30000,
+					SamplingRate:     ".1",
+					SamplingDuration: 45,
+				},
+			}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -591,14 +546,16 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined Jaeger distributed tracing", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.Port = 30001
-		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort = 14250
-		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort = 30080
-		wfSpec.DataExport.WavefrontProxy.Tracing.Jaeger.ApplicationName = "jaeger"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Tracing = wf.Tracing{
+				Jaeger: wf.JaegerTracing{
+					Port:            30001,
+					GrpcPort:        14250,
+					HttpPort:        30080,
+					ApplicationName: "jaeger",
+				},
+			}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -618,12 +575,12 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined ZipKin distributed tracing", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
+		wfSpec := wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
+			w.Spec.DataExport.WavefrontProxy.Tracing.Zipkin.ApplicationName = "zipkin"
+		})
 
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.Port = 9411
-		wfSpec.DataExport.WavefrontProxy.Tracing.Zipkin.ApplicationName = "zipkin"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wfSpec)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -637,14 +594,12 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Histogram.Port = 40000
-		wfSpec.DataExport.WavefrontProxy.Histogram.MinutePort = 40001
-		wfSpec.DataExport.WavefrontProxy.Histogram.HourPort = 40002
-		wfSpec.DataExport.WavefrontProxy.Histogram.DayPort = 40003
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Histogram.Port = 40000
+			w.Spec.DataExport.WavefrontProxy.Histogram.MinutePort = 40001
+			w.Spec.DataExport.WavefrontProxy.Histogram.HourPort = 40002
+			w.Spec.DataExport.WavefrontProxy.Histogram.DayPort = 40003
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -665,11 +620,9 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with a user defined proxy args", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Args = "--prefix dev \r\n --customSourceTags mySource"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -681,12 +634,9 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with preprocessor rules", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
-
-		// TODO: setupForCreate() finally now only returns reconciler... except inside setup()
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Preprocessor = "preprocessor-rules"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -703,14 +653,12 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("resources set for the proxy", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
-		wfSpec.DataExport.WavefrontProxy.Resources.Requests.Memory = "1Gi"
-		wfSpec.DataExport.WavefrontProxy.Resources.Limits.CPU = "1000m"
-		wfSpec.DataExport.WavefrontProxy.Resources.Limits.Memory = "4Gi"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Resources.Requests.CPU = "100m"
+			w.Spec.DataExport.WavefrontProxy.Resources.Requests.Memory = "1Gi"
+			w.Spec.DataExport.WavefrontProxy.Resources.Limits.CPU = "1000m"
+			w.Spec.DataExport.WavefrontProxy.Resources.Limits.Memory = "4Gi"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -726,11 +674,9 @@ func TestReconcileProxy(t *testing.T) {
 	t.Run("adjusting proxy replicas", func(t *testing.T) {
 		t.Run("changes the number of desired replicas", func(t *testing.T) {
 			stubKM := testhelper.NewMockKubernetesManager()
-
-			wfSpec := defaultWFSpec()
-			wfSpec.DataExport.WavefrontProxy.Replicas = 2
-
-			r, _, _, _ := setupForCreate(wfSpec)
+			r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+				w.Spec.DataExport.WavefrontProxy.Replicas = 2
+			}))
 			r.KubernetesManager = stubKM
 
 			_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -742,94 +688,28 @@ func TestReconcileProxy(t *testing.T) {
 			require.Equal(t, int32(2), *deployment.Spec.Replicas)
 		})
 
-		t.Run("defaults to one when no available proxy exists", func(t *testing.T) {
-			stubKM := testhelper.NewMockKubernetesManager()
-
-			wfSpec := defaultWFSpec()
-			wfSpec.DataExport.WavefrontProxy.Replicas = 1
-			wfSpec.DataCollection.Logging.Enable = true
-
-			r, _, _, apps := setupForCreate(wfSpec)
-			r.KubernetesManager = stubKM
-
-			_, err := r.Reconcile(context.Background(), defaultRequest())
-			require.NoError(t, err)
-
-			ProxyRunning(apps, wfSpec.Namespace, 0)
-
-			_, err = r.Reconcile(context.Background(), defaultRequest())
-			require.NoError(t, err)
-
-			require.False(t, stubKM.ClusterCollectorDeploymentContains())
-			require.False(t, stubKM.NodeCollectorDaemonSetContains())
-			require.False(t, stubKM.LoggingDaemonSetContains())
-		})
-
-		t.Run("defaults to one when no proxies exists", func(t *testing.T) {
-			stubKM := testhelper.NewMockKubernetesManager()
-
-			wfSpec := defaultWFSpec()
-			wfSpec.DataExport.WavefrontProxy.Replicas = 2
-			wfSpec.DataCollection.Logging.Enable = true
-
-			r, _, _, _ := setupForCreate(wfSpec)
-			r.KubernetesManager = stubKM
-
-			_, err := r.Reconcile(context.Background(), defaultRequest())
-			require.NoError(t, err)
-
-			nodeCollector, err := stubKM.GetAppliedDaemonSet("node-collector", util.NodeCollectorName)
-			require.NoError(t, err)
-
-			require.Equal(t, "1", nodeCollector.Spec.Template.Annotations["proxy-available-replicas"])
-
-			clusterCollector, err := stubKM.GetAppliedDeployment("cluster-collector", util.ClusterCollectorName)
-			require.NoError(t, err)
-
-			require.Equal(t, "1", clusterCollector.Spec.Template.Annotations["proxy-available-replicas"])
-
-			logging, err := stubKM.GetAppliedDaemonSet("logging", util.LoggingName)
-			require.NoError(t, err)
-
-			require.Equal(t, "1", logging.Spec.Template.Annotations["proxy-available-replicas"])
-		})
-
 		t.Run("updates available replicas when based availability", func(t *testing.T) {
 			stubKM := testhelper.NewMockKubernetesManager()
-
-			wfSpec := defaultWFSpec()
-			wfSpec.DataExport.WavefrontProxy.Replicas = 2
-			wfSpec.DataCollection.Logging.Enable = true
-
-			r, _, _, apps := setupForCreate(wfSpec)
-			ProxyRunning(apps, wfSpec.Namespace, 2)
+			r, wfCR, _, apps := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+				w.Spec.DataExport.WavefrontProxy.Replicas = 2
+			}))
+			ProxyRunning(apps, wfCR.Namespace, 2)
 			r.KubernetesManager = stubKM
 
 			_, err := r.Reconcile(context.Background(), defaultRequest())
 			require.NoError(t, err)
 
-			nodeCollector, err := stubKM.GetAppliedDaemonSet("node-collector", util.NodeCollectorName)
-			require.NoError(t, err)
-
-			require.Equal(t, "2", nodeCollector.Spec.Template.Annotations["proxy-available-replicas"])
-
-			clusterCollector, err := stubKM.GetAppliedDeployment("cluster-collector", util.ClusterCollectorName)
-			require.NoError(t, err)
-
-			require.Equal(t, "2", clusterCollector.Spec.Template.Annotations["proxy-available-replicas"])
-
-			logging, err := stubKM.GetAppliedDaemonSet("logging", util.LoggingName)
-			require.NoError(t, err)
-
-			require.Equal(t, "2", logging.Spec.Template.Annotations["proxy-available-replicas"])
+			require.True(t, stubKM.NodeCollectorDaemonSetContains("proxy-available-replicas: \"2\""))
+			require.True(t, stubKM.ClusterCollectorDeploymentContains("proxy-available-replicas: \"2\""))
+			require.True(t, stubKM.LoggingDaemonSetContains("proxy-available-replicas: \"2\""))
 		})
 	})
 
 	t.Run("can create proxy with HTTP configurations", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		wfCR := wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		})
 		var httpProxySecet = &v1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Secret",
@@ -837,7 +717,7 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: wfSpec.Namespace,
+				Namespace: wfCR.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
@@ -847,8 +727,7 @@ func TestReconcileProxy(t *testing.T) {
 				"tls-root-ca-bundle":  []byte("myCert"),
 			},
 		}
-
-		r, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
+		r, _, _, _ := setupScenario(wfCR, httpProxySecet)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -870,9 +749,9 @@ func TestReconcileProxy(t *testing.T) {
 
 	t.Run("can create proxy with HTTP configurations only contains http-url", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		wfCR := wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.HttpProxy.Secret = "testHttpProxySecret"
+		})
 		var httpProxySecet = &v1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Secret",
@@ -880,15 +759,14 @@ func TestReconcileProxy(t *testing.T) {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "testHttpProxySecret",
-				Namespace: wfSpec.Namespace,
+				Namespace: wfCR.Namespace,
 				UID:       "testUID",
 			},
 			Data: map[string][]byte{
 				"http-url": []byte("https://myproxyhost_url:8080"),
 			},
 		}
-
-		r, _, _, _ := setupForCreate(wfSpec, httpProxySecet)
+		r, _, _, _ := setupScenario(wfCR, httpProxySecet)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -899,10 +777,10 @@ func TestReconcileProxy(t *testing.T) {
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
-		disabledMetricsSpec := defaultWFSpec()
-		disabledMetricsSpec.DataExport.WavefrontProxy.Enable = false
-
-		BehavesLikeItCanBeDisabled(t, disabledMetricsSpec,
+		CanBeDisabled(t,
+			wftest.CR(func(w *wf.Wavefront) {
+				w.Spec.DataExport.WavefrontProxy.Enable = false
+			}),
 			&appsv1.Deployment{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "apps/v1",
@@ -923,11 +801,7 @@ func TestReconcileProxy(t *testing.T) {
 func TestReconcileLogging(t *testing.T) {
 	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = true
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR())
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -941,11 +815,7 @@ func TestReconcileLogging(t *testing.T) {
 
 	t.Run("default resources for logging", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = true
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR())
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -957,15 +827,11 @@ func TestReconcileLogging(t *testing.T) {
 
 	t.Run("resources set for logging", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = true
-
-		wfSpec.DataCollection.Logging.Resources.Requests.CPU = "200m"
-		wfSpec.DataCollection.Logging.Resources.Requests.Memory = "10Mi"
-		wfSpec.DataCollection.Logging.Resources.Limits.Memory = "256Mi"
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Logging.Resources.Requests.CPU = "200m"
+			w.Spec.DataCollection.Logging.Resources.Requests.Memory = "10Mi"
+			w.Spec.DataCollection.Logging.Resources.Limits.Memory = "256Mi"
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -977,15 +843,12 @@ func TestReconcileLogging(t *testing.T) {
 
 	t.Run("Verify log tag allow list", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = true
-		wfSpec.DataCollection.Logging.Filters = wf.LogFilters{
-			TagDenyList:  nil,
-			TagAllowList: map[string][]string{"namespace_name": {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
-		}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Logging.Filters = wf.LogFilters{
+				TagDenyList:  nil,
+				TagAllowList: map[string][]string{"namespace_name": {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
+			}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -998,15 +861,12 @@ func TestReconcileLogging(t *testing.T) {
 
 	t.Run("Verify log tag deny list", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = true
-		wfSpec.DataCollection.Logging.Filters = wf.LogFilters{
-			TagDenyList:  map[string][]string{"namespace_name": {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
-			TagAllowList: nil,
-		}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Logging.Filters = wf.LogFilters{
+				TagDenyList:  map[string][]string{"namespace_name": {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
+				TagAllowList: nil,
+			}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -1019,12 +879,9 @@ func TestReconcileLogging(t *testing.T) {
 
 	t.Run("Verify tags are added to logging pods", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		wfSpec := defaultWFSpec()
-		wfSpec.DataCollection.Logging.Enable = true
-		wfSpec.DataCollection.Logging.Tags = map[string]string{"key1": "value1", "key2": "value2"}
-
-		r, _, _, _ := setupForCreate(wfSpec)
+		r, _, _, _ := setupScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Logging.Tags = map[string]string{"key1": "value1", "key2": "value2"}
+		}))
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -1033,10 +890,10 @@ func TestReconcileLogging(t *testing.T) {
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
-		disabledMetricsSpec := defaultWFSpec()
-		disabledMetricsSpec.DataCollection.Logging.Enable = false
-
-		BehavesLikeItCanBeDisabled(t, disabledMetricsSpec,
+		CanBeDisabled(t,
+			wftest.CR(func(w *wf.Wavefront) {
+				w.Spec.DataCollection.Logging.Enable = false
+			}),
 			&appsv1.DaemonSet{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "apps/v1",
@@ -1113,11 +970,10 @@ func UpdateOperatorRegistry(apps typedappsv1.AppsV1Interface, namespace string, 
 	}, metav1.UpdateOptions{})
 }
 
-func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, existingResources ...runtime.Object) {
+func CanBeDisabled(t *testing.T, wfCR *wf.Wavefront, existingResources ...runtime.Object) {
 	t.Run("on CR creation", func(t *testing.T) {
 		stubKM := testhelper.NewMockKubernetesManager()
-
-		r, _, _, _ := setupForCreate(disabledSpec)
+		r, _, _, _ := setupScenario(wfCR)
 		r.KubernetesManager = stubKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -1137,8 +993,7 @@ func BehavesLikeItCanBeDisabled(t *testing.T, disabledSpec wf.WavefrontSpec, exi
 
 	t.Run("on CR update", func(t *testing.T) {
 		mockKM := testhelper.NewMockKubernetesManager()
-
-		r, _, _, _ := setupForCreate(disabledSpec, existingResources...)
+		r, _, _, _ := setupScenario(wfCR, existingResources...)
 		r.KubernetesManager = mockKM
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -1211,6 +1066,7 @@ func containsPortInServicePort(t *testing.T, port int32, stubKM testhelper.MockK
 }
 
 func containsPortInContainers(t *testing.T, proxyArgName string, stubKM testhelper.MockKubernetesManager, port int32) bool {
+	t.Helper()
 	deploymentYAMLUnstructured, err := stubKM.GetAppliedYAML(
 		"apps/v1",
 		"Deployment",
@@ -1230,8 +1086,6 @@ func containsPortInContainers(t *testing.T, proxyArgName string, stubKM testhelp
 			foundPort = true
 			break
 		}
-
-		fmt.Printf("%+v", containerPort)
 	}
 	require.True(t, foundPort, fmt.Sprintf("Did not find the port: %d", port))
 
@@ -1257,40 +1111,7 @@ func containsProxyArg(t *testing.T, proxyArg string, stubKM testhelper.MockKuber
 	require.Contains(t, value, fmt.Sprintf("%s", proxyArg))
 }
 
-func defaultWFSpec() wf.WavefrontSpec {
-	return wf.WavefrontSpec{
-		Namespace:            "testNamespace",
-		ClusterName:          "testClusterName",
-		WavefrontUrl:         "testWavefrontUrl",
-		WavefrontTokenSecret: "testToken",
-		DataExport: wf.DataExport{
-			WavefrontProxy: wf.WavefrontProxy{
-				Enable:     true,
-				MetricPort: 2878,
-			},
-		},
-		DataCollection: wf.DataCollection{
-			Metrics: wf.Metrics{
-				Enable:                    true,
-				EnableDiscovery:           true,
-				DefaultCollectionInterval: "60s",
-			},
-		},
-		ControllerManagerUID: "",
-	}
-}
-
-func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {
-	var wfCR = &wf.Wavefront{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: spec.Namespace,
-			Name:      "wavefront",
-		},
-		Spec:   spec,
-		Status: wf.WavefrontStatus{},
-	}
-
+func setupScenario(wfCR *wf.Wavefront, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {
 	s := scheme.Scheme
 	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.Service{})
 	s.AddKnownTypes(wf.GroupVersion, wfCR)
@@ -1307,7 +1128,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "wavefront-controller-manager",
-			Namespace: spec.Namespace,
+			Namespace: wfCR.Namespace,
 			UID:       "testUID",
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -1328,7 +1149,7 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ProxyName,
-			Namespace: spec.Namespace,
+			Namespace: wfCR.Namespace,
 		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: 1,
@@ -1351,14 +1172,12 @@ func setupForCreate(spec wf.WavefrontSpec, initObjs ...runtime.Object) (*control
 	return r, wfCR, apiClient, fakeClient.AppsV1()
 }
 
-func setup(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {
-	wfSpec := defaultWFSpec()
-	wfSpec.WavefrontUrl = wavefrontUrl
-	wfSpec.WavefrontTokenSecret = wavefrontTokenSecret
-	wfSpec.ClusterName = clusterName
-	reconciler, wfCR, apiClient, fakesAppsV1 := setupForCreate(wfSpec)
-
-	return reconciler, wfCR, apiClient, fakesAppsV1
+func setupStandard(wavefrontUrl, wavefrontTokenSecret, clusterName string) (*controllers.WavefrontReconciler, *wf.Wavefront, client.WithWatch, typedappsv1.AppsV1Interface) {
+	return setupScenario(wftest.CR(func(w *wf.Wavefront) {
+		w.Spec.WavefrontUrl = wavefrontUrl
+		w.Spec.WavefrontTokenSecret = wavefrontTokenSecret
+		w.Spec.ClusterName = clusterName
+	}))
 }
 
 func defaultRequest() reconcile.Request {
