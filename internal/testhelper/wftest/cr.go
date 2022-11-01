@@ -2,20 +2,16 @@ package wftest
 
 import (
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type CROption func(*wf.Wavefront)
-
-func CR(options ...CROption) *wf.Wavefront {
+func CR(options ...func(*wf.Wavefront)) *wf.Wavefront {
 	cr := &wf.Wavefront{
-		TypeMeta: v1.TypeMeta{},
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "wavefront",
-			Namespace: "testNamespace",
+			Namespace: DefaultNamespace,
 		},
 		Spec: wf.WavefrontSpec{
-			Namespace:            "testNamespace",
 			ClusterName:          "testClusterName",
 			WavefrontUrl:         "testWavefrontUrl",
 			WavefrontTokenSecret: "testToken",
