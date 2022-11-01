@@ -600,6 +600,14 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - secrets
   verbs:
   - get
@@ -909,7 +917,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.1
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.2
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
