@@ -3,9 +3,10 @@ package kubernetes_manager
 import (
 	"context"
 
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -42,10 +43,7 @@ func (km *KubernetesManager) ApplyResources(resourceYAMLs []string, exclude func
 
 		var oldObject unstructured.Unstructured
 		oldObject.SetGroupVersionKind(*gvk)
-		err = km.objClient.Get(context.TODO(), types.NamespacedName{
-			Namespace: object.GetNamespace(),
-			Name:      object.GetName(),
-		}, &oldObject)
+		err = km.objClient.Get(context.Background(), util.ObjKey(object.GetNamespace(), object.GetName()), &oldObject)
 		if errors.IsNotFound(err) {
 			err = km.objClient.Create(context.Background(), object)
 		} else if err == nil {

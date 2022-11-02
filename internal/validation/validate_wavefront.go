@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -67,12 +66,12 @@ func validateEnvironment(objClient client.Client, wavefront *wf.Wavefront) error
 	for namespace, resourceMap := range legacyComponentsToCheck {
 		for resourceName, resourceType := range resourceMap {
 			if resourceType == util.DaemonSet {
-				if daemonSetExists(objClient, namespace, resourceName) {
+				if daemonSetExists(objClient, util.ObjKey(namespace, resourceName)) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
 			if resourceType == util.Deployment {
-				if deploymentExists(objClient, namespace, resourceName) {
+				if deploymentExists(objClient, util.ObjKey(namespace, resourceName)) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
@@ -119,34 +118,24 @@ func compareQuantities(request string, limit string) int {
 	return requestQuantity.Cmp(limitQuanity)
 }
 
-func deploymentExists(client client.Client, namespace string, name string) bool {
-	var ds appsv1.Deployment
-	err := client.Get(context.Background(), types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}, &ds)
-	return err == nil
+func deploymentExists(objClient client.Client, key client.ObjectKey) bool {
+	return objClient.Get(context.Background(), key, &appsv1.Deployment{}) == nil
 }
 
-func daemonSetExists(client client.Client, namespace string, name string) bool {
-	var ds appsv1.DaemonSet
-	err := client.Get(context.Background(), types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}, &ds)
-	return err == nil
+func daemonSetExists(objClient client.Client, key client.ObjectKey) bool {
+	return objClient.Get(context.Background(), key, &appsv1.DaemonSet{}) == nil
 }
 
-func areAnyComponentsDeployed(client client.Client, namespace string) bool {
-	exists := deploymentExists(client, namespace, util.ProxyName)
+func areAnyComponentsDeployed(objClient client.Client, namespace string) bool {
+	exists := deploymentExists(objClient, util.ObjKey(namespace, util.ProxyName))
 	if exists {
 		return exists
 	}
-	exists = daemonSetExists(client, namespace, util.NodeCollectorName)
+	exists = daemonSetExists(objClient, util.ObjKey(namespace, util.NodeCollectorName))
 	if exists {
 		return exists
 	}
-	exists = deploymentExists(client, namespace, util.ClusterCollectorName)
+	exists = deploymentExists(objClient, util.ObjKey(namespace, util.ClusterCollectorName))
 	if exists {
 		return exists
 	}

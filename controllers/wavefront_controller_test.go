@@ -19,7 +19,6 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/stretchr/testify/require"
@@ -92,10 +91,11 @@ func TestReconcileAll(t *testing.T) {
 
 		var reconciledWFCR wf.Wavefront
 
-		require.NoError(t, r.Client.Get(context.Background(), types.NamespacedName{
-			Namespace: wfCR.Namespace,
-			Name:      wfCR.Name,
-		}, &reconciledWFCR))
+		require.NoError(t, r.Client.Get(
+			context.Background(),
+			util.ObjKey(wfCR.Namespace, wfCR.Name),
+			&reconciledWFCR,
+		))
 
 		require.Contains(t, reconciledWFCR.Status.Status, health.Unhealthy)
 		require.Contains(t, reconciledWFCR.Status.ResourceStatuses, wf.ResourceStatus{Status: "Running (1/1)", Name: "wavefront-proxy"})
@@ -1072,8 +1072,5 @@ func containsObject(runtimeObjs []runtime.Object, matches func(obj client.Object
 }
 
 func defaultRequest() reconcile.Request {
-	return reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: wftest.DefaultNamespace,
-		Name:      "wavefront",
-	}}
+	return reconcile.Request{NamespacedName: util.ObjKey(wftest.DefaultNamespace, "wavefront")}
 }

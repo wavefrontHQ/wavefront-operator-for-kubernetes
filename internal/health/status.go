@@ -7,7 +7,6 @@ import (
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
@@ -31,33 +30,28 @@ func GenerateWavefrontStatus(objClient client.Client, wavefront *wf.Wavefront) w
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		componentStatuses = append(componentStatuses, deploymentStatus(
 			objClient,
-			wavefront.Namespace,
-			util.ProxyName,
+			util.ObjKey(wavefront.Namespace, util.ProxyName),
 		))
 	}
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		componentStatuses = append(componentStatuses, deploymentStatus(
 			objClient,
-			wavefront.Namespace,
-			util.ClusterCollectorName,
+			util.ObjKey(wavefront.Namespace, util.ClusterCollectorName),
 		))
 		componentStatuses = append(componentStatuses, daemonSetStatus(
 			objClient,
-			wavefront.Namespace,
-			util.NodeCollectorName,
+			util.ObjKey(wavefront.Namespace, util.NodeCollectorName),
 		))
 	}
 	if wavefront.Spec.DataCollection.Logging.Enable {
 		componentStatuses = append(componentStatuses, daemonSetStatus(
 			objClient,
-			wavefront.Namespace,
-			util.LoggingName,
+			util.ObjKey(wavefront.Namespace, util.LoggingName),
 		))
 	}
 	componentStatuses = append(componentStatuses, deploymentStatus(
 		objClient,
-		wavefront.Namespace,
-		util.OperatorName,
+		util.ObjKey(wavefront.Namespace, util.OperatorName),
 	))
 	return reportAggregateStatus(componentStatuses, wavefront.GetCreationTimestamp().Time)
 }
@@ -91,15 +85,12 @@ func reportAggregateStatus(componentStatuses []wf.ResourceStatus, createdAt time
 	return status
 }
 
-func deploymentStatus(objClient client.Client, namespace string, name string) wf.ResourceStatus {
+func deploymentStatus(objClient client.Client, key client.ObjectKey) wf.ResourceStatus {
 	componentStatus := wf.ResourceStatus{
-		Name: name,
+		Name: key.Name,
 	}
 	var deployment appsv1.Deployment
-	err := objClient.Get(context.Background(), types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}, &deployment)
+	err := objClient.Get(context.Background(), key, &deployment)
 	if err != nil {
 		return reportNotRunning(componentStatus)
 	}
@@ -111,21 +102,18 @@ func deploymentStatus(objClient client.Client, namespace string, name string) wf
 	componentStatus = reportStatusFromPod(
 		componentStatus,
 		objClient,
-		namespace,
+		key.Namespace,
 		deployment.Labels["app.kubernetes.io/component"],
 	)
 	return componentStatus
 }
 
-func daemonSetStatus(objClient client.Client, namespace string, name string) wf.ResourceStatus {
+func daemonSetStatus(objClient client.Client, key client.ObjectKey) wf.ResourceStatus {
 	componentStatus := wf.ResourceStatus{
-		Name: name,
+		Name: key.Name,
 	}
 	var daemonset appsv1.DaemonSet
-	err := objClient.Get(context.Background(), types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	}, &daemonset)
+	err := objClient.Get(context.Background(), key, &daemonset)
 	if err != nil {
 		return reportNotRunning(componentStatus)
 	}
@@ -137,7 +125,7 @@ func daemonSetStatus(objClient client.Client, namespace string, name string) wf.
 	componentStatus = reportStatusFromPod(
 		componentStatus,
 		objClient,
-		namespace,
+		key.Namespace,
 		daemonset.Labels["app.kubernetes.io/component"],
 	)
 	return componentStatus
