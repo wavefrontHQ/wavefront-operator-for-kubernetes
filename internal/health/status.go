@@ -6,18 +6,16 @@ import (
 	strings "strings"
 	"time"
 
-	apicorev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 const (
@@ -28,42 +26,37 @@ const (
 	OOMTimeout     = time.Minute * 5
 )
 
-type Client interface {
-	AppsV1() appsv1.AppsV1Interface
-	CoreV1() corev1.CoreV1Interface
-}
-
-func GenerateWavefrontStatus(client Client, wavefront *wf.Wavefront) wf.WavefrontStatus {
+func GenerateWavefrontStatus(objClient client.Client, wavefront *wf.Wavefront) wf.WavefrontStatus {
 	var componentStatuses []wf.ResourceStatus
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
 		componentStatuses = append(componentStatuses, deploymentStatus(
-			client.AppsV1().Deployments(wavefront.Spec.Namespace),
-			client.CoreV1().Pods(wavefront.Spec.Namespace),
+			objClient,
+			wavefront.Namespace,
 			util.ProxyName,
 		))
 	}
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		componentStatuses = append(componentStatuses, deploymentStatus(
-			client.AppsV1().Deployments(wavefront.Spec.Namespace),
-			client.CoreV1().Pods(wavefront.Spec.Namespace),
+			objClient,
+			wavefront.Namespace,
 			util.ClusterCollectorName,
 		))
 		componentStatuses = append(componentStatuses, daemonSetStatus(
-			client.AppsV1().DaemonSets(wavefront.Spec.Namespace),
-			client.CoreV1().Pods(wavefront.Spec.Namespace),
+			objClient,
+			wavefront.Namespace,
 			util.NodeCollectorName,
 		))
 	}
 	if wavefront.Spec.DataCollection.Logging.Enable {
 		componentStatuses = append(componentStatuses, daemonSetStatus(
-			client.AppsV1().DaemonSets(wavefront.Spec.Namespace),
-			client.CoreV1().Pods(wavefront.Spec.Namespace),
+			objClient,
+			wavefront.Namespace,
 			util.LoggingName,
 		))
 	}
 	componentStatuses = append(componentStatuses, deploymentStatus(
-		client.AppsV1().Deployments(wavefront.Spec.Namespace),
-		client.CoreV1().Pods(wavefront.Spec.Namespace),
+		objClient,
+		wavefront.Namespace,
 		util.OperatorName,
 	))
 	return reportAggregateStatus(componentStatuses, wavefront.GetCreationTimestamp().Time)
@@ -98,11 +91,15 @@ func reportAggregateStatus(componentStatuses []wf.ResourceStatus, createdAt time
 	return status
 }
 
-func deploymentStatus(deployments appsv1.DeploymentInterface, pods corev1.PodInterface, name string) wf.ResourceStatus {
+func deploymentStatus(objClient client.Client, namespace string, name string) wf.ResourceStatus {
 	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
-	deployment, err := deployments.Get(context.Background(), name, v1.GetOptions{})
+	var deployment appsv1.Deployment
+	err := objClient.Get(context.Background(), types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}, &deployment)
 	if err != nil {
 		return reportNotRunning(componentStatus)
 	}
@@ -113,29 +110,35 @@ func deploymentStatus(deployments appsv1.DeploymentInterface, pods corev1.PodInt
 	)
 	componentStatus = reportStatusFromPod(
 		componentStatus,
-		pods,
+		objClient,
+		namespace,
 		deployment.Labels["app.kubernetes.io/component"],
 	)
 	return componentStatus
 }
 
-func daemonSetStatus(daemonsets appsv1.DaemonSetInterface, pods corev1.PodInterface, name string) wf.ResourceStatus {
+func daemonSetStatus(objClient client.Client, namespace string, name string) wf.ResourceStatus {
 	componentStatus := wf.ResourceStatus{
 		Name: name,
 	}
-	daemonSet, err := daemonsets.Get(context.Background(), name, v1.GetOptions{})
+	var daemonset appsv1.DaemonSet
+	err := objClient.Get(context.Background(), types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}, &daemonset)
 	if err != nil {
 		return reportNotRunning(componentStatus)
 	}
 	componentStatus = reportStatusFromApp(
 		componentStatus,
-		daemonSet.Status.NumberReady,
-		daemonSet.Status.DesiredNumberScheduled,
+		daemonset.Status.NumberReady,
+		daemonset.Status.DesiredNumberScheduled,
 	)
 	componentStatus = reportStatusFromPod(
 		componentStatus,
-		pods,
-		daemonSet.Labels["app.kubernetes.io/component"],
+		objClient,
+		namespace,
+		daemonset.Labels["app.kubernetes.io/component"],
 	)
 	return componentStatus
 }
@@ -161,10 +164,14 @@ func reportStatusFromApp(componentStatus wf.ResourceStatus, ready int32, desired
 	return componentStatus
 }
 
-func reportStatusFromPod(componentStatus wf.ResourceStatus, pods corev1.PodInterface, labelComponent string) wf.ResourceStatus {
-	podsList, err := pods.List(context.Background(), metav1.ListOptions{
-		LabelSelector: componentPodSelector(labelComponent).String(),
-	})
+func reportStatusFromPod(componentStatus wf.ResourceStatus, objClient client.Client, namespace string, labelComponent string) wf.ResourceStatus {
+	var podsList corev1.PodList
+	err := objClient.List(
+		context.Background(),
+		&podsList,
+		client.InNamespace(namespace),
+		componentPodSelector(labelComponent),
+	)
 	if err != nil {
 		log.Log.Error(err, "error getting pod status")
 		return componentStatus
@@ -181,13 +188,14 @@ func reportStatusFromPod(componentStatus wf.ResourceStatus, pods corev1.PodInter
 	return componentStatus
 }
 
-func componentPodSelector(componentName string) labels.Selector {
-	nameSelector, _ := labels.NewRequirement("app.kubernetes.io/name", selection.Equals, []string{"wavefront"})
-	componentSelector, _ := labels.NewRequirement("app.kubernetes.io/component", selection.Equals, []string{componentName})
-	return labels.NewSelector().Add(*nameSelector, *componentSelector)
+func componentPodSelector(componentName string) client.MatchingLabels {
+	return client.MatchingLabels{
+		"app.kubernetes.io/name":      "wavefront",
+		"app.kubernetes.io/component": componentName,
+	}
 }
 
-func oomKilledRecently(terminated *apicorev1.ContainerStateTerminated) bool {
+func oomKilledRecently(terminated *corev1.ContainerStateTerminated) bool {
 	return terminated != nil &&
 		terminated.ExitCode == 137 &&
 		time.Now().Sub(terminated.FinishedAt.Time) < OOMTimeout

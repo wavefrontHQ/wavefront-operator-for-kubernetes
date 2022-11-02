@@ -29,6 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
+
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
@@ -49,14 +51,12 @@ import (
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 
@@ -71,9 +71,7 @@ const DeployDir = "../deploy/internal"
 type WavefrontReconciler struct {
 	client.Client
 
-	Scheme            *runtime.Scheme
 	FS                fs.FS
-	TypedClient       kubernetes.Interface
 	KubernetesManager kubernetes_manager.KubernetesManager
 	MetricConnection  *metric.Connection
 	OperatorVersion   string
@@ -121,7 +119,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return errorCRTLResult(err)
 	}
 
-	validationResult := validation.Validate(r.TypedClient.AppsV1(), wavefront)
+	validationResult := validation.Validate(r.Client, wavefront)
 	if !validationResult.IsError() {
 		err = r.readAndCreateResources(wavefront.Spec)
 		if err != nil {
@@ -174,8 +172,6 @@ func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme
 		return nil, err
 	}
 
-	clientSet, err := kubernetes.NewForConfig(config)
-
 	kubernetesManager, err := kubernetes_manager.NewKubernetesManager(mapper, dynamicClient)
 	if err != nil {
 		return nil, err
@@ -184,9 +180,7 @@ func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme
 	reconciler := &WavefrontReconciler{
 		OperatorVersion:   operatorVersion,
 		Client:            client,
-		Scheme:            scheme,
 		FS:                os.DirFS(DeployDir),
-		TypedClient:       clientSet,
 		KubernetesManager: kubernetesManager,
 		MetricConnection:  metric.NewConnection(metric.WavefrontSenderFactory()),
 	}
@@ -293,8 +287,20 @@ func (r *WavefrontReconciler) readAndDeleteResources() error {
 	return nil
 }
 
+func (r *WavefrontReconciler) deployment(name string) (*appsv1.Deployment, error) {
+	var deployment appsv1.Deployment
+	err := r.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: r.namespace,
+		Name:      name,
+	}, &deployment)
+	if err != nil {
+		return nil, err
+	}
+	return &deployment, err
+}
+
 func (r *WavefrontReconciler) getControllerManagerUID() (types.UID, error) {
-	deployment, err := r.TypedClient.AppsV1().Deployments(r.namespace).Get(context.Background(), "wavefront-controller-manager", v1.GetOptions{})
+	deployment, err := r.deployment(util.OperatorName)
 	if err != nil {
 		return "", err
 	}
@@ -358,7 +364,7 @@ func hashValue(bytes []byte) string {
 
 // Preprocessing Wavefront Spec
 func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Context) error {
-	deployment, err := r.TypedClient.AppsV1().Deployments(r.namespace).Get(context.Background(), util.OperatorName, v1.GetOptions{})
+	deployment, err := r.deployment(util.OperatorName)
 	if err != nil {
 		return err
 	}
@@ -376,7 +382,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 
 	wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = 1
 	if wavefront.Spec.DataExport.WavefrontProxy.Enable {
-		deployment, err := r.TypedClient.AppsV1().Deployments(r.namespace).Get(context.Background(), util.ProxyName, v1.GetOptions{})
+		deployment, err := r.deployment(util.ProxyName)
 		if err == nil && deployment.Status.AvailableReplicas > 0 {
 			wavefront.Spec.DataExport.WavefrontProxy.AvailableReplicas = int(deployment.Status.AvailableReplicas)
 			wavefront.Spec.CanExportData = true
@@ -474,7 +480,7 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 // Reporting Health Status
 func (r *WavefrontReconciler) reportHealthStatus(ctx context.Context, wavefront *wf.Wavefront, validationResult validation.Result) (wf.WavefrontStatus, error) {
 
-	wavefrontStatus := health.GenerateWavefrontStatus(r.TypedClient, wavefront)
+	wavefrontStatus := health.GenerateWavefrontStatus(r.Client, wavefront)
 
 	if !validationResult.IsValid() {
 		wavefrontStatus.Status = health.Unhealthy

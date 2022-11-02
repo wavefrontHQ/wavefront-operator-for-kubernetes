@@ -3,6 +3,9 @@ package validation
 import (
 	"testing"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
 	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
@@ -10,8 +13,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	k8sfake "k8s.io/client-go/kubernetes/fake"
-	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
 func TestValidate(t *testing.T) {
@@ -257,27 +258,29 @@ func requireValidationMessage(t *testing.T, validationError error, namespace str
 	require.Equal(t, legacyEnvironmentError(namespace).Error(), validationError.Error())
 }
 
-func legacyEnvironmentSetup(namespace string) typedappsv1.AppsV1Interface {
-	collectorDaemonSet := &appsv1.DaemonSet{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "wavefront-collector",
-			Namespace: namespace,
+func legacyEnvironmentSetup(namespace string) client.Client {
+	return setup(
+		&appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-collector",
+				Namespace: namespace,
+			},
 		},
-	}
-	proxyDeployment := &appsv1.Deployment{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "wavefront-proxy",
-			Namespace: namespace,
+		&appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "wavefront-proxy",
+				Namespace: namespace,
+			},
 		},
-	}
-	appsV1 := setup(collectorDaemonSet, proxyDeployment)
-	return appsV1
+	)
 }
 
-func setup(initObjs ...runtime.Object) typedappsv1.AppsV1Interface {
-	return k8sfake.NewSimpleClientset(initObjs...).AppsV1()
+func setup(initObjs ...runtime.Object) client.Client {
+	return fake.NewClientBuilder().
+		WithRuntimeObjects(initObjs...).
+		Build()
 }
 
 func defaultWFCR() *wf.Wavefront {
