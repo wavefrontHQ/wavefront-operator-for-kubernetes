@@ -1011,11 +1011,11 @@ func emptyScenario(wfCR *wf.Wavefront, initObjs ...runtime.Object) (*controllers
 		initObjs = append(initObjs, operator)
 	}
 
-	clientBuilder := fake.NewClientBuilder()
+	clientBuilder := fake.NewClientBuilder().WithScheme(s)
 	if wfCR != nil {
-		clientBuilder = clientBuilder.WithScheme(s).WithObjects(wfCR)
+		clientBuilder = clientBuilder.WithObjects(wfCR)
 	}
-	clientBuilder = clientBuilder.WithScheme(s).WithRuntimeObjects(initObjs...)
+	clientBuilder = clientBuilder.WithRuntimeObjects(initObjs...)
 	objClient := clientBuilder.Build()
 
 	mockKM := testhelper.NewMockKubernetesManager()
