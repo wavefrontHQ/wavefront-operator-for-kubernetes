@@ -80,8 +80,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var controller *controllers.WavefrontReconciler
-	controller, err = controllers.NewWavefrontReconciler(version, mgr.GetClient(), mgr.GetScheme())
+	controller, err := controllers.NewWavefrontReconciler(version, mgr.GetClient())
 	if err != nil {
 		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)

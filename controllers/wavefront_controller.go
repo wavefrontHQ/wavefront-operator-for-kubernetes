@@ -51,15 +51,8 @@ import (
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/discovery/cached/memory"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/restmapper"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -67,12 +60,17 @@ import (
 
 const DeployDir = "../deploy/internal"
 
+type KubernetesManager interface {
+	ApplyResources(resourceYAMLs []string, exclude func(*unstructured.Unstructured) bool) error
+	DeleteResources(resourceYAMLs []string) error
+}
+
 // WavefrontReconciler reconciles a Wavefront object
 type WavefrontReconciler struct {
 	client.Client
 
 	FS                fs.FS
-	KubernetesManager kubernetes_manager.KubernetesManager
+	KubernetesManager KubernetesManager
 	MetricConnection  *metric.Connection
 	OperatorVersion   string
 	namespace         string
@@ -155,37 +153,14 @@ func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme *runtime.Scheme) (operator *WavefrontReconciler, err error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	dc, err := discovery.NewDiscoveryClientForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
-
-	dynamicClient, err := dynamic.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	kubernetesManager, err := kubernetes_manager.NewKubernetesManager(mapper, dynamicClient)
-	if err != nil {
-		return nil, err
-	}
-
-	reconciler := &WavefrontReconciler{
+func NewWavefrontReconciler(operatorVersion string, client client.Client) (operator *WavefrontReconciler, err error) {
+	return &WavefrontReconciler{
 		OperatorVersion:   operatorVersion,
 		Client:            client,
 		FS:                os.DirFS(DeployDir),
-		KubernetesManager: kubernetesManager,
+		KubernetesManager: kubernetes_manager.NewKubernetesManager(client),
 		MetricConnection:  metric.NewConnection(metric.WavefrontSenderFactory()),
-	}
-
-	return reconciler, nil
+	}, nil
 }
 
 // Read, Create, Update and Delete Resources.

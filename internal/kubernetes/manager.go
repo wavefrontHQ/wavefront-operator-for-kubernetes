@@ -4,110 +4,71 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/client-go/dynamic"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type KubernetesManager interface {
-	ApplyResources(resourceYamls []string, filterObject func(*unstructured.Unstructured) bool) error
-	DeleteResources(resourceYamls []string) error
+type Client interface {
+	Get(ctx context.Context, key client.ObjectKey, obj client.Object) error
+
+	Create(ctx context.Context, obj client.Object, opts ...client.CreateOption) error
+	Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error
+	Delete(ctx context.Context, obj client.Object, opts ...client.DeleteOption) error
 }
 
-func NewKubernetesManager(mapper meta.RESTMapper, dynamicClient dynamic.Interface) (KubernetesManager, error) {
-	return &kubernetesManager{
-		RestMapper:    mapper,
-		DynamicClient: dynamicClient,
-	}, nil
+type KubernetesManager struct {
+	objClient Client
 }
 
-type kubernetesManager struct {
-	RestMapper    meta.RESTMapper
-	DynamicClient dynamic.Interface
+func NewKubernetesManager(objClient Client) *KubernetesManager {
+	return &KubernetesManager{objClient: objClient}
 }
 
-func (km kubernetesManager) ApplyResources(resourceYAMLs []string, filterObject func(*unstructured.Unstructured) bool) error {
-	var dynamicClient dynamic.ResourceInterface
-
-	for _, resource := range resourceYAMLs {
+func (km *KubernetesManager) ApplyResources(resourceYAMLs []string, exclude func(*unstructured.Unstructured) bool) error {
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	for _, resourceYAML := range resourceYAMLs {
 		object := &unstructured.Unstructured{}
-		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+		_, gvk, err := resourceDecoder.Decode([]byte(resourceYAML), nil, object)
 		if err != nil {
 			return err
 		}
 
-		if filterObject(object) {
+		if exclude(object) {
 			continue
 		}
 
-		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		var oldObject unstructured.Unstructured
+		oldObject.SetGroupVersionKind(*gvk)
+		err = km.objClient.Get(context.TODO(), types.NamespacedName{
+			Namespace: object.GetNamespace(),
+			Name:      object.GetName(),
+		}, &oldObject)
+		if errors.IsNotFound(err) {
+			err = km.objClient.Create(context.Background(), object)
+		} else if err == nil {
+			err = km.objClient.Patch(context.Background(), object, client.MergeFrom(&oldObject))
+		}
 		if err != nil {
 			return err
 		}
-
-		if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-			dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(object.GetNamespace())
-		} else {
-			dynamicClient = km.DynamicClient.Resource(mapping.Resource)
-		}
-
-		_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
-		if err != nil && errors.IsNotFound(err) {
-			_, err = dynamicClient.Create(context.TODO(), object, v1.CreateOptions{})
-			if err != nil {
-				return err
-			}
-		} else if err == nil {
-			data, err := json.Marshal(object)
-			if err != nil {
-				return err
-			}
-			_, err = dynamicClient.Patch(context.TODO(), object.GetName(), types.MergePatchType, data, v1.PatchOptions{})
-			if err != nil {
-				return err
-			}
-		}
 	}
-
 	return nil
 }
 
-func (km kubernetesManager) DeleteResources(resourceYAMLs []string) error {
-	for _, resource := range resourceYAMLs {
-		var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-
+func (km *KubernetesManager) DeleteResources(resourceYAMLs []string) error {
+	var resourceDecoder = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	for _, resourceYAML := range resourceYAMLs {
 		object := &unstructured.Unstructured{}
-		_, gvk, err := resourceDecoder.Decode([]byte(resource), nil, object)
+		_, _, err := resourceDecoder.Decode([]byte(resourceYAML), nil, object)
 		if err != nil {
 			return err
 		}
 
-		mapping, err := km.RestMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-		if err != nil {
-			return err
-		}
-
-		var dynamicClient dynamic.ResourceInterface
-		if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-			dynamicClient = km.DynamicClient.Resource(mapping.Resource).Namespace(object.GetNamespace())
-		} else {
-			dynamicClient = km.DynamicClient.Resource(mapping.Resource)
-		}
-
-		_, err = dynamicClient.Get(context.TODO(), object.GetName(), v1.GetOptions{})
-		if err != nil && errors.IsNotFound(err) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		err = dynamicClient.Delete(context.TODO(), object.GetName(), v1.DeleteOptions{})
-		if err != nil {
+		err = km.objClient.Delete(context.TODO(), object)
+		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
 	}
