@@ -641,10 +641,8 @@ rules:
   - create
   - delete
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
   - apps
   resources:
@@ -919,7 +917,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.3-alpha-8d60b1fe
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.3-alpha-dcb7d78d
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
