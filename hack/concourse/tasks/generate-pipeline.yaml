@@ -1,0 +1,9 @@
+---
+platform: linux
+#image_resource:
+
+inputs:
+- name: ci_repo
+params:
+run:
+  path: ci_repo/hack/concourse/tasks/generate-pipeline.sh
