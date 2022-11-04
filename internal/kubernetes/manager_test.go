@@ -191,7 +191,6 @@ func TestKubernetesManager(t *testing.T) {
 	})
 }
 
-
 func excludeEverything(_ *unstructured.Unstructured) bool {
 	return true
 }

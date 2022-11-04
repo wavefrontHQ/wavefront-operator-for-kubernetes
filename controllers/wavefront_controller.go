@@ -153,7 +153,6 @@ func (r *WavefrontReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-
 func NewWavefrontReconciler(operatorVersion string, client client.Client) (operator *WavefrontReconciler, err error) {
 	return &WavefrontReconciler{
 		OperatorVersion:   operatorVersion,

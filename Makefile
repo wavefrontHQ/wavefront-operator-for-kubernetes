@@ -5,10 +5,14 @@ DOCKER_IMAGE?=kubernetes-operator-snapshot
 
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
-DARWIN_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),"/usr/local/bin/golangci-lint")
-LINUX_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),$(GOPATH)/bin/golangci-lint)
 
 OS := $(shell uname -s | tr A-Z a-z)
+
+ifeq ($(OS), darwin)
+DARWIN_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),"/usr/local/bin/golangci-lint")
+else
+LINUX_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),$(GOPATH)/bin/golangci-lint)
+endif
 
 ifeq ($(origin VERSION_POSTFIX), undefined)
 VERSION_POSTFIX:=-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
