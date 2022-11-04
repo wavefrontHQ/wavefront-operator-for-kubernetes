@@ -5,6 +5,7 @@ DOCKER_IMAGE?=kubernetes-operator-snapshot
 
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
+DARWIN_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),"/usr/local/bin/golangci-lint")
 
 ifeq ($(origin VERSION_POSTFIX), undefined)
 VERSION_POSTFIX:=-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
@@ -35,6 +36,8 @@ GOARCH?=$(shell go env GOARCH)
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
+
+OS := $(shell uname -s | tr A-Z a-z)
 
 .PHONY: all
 all: build
@@ -92,6 +95,16 @@ checkfmt: $(GO_IMPORTS_BIN)
 .PHONY: vet
 vet: ## Run go vet against code.
 	go vet ./...
+
+.PHONY: golangci-lint
+golangci-lint: $(OS)-golangci-lint
+	golangci-lint run
+
+.PHONY: darwin-golangci-lint
+darwin-golangci-lint: $(DARWIN_GOLANGCI_LINT_BIN)
+
+$(DARWIN_GOLANGCI_LINT_BIN):
+	brew install golangci-lint
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
