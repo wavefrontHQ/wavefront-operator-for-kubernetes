@@ -41,14 +41,15 @@ func (km *KubernetesManager) ApplyResources(resourceYAMLs []string, exclude func
 			continue
 		}
 
-		var oldObject unstructured.Unstructured
-		oldObject.SetGroupVersionKind(*gvk)
-		err = km.objClient.Get(context.Background(), util.ObjKey(object.GetNamespace(), object.GetName()), &oldObject)
+		var getObj unstructured.Unstructured
+		getObj.SetGroupVersionKind(*gvk)
+		err = km.objClient.Get(context.Background(), util.ObjKey(object.GetNamespace(), object.GetName()), &getObj)
 		if errors.IsNotFound(err) {
 			err = km.objClient.Create(context.Background(), object)
 		} else if err == nil {
-			object.SetResourceVersion(oldObject.GetResourceVersion())
-			err = km.objClient.Patch(context.Background(), object, client.MergeFrom(&oldObject))
+			var diffObj unstructured.Unstructured
+			diffObj.SetGroupVersionKind(*gvk)
+			err = km.objClient.Patch(context.Background(), object, client.MergeFrom(&diffObj))
 		}
 		if err != nil {
 			return err
@@ -66,7 +67,7 @@ func (km *KubernetesManager) DeleteResources(resourceYAMLs []string) error {
 			return err
 		}
 
-		err = km.objClient.Delete(context.TODO(), object)
+		err = km.objClient.Delete(context.Background(), object)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
