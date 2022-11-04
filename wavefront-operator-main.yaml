@@ -917,7 +917,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.3-alpha-56835e74
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.0.3-alpha-92a127a0
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
