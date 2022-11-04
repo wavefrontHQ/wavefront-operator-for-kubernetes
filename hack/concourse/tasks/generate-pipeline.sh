@@ -8,6 +8,11 @@ function get_feature_branches() {
 }
 
 function get_resources() {
+  echo "#@data/values"
+  echo '#@ load("@ytt:overlay", "overlay")'
+  echo "---"
+  echo "resources:"
+  echo "#@overlay/append"
   for feature_branch in "${@}" ; do
     jira=$(echo $feature_branch | grep -oE 'K8SSAAS-\d{3,4}')
     cat <<- EOD
@@ -23,9 +28,7 @@ EOD
 
 echo "Generating pipeline"
 #get_feature_branches > feature-branches.txt
-resources=$(get_resources $(cat feature-branches.txt))
+get_resources $(cat feature-branches.txt) > hack/concourse/yamlbits/feature_branch_resources.yaml
 
-awk -v from='#+ {{ feature_branch_resources }}'\
- to=$resources \
- '{gsub(from,to)}' hack/concourse/pipeline.yaml
-
+ytt -f hack/concourse/yamlbits \
+  > pipeline.yaml
