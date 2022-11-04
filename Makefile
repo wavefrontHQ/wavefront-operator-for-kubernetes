@@ -117,7 +117,7 @@ $(DARWIN_GOLANGCI_LINT_BIN):
 linux-golangci-lint: $(LINUX_GOLANGCI_LINT_BIN)
 
 $(LINUX_GOLANGCI_LINT_BIN):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b $(go env GOPATH)/bin v1.50.1
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
