@@ -25,6 +25,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -68,7 +69,8 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	config := ctrl.GetConfigOrDie()
+	mgr, err := ctrl.NewManager(config, ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     "0",
 		Port:                   9443,
@@ -80,8 +82,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	var controller *controllers.WavefrontReconciler
-	controller, err = controllers.NewWavefrontReconciler(version, mgr.GetClient(), mgr.GetScheme())
+	objClient, err := client.New(config, client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "error creating reconciler client")
+		os.Exit(1)
+	}
+
+	controller, err := controllers.NewWavefrontReconciler(version, objClient)
 	if err != nil {
 		setupLog.Error(err, "error creating wavefront operator reconciler")
 		os.Exit(1)
