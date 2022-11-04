@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	appsv1 "k8s.io/api/apps/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	typedappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 )
 
 var legacyComponentsToCheck = map[string]map[string]string{
@@ -46,10 +47,10 @@ func (result Result) IsWarning() bool {
 	return result.error != nil && !result.isError
 }
 
-func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Result {
-	err := validateEnvironment(appsV1, wavefront)
+func Validate(objClient client.Client, wavefront *wf.Wavefront) Result {
+	err := validateEnvironment(objClient, wavefront)
 	if err != nil {
-		return Result{err, !areAnyComponentsDeployed(appsV1, wavefront.Spec.Namespace)}
+		return Result{err, !areAnyComponentsDeployed(objClient, wavefront.Spec.Namespace)}
 	}
 	err = validateWavefrontSpec(wavefront)
 	if err != nil {
@@ -58,19 +59,19 @@ func Validate(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) Resul
 	return Result{}
 }
 
-func validateEnvironment(appsV1 typedappsv1.AppsV1Interface, wavefront *wf.Wavefront) error {
+func validateEnvironment(objClient client.Client, wavefront *wf.Wavefront) error {
 	if wavefront.Spec.AllowLegacyInstall {
 		return nil
 	}
 	for namespace, resourceMap := range legacyComponentsToCheck {
 		for resourceName, resourceType := range resourceMap {
 			if resourceType == util.DaemonSet {
-				if daemonSetExists(appsV1.DaemonSets(namespace), resourceName) {
+				if daemonSetExists(objClient, util.ObjKey(namespace, resourceName)) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
 			if resourceType == util.Deployment {
-				if deploymentExists(appsV1.Deployments(namespace), resourceName) {
+				if deploymentExists(objClient, util.ObjKey(namespace, resourceName)) {
 					return legacyEnvironmentError(namespace)
 				}
 			}
@@ -117,26 +118,24 @@ func compareQuantities(request string, limit string) int {
 	return requestQuantity.Cmp(limitQuanity)
 }
 
-func deploymentExists(deployments typedappsv1.DeploymentInterface, resourceName string) bool {
-	_, err := deployments.Get(context.Background(), resourceName, v1.GetOptions{})
-	return err == nil
+func deploymentExists(objClient client.Client, key client.ObjectKey) bool {
+	return objClient.Get(context.Background(), key, &appsv1.Deployment{}) == nil
 }
 
-func daemonSetExists(daemonsets typedappsv1.DaemonSetInterface, resourceName string) bool {
-	_, err := daemonsets.Get(context.Background(), resourceName, v1.GetOptions{})
-	return err == nil
+func daemonSetExists(objClient client.Client, key client.ObjectKey) bool {
+	return objClient.Get(context.Background(), key, &appsv1.DaemonSet{}) == nil
 }
 
-func areAnyComponentsDeployed(appsV1 typedappsv1.AppsV1Interface, namespace string) bool {
-	exists := deploymentExists(appsV1.Deployments(namespace), util.ProxyName)
+func areAnyComponentsDeployed(objClient client.Client, namespace string) bool {
+	exists := deploymentExists(objClient, util.ObjKey(namespace, util.ProxyName))
 	if exists {
 		return exists
 	}
-	exists = daemonSetExists(appsV1.DaemonSets(namespace), util.NodeCollectorName)
+	exists = daemonSetExists(objClient, util.ObjKey(namespace, util.NodeCollectorName))
 	if exists {
 		return exists
 	}
-	exists = deploymentExists(appsV1.Deployments(namespace), util.ClusterCollectorName)
+	exists = deploymentExists(objClient, util.ObjKey(namespace, util.ClusterCollectorName))
 	if exists {
 		return exists
 	}

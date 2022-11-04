@@ -4,18 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/stretchr/testify/require"
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/stretchr/testify/assert"
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	k8sfake "k8s.io/client-go/kubernetes/fake"
 )
 
 const testNamespace = "testNamespace"
@@ -27,7 +27,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -38,7 +38,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -49,7 +49,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -85,7 +85,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -96,7 +96,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -107,7 +107,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -132,7 +132,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
 				Replicas:          1,
@@ -143,7 +143,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.NodeCollectorName,
-				Namespace: wavefront.Spec.Namespace,
+				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DaemonSetStatus{
 				DesiredNumberScheduled: 3,
@@ -442,21 +442,24 @@ func pastMaxInstallTime() time.Time {
 	return time.Now().Add(-MaxInstallTime).Add(-time.Second * 10)
 }
 
-func setup(initObjs ...runtime.Object) kubernetes.Interface {
-	return k8sfake.NewSimpleClientset(append(initObjs, &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: testNamespace,
-			Name:      util.OperatorName,
-			Labels: map[string]string{
-				"app.kubernetes.io/name":      "wavefront",
-				"app.kubernetes.io/component": "controller-manager",
+func setup(initObjs ...runtime.Object) client.Client {
+	return fake.NewClientBuilder().WithRuntimeObjects(append(
+		initObjs,
+		&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: testNamespace,
+				Name:      util.OperatorName,
+				Labels: map[string]string{
+					"app.kubernetes.io/name":      "wavefront",
+					"app.kubernetes.io/component": "controller-manager",
+				},
+			},
+			Status: appsv1.DeploymentStatus{
+				AvailableReplicas: 1,
+				Replicas:          1,
 			},
 		},
-		Status: appsv1.DeploymentStatus{
-			AvailableReplicas: 1,
-			Replicas:          1,
-		},
-	})...)
+	)...).Build()
 }
 
 func getComponentStatusWithName(name string, componentStatuses []wf.ResourceStatus) wf.ResourceStatus {
@@ -470,7 +473,7 @@ func getComponentStatusWithName(name string, componentStatuses []wf.ResourceStat
 
 func defaultWF() *wf.Wavefront {
 	return &wf.Wavefront{
-		Spec: wf.WavefrontSpec{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: testNamespace,
 		},
 	}
