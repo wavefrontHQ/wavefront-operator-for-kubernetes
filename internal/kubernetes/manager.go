@@ -47,6 +47,7 @@ func (km *KubernetesManager) ApplyResources(resourceYAMLs []string, exclude func
 		if errors.IsNotFound(err) {
 			err = km.objClient.Create(context.Background(), object)
 		} else if err == nil {
+			object.SetResourceVersion(oldObject.GetResourceVersion())
 			err = km.objClient.Patch(context.Background(), object, client.MergeFrom(&oldObject))
 		}
 		if err != nil {
