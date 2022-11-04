@@ -201,10 +201,7 @@ spec:
 }
 
 func hasAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (result bool) {
-	if getAction(dynamicClient, verb, resource) != nil {
-		return true
-	}
-	return false
+	return getAction(dynamicClient, verb, resource) != nil
 }
 
 func getAction(dynamicClient *fake2.FakeDynamicClient, verb, resource string) (action testing2.Action) {

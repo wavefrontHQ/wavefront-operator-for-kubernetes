@@ -112,7 +112,7 @@ func (r *WavefrontReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if errors.IsNotFound(err) {
-		err = r.readAndDeleteResources()
+		_ = r.readAndDeleteResources()
 		return ctrl.Result{}, nil
 	}
 
@@ -175,6 +175,9 @@ func NewWavefrontReconciler(operatorVersion string, client client.Client, scheme
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
 
 	kubernetesManager, err := kubernetes_manager.NewKubernetesManager(mapper, dynamicClient)
 	if err != nil {
@@ -516,7 +519,7 @@ func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName 
 func filterDisabledAndConfigMap(wavefrontSpec wf.WavefrontSpec) func(object *unstructured.Unstructured) bool {
 	return func(object *unstructured.Unstructured) bool {
 		objLabels := object.GetLabels()
-		if labelVal, _ := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
+		if labelVal := objLabels["app.kubernetes.io/component"]; labelVal == "collector" && object.GetKind() == "ConfigMap" && wavefrontSpec.DataCollection.Metrics.CollectorConfigName != object.GetName() {
 			return true
 		}
 		return false

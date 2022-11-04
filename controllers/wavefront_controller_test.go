@@ -743,6 +743,7 @@ func TestReconcileLogging(t *testing.T) {
 		r, mockKM := componentScenario(wftest.CR())
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
 		ds, err := mockKM.GetAppliedDaemonSet("logging", util.LoggingName)
 		require.NoError(t, err)
 		require.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
@@ -994,7 +995,7 @@ func containsProxyArg(t *testing.T, proxyArg string, mockKM testhelper.MockKuber
 	require.NoError(t, err)
 
 	value := getEnvValueForName(deployment.Spec.Template.Spec.Containers[0].Env, "WAVEFRONT_PROXY_ARGS")
-	require.Contains(t, value, fmt.Sprintf("%s", proxyArg))
+	require.Contains(t, value, proxyArg)
 }
 
 func emptyScenario(wfCR *wf.Wavefront, initObjs ...runtime.Object) (*controllers.WavefrontReconciler, *testhelper.MockKubernetesManager) {
