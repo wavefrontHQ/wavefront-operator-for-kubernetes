@@ -27,8 +27,10 @@ EOD
 }
 
 echo "Generating pipeline"
-#get_feature_branches > feature-branches.txt
-get_resources $(cat feature-branches.txt) > hack/concourse/yamlbits/feature_branch_resources.yaml
+get_feature_branches > feature-branches.txt
+get_resources $(cat feature-branches.txt) > ci_repo/hack/concourse/yamlbits/feature_branch_resources.yaml
 
-ytt -f hack/concourse/yamlbits \
+ytt -f ci_repo/hack/concourse/yamlbits \
   > pipeline.yaml
+
+cat pipeline.yaml

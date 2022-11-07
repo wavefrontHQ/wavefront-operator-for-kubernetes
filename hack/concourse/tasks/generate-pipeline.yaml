@@ -1,6 +1,9 @@
 ---
 platform: linux
-#image_resource:
+image_resource:
+  type: registry-image
+  source:
+    repository: taylorsilva/carvel-ytt
 
 inputs:
 - name: ci_repo
