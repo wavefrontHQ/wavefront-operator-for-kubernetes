@@ -12,6 +12,9 @@ resources:
     source:
       repository: taylorsilva/carvel-ytt
       tag: 0.36
+  - name: ubuntu
+    type: docker-image
+    source: { repository: ubuntu }
   - name: wavefront-operator-ci
     type: git
     source:
@@ -26,7 +29,7 @@ jobs:
       - get: wavefront-operator-ci
       - get: ytt
       - task: generate-pipeline
-        image: ytt
+        image: ubuntu
         file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
         input_mapping:
           ci_repo: wavefront-operator-ci
