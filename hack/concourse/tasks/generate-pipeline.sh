@@ -26,6 +26,16 @@ EOD
   done
 }
 
+function ensure_ytt() {
+  if ! command -v ytt; then
+    wget https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.43.0/ytt-linux-arm64
+    mv ytt-linux-arm64 /usr/local/bin/
+    ytt version
+  fi
+}
+
+ensure_ytt
+
 echo "Generating pipeline"
 get_feature_branches > feature-branches.txt
 get_resources $(cat feature-branches.txt) > ci_repo/hack/concourse/yamlbits/feature_branch_resources.yaml
