@@ -1,7 +1,7 @@
 #@data/values
 ---
 resources:
-  - name: 9am
+  - name: every-morning
     type: time
     source:
       start: 9:00 AM
@@ -21,36 +21,39 @@ resources:
 jobs:
   - name: update-self
     plan:
-      - get: 9am
+      - get: every-morning
         trigger: true
       - get: wavefront-operator-ci
+      - get: ytt
       - task: generate-pipeline
-        file: wavefront-operator/hack/concourse/tasks/generate-pipeline.yaml
+        file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
+        input_mapping:
+          ci_repo: wavefront-operator-ci
 
       #! generate pipeline based on active branches
       #! trigger 9am or manually
-      - set_pipeline: operator-gitops
-        file: wavefront-operator/hack/concourse/pipeline.yaml
+      #! - set_pipeline: operator-gitops
+      #!   file: wavefront-operator/hack/concourse/pipeline.yaml
 
-  - name: setup-<feature JIRA>-cluster
+  #!- name: setup-<feature JIRA>-cluster
     #! trigger 9am
     #! trigger on push to branch
     #! for each branch with push today, create dev cluster
     #! I think only trigger on push, but could also be daily
-  - name: teardown-all-feature-clusters
+  #!- name: teardown-all-feature-clusters
     #! trigger 5pm
     #! ideal: gcloud search by pattern 'k8po-operator-gitops-<feature JIRA>'
     #! but that's maybe not safe so instead
-  - name: teardown-<feature JIRA>-cluster
+  #!- name: teardown-<feature JIRA>-cluster
 
-  - name: submit-<feature JIRA>-for-acceptance
-    plan:
-      - get: wavefront-operator
-        branch: <feature JIRA>
+  #!- name: submit-<feature JIRA>-for-acceptance
+  #!  plan:
+  #!    - get: wavefront-operator
+  #!      branch: <feature JIRA>
     #! create acceptance GKE cluster
     #! teardown-<feature JIRA>-cluster
-  - name: accept-<feature JIRA>
+  #!- name: accept-<feature JIRA>
     #! create PR from feature JIRA into release-elect and try to automatically merge
     #! promote release-elect to release
-  - name: reject-<feature JIRA>
+  #!- name: reject-<feature JIRA>
     #! stretch goal: send slack notification or something
