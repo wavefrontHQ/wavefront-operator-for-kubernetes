@@ -2,8 +2,12 @@ package testhelper
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
 	"strings"
+	"testing"
 
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -507,6 +511,31 @@ func (skm MockKubernetesManager) GetProxyDeployment() (appsv1.Deployment, error)
 func (skm MockKubernetesManager) ObjectPassesFilter(object *unstructured.Unstructured) bool {
 	// TODO: filter returning true if filtered is confusing
 	return !skm.usedFilter(object)
+}
+
+func (skm MockKubernetesManager) ServiceAccountPassesFilter(t *testing.T, err error) bool {
+	serviceAccountObject, err := skm.GetUnstructuredCollectorServiceAccount()
+	assert.NoError(t, err)
+
+	// TODO: NOTE: the filter is only based on app.kubernetes.io/component value
+	return skm.ObjectPassesFilter(
+		serviceAccountObject,
+	)
+}
+
+func k8sYAMLHeader(apiVersion string, kind string, appKubernetesIOName string, appKubernetesIOComponent string, metadataName string) (*regexp.Regexp, error) {
+	headerMatchStr := fmt.Sprintf(
+		`apiVersion: %s
+kind: %s
+metadata:
+  labels:
+    app.kubernetes.io/name: %s
+    app.kubernetes.io/component: %s
+  name: %s`,
+		apiVersion, kind, appKubernetesIOName, appKubernetesIOComponent, metadataName)
+
+	reg, err := regexp.Compile(headerMatchStr)
+	return reg, err
 }
 
 func contains(

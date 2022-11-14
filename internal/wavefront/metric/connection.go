@@ -36,8 +36,10 @@ func NewConnection(newSender SenderFactory) *Connection {
 func flushLoop(c *Connection) {
 	ticker := time.NewTicker(60 * time.Second)
 	for {
-		<-ticker.C
-		c.Flush()
+		select {
+		case <-ticker.C:
+			c.Flush()
+		}
 	}
 }
 
