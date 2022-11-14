@@ -72,10 +72,10 @@ func reportAggregateStatus(componentStatuses []wf.ResourceStatus, createdAt time
 	if boolCount(false, componentHealth...) == 0 {
 		status.Status = Healthy
 		status.Message = "All components are healthy"
-	} else if time.Since(createdAt) < MaxInstallTime {
+	} else if time.Now().Sub(createdAt) < MaxInstallTime {
 		status.Status = Installing
 		status.Message = "Installing components"
-		for i := range status.ResourceStatuses {
+		for i, _ := range status.ResourceStatuses {
 			status.ResourceStatuses[i].Installing = true
 		}
 	} else {
@@ -133,7 +133,7 @@ func daemonSetStatus(objClient client.Client, key client.ObjectKey) wf.ResourceS
 
 func reportNotRunning(componentStatus wf.ResourceStatus) wf.ResourceStatus {
 	componentStatus.Healthy = false
-	componentStatus.Status = "Not running"
+	componentStatus.Status = fmt.Sprintf("Not running")
 	return componentStatus
 }
 
@@ -186,7 +186,7 @@ func componentPodSelector(componentName string) client.MatchingLabels {
 func oomKilledRecently(terminated *corev1.ContainerStateTerminated) bool {
 	return terminated != nil &&
 		terminated.ExitCode == 137 &&
-		time.Since(terminated.FinishedAt.Time) < OOMTimeout
+		time.Now().Sub(terminated.FinishedAt.Time) < OOMTimeout
 }
 
 func boolCount(b bool, statuses ...bool) int {

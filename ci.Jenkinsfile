@@ -24,7 +24,7 @@ pipeline {
   stages {
     stage("Test Go Code") {
       steps {
-        sh 'make checkfmt vet test golangci-lint'
+        sh 'make checkfmt vet test'
       }
     }
     stage("Setup For Publish") {
