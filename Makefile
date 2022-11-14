@@ -6,6 +6,14 @@ DOCKER_IMAGE?=kubernetes-operator-snapshot
 GO_IMPORTS_BIN:=$(if $(which goimports),$(which goimports),$(GOPATH)/bin/goimports)
 SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semver-cli)
 
+OS := $(shell uname -s | tr A-Z a-z)
+
+ifeq ($(OS), darwin)
+DARWIN_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),"/usr/local/bin/golangci-lint")
+else
+LINUX_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),$(GOPATH)/bin/golangci-lint)
+endif
+
 ifeq ($(origin VERSION_POSTFIX), undefined)
 VERSION_POSTFIX:=-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
 endif
@@ -36,6 +44,7 @@ GOARCH?=$(shell go env GOARCH)
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+
 .PHONY: all
 all: build
 
@@ -60,6 +69,7 @@ help: ## Display this help.
 $(GO_IMPORTS_BIN):
 	@(cd $(REPO_DIR)/..; CGO_ENABLED=0 go install golang.org/x/tools/cmd/goimports@latest)
 
+.PHONY: semver-cli
 semver-cli: $(SEMVER_CLI_BIN)
 
 $(SEMVER_CLI_BIN):
@@ -92,6 +102,22 @@ checkfmt: $(GO_IMPORTS_BIN)
 .PHONY: vet
 vet: ## Run go vet against code.
 	go vet ./...
+
+.PHONY: golangci-lint
+golangci-lint: $(OS)-golangci-lint
+	golangci-lint run
+
+.PHONY: darwin-golangci-lint
+darwin-golangci-lint: $(DARWIN_GOLANGCI_LINT_BIN)
+
+$(DARWIN_GOLANGCI_LINT_BIN):
+	brew install golangci-lint
+
+.PHONY: linux-golangci-lint
+linux-golangci-lint: $(LINUX_GOLANGCI_LINT_BIN)
+
+$(LINUX_GOLANGCI_LINT_BIN):
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b $(go env GOPATH)/bin v1.50.1
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
