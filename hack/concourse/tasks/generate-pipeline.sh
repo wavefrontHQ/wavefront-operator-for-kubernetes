@@ -28,8 +28,9 @@ EOD
 
 function ensure_ytt() {
   if ! command -v ytt; then
-    wget https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.43.0/ytt-linux-arm64
-    mv ytt-linux-arm64 /usr/local/bin/
+    wget https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.43.0/ytt-linux-amd64
+    chmod +x ytt-linux-amd64
+    mv ytt-linux-amd64 /usr/local/bin/ytt
     ytt version
   fi
 }
