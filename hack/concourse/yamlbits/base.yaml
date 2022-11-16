@@ -1,5 +1,12 @@
 #@data/values
 ---
+resource_types:
+  - name: gitlab
+    type: registry-image
+    source:
+      repository: devtools-docker.artifactory.eng.vmware.com/vmware/runway/resourcetypes/gitlab-resource
+      tag: 1.0.0
+
 resources:
   - name: every-morning
     type: time
@@ -7,14 +14,6 @@ resources:
       start: 9:00 AM
       stop: 10:00 AM
       location: America/Denver
-  - name: ytt
-    type: registry-image
-    source:
-      repository: taylorsilva/carvel-ytt
-      tag: 0.36
-  - name: ubuntu
-    type: docker-image
-    source: { repository: ubuntu }
   - name: wavefront-operator-ci
     type: git
     source:
@@ -27,7 +26,6 @@ jobs:
       - get: every-morning
         trigger: true
       - get: wavefront-operator-ci
-      - get: ytt
       - task: generate-pipeline
         image: ubuntu
         file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
