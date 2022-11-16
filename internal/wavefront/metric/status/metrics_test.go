@@ -31,34 +31,63 @@ func TestMetrics(t *testing.T) {
 		testhelper.RequireMetricValue(t, m, status.UNHEALTHY_VALUE)
 	})
 
-	t.Run("has installing status when operator status is installing", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: health.Installing, Message: "Installing Components"})
+	t.Run("has installing status when integration status is installing", func(t *testing.T) {
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+			Message: "Installing Components",
+			Status:  health.Installing,
+			ResourceStatuses: append(generateHealthySubComponentMetric([]string{util.ClusterCollectorName, util.NodeCollectorName, util.LoggingName}), wf.ResourceStatus{
+				Name:       util.ProxyName,
+				Installing: true,
+			}),
+		})
 
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
 		testhelper.RequireMetricValue(t, m, status.INSTALLING_VALUE)
 		testhelper.RequireMetricTag(t, m, "status", "Installing")
 		testhelper.RequireMetricTag(t, m, "message", "Installing Components")
+		testhelper.RequireMetricTag(t, m, "metrics", "Healthy")
+		testhelper.RequireMetricTag(t, m, "logging", "Healthy")
+		testhelper.RequireMetricTag(t, m, "proxy", "Installing")
 	})
 
-	t.Run("has healthy status when operator status is healthy", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Healthy", Message: "1/1 components are healthy"})
+	t.Run("has healthy status when integration status is healthy", func(t *testing.T) {
+		wfStatus := wf.WavefrontStatus{
+			Status:           "Healthy",
+			Message:          "4/4 components are healthy",
+			ResourceStatuses: generateHealthySubComponentMetric([]string{util.ClusterCollectorName, util.NodeCollectorName, util.LoggingName, util.ProxyName}),
+		}
+
+		ms, err := status.Metrics("my_cluster", wfStatus)
 
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
 		testhelper.RequireMetricValue(t, m, status.HEALTHY_VALUE)
 		testhelper.RequireMetricTag(t, m, "status", "Healthy")
-		testhelper.RequireMetricTag(t, m, "message", "1/1 components are healthy")
+		testhelper.RequireMetricTag(t, m, "message", "4/4 components are healthy")
+		testhelper.RequireMetricTag(t, m, "metrics", "Healthy")
+		testhelper.RequireMetricTag(t, m, "logging", "Healthy")
+		testhelper.RequireMetricTag(t, m, "proxy", "Healthy")
 	})
 
-	t.Run("has unhealthy status when operator status is unhealthy", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{Status: "Unhealthy", Message: "0/1 components are healthy"})
+	t.Run("has unhealthy status when integration status is unhealthy", func(t *testing.T) {
+		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+			Status:  "Unhealthy",
+			Message: "3/4 components are healthy",
+			ResourceStatuses: append(generateHealthySubComponentMetric([]string{util.NodeCollectorName, util.LoggingName, util.ProxyName}), wf.ResourceStatus{
+				Name:    util.ClusterCollectorName,
+				Healthy: false,
+			})},
+		)
 
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
 		testhelper.RequireMetricValue(t, m, status.UNHEALTHY_VALUE)
 		testhelper.RequireMetricTag(t, m, "status", "Unhealthy")
-		testhelper.RequireMetricTag(t, m, "message", "0/1 components are healthy")
+		testhelper.RequireMetricTag(t, m, "message", "3/4 components are healthy")
+		testhelper.RequireMetricTag(t, m, "metrics", "Unhealthy")
+		testhelper.RequireMetricTag(t, m, "logging", "Healthy")
+		testhelper.RequireMetricTag(t, m, "proxy", "Healthy")
 	})
 
 	t.Run("metrics component", func(t *testing.T) {
@@ -80,19 +109,14 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 	for _, testResourceName := range resourceNames {
 		t.Run(fmt.Sprintf("has healthy status when %s is healthy", testResourceName), func(t *testing.T) {
 			wfStatus := wf.WavefrontStatus{Status: health.Healthy}
-			for _, resourceName := range resourceNames {
-				wfStatus.ResourceStatuses = append(wfStatus.ResourceStatuses, wf.ResourceStatus{
-					Name:    resourceName,
-					Healthy: true,
-				})
-			}
+			wfStatus.ResourceStatuses = generateHealthySubComponentMetric(resourceNames)
 
 			ms, err := status.Metrics("my_cluster", wfStatus)
 
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
 			testhelper.RequireMetricValue(t, m, status.HEALTHY_VALUE)
-			testhelper.RequireMetricTag(t, m, "status", "healthy")
+			testhelper.RequireMetricTag(t, m, "status", health.Healthy)
 			testhelper.RequireMetricTag(t, m, "message", fmt.Sprintf("%s component is healthy", componentName))
 		})
 	}
@@ -122,7 +146,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
 			testhelper.RequireMetricValue(t, m, status.UNHEALTHY_VALUE)
-			testhelper.RequireMetricTag(t, m, "status", "unhealthy")
+			testhelper.RequireMetricTag(t, m, "status", health.Unhealthy)
 			testhelper.RequireMetricTag(t, m, "message", errorStr)
 		})
 	}
@@ -153,7 +177,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
 			testhelper.RequireMetricValue(t, m, status.INSTALLING_VALUE)
-			testhelper.RequireMetricTag(t, m, "status", "installing")
+			testhelper.RequireMetricTag(t, m, "status", health.Installing)
 			testhelper.RequireMetricTag(t, m, "message", errorStr)
 		})
 	}
@@ -167,7 +191,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, metricName)
 		testhelper.RequireMetricValue(t, m, status.NOT_ENABLED_VALUE)
-		testhelper.RequireMetricTag(t, m, "status", "not enabled")
+		testhelper.RequireMetricTag(t, m, "status", health.NotEnabled)
 		testhelper.RequireMetricTag(t, m, "message", fmt.Sprintf("%s component is not enabled", componentName))
 	})
 
@@ -190,8 +214,21 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
 			testhelper.RequireMetricValue(t, m, status.UNHEALTHY_VALUE)
-			testhelper.RequireMetricTag(t, m, "status", "unhealthy")
+			testhelper.RequireMetricTag(t, m, "status", health.Unhealthy)
 			testhelper.RequireMetricTag(t, m, "message", strings.Join(errorStrs, "; "))
 		})
 	}
+}
+
+func generateHealthySubComponentMetric(resourceNames []string) []wf.ResourceStatus {
+	statuses := make([]wf.ResourceStatus, len(resourceNames))
+
+	for _, name := range resourceNames {
+		statuses = append(statuses, wf.ResourceStatus{
+			Name:    name,
+			Healthy: true,
+		})
+	}
+
+	return statuses
 }
