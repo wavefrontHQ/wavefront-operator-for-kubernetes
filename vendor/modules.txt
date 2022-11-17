@@ -102,7 +102,7 @@ github.com/spf13/pflag
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/wavefronthq/wavefront-sdk-go v0.10.4
+# github.com/wavefronthq/wavefront-sdk-go v0.11.0
 ## explicit; go 1.17
 github.com/wavefronthq/wavefront-sdk-go/event
 github.com/wavefronthq/wavefront-sdk-go/histogram
