@@ -1,12 +1,12 @@
 #@data/values
 ---
 resources:
-  - name: every-morning
-    type: time
-    source:
-      start: 9:00 AM
-      stop: 10:00 AM
-      location: America/Denver
+#  - name: every-morning
+#    type: time
+#    source:
+#      start: 9:00 AM
+#      stop: 10:00 AM
+#      location: America/Denver
   - name: wavefront-operator-ci
     type: git
     source:
@@ -16,8 +16,8 @@ resources:
 jobs:
   - name: update-self
     plan:
-      - get: every-morning
-        trigger: true
+#      - get: every-morning
+#        trigger: true
       - get: wavefront-operator-ci
       - task: try-some-git-stuff
         config:
@@ -25,7 +25,7 @@ jobs:
           image_resource:
             type: docker-image
             source:
-              repository: busybox
+              repository: ubuntu
           inputs:
           - name: wavefront-operator-ci
           outputs:
