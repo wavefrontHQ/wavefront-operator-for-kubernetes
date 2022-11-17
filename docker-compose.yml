@@ -16,9 +16,6 @@ services:
     depends_on: [concourse-db]
     ports: ["8080:8080"]
     environment:
-      CONCOURSE_VAULT_URL: https://runway-vault-sfo.eng.vmware.com
-      CONCOURSE_VAULT_CLIENT_TOKEN: "${CONCOURSE_VAULT_CLIENT_TOKEN}"
-
       CONCOURSE_POSTGRES_HOST: concourse-db
       CONCOURSE_POSTGRES_USER: concourse_user
       CONCOURSE_POSTGRES_PASSWORD: concourse_pass
