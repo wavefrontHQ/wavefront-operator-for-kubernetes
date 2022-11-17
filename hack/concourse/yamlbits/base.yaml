@@ -1,12 +1,5 @@
 #@data/values
 ---
-resource_types:
-  - name: gitlab
-    type: registry-image
-    source:
-      repository: devtools-docker.artifactory.eng.vmware.com/vmware/runway/resourcetypes/gitlab-resource
-      tag: 1.0.0
-
 resources:
   - name: every-morning
     type: time
@@ -26,10 +19,31 @@ jobs:
       - get: every-morning
         trigger: true
       - get: wavefront-operator-ci
-      - task: generate-pipeline
-        file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
-        input_mapping:
-          ci_repo: wavefront-operator-ci
+      - task: try-some-git-stuff
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: busybox
+          inputs:
+          - name: wavefront-operator-ci
+          outputs:
+          - name: wavefront-operator-ci-with-branch-list
+          run:
+            path: sh
+            args:
+            - -cx
+            - |
+              cd wavefront-operator-ci
+              git ls-remote --heads
+              git ls-remote --heads \
+                | grep -E 'refs/heads/K8SSAAS' \
+                | grep -oE 'K8SSAAS-\d{3,4}.*$'
+      #! - task: generate-pipeline
+      #!   file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
+      #!   input_mapping:
+      #!     ci_repo: wavefront-operator-ci
 
       #! generate pipeline based on active branches
       #! trigger 9am or manually

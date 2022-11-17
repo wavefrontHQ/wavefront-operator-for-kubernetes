@@ -2,11 +2,11 @@
 set -e
 
 function get_feature_branches() {
-  pushd ci_repo
+  cd ci_repo
     git ls-remote --heads \
       | grep -E 'refs/heads/K8SSAAS' \
       | grep -oE 'K8SSAAS-\d{3,4}.*$'
-  popd
+  cd -
 }
 
 function get_resources() {
