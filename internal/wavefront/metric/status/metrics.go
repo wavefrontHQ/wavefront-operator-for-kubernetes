@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -19,7 +21,7 @@ const (
 	NOT_ENABLED_VALUE
 )
 
-func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, error) {
+func Metrics(clusterName string, operatorVersion string, status wf.WavefrontStatus) ([]metric.Metric, error) {
 	ms := []metric.Metric{
 		metricsStatus(status),
 		loggingStatus(status),
@@ -34,13 +36,19 @@ func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, er
 		}
 	}
 
-	ms = append(ms, integrationStatus(status, componentStatuses))
+	ms = append(ms, integrationStatus(status, componentStatuses, operatorVersion))
 
 	return metric.Common(clusterName, ms), nil
 }
 
-func integrationStatus(status wf.WavefrontStatus, componentStatuses map[string]string) metric.Metric {
+func integrationStatus(status wf.WavefrontStatus, componentStatuses map[string]string, operatorVersion string) metric.Metric {
 	tags := map[string]string{}
+	if len(operatorVersion) == 0 {
+		tags["version"] = "unknown"
+		log.Log.Info("operator version is not set")
+	} else {
+		tags["version"] = operatorVersion
+	}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
 	}

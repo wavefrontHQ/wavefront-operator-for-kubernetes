@@ -17,14 +17,14 @@ import (
 
 func TestMetrics(t *testing.T) {
 	t.Run("have common attributes", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{})
+		ms, err := status.Metrics("my_cluster", "", wf.WavefrontStatus{})
 
 		require.NoError(t, err)
 		testhelper.RequireAllMetricsHaveCommonAttributes(t, ms, "my_cluster")
 	})
 
 	t.Run("defaults to unhealthy when status is empty", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{})
+		ms, err := status.Metrics("my_cluster", "", wf.WavefrontStatus{})
 
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
@@ -32,7 +32,7 @@ func TestMetrics(t *testing.T) {
 	})
 
 	t.Run("has installing status when integration status is installing", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+		ms, err := status.Metrics("my_cluster", "", wf.WavefrontStatus{
 			Message: "Installing Components",
 			Status:  health.Installing,
 			ResourceStatuses: append(generateHealthySubComponentMetric([]string{util.ClusterCollectorName, util.NodeCollectorName, util.LoggingName}), wf.ResourceStatus{
@@ -58,7 +58,7 @@ func TestMetrics(t *testing.T) {
 			ResourceStatuses: generateHealthySubComponentMetric([]string{util.ClusterCollectorName, util.NodeCollectorName, util.LoggingName, util.ProxyName}),
 		}
 
-		ms, err := status.Metrics("my_cluster", wfStatus)
+		ms, err := status.Metrics("my_cluster", "", wfStatus)
 
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
@@ -71,14 +71,13 @@ func TestMetrics(t *testing.T) {
 	})
 
 	t.Run("has unhealthy status when integration status is unhealthy", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+		ms, err := status.Metrics("my_cluster", "", wf.WavefrontStatus{
 			Status:  "Unhealthy",
 			Message: "3/4 components are healthy",
 			ResourceStatuses: append(generateHealthySubComponentMetric([]string{util.NodeCollectorName, util.LoggingName, util.ProxyName}), wf.ResourceStatus{
 				Name:    util.ClusterCollectorName,
 				Healthy: false,
-			})},
-		)
+			})})
 
 		require.NoError(t, err)
 		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
@@ -88,6 +87,22 @@ func TestMetrics(t *testing.T) {
 		testhelper.RequireMetricTag(t, m, "metrics", "Unhealthy")
 		testhelper.RequireMetricTag(t, m, "logging", "Healthy")
 		testhelper.RequireMetricTag(t, m, "proxy", "Healthy")
+	})
+
+	t.Run("status metric has operator version", func(t *testing.T) {
+		ms, err := status.Metrics("my_cluster", "2.0.2", wf.WavefrontStatus{})
+
+		require.NoError(t, err)
+		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
+		testhelper.RequireMetricTag(t, m, "version", "2.0.2")
+	})
+
+	t.Run("status metric has unknown version when operator version is not set", func(t *testing.T) {
+		ms, err := status.Metrics("my_cluster", "", wf.WavefrontStatus{})
+
+		require.NoError(t, err)
+		m := testhelper.RequireMetric(t, ms, "kubernetes.observability.status")
+		testhelper.RequireMetricTag(t, m, "version", "unknown")
 	})
 
 	t.Run("metrics component", func(t *testing.T) {
@@ -111,7 +126,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 			wfStatus := wf.WavefrontStatus{Status: health.Healthy}
 			wfStatus.ResourceStatuses = generateHealthySubComponentMetric(resourceNames)
 
-			ms, err := status.Metrics("my_cluster", wfStatus)
+			ms, err := status.Metrics("my_cluster", "", wfStatus)
 
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
@@ -141,7 +156,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				}
 			}
 
-			ms, err := status.Metrics("my_cluster", wfStatus)
+			ms, err := status.Metrics("my_cluster", "", wfStatus)
 
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
@@ -172,7 +187,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				}
 			}
 
-			ms, err := status.Metrics("my_cluster", wfStatus)
+			ms, err := status.Metrics("my_cluster", "", wfStatus)
 
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
@@ -183,7 +198,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 	}
 
 	t.Run("has not enabled status if component statuses are not present", func(t *testing.T) {
-		ms, err := status.Metrics("my_cluster", wf.WavefrontStatus{
+		ms, err := status.Metrics("my_cluster", "", wf.WavefrontStatus{
 			Status:           health.Unhealthy,
 			ResourceStatuses: []wf.ResourceStatus{},
 		})
@@ -209,7 +224,7 @@ func ReportsSubComponentMetric(t *testing.T, componentName string, resourceNames
 				})
 			}
 
-			ms, err := status.Metrics("my_cluster", wfStatus)
+			ms, err := status.Metrics("my_cluster", "", wfStatus)
 
 			require.NoError(t, err)
 			m := testhelper.RequireMetric(t, ms, metricName)
