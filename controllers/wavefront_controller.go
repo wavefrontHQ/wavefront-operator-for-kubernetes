@@ -473,7 +473,7 @@ func (r *WavefrontReconciler) reportMetrics(sendStatusMetrics bool, clusterName 
 	var metrics []metric.Metric
 
 	if sendStatusMetrics {
-		statusMetrics, err := status.Metrics(clusterName, wavefrontStatus)
+		statusMetrics, err := status.Metrics(clusterName, r.OperatorVersion, wavefrontStatus)
 		if err != nil {
 			log.Log.Error(err, "could not create status metrics")
 		} else {

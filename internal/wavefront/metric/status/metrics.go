@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/wavefront/metric"
 
 	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
@@ -19,17 +21,34 @@ const (
 	NOT_ENABLED_VALUE
 )
 
-func Metrics(clusterName string, status wf.WavefrontStatus) ([]metric.Metric, error) {
-	return metric.Common(clusterName, []metric.Metric{
+func Metrics(clusterName string, operatorVersion string, status wf.WavefrontStatus) ([]metric.Metric, error) {
+	ms := []metric.Metric{
 		metricsStatus(status),
 		loggingStatus(status),
 		proxyStatus(status),
-		operatorStatus(status),
-	}), nil
+	}
+
+	componentStatuses := map[string]string{}
+	for _, m := range ms {
+		name := m.ComponentName
+		if val, ok := m.Tags["status"]; ok {
+			componentStatuses[name] = val
+		}
+	}
+
+	ms = append(ms, integrationStatus(status, componentStatuses, operatorVersion))
+
+	return metric.Common(clusterName, ms), nil
 }
 
-func operatorStatus(status wf.WavefrontStatus) metric.Metric {
+func integrationStatus(status wf.WavefrontStatus, componentStatuses map[string]string, operatorVersion string) metric.Metric {
 	tags := map[string]string{}
+	if len(operatorVersion) == 0 {
+		tags["version"] = "unknown"
+		log.Log.Info("operator version is not set")
+	} else {
+		tags["version"] = operatorVersion
+	}
 	if len(status.Message) > 0 {
 		tags["message"] = status.Message
 	}
@@ -42,6 +61,10 @@ func operatorStatus(status wf.WavefrontStatus) metric.Metric {
 		healthy = INSTALLING_VALUE
 	} else if status.Status == health.Healthy {
 		healthy = HEALTHY_VALUE
+	}
+
+	for component, componentStatus := range componentStatuses {
+		tags[component] = componentStatus
 	}
 
 	return metric.Metric{Name: "kubernetes.observability.status", Value: healthy, Tags: tags}
@@ -76,26 +99,29 @@ func componentStatusMetric(resourcesInComponent map[string]bool, componentName s
 	var healthValue float64
 	tags := map[string]string{}
 	if !resourcesPresent(componentStatuses) {
-		tags["status"] = "not enabled"
+		tags["status"] = health.NotEnabled
 		tags["message"] = fmt.Sprintf("%s component is not enabled", componentName)
 		healthValue = NOT_ENABLED_VALUE
 	} else if resourcesHealthy(componentStatuses) {
-		tags["status"] = "healthy"
+		tags["status"] = health.Healthy
 		tags["message"] = fmt.Sprintf("%s component is healthy", componentName)
 		healthValue = HEALTHY_VALUE
 	} else if resourceInstalling(componentStatuses) {
-		tags["status"] = "installing"
+		tags["status"] = health.Installing
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = INSTALLING_VALUE
 	} else {
-		tags["status"] = "unhealthy"
+		tags["status"] = health.Unhealthy
 		tags["message"] = strings.Join(resourceMessages(componentStatuses), "; ")
 		healthValue = UNHEALTHY_VALUE
 	}
+
+	componentName = strings.ToLower(componentName)
 	return metric.Metric{
-		Name:  fmt.Sprintf("kubernetes.observability.%s.status", strings.ToLower(componentName)),
-		Value: healthValue,
-		Tags:  tags,
+		Name:          fmt.Sprintf("kubernetes.observability.%s.status", componentName),
+		Value:         healthValue,
+		Tags:          tags,
+		ComponentName: componentName,
 	}
 }
 

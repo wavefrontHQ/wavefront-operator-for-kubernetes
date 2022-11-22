@@ -21,6 +21,7 @@ const (
 	Healthy        = "Healthy"
 	Unhealthy      = "Unhealthy"
 	Installing     = "Installing"
+	NotEnabled     = "Not Enabled"
 	MaxInstallTime = time.Minute * 5
 	OOMTimeout     = time.Minute * 5
 )
