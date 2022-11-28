@@ -7,7 +7,7 @@ function get_resources() {
   echo "resources:"
   echo "#@overlay/append"
   for feature_branch in "${@}" ; do
-    jira=$(echo $feature_branch | grep -oE 'K8SSAAS-\d{3,4}')
+    jira=$(echo $feature_branch | grep -o 'K8SSAAS-[0-9]+')
     cat <<- EOD
 - name: wavefront-operator-${jira}
   type: git
