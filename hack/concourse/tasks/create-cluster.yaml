@@ -1,0 +1,12 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+
+inputs:
+params:
+  CLUSTER_NAME:
+run:
+  path: ci_repo/hack/concourse/tasks/create-cluster.sh
