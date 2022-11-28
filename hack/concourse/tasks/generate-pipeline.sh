@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 function get_resources() {
   echo "#@data/values"
