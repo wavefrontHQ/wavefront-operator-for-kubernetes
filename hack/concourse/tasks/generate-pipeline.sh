@@ -21,6 +21,11 @@ EOD
 }
 
 function ensure_ytt() {
+  if ! command -v curl; then
+    apt update
+    apt install -y curl
+  fi
+
   if ! command -v ytt; then
     curl https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.43.0/ytt-linux-amd64 \
       --output /usr/local/bin/ytt
