@@ -10,4 +10,8 @@ inputs:
 - name: feature_branches
 params:
 run:
-  path: ci_repo/hack/concourse/tasks/generate-pipeline.sh
+  path: sh
+  args:
+  - cx
+  - |
+    ./ci_repo/hack/concourse/tasks/generate-pipeline.sh
