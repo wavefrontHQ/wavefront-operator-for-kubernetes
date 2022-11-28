@@ -21,7 +21,7 @@ EOD
 }
 
 function ensure_ytt() {
-  if ! command -v wge; then
+  if ! command -v wget; then
     apt update
     apt install -y wget
   fi
