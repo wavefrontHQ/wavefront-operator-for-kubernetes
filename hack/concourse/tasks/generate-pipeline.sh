@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-set -e
 
 function get_resources() {
-  echo "#@data/values"
-  echo '#@ load("@ytt:overlay", "overlay")'
-  echo "---"
-  echo "resources:"
-  echo "#@overlay/append"
+  cat << EOF
+#@data/values
+#@ load("@ytt:overlay", "overlay")
+---
+resources:
+#@overlay/append
+EOF
   for feature_branch in "${@}" ; do
     jira=$(echo $feature_branch | grep -o 'K8SSAAS-[0-9]*')
     cat <<- EOD
