@@ -12,6 +12,6 @@ params:
 run:
   path: sh
   args:
-  - cx
+  - -cx
   - |
     ./ci_repo/hack/concourse/tasks/generate-pipeline.sh
