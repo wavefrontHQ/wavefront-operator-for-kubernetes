@@ -44,7 +44,7 @@ jobs:
               apt install -y git
               cd wavefront-operator-ci
               git ls-remote --heads \
-                grep -o 'K8SSAAS-.*$' \
+                | grep -o 'K8SSAAS-.*$' \
                 > ../feature-branches/list.txt
       - task: generate-pipeline
         file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
