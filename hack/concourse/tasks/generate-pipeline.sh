@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-function get_feature_branches() {
-  cd ci_repo
-    git ls-remote --heads \
-      | grep -E 'refs/heads/K8SSAAS' \
-      | grep -oE 'K8SSAAS-\d{3,4}.*$'
-  cd -
-}
-
 function get_resources() {
   echo "#@data/values"
   echo '#@ load("@ytt:overlay", "overlay")'
@@ -40,8 +32,7 @@ function ensure_ytt() {
 ensure_ytt
 
 echo "Generating pipeline"
-get_feature_branches > feature-branches.txt
-get_resources $(cat feature-branches.txt) > ci_repo/hack/concourse/yamlbits/feature_branch_resources.yaml
+get_resources $(cat feature_branches/list.txt) > ci_repo/hack/concourse/yamlbits/feature_branch_resources.yaml
 
 ytt -f ci_repo/hack/concourse/yamlbits \
   > pipeline.yaml

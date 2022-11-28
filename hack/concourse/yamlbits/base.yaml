@@ -29,21 +29,28 @@ jobs:
           inputs:
           - name: wavefront-operator-ci
           outputs:
-          - name: wavefront-operator-ci-with-branch-list
+          - name: feature-branches
           run:
             path: sh
             args:
             - -cx
             - |
+              mkdir -p ~/.ssh
+              echo "((osspi.jcornish-github-private-key))" > ~/.ssh/id_ed25519
+              echo "((osspi.github-known-host))" > ~/.ssh/known_hosts
+              chmod 400 ~/.ssh/id_ed25519
+              
+              apt update
+              apt install -y git
               cd wavefront-operator-ci
-              git ls-remote --heads
               git ls-remote --heads \
-                | grep -E 'refs/heads/K8SSAAS' \
-                | grep -oE 'K8SSAAS-\d{3,4}.*$'
-      #! - task: generate-pipeline
-      #!   file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
-      #!   input_mapping:
-      #!     ci_repo: wavefront-operator-ci
+                grep -o 'K8SSAAS-.*$' \
+                > ../feature-branches/list.txt
+      - task: generate-pipeline
+        file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
+        input_mapping:
+          ci_repo: wavefront-operator-ci
+          feature_branches: feature-branches
 
       #! generate pipeline based on active branches
       #! trigger 9am or manually
