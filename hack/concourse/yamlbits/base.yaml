@@ -7,12 +7,12 @@ resources:
 #!      start: 9:00 AM
 #!      stop: 10:00 AM
 #!      location: America/Denver
-  - name: every-evening
-    type: time
-    source:
-      start: 5:00 PM
-      stop: 6:00 PM
-      location: America/Denver
+#!  - name: every-evening
+#!    type: time
+#!    source:
+#!      start: 5:00 PM
+#!      stop: 6:00 PM
+#!      location: America/Denver
   - name: wavefront-operator-ci
     type: git
     source:

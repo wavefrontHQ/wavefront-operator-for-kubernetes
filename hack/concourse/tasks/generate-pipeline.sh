@@ -14,6 +14,10 @@ function ensure_ytt() {
   fi
 }
 
+function get_jira_shortname() {
+    echo $1 | grep -o 'K8SSAAS-[0-9]*' | awk '{print tolower($0)}'
+}
+
 function get_resources() {
   cat << EOF
 #@data/values
@@ -23,7 +27,7 @@ resources:
 #@overlay/append
 EOF
   for feature_branch in "${@}" ; do
-    jira=$(echo $feature_branch | grep -o 'K8SSAAS-[0-9]*')
+    jira=$(get_jira_shortname $feature_branch)
     cat <<- EOD
 - name: wavefront-operator-${jira}
   type: git
@@ -44,7 +48,7 @@ jobs:
 #@overlay/append
 EOF
   for feature_branch in "${@}" ; do
-    jira=$(echo $feature_branch | grep -o 'K8SSAAS-[0-9]*')
+    jira=$(get_jira_shortname $feature_branch)
     cat <<- EOD
 - name: setup-cluster-${jira}
   plan:
