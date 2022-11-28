@@ -65,6 +65,9 @@ spec:
               {{- if .DataExport.WavefrontProxy.Histogram.MinutePort }} --histogramMinuteListenerPorts {{ .DataExport.WavefrontProxy.Histogram.MinutePort }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.Histogram.HourPort }} --histogramHourListenerPorts {{ .DataExport.WavefrontProxy.Histogram.HourPort }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.Histogram.DayPort }} --histogramDayListenerPorts {{ .DataExport.WavefrontProxy.Histogram.DayPort }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.OLTP.GrpcPort}} --otlpGrpcListenerPorts {{ .DataExport.WavefrontProxy.OLTP.GrpcPort }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.OLTP.HttpPort}} --otlpHttpListenerPorts {{ .DataExport.WavefrontProxy.OLTP.HttpPort }} {{- end -}}
+              {{- if .DataExport.WavefrontProxy.OLTP.ResourceAttrsOnMetricsIncluded}} --otlpResourceAttrsOnMetricsIncluded true {{- end -}}
               {{- if .DataExport.WavefrontProxy.Preprocessor }} --preprocessorConfigFile /etc/wavefront/preprocessor/rules.yaml {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyHost }} --proxyHost {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyHost }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPort }} --proxyPort {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPort }} {{- end -}}
@@ -113,6 +116,14 @@ spec:
             {{- end }}
             {{- if .DataExport.WavefrontProxy.Histogram.DayPort}}
             - containerPort: {{ .DataExport.WavefrontProxy.Histogram.DayPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.WavefrontProxy.OLTP.GrpcPort}}
+            - containerPort: {{ .DataExport.WavefrontProxy.OLTP.GrpcPort }}
+              protocol: TCP
+            {{- end }}
+            {{- if .DataExport.WavefrontProxy.OLTP.HttpPort}}
+            - containerPort: {{ .DataExport.WavefrontProxy.OLTP.HttpPort }}
               protocol: TCP
             {{- end }}
           readinessProbe:

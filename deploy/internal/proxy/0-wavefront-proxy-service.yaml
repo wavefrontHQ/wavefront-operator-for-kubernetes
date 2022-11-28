@@ -66,6 +66,16 @@ spec:
       port: {{ .DataExport.WavefrontProxy.Histogram.DayPort }}
       protocol: TCP
     {{end}}
+    {{if .DataExport.WavefrontProxy.OLTP.GrpcPort}}
+    - name: oltp-grpc
+      port: {{ .DataExport.WavefrontProxy.OLTP.GrpcPort }}
+      protocol: TCP
+    {{end}}
+    {{if .DataExport.WavefrontProxy.OLTP.HttpPort}}
+    - name: oltp-http
+      port: {{ .DataExport.WavefrontProxy.OLTP.HttpPort }}
+      protocol: TCP
+    {{end}}
   selector:
     app.kubernetes.io/name : wavefront
     app.kubernetes.io/component: proxy

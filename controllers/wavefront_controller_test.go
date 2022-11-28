@@ -552,6 +552,27 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--traceZipkinApplicationName zipkin", *mockKM)
 	})
 
+	t.Run("can create proxy with OLTP enabled", func(t *testing.T) {
+		r, mockKM := emptyScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.OLTP = wf.OLTP{
+				GrpcPort:                       4317,
+				HttpPort:                       4318,
+				ResourceAttrsOnMetricsIncluded: true,
+			}
+		}))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+
+		containsPortInContainers(t, "otlpGrpcListenerPorts", *mockKM, 4317)
+		containsPortInServicePort(t, 4317, *mockKM)
+
+		containsPortInContainers(t, "otlpHttpListenerPorts", *mockKM, 4318)
+		containsPortInServicePort(t, 4318, *mockKM)
+
+		containsProxyArg(t, "--otlpResourceAttrsOnMetricsIncluded true", *mockKM)
+	})
+
 	t.Run("can create proxy with histogram ports enabled", func(t *testing.T) {
 		r, mockKM := emptyScenario(wftest.CR(func(w *wf.Wavefront) {
 			w.Spec.DataExport.WavefrontProxy.Histogram.Port = 40000
