@@ -8,6 +8,8 @@ image_resource:
 inputs:
 - name: ci_repo
 - name: feature_branches
+outputs:
+- name: generated-pipeline
 params:
 run:
   path: ci_repo/hack/concourse/tasks/generate-pipeline.sh

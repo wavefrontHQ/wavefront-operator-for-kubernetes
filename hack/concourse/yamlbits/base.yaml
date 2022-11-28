@@ -52,14 +52,10 @@ jobs:
                 > ../feature-branches/list.txt
       - task: generate-pipeline
         file: wavefront-operator-ci/hack/concourse/tasks/generate-pipeline.yaml
-        outputs:
-        - name: generated-pipeline
         input_mapping:
           ci_repo: wavefront-operator-ci
           feature_branches: feature-branches
-      - set_pipeline: collector-osspi
-        inputs:
-        - name: generated-pipeline
+      - set_pipeline: operator-gitops
         file: generated-pipeline/pipeline.yaml
 
   #!- name: setup-<feature JIRA>-cluster
