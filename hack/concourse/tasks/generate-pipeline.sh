@@ -21,15 +21,15 @@ EOD
 }
 
 function ensure_ytt() {
-  if ! command -v curl; then
+  if ! command -v wge; then
     apt update
-    apt install -y curl
+    apt install -y wget
   fi
 
   if ! command -v ytt; then
-    curl https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.43.0/ytt-linux-amd64 \
-      --output /usr/local/bin/ytt
-    chmod +x /usr/local/bin/ytt
+    wget https://github.com/vmware-tanzu/carvel-ytt/releases/download/v0.43.0/ytt-linux-amd64
+    chmod +x ytt-linux-amd64
+    mv ytt-linux-amd64 /usr/local/bin/ytt
     ytt version
   fi
 }
