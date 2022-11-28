@@ -145,6 +145,9 @@ type WavefrontProxy struct {
 	// Distributed tracing configuration
 	Tracing Tracing `json:"tracing,omitempty"`
 
+	// OpenTelemetry Protocol configuration
+	OLTP OLTP `json:"oltp,omitempty"`
+
 	// Histogram distribution configuration
 	Histogram Histogram `json:"histogram,omitempty"`
 
@@ -248,6 +251,17 @@ type HttpProxy struct {
 	HttpProxyUser      string `json:"-"`
 	HttpProxyPassword  string `json:"-"`
 	UseHttpProxyCAcert bool   `json:"-"`
+}
+
+type OLTP struct {
+	// GrpcPort for OLTP GRPC format data (usually 4317)
+	GrpcPort int `json:"grpcPort,omitempty"`
+
+	// HttpPort for OLTP format data (usually 4318)
+	HttpPort int `json:"httpPort,omitempty"`
+
+	// Enable resource attributes on metrics to be included. Defaults to false.
+	ResourceAttrsOnMetricsIncluded bool `json:"resourceAttrsOnMetricsIncluded,omitempty"`
 }
 
 type Resource struct {
