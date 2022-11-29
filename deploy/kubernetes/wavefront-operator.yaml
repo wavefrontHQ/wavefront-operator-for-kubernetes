@@ -405,6 +405,21 @@ spec:
                         description: MetricPort is the primary port for Wavefront
                           data format metrics. Defaults to 2878.
                         type: integer
+                      oltp:
+                        description: OpenTelemetry Protocol configuration
+                        properties:
+                          grpcPort:
+                            description: GrpcPort for OLTP GRPC format data (usually
+                              4317)
+                            type: integer
+                          httpPort:
+                            description: HttpPort for OLTP format data (usually 4318)
+                            type: integer
+                          resourceAttrsOnMetricsIncluded:
+                            description: Enable resource attributes on metrics to
+                              be included. Defaults to false.
+                            type: boolean
+                        type: object
                       preprocessor:
                         description: Preprocessor is the name of the configmap containing
                           a rules.yaml key with proxy preprocessing rules
@@ -917,7 +932,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.2
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.0.3-beta-1
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
