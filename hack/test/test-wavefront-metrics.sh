@@ -24,10 +24,13 @@ function wait_for_query_match_tags() {
 
   while [[ $loop_count -lt $MAX_QUERY_TIMES ]]; do
     loop_count=$((loop_count + 1))
+    END_TIME="$(date '+%s')000"
+    START_TIME="$(echo "`date +%s` - 120"| bc)000"
     curl -s -X GET --header "Accept: application/json" \
        --header "Authorization: Bearer $WAVEFRONT_TOKEN" \
-       "https://$WF_CLUSTER.wavefront.com/api/v2/chart/api?q=${query}&queryType=WQL&s=$AFTER_UNIX_TS&g=s&view=METRIC&sorted=false&cached=true&useRawQK=false" | \
-       jq -S '.timeseries[0].tags' > "$actual_tags_json"
+       "https://$WF_CLUSTER.wavefront.com/api/v2/chart/api?q=${query}&queryType=WQL&s=$START_TIME&e=$END_TIME&g=m&i=false&strict=true&view=METRIC&includeObsoleteMetrics=false&sorted=false&cached=true&useRawQK=false" | \
+       jq '.timeseries[0].tags' | \
+       sort > "$actual_tags_json"
     printf "."
     if [ "$(comm -23 "$expected_tags_json" "$actual_tags_json")" == "" ]; then
       echo " done."
@@ -37,11 +40,11 @@ function wait_for_query_match_tags() {
   done
 
   if [ "$(comm -23 "$expected_tags_json" "$actual_tags_json")" != "" ]; then
-    echo "\nChecking if actual tags are a subset of expected tags for $query failed after attempting $MAX_QUERY_TIMES times."
+    printf "\nChecking if expected tags are a subset of actual tags for query %s failed after attempting %s times.\n" "$query" "$MAX_QUERY_TIMES"
+    echo "Actual tags are:"
+    cat "$expected_tags_json"
     echo "Actual tags are:"
     cat "$actual_tags_json"
-    echo "Expected tags are:"
-    cat "$expected_tags_json"
   fi
   return 1
 }
@@ -180,13 +183,13 @@ function main() {
   wait_for_cluster_ready $NS
 
   local EXPECTED_TAGS_JSON=$(mktemp)
-  jq -S -n --arg status Healthy \
+  jq -n --arg status Healthy \
      --arg proxy Healthy \
      --arg metrics Healthy \
      --arg logging Healthy \
-     --arg version "$EXPECTED_OPERATOR_VERSION"\
-     '$ARGS.named' > "$EXPECTED_TAGS_JSON"
-  cat $EXPECTED_TAGS_JSON
+     --arg version "$EXPECTED_OPERATOR_VERSION" \
+     '$ARGS.named' | \
+     sort > "$EXPECTED_TAGS_JSON"
 
   exit_on_fail wait_for_query_match_tags "ts(%22kubernetes.observability.status%22%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22)" "${EXPECTED_TAGS_JSON}"
   exit_on_fail wait_for_query_match_exact "ts(kubernetes.collector.version%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22%20AND%20installation_method%3D%22operator%22)" "${COLLECTOR_VERSION_IN_DECIMAL}"
