@@ -36,7 +36,7 @@ spec:
         runAsGroup: 65534
       containers:
         - name: wavefront-proxy
-          image: {{ .ImageRegistry }}/proxy:12.0
+          image: deosu877/proxy-dev:12.1-SNAPSHOT_20221121-103330
           imagePullPolicy: Always
           env:
             - name: WAVEFRONT_URL
