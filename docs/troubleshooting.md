@@ -110,10 +110,6 @@ If your proxy is having backlog issues, below are some options for fixes:
 
 ### Are metrics being dropped?
 
-Check the proxy logs by running the below command.
-```
-kubectl logs deployment/wavefront-proxy -n observability-system
-```
 Formerly, we would see the following error in the proxy logs when a metric has too many tags: `Too many point tags`.
 However, logic has been added to the collector to automatically drop tags in priority order
 to ensure that metrics make it through to the proxy and no longer cause this error.
