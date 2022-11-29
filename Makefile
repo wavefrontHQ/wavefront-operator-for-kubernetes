@@ -9,17 +9,12 @@ SEMVER_CLI_BIN:=$(if $(which semver-cli),$(which semver-cli),$(GOPATH)/bin/semve
 ifeq ($(origin VERSION_POSTFIX), undefined)
 VERSION_POSTFIX:=-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
 endif
+
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
-ifeq ($(origin VERSION), undefined)
 VERSION?=$(shell semver-cli inc patch $(RELEASE_VERSION))$(VERSION_POSTFIX)
-endif
-ifeq ($(origin IMG), undefined)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
-endif
 NS?=observability-system
-ifeq ($(origin LDFLAGS), undefined)
-LDFLAGS?= -X main.version=$(VERSION)
-endif
+LDFLAGS=-X main.version=$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
