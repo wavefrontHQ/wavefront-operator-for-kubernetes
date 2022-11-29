@@ -14,17 +14,49 @@ function curl_query_to_wf_dashboard() {
     jq '.timeseries[0].data[0][1]'
 }
 
+function wait_for_query_match_tags() {
+  local query=$1
+  local expected_tags_json=$2
+  local actual_tags_json=$(mktemp)
+  local loop_count=0
+
+  printf "Querying for tags %s ..."  "$query"
+
+  while [[ $loop_count -lt $MAX_QUERY_TIMES ]]; do
+    loop_count=$((loop_count + 1))
+    curl -s -X GET --header "Accept: application/json" \
+       --header "Authorization: Bearer $WAVEFRONT_TOKEN" \
+       "https://$WF_CLUSTER.wavefront.com/api/v2/chart/api?q=${query}&queryType=WQL&s=$AFTER_UNIX_TS&g=s&view=METRIC&sorted=false&cached=true&useRawQK=false" | \
+       jq -S '.timeseries[0].tags' > "$actual_tags_json"
+    printf "."
+    if [ "$(comm -23 "$expected_tags_json" "$actual_tags_json")" == "" ]; then
+      echo " done."
+      return 0
+    fi
+    sleep $CURL_WAIT
+  done
+
+  if [ "$(comm -23 "$expected_tags_json" "$actual_tags_json")" != "" ]; then
+    echo "Checking tags for $query failed after attempting $MAX_QUERY_TIMES times."
+    echo "Actual tags are:"
+    cat "$actual_tags_json"
+    echo "Expected tags are:"
+    cat "$expected_tags_json"
+  fi
+  return 1
+}
+
 function wait_for_query_match_exact() {
-  local query_match_exact=$1
+  local query=$1
   local expected=$2
   local actual
   local loop_count=0
 
-  printf "Querying for exact match %s ..."  "$query_match_exact"
+  printf "Querying for exact match %s ..."  "$query"
 
   while [[ $loop_count -lt $MAX_QUERY_TIMES ]]; do
     loop_count=$((loop_count + 1))
-    actual=$(curl_query_to_wf_dashboard "${query_match_exact}")
+    actual=$(curl_query_to_wf_dashboard "${query}")
     printf "."
     if echo "$actual $expected" | awk '{exit ($1 > $2 || $1 < $2)}'; then
         echo " done."
@@ -66,11 +98,13 @@ function wait_for_query_non_zero() {
 function print_usage_and_exit() {
   echo "Failure: $1"
   echo "Usage: $0 [flags] [options]"
-  echo -e "\t-c wavefront instance name (default: 'nimba')"
   echo -e "\t-t wavefront token (required)"
-  echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
-  echo -e "\t-v collector version (default: load from 'release/VERSION')"
-  echo -e "\t-e name of a file containing any extra asserts that should be made as part of this test"
+  echo -e "\t-n config cluster name for metric grouping (required)"
+  echo -e "\t-c wavefront instance name (default: 'nimba')"
+  echo -e "\t-c collector version (default: load from 'release/COLLECTOR_VERSION')"
+  echo -e "\t-o operator version (default: load from 'release/OPERATOR_VERSION')"
+  echo -e "\t-e name of a file containing any extra asserts that should be made as part of this test (optional)"
+  echo -e "\t-l name of test proxy used for logging (optional)"
   exit 1
 }
 
@@ -94,14 +128,16 @@ function main() {
 
   # REQUIRED
   local WAVEFRONT_TOKEN=
+  local CONFIG_CLUSTER_NAME=
 
+  local EXPECTED_COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
+  local EXPECTED_OPERATOR_VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
   local WF_CLUSTER=nimba
-  local EXPECTED_VERSION=${COLLECTOR_VERSION}
   local EXTRA_TESTS=
-
   local LOGGING_TEST_PROXY_NAME=
 
-  while getopts ":c:t:n:v:e:l:" opt; do
+
+  while getopts ":c:t:n:o:c:e:l:" opt; do
     case $opt in
     c)
       WF_CLUSTER="$OPTARG"
@@ -112,8 +148,11 @@ function main() {
     n)
       CONFIG_CLUSTER_NAME="$OPTARG"
       ;;
-    v)
-      EXPECTED_VERSION="$OPTARG"
+    o)
+      EXPECTED_OPERATOR_VERSION="$OPTARG"
+      ;;
+    c)
+      EXPECTED_COLLECTOR_VERSION="$OPTARG"
       ;;
     e)
       EXTRA_TESTS="$OPTARG"
@@ -128,20 +167,29 @@ function main() {
   done
 
   if [[ -z ${WAVEFRONT_TOKEN} ]]; then
-    print_msg_and_exit "wavefront token required"
+    print_usage_and_exit "wavefront token required"
   fi
-
   if [[ -z ${CONFIG_CLUSTER_NAME} ]]; then
-    print_msg_and_exit "config cluster name required"
+    print_usage_and_exit "config cluster name required"
   fi
 
-  local VERSION_IN_DECIMAL="${EXPECTED_VERSION%.*}"
-  local VERSION_IN_DECIMAL+="$(echo "${EXPECTED_VERSION}" | cut -d '.' -f3)"
-  local VERSION_IN_DECIMAL="$(echo "${VERSION_IN_DECIMAL}" | sed 's/0$//')"
+  local COLLECTOR_VERSION_IN_DECIMAL="${EXPECTED_COLLECTOR_VERSION%.*}"
+  local COLLECTOR_VERSION_IN_DECIMAL+="$(echo "${EXPECTED_COLLECTOR_VERSION}" | cut -d '.' -f3)"
+  local COLLECTOR_VERSION_IN_DECIMAL="$(echo "${COLLECTOR_VERSION_IN_DECIMAL}" | sed 's/0$//')"
 
   wait_for_cluster_ready $NS
 
-  exit_on_fail wait_for_query_match_exact "ts(kubernetes.collector.version%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22%20AND%20installation_method%3D%22operator%22)" "${VERSION_IN_DECIMAL}"
+  local EXPECTED_TAGS_JSON=$(mktemp)
+  jq -S -n --arg status Healthy \
+     --arg proxy Healthy \
+     --arg metrics Healthy \
+     --arg logging Healthy \
+     --arg version "$EXPECTED_OPERATOR_VERSION"\
+     '$ARGS.named' > "$EXPECTED_TAGS_JSON"
+  cat $EXPECTED_TAGS_JSON
+
+  exit_on_fail wait_for_query_match_tags "ts(%22kubernetes.observability.status%22%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22)" "${EXPECTED_TAGS_JSON}"
+  exit_on_fail wait_for_query_match_exact "ts(kubernetes.collector.version%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22%20AND%20installation_method%3D%22operator%22)" "${COLLECTOR_VERSION_IN_DECIMAL}"
   exit_on_fail wait_for_query_non_zero "ts(kubernetes.cluster.pod.count%2C%20cluster%3D%22${CONFIG_CLUSTER_NAME}%22)"
 
   if [[ ! -z ${LOGGING_TEST_PROXY_NAME} ]]; then
