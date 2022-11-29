@@ -69,6 +69,11 @@ function wait_for_query_match_exact() {
     sleep $CURL_WAIT
   done
 
+  if [[ $actual != $expected ]]; then
+    echo "Checking wavefront dashboard metrics for $query failed after attempting $MAX_QUERY_TIMES times."
+    echo "Actual is '$actual'"
+    echo "Expected is '$expected'"
+  fi
   return 1
 }
 
