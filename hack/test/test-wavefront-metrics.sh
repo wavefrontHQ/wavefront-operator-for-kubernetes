@@ -37,7 +37,7 @@ function wait_for_query_match_tags() {
   done
 
   if [ "$(comm -23 "$expected_tags_json" "$actual_tags_json")" != "" ]; then
-    echo "Checking tags for $query failed after attempting $MAX_QUERY_TIMES times."
+    echo "\nChecking if actual tags are a subset of expected tags for $query failed after attempting $MAX_QUERY_TIMES times."
     echo "Actual tags are:"
     cat "$actual_tags_json"
     echo "Expected tags are:"
