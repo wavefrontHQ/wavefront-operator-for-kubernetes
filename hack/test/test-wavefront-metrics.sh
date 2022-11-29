@@ -108,7 +108,7 @@ function print_usage_and_exit() {
   echo "Usage: $0 [flags] [options]"
   echo -e "\t-t wavefront token (required)"
   echo -e "\t-n config cluster name for metric grouping (required)"
-  echo -e "\t-c wavefront instance name (default: 'nimba')"
+  echo -e "\t-w wavefront instance name (default: 'nimba')"
   echo -e "\t-c collector version (default: load from 'release/COLLECTOR_VERSION')"
   echo -e "\t-o operator version (default: load from 'release/OPERATOR_VERSION')"
   echo -e "\t-e name of a file containing any extra asserts that should be made as part of this test (optional)"
@@ -147,7 +147,7 @@ function main() {
 
   while getopts ":c:t:n:o:c:e:l:" opt; do
     case $opt in
-    c)
+    w)
       WF_CLUSTER="$OPTARG"
       ;;
     t)
