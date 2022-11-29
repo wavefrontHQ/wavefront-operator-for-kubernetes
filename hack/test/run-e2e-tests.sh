@@ -7,10 +7,11 @@ NS=observability-system
 function print_usage_and_exit() {
   echo "Failure: $1"
   echo "Usage: $0 [flags] [options]"
-  echo -e "\t-c wavefront instance name (default: 'nimba')"
   echo -e "\t-t wavefront token (required)"
+  echo -e "\t-c wavefront instance name (default: 'nimba')"
+  echo -e "\t-v operator version (default: load from 'release/OPERATOR_VERSION')"
   echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
-  echo -e "\t-d namespace to create CR in"
+  echo -e "\t-d namespace to create CR in (default: observability-system"
   echo -e "\t-r tests to run (runs all by default)"
   exit 1
 }
@@ -39,7 +40,7 @@ function run_test_wavefront_metrics() {
   local cluster_name=${CONFIG_CLUSTER_NAME}-$type
   echo "Running test wavefront metrics, cluster_name $cluster_name ..."
 
-  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -v ${COLLECTOR_VERSION} -e "$type-test.sh"
+  ${REPO_ROOT}/hack/test/test-wavefront-metrics.sh -t ${WAVEFRONT_TOKEN} -n $cluster_name -e "$type-test.sh" -o ${VERSION}
 }
 
 function run_health_checks() {
@@ -196,21 +197,21 @@ function main() {
 
   # REQUIRED
   local WAVEFRONT_TOKEN=
+
   local WAVEFRONT_URL="https:\/\/nimba.wavefront.com"
   local WF_CLUSTER=nimba
   local VERSION=$(cat ${REPO_ROOT}/release/OPERATOR_VERSION)
-  local COLLECTOR_VERSION=$(cat ${REPO_ROOT}/release/COLLECTOR_VERSION)
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   local CONFIG_CLUSTER_NAME=$(create_cluster_name)
   local tests_to_run=()
 
   while getopts ":c:t:v:n:d:r:" opt; do
     case $opt in
-    c)
-      WF_CLUSTER="$OPTARG"
-      ;;
     t)
       WAVEFRONT_TOKEN="$OPTARG"
+      ;;
+    c)
+      WF_CLUSTER="$OPTARG"
       ;;
     v)
       VERSION="$OPTARG"
