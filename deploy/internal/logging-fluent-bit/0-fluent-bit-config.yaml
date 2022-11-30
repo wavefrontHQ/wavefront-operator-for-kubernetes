@@ -48,8 +48,7 @@ data:
     [OUTPUT]
         Name http
         Match kube.*
-        Host 10.96.239.246
-        Port 2878
+        Proxy http://wavefront-proxy:2878
         URI /logs/json_array?f=logs_json_lines
         Format json_lines
         json_date_key timestamp

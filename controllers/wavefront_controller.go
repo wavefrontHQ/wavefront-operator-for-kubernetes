@@ -215,14 +215,15 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec,
 }
 
 func allDirs() []string {
-	return dirList(true, true, true)
+	return dirList(true, true, true, true)
 }
 
 func enabledDirs(spec wf.WavefrontSpec) []string {
 	return dirList(
 		spec.DataExport.WavefrontProxy.Enable,
 		spec.CanExportData && spec.DataCollection.Metrics.Enable,
-		spec.CanExportData && spec.DataCollection.Logging.Enable,
+		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluentd",
+		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluent-bit",
 	)
 }
 
@@ -230,11 +231,12 @@ func disabledDirs(spec wf.WavefrontSpec) []string {
 	return dirList(
 		!spec.DataExport.WavefrontProxy.Enable,
 		!spec.DataCollection.Metrics.Enable,
-		!spec.DataCollection.Logging.Enable,
+		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluentd"),
+		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluent-bit"),
 	)
 }
 
-func dirList(proxy, collector, logging bool) []string {
+func dirList(proxy, collector, loggingFluentd, loggingFluentBit bool) []string {
 	dirsToInclude := []string{"internal"}
 	if proxy {
 		dirsToInclude = append(dirsToInclude, "proxy")
@@ -242,8 +244,11 @@ func dirList(proxy, collector, logging bool) []string {
 	if collector {
 		dirsToInclude = append(dirsToInclude, "collector")
 	}
-	if logging {
-		dirsToInclude = append(dirsToInclude, "logging")
+	if loggingFluentd {
+		dirsToInclude = append(dirsToInclude, "logging-fluentd")
+	}
+	if loggingFluentBit {
+		dirsToInclude = append(dirsToInclude, "logging-fluent-bit")
 	}
 	return dirsToInclude
 }

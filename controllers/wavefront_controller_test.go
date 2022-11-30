@@ -153,7 +153,7 @@ func TestReconcileAll(t *testing.T) {
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
 		require.True(t, mockKM.ClusterCollectorDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
 		require.True(t, mockKM.LoggingDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd"))
-		require.True(t, mockKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
+		//require.True(t, mockKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
 	})
 
 	t.Run("Can Configure Custom Registry", func(t *testing.T) {
@@ -172,7 +172,7 @@ func TestReconcileAll(t *testing.T) {
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("image: docker.io/kubernetes-collector"))
 		require.True(t, mockKM.ClusterCollectorDeploymentContains("image: docker.io/kubernetes-collector"))
 		require.True(t, mockKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
-		require.True(t, mockKM.ProxyDeploymentContains("image: docker.io/proxy"))
+		//require.True(t, mockKM.ProxyDeploymentContains("image: docker.io/proxy"))
 	})
 
 	t.Run("Child components inherits controller's namespace", func(t *testing.T) {
@@ -759,7 +759,7 @@ func TestReconcileProxy(t *testing.T) {
 }
 
 func TestReconcileLogging(t *testing.T) {
-	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
+	t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluentd", func(t *testing.T) {
 		r, mockKM := componentScenario(wftest.CR())
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -769,6 +769,19 @@ func TestReconcileLogging(t *testing.T) {
 
 		require.NoError(t, err)
 		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
+	})
+
+	t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluent-bit", func(t *testing.T) {
+		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataCollection.Logging.Type = "fluent-bit"
+		}))
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		ds, err := mockKM.GetAppliedDaemonSet("logging", util.LoggingName)
+		require.NoError(t, err)
+		require.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+
+		require.NoError(t, err)
+		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName, "fluentbit"))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {

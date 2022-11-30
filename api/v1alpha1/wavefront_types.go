@@ -313,6 +313,11 @@ type Logging struct {
 	// +kubebuilder:default:=false
 	Enable bool `json:"enable,omitempty"`
 
+	//Logging Type: fluentd or fluent-bit. Defaults to fluentd
+	// +kubebuilder:validation:Enum=fluentd;fluent-bit
+	// +kubebuilder:default:=fluentd
+	Type string `json:"type,omitempty"`
+
 	// Filters to apply towards all logs collected by wavefront-logging.
 	Filters LogFilters `json:"filters,omitempty"`
 

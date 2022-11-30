@@ -21,6 +21,7 @@ func CR(options ...func(*wf.Wavefront)) *wf.Wavefront {
 				},
 				Logging: wf.Logging{
 					Enable: true,
+					Type:   "fluentd",
 				},
 			},
 			DataExport: wf.DataExport{
