@@ -773,7 +773,7 @@ func TestReconcileLogging(t *testing.T) {
 
 	t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluent-bit", func(t *testing.T) {
 		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataCollection.Logging.Type = "fluent-bit"
+			w.Spec.DataCollection.Logging.Type = util.FluentBit
 		}))
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		ds, err := mockKM.GetAppliedDaemonSet("logging", util.LoggingName)

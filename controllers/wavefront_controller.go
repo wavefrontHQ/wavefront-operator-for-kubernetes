@@ -222,8 +222,8 @@ func enabledDirs(spec wf.WavefrontSpec) []string {
 	return dirList(
 		spec.DataExport.WavefrontProxy.Enable,
 		spec.CanExportData && spec.DataCollection.Metrics.Enable,
-		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluentd",
-		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluent-bit",
+		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.Fluentd,
+		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.FluentBit,
 	)
 }
 
@@ -231,8 +231,8 @@ func disabledDirs(spec wf.WavefrontSpec) []string {
 	return dirList(
 		!spec.DataExport.WavefrontProxy.Enable,
 		!spec.DataCollection.Metrics.Enable,
-		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluentd"),
-		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == "fluent-bit"),
+		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.Fluentd),
+		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.FluentBit),
 	)
 }
 

@@ -30,7 +30,7 @@ spec:
         app.kubernetes.io/component: logging
     spec:
       containers:
-      - image: cr.fluentbit.io/fluent/fluent-bit:1.9.8-debug
+      - image: cr.fluentbit.io/fluent/fluent-bit:2.0.6
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

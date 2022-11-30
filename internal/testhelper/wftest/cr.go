@@ -2,6 +2,7 @@ package wftest
 
 import (
 	wf "github.com/wavefrontHQ/wavefront-operator-for-kubernetes/api/v1alpha1"
+	"github.com/wavefrontHQ/wavefront-operator-for-kubernetes/internal/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -21,7 +22,7 @@ func CR(options ...func(*wf.Wavefront)) *wf.Wavefront {
 				},
 				Logging: wf.Logging{
 					Enable: true,
-					Type:   "fluentd",
+					Type:   util.Fluentd,
 				},
 			},
 			DataExport: wf.DataExport{
