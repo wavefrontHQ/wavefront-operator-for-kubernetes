@@ -5,13 +5,6 @@
 This repository is a work in progress.
 Currently, community contribution is not supported.
 
-## Release new version of the manual deploy
-
-Increment the version number before building
-```
- PREFIX=projects.registry.vmware.com/tanzu_observability DOCKER_IMAGE=kubernetes-operator VERSION=0.10.0-alpha-9 make docker-xplatform-build generate-kubernetes-yaml
-```
-
 ## Build and install locally
 
 See the below steps to build and deploy the operator on your local kind cluster.
@@ -44,7 +37,7 @@ Run the controller manager on the local cluster:
 # Create new local kind cluster
 make nuke-kind
 # Build and Deploy local operator image
-make deploy-kind
+make deploy
 # Deploy Proxy
 kubectl apply -f deploy/kubernetes/scenarios/wavefront-getting-started.yaml
 ```
