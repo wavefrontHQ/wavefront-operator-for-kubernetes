@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/name: wavefront
     app.kubernetes.io/component: logging
-  name: wavefront-logging
+  name: wavefront-logging-fluent-bit
   namespace: {{ .Namespace }}
   ownerReferences:
     - apiVersion: apps/v1
@@ -77,13 +77,13 @@ spec:
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
-      serviceAccount: wavefront-logging
-      serviceAccountName: wavefront-logging
+      serviceAccount: wavefront-logging-fluent-bit
+      serviceAccountName: wavefront-logging-fluent-bit
       terminationGracePeriodSeconds: 30
       volumes:
       - configMap:
           defaultMode: 420
-          name: wavefront-logging-config
+          name: wavefront-logging-config-fluent-bit
         name: config
       - hostPath:
           path: /var/log
