@@ -57,6 +57,9 @@ jobs:
           feature_branches: feature-branches
       - set_pipeline: operator-gitops
         file: generated-pipeline/pipeline.yaml
+        instance_vars:
+          osspi:
+            jcornish-github-private-key: ((osspi.jcornish-github-private-key))
 
   #!- name: setup-<feature JIRA>-cluster
     #! trigger 9am
