@@ -41,7 +41,7 @@ spec:
         - name: wavefront-collector
           securityContext:
             readOnlyRootFilesystem: true
-          image: {{ .ImageRegistry }}/kubernetes-collector:1.12.1
+          image: {{ .ImageRegistry }}/kubernetes-collector:1.13.0
           imagePullPolicy: Always
           command:
             - /wavefront-collector
