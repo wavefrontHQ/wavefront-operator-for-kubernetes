@@ -7,7 +7,7 @@ pipeline {
 
   environment {
     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
-    GIT_BRANCH = getCurrentBranchName()
+    GIT_BRANCH = "main"
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
     GITHUB_TOKEN = credentials('GITHUB_TOKEN')
   }
@@ -92,8 +92,4 @@ pipeline {
       }
     }
   }
-}
-
-def getCurrentBranchName() {
-  return env.BRANCH_NAME.split("/")[1]
 }
