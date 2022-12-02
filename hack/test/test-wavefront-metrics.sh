@@ -52,7 +52,7 @@ function wait_for_query_match_tags() {
 function wait_for_query_match_exact() {
   local query=$1
   local expected=$2
-  local actual
+  local actual=""
   local loop_count=0
 
   printf "Querying for exact match %s ..."  "$query"
