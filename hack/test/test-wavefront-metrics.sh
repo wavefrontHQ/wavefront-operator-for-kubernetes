@@ -61,7 +61,6 @@ function wait_for_query_match_exact() {
     loop_count=$((loop_count + 1))
     actual=$(curl_query_to_wf_dashboard "${query}")
     printf "."
-    echo "actual is $actual"
     if echo "$actual $expected" | awk '{exit ($1 > $2 || $1 < $2)}'; then
         echo " done."
         return 0
@@ -69,7 +68,7 @@ function wait_for_query_match_exact() {
 
     sleep $CURL_WAIT
   done
-  echo "actual at end is $actual"
+
   if [[ $actual != $expected ]]; then
     echo "Checking wavefront dashboard metrics for $query failed after attempting $MAX_QUERY_TIMES times."
     echo "Actual is '$actual'"
