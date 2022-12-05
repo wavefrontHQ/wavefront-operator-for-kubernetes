@@ -215,41 +215,48 @@ func (r *WavefrontReconciler) readAndInterpolateResources(spec wf.WavefrontSpec,
 }
 
 func allDirs() []string {
-	return dirList(true, true, true, true)
+	return []string{"internal", "proxy", "logging", "collector", "fluentd", "fluent-bit"}
 }
 
 func enabledDirs(spec wf.WavefrontSpec) []string {
-	return dirList(
-		spec.DataExport.WavefrontProxy.Enable,
-		spec.CanExportData && spec.DataCollection.Metrics.Enable,
-		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.Fluentd,
-		spec.CanExportData && spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.FluentBit,
-	)
+	dirsToInclude := []string{"internal"}
+	if spec.DataExport.WavefrontProxy.Enable {
+		dirsToInclude = append(dirsToInclude, "proxy")
+	}
+	if !spec.CanExportData {
+		return dirsToInclude
+	}
+	if spec.DataCollection.Metrics.Enable {
+		dirsToInclude = append(dirsToInclude, "collector")
+	}
+	if spec.DataCollection.Logging.Enable {
+		dirsToInclude = append(dirsToInclude, "logging")
+		dirsToInclude = append(dirsToInclude, spec.DataCollection.Logging.Type)
+	}
+
+	return dirsToInclude
 }
 
 func disabledDirs(spec wf.WavefrontSpec) []string {
-	return dirList(
-		!spec.DataExport.WavefrontProxy.Enable,
-		!spec.DataCollection.Metrics.Enable,
-		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.Fluentd),
-		!(spec.DataCollection.Logging.Enable && spec.DataCollection.Logging.Type == util.FluentBit),
-	)
-}
-
-func dirList(proxy, collector, loggingFluentd, loggingFluentBit bool) []string {
 	dirsToInclude := []string{"internal"}
-	if proxy {
+	if !spec.DataExport.WavefrontProxy.Enable {
 		dirsToInclude = append(dirsToInclude, "proxy")
 	}
-	if collector {
+	if !spec.DataCollection.Metrics.Enable {
 		dirsToInclude = append(dirsToInclude, "collector")
 	}
-	if loggingFluentd {
-		dirsToInclude = append(dirsToInclude, "logging-fluentd")
+	if spec.DataCollection.Logging.Enable {
+		if spec.DataCollection.Logging.Type == util.FluentBit {
+			dirsToInclude = append(dirsToInclude, util.Fluentd)
+		} else {
+			dirsToInclude = append(dirsToInclude, util.FluentBit)
+		}
+	} else {
+		dirsToInclude = append(dirsToInclude, "logging")
+		dirsToInclude = append(dirsToInclude, util.Fluentd)
+		dirsToInclude = append(dirsToInclude, util.FluentBit)
 	}
-	if loggingFluentBit {
-		dirsToInclude = append(dirsToInclude, "logging-fluent-bit")
-	}
+
 	return dirsToInclude
 }
 

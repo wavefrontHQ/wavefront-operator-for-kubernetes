@@ -771,18 +771,18 @@ func TestReconcileLogging(t *testing.T) {
 		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
 	})
 
-	t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluent-bit", func(t *testing.T) {
-		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataCollection.Logging.Type = util.FluentBit
-		}))
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		ds, err := mockKM.GetAppliedDaemonSet("logging", util.LoggingName)
-		require.NoError(t, err)
-		require.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
-
-		require.NoError(t, err)
-		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName, "fluentbit"))
-	})
+	//t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluent-bit", func(t *testing.T) {
+	//	r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+	//		w.Spec.DataCollection.Logging.Type = util.FluentBit
+	//	}))
+	//	_, err := r.Reconcile(context.Background(), defaultRequest())
+	//	ds, err := mockKM.GetAppliedDaemonSet("logging", util.LoggingName)
+	//	require.NoError(t, err)
+	//	require.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
+	//
+	//	require.NoError(t, err)
+	//	require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName, "fluentbit"))
+	//})
 
 	t.Run("default resources for logging", func(t *testing.T) {
 		r, mockKM := componentScenario(wftest.CR())
