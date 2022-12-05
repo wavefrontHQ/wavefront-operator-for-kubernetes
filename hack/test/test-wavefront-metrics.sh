@@ -59,8 +59,7 @@ function wait_for_query_match_exact() {
 
   while [[ $loop_count -lt $MAX_QUERY_TIMES ]]; do
     loop_count=$((loop_count + 1))
-    actual=$(curl_query_to_wf_dashboard "${query}")
-    actual=$(echo $actual | awk '{printf "%.3f", $1}')
+    actual=$(curl_query_to_wf_dashboard "${query}" | awk '{printf "%.3f", $1}')
     printf "."
     if echo "$actual $expected" | awk '{exit ($1 > $2 || $1 < $2)}'; then
         echo " done."
