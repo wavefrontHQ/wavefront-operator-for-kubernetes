@@ -23,9 +23,6 @@ pipeline {
 
   stages {
     stage("Test Go Code") {
-      options {
-        timeout(time: 15, unit: 'MINUTES')
-      }
       steps {
         sh 'make checkfmt vet test'
         sh 'make linux-golangci-lint'
