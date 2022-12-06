@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-configurator
+  namespace: observability-system # was going to put in separate namespace but meh
+  labels:
+    app.kubernetes.io/name: cornfront
+    app.kubernetes.io/component: observability-configurator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cornfront
+      app.kubernetes.io/component: observability-configurator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cornfront
+        app.kubernetes.io/component: observability-configurator
+      annotations:
+        config-repo: git@github.com:johncornish/gitops-configurator.git
+        cr-selector: wavefront
+        cr-namespace: observability-system
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+      # serviceAccountName: wavefront-configurator
+      containers:
+        - name: gitops-configurator
+          securityContext:
+            readOnlyRootFilesystem: true
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/gitops-configurator:latest
+          imagePullPolicy: Never
+          command:
+            - /configurator.sh
+          env:
+            - name: POD_NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: CONFIG_REPO
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['config-repo']
+            - name: CR_SELECTOR
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['cr-selector']
+            - name: CR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations['cr-namespace']
