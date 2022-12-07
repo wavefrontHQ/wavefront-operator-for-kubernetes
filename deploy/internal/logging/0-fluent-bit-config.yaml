@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: wavefront-logging-config-fluent-bit
+  name: wavefront-logging-config
   namespace: {{ .Namespace }}
   ownerReferences:
     - apiVersion: apps/v1

@@ -147,14 +147,6 @@ spec:
                         description: Tags are a map of key value pairs that are added
                           to all logging emitted.
                         type: object
-                      type:
-                        default: fluentd
-                        description: 'Logging Type: fluentd or fluent-bit. Defaults
-                          to fluentd'
-                        enum:
-                        - fluentd
-                        - fluent-bit
-                        type: string
                     type: object
                   metrics:
                     description: Metrics has resource configuration for node- and

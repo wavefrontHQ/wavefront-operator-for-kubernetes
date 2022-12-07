@@ -152,7 +152,7 @@ func TestReconcileAll(t *testing.T) {
 
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
 		require.True(t, mockKM.ClusterCollectorDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
-		require.True(t, mockKM.LoggingDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd"))
+		//require.True(t, mockKM.LoggingDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd"))
 		//require.True(t, mockKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
 	})
 
@@ -171,7 +171,8 @@ func TestReconcileAll(t *testing.T) {
 
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("image: docker.io/kubernetes-collector"))
 		require.True(t, mockKM.ClusterCollectorDeploymentContains("image: docker.io/kubernetes-collector"))
-		require.True(t, mockKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
+		//TODO: Implement Me
+		//require.True(t, mockKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
 		//require.True(t, mockKM.ProxyDeploymentContains("image: docker.io/proxy"))
 	})
 
@@ -759,7 +760,7 @@ func TestReconcileProxy(t *testing.T) {
 }
 
 func TestReconcileLogging(t *testing.T) {
-	t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluentd", func(t *testing.T) {
+	t.Run("Create logging if DataCollection.Logging.Enable is set to true", func(t *testing.T) {
 		r, mockKM := componentScenario(wftest.CR())
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
@@ -769,19 +770,6 @@ func TestReconcileLogging(t *testing.T) {
 
 		require.NoError(t, err)
 		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
-	})
-
-	t.Run("Create logging if DataCollection.Logging.Enable is set to true for fluent-bit", func(t *testing.T) {
-		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataCollection.Logging.Type = util.FluentBit
-		}))
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		ds, err := mockKM.GetAppliedDaemonSet("logging", util.LoggingName)
-		require.NoError(t, err)
-		require.NotEmpty(t, ds.Spec.Template.GetObjectMeta().GetAnnotations()["configHash"])
-
-		require.NoError(t, err)
-		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName, "fluentbit"))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {
@@ -808,47 +796,50 @@ func TestReconcileLogging(t *testing.T) {
 		require.True(t, mockKM.LoggingDaemonSetContains("cpu: 200m"))
 	})
 
-	t.Run("Verify log tag allow list", func(t *testing.T) {
-		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataCollection.Logging.Filters = wf.LogFilters{
-				TagDenyList:  nil,
-				TagAllowList: map[string][]string{"namespace_name": {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
-			}
-		}))
+	//TODO: Implement Me
+	//t.Run("Verify log tag allow list", func(t *testing.T) {
+	//	r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+	//		w.Spec.DataCollection.Logging.Filters = wf.LogFilters{
+	//			TagDenyList:  nil,
+	//			TagAllowList: map[string][]string{"namespace_name": {"kube-sys", "wavefront"}, "pod_name": {"pet-clinic"}},
+	//		}
+	//	}))
+	//
+	//	_, err := r.Reconcile(context.Background(), defaultRequest())
+	//	require.NoError(t, err)
+	//	require.True(t, mockKM.LoggingConfigMapContains("key $.namespace_name"))
+	//	require.True(t, mockKM.LoggingConfigMapContains("key $.pod_name"))
+	//	require.True(t, mockKM.LoggingConfigMapContains("pattern /(^kube-sys$|^wavefront$)/"))
+	//	require.True(t, mockKM.LoggingConfigMapContains("pattern /(^pet-clinic$)/"))
+	//})
 
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		require.NoError(t, err)
-		require.True(t, mockKM.LoggingConfigMapContains("key $.namespace_name"))
-		require.True(t, mockKM.LoggingConfigMapContains("key $.pod_name"))
-		require.True(t, mockKM.LoggingConfigMapContains("pattern /(^kube-sys$|^wavefront$)/"))
-		require.True(t, mockKM.LoggingConfigMapContains("pattern /(^pet-clinic$)/"))
-	})
+	//TODO: Implement Me
+	//t.Run("Verify log tag deny list", func(t *testing.T) {
+	//	r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+	//		w.Spec.DataCollection.Logging.Filters = wf.LogFilters{
+	//			TagDenyList:  map[string][]string{"namespace_name": {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
+	//			TagAllowList: nil,
+	//		}
+	//	}))
+	//
+	//	_, err := r.Reconcile(context.Background(), defaultRequest())
+	//	require.NoError(t, err)
+	//	require.True(t, mockKM.LoggingConfigMapContains("key $.namespace_name"))
+	//	require.True(t, mockKM.LoggingConfigMapContains("key $.pod_name"))
+	//	require.True(t, mockKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
+	//	require.True(t, mockKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
+	//})
 
-	t.Run("Verify log tag deny list", func(t *testing.T) {
-		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataCollection.Logging.Filters = wf.LogFilters{
-				TagDenyList:  map[string][]string{"namespace_name": {"deny-kube-sys", "deny-wavefront"}, "pod_name": {"deny-pet-clinic"}},
-				TagAllowList: nil,
-			}
-		}))
-
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		require.NoError(t, err)
-		require.True(t, mockKM.LoggingConfigMapContains("key $.namespace_name"))
-		require.True(t, mockKM.LoggingConfigMapContains("key $.pod_name"))
-		require.True(t, mockKM.LoggingConfigMapContains("pattern /(^deny-kube-sys$|^deny-wavefront$)/"))
-		require.True(t, mockKM.LoggingConfigMapContains("pattern /(^deny-pet-clinic$)/"))
-	})
-
-	t.Run("Verify tags are added to logging pods", func(t *testing.T) {
-		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataCollection.Logging.Tags = map[string]string{"key1": "value1", "key2": "value2"}
-		}))
-
-		_, err := r.Reconcile(context.Background(), defaultRequest())
-		require.NoError(t, err)
-		require.True(t, mockKM.LoggingConfigMapContains("key1 value1", "key2 value2"))
-	})
+	//TODO: Implement Me
+	//t.Run("Verify tags are added to logging pods", func(t *testing.T) {
+	//	r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+	//		w.Spec.DataCollection.Logging.Tags = map[string]string{"key1": "value1", "key2": "value2"}
+	//	}))
+	//
+	//	_, err := r.Reconcile(context.Background(), defaultRequest())
+	//	require.NoError(t, err)
+	//	require.True(t, mockKM.LoggingConfigMapContains("key1 value1", "key2 value2"))
+	//})
 
 	t.Run("can be disabled", func(t *testing.T) {
 		CanBeDisabled(t,

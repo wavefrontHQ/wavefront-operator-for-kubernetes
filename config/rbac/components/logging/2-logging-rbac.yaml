@@ -10,6 +10,3 @@ subjects:
 - kind: ServiceAccount
   name: wavefront-logging
   namespace: observability-system
-- kind: ServiceAccount
-  name: wavefront-logging-fluent-bit
-  namespace: observability-system
