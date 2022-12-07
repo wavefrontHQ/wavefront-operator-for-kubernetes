@@ -22,19 +22,17 @@ spec:
         cr-selector: wavefront
         cr-namespace: observability-system
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 65534
-        runAsGroup: 65534
-      # serviceAccountName: wavefront-configurator
+      serviceAccountName: wavefront-configurator
       containers:
         - name: gitops-configurator
-          securityContext:
-            readOnlyRootFilesystem: true
           image: projects.registry.vmware.com/tanzu_observability_keights_saas/gitops-configurator:latest
           imagePullPolicy: Never
           command:
             - /configurator.sh
+          volumeMounts:
+            - mountPath: /root/.ssh
+              name: ssh-hosts-and-key
+              readOnly: true
           env:
             - name: POD_NAMESPACE_NAME
               valueFrom:
@@ -56,3 +54,9 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.annotations['cr-namespace']
+
+      volumes:
+        - name: ssh-hosts-and-key
+          secret:
+            secretName: ssh-hosts-and-key
+            defaultMode: 0600

@@ -9,8 +9,14 @@ VERSION?=$(shell cat ./release/CONFIGURATOR_VERSION)$(VERSION_POSTFIX)
 IMG?=$(PREFIX)/$(DOCKER_IMAGE):$(VERSION)
 LOCAL_IMG=$(PREFIX)/$(DOCKER_IMAGE):latest
 
+NS?=observability-system
+
 .PHONY: all
 all: docker-build
+
+.PHONY: ssh-hosts-and-key
+ssh-hosts-and-key:
+	kubectl create -n $(NS) secret generic ssh-hosts-and-key --from-file known_hosts=$(HOME)/.ssh/known_hosts --from-file id_ed25519=$(HOME)/.ssh/id_ed25519 || true
 
 .PHONY: docker-build
 docker-build:
@@ -22,7 +28,7 @@ docker-push: docker-build
 	#docker push ${IMG}
 
 .PHONY: deploy
-deploy: docker-push
+deploy: ssh-hosts-and-key docker-push
 	kubectl apply -f deploy/
 
 .PHONY: undeploy
@@ -30,4 +36,7 @@ undeploy:
 	kubectl delete -f deploy/
 
 img:
-	echo $(IMG)
+	@echo $(IMG)
+
+limg:
+	@echo $(LOCAL_IMG)
