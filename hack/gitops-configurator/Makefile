@@ -36,7 +36,7 @@ redeploy: undeploy deploy
 
 .PHONY: undeploy
 undeploy:
-	kubectl delete -f deploy/
+	kubectl delete -f deploy/ || true
 
 img:
 	@echo $(IMG)

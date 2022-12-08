@@ -2,7 +2,7 @@
 
 REPO_DIR=./gitops-configurator
 CONFIG_FILE=wavefront.yaml
-SLEEP_INTERVAL=60
+POLL_INTERVAL=3
 
 function init_repo_and_author() {
   git config --global user.name "Wavefront Operator Configurator"
@@ -13,24 +13,29 @@ function init_repo_and_author() {
 }
 
 function push_cr() {
-  while [ true ]; do
-    kubectl get pods --namespace "$CR_NAMESPACE"
-    kubectl get "$CR_SELECTOR" --namespace "$CR_NAMESPACE" -o yaml > "$REPO_DIR/$CONFIG_FILE"
+  kubectl get "$CR_SELECTOR" --namespace "$CR_NAMESPACE" -o yaml > "$CONFIG_FILE"
 
-    pushd "$REPO_DIR" || exit 1
-      git add "$CONFIG_FILE"
-      git commit -m"Update '$CONFIG_FILE'" || continue
-      git push
-    popd  || exit 1
+  git add "$CONFIG_FILE"
+  git commit -m"Update '$CONFIG_FILE'" || return
+  git push || return # should be a conflict if it was updated externally
+}
 
-    sleep $SLEEP_INTERVAL
-  done
+function pull_cr() {
+  git pull
+
+  kubectl
 }
 
 function main() {
   init_repo_and_author
 
-  push_cr
+  cd "$REPO_DIR" || exit 1
+
+  while [ true ]; do
+    pull_cr
+    push_cr
+    sleep $POLL_INTERVAL
+  done
 }
 
 main
