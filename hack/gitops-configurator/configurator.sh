@@ -14,6 +14,7 @@ function init_repo_and_author() {
 
 function push_cr() {
   while [ true ]; do
+    kubectl get pods --namespace "$CR_NAMESPACE"
     kubectl get "$CR_SELECTOR" --namespace "$CR_NAMESPACE" -o yaml > "$REPO_DIR/$CONFIG_FILE"
 
     pushd "$REPO_DIR" || exit 1

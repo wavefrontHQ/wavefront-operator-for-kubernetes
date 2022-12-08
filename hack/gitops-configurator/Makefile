@@ -31,6 +31,9 @@ docker-push: docker-build
 deploy: ssh-hosts-and-key docker-push
 	kubectl apply -f deploy/
 
+.PHONY: redeploy
+redeploy: undeploy deploy
+
 .PHONY: undeploy
 undeploy:
 	kubectl delete -f deploy/
