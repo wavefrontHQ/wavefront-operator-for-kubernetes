@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-proxy
+    name: test-proxy
+  name: test-proxy
+  namespace: observability-fake-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-proxy
+  template:
+    metadata:
+      labels:
+        app: test-proxy
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+      containers:
+        - name: test-proxy
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:1.13.1-dev-jyuqi
+          imagePullPolicy: Always
+          command: [ "/test-proxy", "-logsPort", ":9999", "-logLevel", "info" ]
+          ports:
+            - name: proxy
+              containerPort: 9999
+              protocol: TCP
+            - name: control
+              containerPort: 8888
+              protocol: TCP
+          securityContext:
+            privileged: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-proxy
+  labels:
+    app: test-proxy
+  namespace: observability-fake-proxy
+spec:
+  ports:
+    - name: wavefront
+      port: 9999
+      protocol: TCP
+  selector:
+    app: test-proxy

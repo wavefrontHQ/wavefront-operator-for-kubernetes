@@ -162,6 +162,39 @@ function run_logging_checks() {
   echo " done."
 }
 
+function run_logging_checks_test_proxy() {
+  printf "Running logging checks with test-proxy ..."
+
+  FAKE_NS=observability-fake-proxy
+  # we have a running cluster with operator deployed
+
+  # deploy fake proxy into cluster in separate namespace
+  kubectl create namespace "$FAKE_NS"
+  kubectl apply -f "${REPO_ROOT}/hack/test/test-proxy.yaml"
+
+  # edit the fluentd config to overwrite the config to point to the fake proxy
+    # TODO replace 'wavefront-proxy:2878' with 'test-proxy.observability-fake-proxy.svc.cluster.local:9999'
+  # apply fluentd config back to cluster and wait for it to reload
+
+
+  # send request to the fake proxy control endpoint and check status code for success
+  kill $(jobs -p) &>/dev/null || true
+  kubectl --namespace "$FAKE_NS" port-forward deploy/test-proxy 8888 &
+  trap 'kill $(jobs -p) &>/dev/null || true' EXIT
+
+  RES_CODE=$(curl --silent --write-out "%{http_code}" --data "expected_format=json_array" "http://localhost:8888/logs/assert")
+
+  if [[ $RES_CODE -gt 399 ]]; then
+    red "INVALID METRICS"
+    jq -r '.[]' "${RES}"
+    exit 1
+  fi
+
+  # delete fake proxy and reset logging config
+
+  echo " done."
+}
+
 function run_test() {
   local type=$1
   shift
@@ -187,6 +220,10 @@ function run_test() {
 
   if [[ " ${checks[*]} " =~ " logging " ]]; then
     run_logging_checks
+  fi
+
+  if [[ " ${checks[*]} " =~ " logging-test-proxy " ]]; then
+    run_logging_checks_test_proxy
   fi
 
   clean_up_test $type
@@ -265,6 +302,9 @@ function main() {
   fi
   if [[ " ${tests_to_run[*]} " =~ " advanced " ]]; then
     run_test "advanced" "health" "test_wavefront_metrics" "logging"
+  fi
+  if [[ " ${tests_to_run[*]} " =~ " logging " ]]; then
+    run_test "logging-test-proxy"
   fi
 }
 
