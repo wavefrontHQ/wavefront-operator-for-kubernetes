@@ -69,4 +69,5 @@ spec:
             memory: 64Mi
             ephemeral-storage: 128Mi
       serviceAccountName: controller-manager
+      automountServiceAccountToken: true
       terminationGracePeriodSeconds: 10
