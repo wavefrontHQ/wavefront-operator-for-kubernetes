@@ -31,6 +31,7 @@ spec:
     spec:
       serviceAccount: wavefront-logging
       serviceAccountName: wavefront-logging
+      automountServiceAccountToken: true
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
