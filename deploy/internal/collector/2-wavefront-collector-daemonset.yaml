@@ -37,6 +37,7 @@ spec:
           key: node-role.kubernetes.io/master
           operator: Exists
       serviceAccountName: wavefront-collector
+      automountServiceAccountToken: true
       containers:
         - name: wavefront-collector
           securityContext:
