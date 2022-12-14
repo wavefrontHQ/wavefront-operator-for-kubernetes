@@ -115,7 +115,7 @@ data:
       @type copy
       <store>
         @type http
-        endpoint http://wavefront-proxy:2878/logs/json_array?f=logs_json_arr
+        endpoint http://{{.DataCollection.Metrics.ProxyAddress}}/logs/json_array?f=logs_json_arr
         open_timeout 2
         json_array true
         <buffer>

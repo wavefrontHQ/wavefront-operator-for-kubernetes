@@ -165,6 +165,30 @@ function run_logging_checks() {
 function run_logging_checks_test_proxy() {
   printf "Running logging checks with test-proxy ..."
 
+  rm -rf "$REPO_ROOT/build/logging-test-proxy" || true
+  mkdir -p "$REPO_ROOT/build/logging-test-proxy"
+
+  kubectl get deployment/wavefront-proxy -o
+
+  cat <<EOF > "$REPO_ROOT/build/logging-test-proxy/kustomization.yaml"
+  apiVersion: kustomize.config.k8s.io/v1beta1
+  kind: Kustomization
+
+  resources:
+  - wavefront-operator.yaml
+
+  images:
+  - name: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
+    newName: projects.registry.vmware.com/tanzu_observability_test_fakes/kubernetes-operator
+EOF
+
+
+
+
+
+
+
+
   FAKE_NS=observability-fake-proxy
   # we have a running cluster with operator deployed
 
@@ -181,6 +205,10 @@ function run_logging_checks_test_proxy() {
   kill $(jobs -p) &>/dev/null || true
   kubectl --namespace "$FAKE_NS" port-forward deploy/test-proxy 8888 &
   trap 'kill $(jobs -p) &>/dev/null || true' EXIT
+
+  # controller manager will auto update first the logging ConfigMap
+  # and then update the logging pod, but there's a window of time and
+  # we may be able to capture enough information before it heals itself!
 
   RES_CODE=$(curl --silent --write-out "%{http_code}" --data "expected_format=json_array" "http://localhost:8888/logs/assert")
 
