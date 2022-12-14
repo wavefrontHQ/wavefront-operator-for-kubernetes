@@ -112,7 +112,6 @@ type DataExport struct {
 
 type ExternalWavefrontProxy struct {
 	// Url is the proxy URL that the collector sends metrics to.
-	// +kubebuilder:validation:Pattern:=`^http*`
 	// +kubebuilder:validation:MinLength:=10
 	Url string `json:"url,required"`
 }
