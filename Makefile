@@ -1,5 +1,17 @@
 export # Used to let all sub-make use the initialized value of variables whose names consist solely of alphanumerics and underscores
 
+
+DEBUG?=false
+COVER?=false
+IMAGE_MODE_POSTFIX?=
+
+ifeq ($(DEBUG), true)
+	IMAGE_MODE_POSTFIX=-debug
+else ifeq ($(COVER), true)
+	IMAGE_MODE_POSTFIX=-cover
+endif
+
+
 # Image URL to use all building/pushing image targets
 PREFIX?=projects.registry.vmware.com/tanzu_observability
 DOCKER_IMAGE?=kubernetes-operator-snapshot
@@ -341,3 +353,10 @@ git-rebase:
 	git fetch origin
 	git rebase origin/main
 	git log --oneline -n 10
+
+
+ssh-collector:
+	@# I would LOVE to have this broken up into variables but freakin' Makefile variable assignment has dumbfounded me...
+	@kubectl --namespace wavefront-collector exec --stdin --tty \
+		$(shell kubectl get pods --namespace wavefront-collector | grep wavefront-collector | head -n1 | awk '{print $$1}') \
+		-- /bin/bash
