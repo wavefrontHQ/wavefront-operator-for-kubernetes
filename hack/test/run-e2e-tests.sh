@@ -139,6 +139,19 @@ function run_static_analysis() {
     exit_status=1
   fi
 
+  echo "Running static analysis: Service Account automountServiceAccountToken checks"
+  local automount=
+  local service_accounts=$(kubectl get serviceaccounts -l app.kubernetes.io/name=wavefront -n $NS -o name | tr '\n' ',' | sed "s/serviceaccount\///g" | sed s/,\$//)
+
+  for i in ${service_accounts//,/ }
+  do
+    automount=$(kubectl get serviceaccount $i -n $NS -o=jsonpath='{.automountServiceAccountToken}' | tr -d '\n')
+    if [[ $automount != "false" ]]; then
+      red "Failure: Expected automountServiceAccountToken in $i to be \"false\", but was $automount"
+      exit 1
+    fi
+  done
+
   if [[ $exit_status -ne 0 ]]; then
     exit $exit_status
   fi
