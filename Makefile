@@ -1,16 +1,21 @@
 export # Used to let all sub-make use the initialized value of variables whose names consist solely of alphanumerics and underscores
 
-
-DEBUG?=false
-COVER?=false
+DEBUG_OPERATOR?=false
+#COVER?=false
 IMAGE_MODE_POSTFIX?=
 
-ifeq ($(DEBUG), true)
+ifeq ($(DEBUG_OPERATOR), true)
 	IMAGE_MODE_POSTFIX=-debug
-else ifeq ($(COVER), true)
-	IMAGE_MODE_POSTFIX=-cover
+#else ifeq ($(COVER), true)
+#	IMAGE_MODE_POSTFIX=-cover
 endif
 
+ssh-operator:
+	@# NOTE: DEBUG is an existing env var for Operator we may consider using
+	@# I would LOVE to have this broken up into variables but freakin' Makefile variable assignment has dumbfounded me...
+	@kubectl --namespace observability-system exec --stdin --tty \
+		$(shell kubectl get pods --namespace observability-system | grep wavefront-controller-manager | head -n1 | awk '{print $$1}') \
+		-- /bin/bash
 
 # Image URL to use all building/pushing image targets
 PREFIX?=projects.registry.vmware.com/tanzu_observability
@@ -28,7 +33,7 @@ LINUX_GOLANGCI_LINT_BIN:=$(or $(shell which golangci-lint),$(GOPATH)/bin/golangc
 endif
 
 ifeq ($(origin VERSION_POSTFIX), undefined)
-VERSION_POSTFIX:=-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
+VERSION_POSTFIX:=$(IMAGE_MODE_POSTFIX)-alpha-$(shell whoami)-$(shell date +"%y%m%d%H%M%S")
 endif
 
 RELEASE_VERSION?=$(shell cat ./release/OPERATOR_VERSION)
@@ -153,7 +158,7 @@ clean:
 .PHONY: docker-build
 docker-build: $(SEMVER_CLI_BIN) ## Build docker image with the manager.
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) make build -o fmt -o vet
-	docker build -t ${IMG} -f Dockerfile build
+	docker build -t ${IMG} -f Dockerfile$(IMAGE_MODE_POSTFIX) build
 
 BUILDER_SUFFIX=$(shell echo $(PREFIX) | cut -d '/' -f1)
 
@@ -353,10 +358,3 @@ git-rebase:
 	git fetch origin
 	git rebase origin/main
 	git log --oneline -n 10
-
-
-ssh-collector:
-	@# I would LOVE to have this broken up into variables but freakin' Makefile variable assignment has dumbfounded me...
-	@kubectl --namespace wavefront-collector exec --stdin --tty \
-		$(shell kubectl get pods --namespace wavefront-collector | grep wavefront-collector | head -n1 | awk '{print $$1}') \
-		-- /bin/bash

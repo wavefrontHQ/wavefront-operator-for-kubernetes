@@ -1,0 +1,8 @@
+FROM ubuntu:latest
+ARG TARGETPLATFORM
+#   nobody:nobody
+USER 65534:65534
+WORKDIR /
+COPY $TARGETPLATFORM .
+COPY open_source_licenses.txt .
+ENTRYPOINT ["bash"]
