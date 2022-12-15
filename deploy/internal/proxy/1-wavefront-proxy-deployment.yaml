@@ -30,6 +30,7 @@ spec:
       annotations:
         configHash: "{{ .DataExport.WavefrontProxy.ConfigHash }}"
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
