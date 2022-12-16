@@ -49,3 +49,7 @@ function create_cluster_name() {
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   echo $(whoami)-${K8S_ENV}-operator-$(date +"%y%m%d")
 }
+
+function k8s_env() {
+  echo $(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
+}
