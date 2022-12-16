@@ -29,15 +29,19 @@ spec:
         app.kubernetes.io/name: wavefront
         app.kubernetes.io/component: logging
     spec:
-      serviceAccount: wavefront-logging
-      serviceAccountName: wavefront-logging
-      automountServiceAccountToken: true
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+          operator: Exists
+      serviceAccount: wavefront-logging
+      serviceAccountName: wavefront-logging
+      automountServiceAccountToken: true
       containers:
         - name: fluentd-wf
           image: {{ .ImageRegistry }}/kubernetes-operator-fluentd:1.0.4-1.15.2
+          imagePullPolicy: Always
           command: ["fluentd", "--config", "/etc/fluentd/fluentd.conf", "--no-supervisor", "--quiet"]
           env:
             - name:  K8S_NODE_NAME

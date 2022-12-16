@@ -102,8 +102,23 @@ function clean_up_test() {
   wait_for_proxy_termination "$NS"
 }
 
+function checks_to_remove(){
+  local file_name=$1
+  local component_name=$2
+  local checks=$3
+  local tempFile
+
+  for i in ${checks//,/ }; do
+    tempFile=$(mktemp)
+    local excludeCheck=$(echo $i | sed -r 's/:/ /g')
+    local awk_command="!/.*$excludeCheck.*$component_name|.*$component_name.*$excludeCheck/"
+    cat "$file_name" | awk "$awk_command" > "$tempFile" && mv "$tempFile" "$file_name"
+  done
+}
+
 function run_static_analysis() {
   local type=$1
+  local k8s_env=$(k8s_env)
   echo "Running static analysis ..."
 
   local resources_yaml_file=$(mktemp)
@@ -111,31 +126,55 @@ function run_static_analysis() {
   kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n $NS -o yaml \
   | yq '.items[] | split_doc' - > "$resources_yaml_file"
 
-  # Ideally we want to fail when a non-zero error count is identified. Until we get to a zero error count, use the known
-  # error count to pass.
   echo "Running static analysis: kube-linter"
+
+
   local kube_lint_results_file=$(mktemp)
+  local kube_lint_check_errors=$(mktemp)
   ${REPO_ROOT}/bin/kube-linter lint "$resources_yaml_file" --format json 1> "$kube_lint_results_file" 2>/dev/null || true
 
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
-  local known_lint_errors=8
+
+  jq -r '.Reports[] | "|" + .Check + "|  " +.Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file" 1> "$kube_lint_check_errors"  2>/dev/null || true
+
+  #REMOVE KNOWN CHECKS
+  #non root checks for logging
+  checks_to_remove "$kube_lint_check_errors"  "wavefront-logging" "run-as-non-root,no-read-only-root-fs"
+  #sensitive-host-mounts checks for the collector
+  checks_to_remove "$kube_lint_check_errors" "collector" "sensitive-host-mounts"
+
+  current_lint_errors=$(cat "$kube_lint_check_errors" | wc -l )
+  yellow "Kube linter error count (with known errors removed): ${current_lint_errors}"
+  local known_lint_errors=0
   if [ $current_lint_errors -gt $known_lint_errors ]; then
     red "Failure: Expected error count = $known_lint_errors"
-    jq -r '.Reports[] | .Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file"
+    cat "$kube_lint_check_errors"
     exit_status=1
   fi
 
   echo "Running static analysis: kube-score"
   local kube_score_results_file=$(mktemp)
-  ${REPO_ROOT}/bin/kube-score score "$resources_yaml_file" --output-format ci> "$kube_score_results_file" || true
+  local kube_score_critical_errors=$(mktemp)
+  ${REPO_ROOT}/bin/kube-score score "$resources_yaml_file" --ignore-test pod-networkpolicy --output-format ci> "$kube_score_results_file" || true
 
-  local current_score_errors=$(grep '\[CRITICAL\]' "$kube_score_results_file" | wc -l)
+  grep '\[CRITICAL\]' "$kube_score_results_file" > "$kube_score_critical_errors"
+  local current_score_errors=$(cat "$kube_score_critical_errors" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
-  local known_score_errors=11
+
+  #REMOVE KNOWN CHECKS
+  #non root checks for logging
+  checks_to_remove "$kube_score_critical_errors" "wavefront-logging" "security:context,low:user:ID,low:group:ID"
+  if [[ "$k8s_env" == "Kind" ]]; then
+    checks_to_remove "$kube_score_critical_errors" "wavefront-controller-manager" "ImagePullPolicy"
+  fi
+
+  current_score_errors=$(cat "$kube_score_critical_errors" | wc -l)
+  yellow "Kube score error count (with known errors removed): ${current_score_errors}"
+  local known_score_errors=0
   if [ $current_score_errors -gt $known_score_errors ]; then
     red "Failure: Expected error count = $known_score_errors"
-    grep '\[CRITICAL\]' "$kube_score_results_file"
+    cat "$kube_score_critical_errors"
     exit_status=1
   fi
 

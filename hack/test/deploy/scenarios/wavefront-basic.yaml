@@ -10,6 +10,8 @@ spec:
   dataCollection:
     metrics:
       enable: true
+    logging:
+      enable: true
   dataExport:
     wavefrontProxy:
       enable: true
