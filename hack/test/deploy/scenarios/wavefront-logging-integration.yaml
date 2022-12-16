@@ -5,7 +5,7 @@ metadata:
     app: test-proxy
     name: test-proxy
   name: test-proxy
-  namespace: observability-fake-proxy
+  namespace: observability-system
 spec:
   replicas: 1
   selector:
@@ -28,9 +28,9 @@ spec:
                       - amd64
       containers:
         - name: test-proxy
-          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:1.13.1-dev-jalvis
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:1.13.1-dev-jcornish
           imagePullPolicy: Always
-          command: [ "/test-proxy", "-proxy", ":2878", "-logLevel", "info", "-mode", "logs", "-logFilePath", "/logs/test-proxy.log" ]
+          command: [ "/test-proxy", "-proxy", ":2878", "-logLevel", "info", "-mode", "logs" ]
           ports:
             - name: proxy-metrics
               containerPort: 2878
@@ -53,7 +53,7 @@ metadata:
   name: test-proxy
   labels:
     app: test-proxy
-  namespace: observability-fake-proxy
+  namespace: observability-system
 spec:
   ports:
     - name: wavefront
@@ -61,3 +61,21 @@ spec:
       protocol: TCP
   selector:
     app: test-proxy
+---
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: YOUR_NAMESPACE
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    logging:
+      enable: true
+      tags:
+        env: non-production
+  dataExport:
+    externalWavefrontProxy:
+      url: test-proxy:2878

@@ -162,63 +162,29 @@ function run_logging_checks() {
   echo " done."
 }
 
-function run_logging_checks_test_proxy() {
+function run_logging_integration_checks() {
   printf "Running logging checks with test-proxy ..."
-
-  rm -rf "$REPO_ROOT/build/logging-test-proxy" || true
-  mkdir -p "$REPO_ROOT/build/logging-test-proxy"
-
-  kubectl get deployment/wavefront-proxy -o
-
-  cat <<EOF > "$REPO_ROOT/build/logging-test-proxy/kustomization.yaml"
-  apiVersion: kustomize.config.k8s.io/v1beta1
-  kind: Kustomization
-
-  resources:
-  - wavefront-operator.yaml
-
-  images:
-  - name: projects.registry.vmware.com/tanzu_observability/kubernetes-operator
-    newName: projects.registry.vmware.com/tanzu_observability_test_fakes/kubernetes-operator
-EOF
-
-
-
-
-
-
-
-
-  FAKE_NS=observability-fake-proxy
-  # we have a running cluster with operator deployed
-
-  # deploy fake proxy into cluster in separate namespace
-  kubectl create namespace "$FAKE_NS"
-  kubectl apply -f "${REPO_ROOT}/hack/test/test-proxy.yaml"
-
-  # edit the fluentd config to overwrite the config to point to the fake proxy
-    # TODO replace 'wavefront-proxy:2878' with 'test-proxy.observability-fake-proxy.svc.cluster.local:9999'
-  # apply fluentd config back to cluster and wait for it to reload
-
 
   # send request to the fake proxy control endpoint and check status code for success
   kill $(jobs -p) &>/dev/null || true
-  kubectl --namespace "$FAKE_NS" port-forward deploy/test-proxy 8888 &
+  sleep 3
+  kubectl --namespace "$NS" port-forward deploy/test-proxy 8888 &
   trap 'kill $(jobs -p) &>/dev/null || true' EXIT
+  sleep 3
 
-  # controller manager will auto update first the logging ConfigMap
-  # and then update the logging pod, but there's a window of time and
-  # we may be able to capture enough information before it heals itself!
+  RES=$(mktemp)
 
-  RES_CODE=$(curl --silent --write-out "%{http_code}" --data "expected_format=json_array" "http://localhost:8888/logs/assert")
+  while true; do # wait until we get a good connection
+    # TODO some kind of "no data" error code based on whether store has received any logs
+    RES_CODE=$(curl --silent --output "$RES" --write-out "%{http_code}" "http://localhost:8888/logs/assert")
+    [[ $RES_CODE -lt 200 ]] || break
+  done
 
+  # TODO look at result and pass or fail test
   if [[ $RES_CODE -gt 399 ]]; then
-    red "INVALID METRICS"
-    jq -r '.[]' "${RES}"
+    red "LOGGING ASSERTION FAILURE"
     exit 1
   fi
-
-  # delete fake proxy and reset logging config
 
   echo " done."
 }
@@ -250,8 +216,8 @@ function run_test() {
     run_logging_checks
   fi
 
-  if [[ " ${checks[*]} " =~ " logging-test-proxy " ]]; then
-    run_logging_checks_test_proxy
+  if [[ " ${checks[*]} " =~ " logging-integration-checks " ]]; then
+    run_logging_integration_checks
   fi
 
   clean_up_test $type
@@ -303,6 +269,7 @@ function main() {
       "allow-legacy-install"
       "basic"
       "advanced"
+      "logging-integration"
     )
   fi
 
@@ -331,8 +298,8 @@ function main() {
   if [[ " ${tests_to_run[*]} " =~ " advanced " ]]; then
     run_test "advanced" "health" "test_wavefront_metrics" "logging"
   fi
-  if [[ " ${tests_to_run[*]} " =~ " logging " ]]; then
-    run_test "logging-test-proxy"
+  if [[ " ${tests_to_run[*]} " =~ " logging-integration " ]]; then
+    run_test "logging-integration" "logging-integration-checks"
   fi
 }
 
