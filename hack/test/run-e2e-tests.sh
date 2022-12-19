@@ -226,6 +226,33 @@ function run_logging_checks() {
   echo " done."
 }
 
+function run_logging_integration_checks() {
+  printf "Running logging checks with test-proxy ..."
+
+  # send request to the fake proxy control endpoint and check status code for success
+  kill $(jobs -p) &>/dev/null || true
+  sleep 3
+  kubectl --namespace "$NS" port-forward deploy/test-proxy 8888 &
+  trap 'kill $(jobs -p) &>/dev/null || true' EXIT
+  sleep 3
+
+  RES=$(mktemp)
+
+  while true; do # wait until we get a good connection
+    # TODO some kind of "no data" error code based on whether store has received any logs
+    RES_CODE=$(curl --silent --output "$RES" --write-out "%{http_code}" "http://localhost:8888/logs/assert")
+    [[ $RES_CODE -lt 200 ]] || break
+  done
+
+  # TODO look at result and pass or fail test
+  if [[ $RES_CODE -gt 399 ]]; then
+    red "LOGGING ASSERTION FAILURE"
+    exit 1
+  fi
+
+  echo " done."
+}
+
 function run_test() {
   local type=$1
   shift
@@ -251,6 +278,10 @@ function run_test() {
 
   if [[ " ${checks[*]} " =~ " logging " ]]; then
     run_logging_checks
+  fi
+
+  if [[ " ${checks[*]} " =~ " logging-integration-checks " ]]; then
+    run_logging_integration_checks
   fi
 
   clean_up_test $type
@@ -302,6 +333,7 @@ function main() {
       "allow-legacy-install"
       "basic"
       "advanced"
+      "logging-integration"
     )
   fi
 
@@ -329,6 +361,9 @@ function main() {
   fi
   if [[ " ${tests_to_run[*]} " =~ " advanced " ]]; then
     run_test "advanced" "health" "test_wavefront_metrics" "logging"
+  fi
+  if [[ " ${tests_to_run[*]} " =~ " logging-integration " ]]; then
+    run_test "logging-integration" "logging-integration-checks"
   fi
 }
 

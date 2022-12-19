@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-proxy
+    name: test-proxy
+  name: test-proxy
+  namespace: observability-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-proxy
+  template:
+    metadata:
+      labels:
+        app: test-proxy
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+      containers:
+        - name: test-proxy
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:latest
+          imagePullPolicy: Always
+          command: [ "/test-proxy", "-proxy", ":2878", "-logLevel", "info", "-mode", "logs" ]
+          ports:
+            - name: proxy-metrics
+              containerPort: 2878
+              protocol: TCP
+            - name: control
+              containerPort: 8888
+              protocol: TCP
+          securityContext:
+            privileged: false
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /logs
+      volumes:
+        - name: logs-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-proxy
+  labels:
+    app: test-proxy
+  namespace: observability-system
+spec:
+  ports:
+    - name: wavefront
+      port: 2878
+      protocol: TCP
+  selector:
+    app: test-proxy
+---
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: YOUR_NAMESPACE
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    logging:
+      enable: true
+      tags:
+        env: non-production
+  dataExport:
+    externalWavefrontProxy:
+      url: test-proxy:2878

@@ -341,7 +341,6 @@ spec:
                         description: Url is the proxy URL that the collector sends
                           metrics to.
                         minLength: 10
-                        pattern: ^http*
                         type: string
                     required:
                     - url
