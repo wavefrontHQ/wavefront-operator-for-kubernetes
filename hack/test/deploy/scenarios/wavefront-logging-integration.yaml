@@ -28,7 +28,7 @@ spec:
                       - amd64
       containers:
         - name: test-proxy
-          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:1.13.1-dev-jcornish
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:latest
           imagePullPolicy: Always
           command: [ "/test-proxy", "-proxy", ":2878", "-logLevel", "info", "-mode", "logs" ]
           ports:
