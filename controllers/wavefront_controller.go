@@ -361,6 +361,8 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		}
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+		wavefront.Spec.DataCollection.Logging.ProxyAddress = fmt.Sprintf("http://%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
+
 		err = r.parseHttpProxyConfigs(wavefront, ctx)
 		if err != nil {
 			errInfo := fmt.Sprintf("error setting up http proxy configuration: %s", err.Error())
@@ -370,6 +372,12 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	} else if len(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url) != 0 {
 		wavefront.Spec.CanExportData = true
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
+
+		if strings.Contains(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url, "http") {
+			wavefront.Spec.DataCollection.Logging.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
+		} else {
+			wavefront.Spec.DataCollection.Logging.ProxyAddress = fmt.Sprintf("http://%s", wavefront.Spec.DataExport.ExternalWavefrontProxy.Url)
+		}
 	}
 
 	if wavefront.Spec.DataCollection.Logging.Enable {

@@ -115,7 +115,7 @@ data:
       @type copy
       <store>
         @type http
-        endpoint http://{{.DataCollection.Metrics.ProxyAddress}}/logs/json_array?f=logs_json_arr
+        endpoint {{.DataCollection.Logging.ProxyAddress}}/logs/json_array?f=logs_json_arr
         open_timeout 2
         json_array true
         <buffer>

@@ -770,6 +770,7 @@ func TestReconcileLogging(t *testing.T) {
 
 		require.NoError(t, err)
 		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
+		require.True(t, mockKM.LoggingConfigMapContains("endpoint http://wavefront-proxy:2878/logs/json_array?f=logs_json_arr"))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {
@@ -836,6 +837,28 @@ func TestReconcileLogging(t *testing.T) {
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
 		require.True(t, mockKM.LoggingConfigMapContains("key1 value1", "key2 value2"))
+	})
+
+	t.Run("Verify external wavefront proxy url with http specified in URL", func(t *testing.T) {
+		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Enable = false
+			w.Spec.DataExport.ExternalWavefrontProxy.Url = "http://my-proxy:8888"
+		}))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+		require.True(t, mockKM.LoggingConfigMapContains("endpoint http://my-proxy:8888/logs/json_array?f=logs_json_arr"))
+	})
+
+	t.Run("Verify external wavefront proxy url without http specified in URL", func(t *testing.T) {
+		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
+			w.Spec.DataExport.WavefrontProxy.Enable = false
+			w.Spec.DataExport.ExternalWavefrontProxy.Url = "my-proxy:8888"
+		}))
+
+		_, err := r.Reconcile(context.Background(), defaultRequest())
+		require.NoError(t, err)
+		require.True(t, mockKM.LoggingConfigMapContains("endpoint http://my-proxy:8888/logs/json_array?f=logs_json_arr"))
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {

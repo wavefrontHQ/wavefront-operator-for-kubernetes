@@ -62,53 +62,54 @@ spec:
     # Note on externalWavefrontProxy and wavefrontProxy
     #
     # It is not valid to define an external proxy (externalWavefrontProxy.url) and
-    # enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster
+    # enable the wavefront proxy (wavefrontProxy.enable) in your Kubernetes cluster.
+    # If specified the externalWavefrontProxy is used by metrics and logging.
     externalWavefrontProxy:
       url: YOUR_EXTERNAL_PROXY_URL
     wavefrontProxy:
       enable: true
-        metricPort: 2878
-        preprocessor: advanced-proxy-preprocessor-rules
-        resources:
-          requests:
-            cpu: 200m
-            memory: 1Gi
-          limits:
-            cpu: 1000m
-            memory: 3Gi
-        tracing:
-          wavefront:
-            port: 30000
-            samplingRate: "0.1"
-            samplingDuration: 100
-          zipkin:
-            port: 9411
-            applicationName: "zipkin"
-          jaeger:
-            port: 30001
-            httpPort: 30080
-            grpcPort: 14250
-            applicationName: "jaeger"
-        histogram:
-          port: 40000
-          minutePort: 40001
-          hourPort: 40002
-          dayPort: 40003
-        httpProxy:
-          secret: http-proxy-secret
-        # Note on Proxy Configuration Precedence
-        #
-        # Most wavefront proxy configuration options should be available via explicit fields in the custom resource.
-        # It is our recommendation to use those fields. However, it is also possible to specify options as proxy command
-        # line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at
-        # this time, but the custom resource field will take precedence.
-        #
-        # For example, if you specify `--histogramDistListenerPorts 40123` in `dataExport.wavefrontProxy.args`
-        #  and `dataExport.wavefrontProxy.histogram.port: 40000`,
-        #  `dataExport.wavefrontProxy.histogram.port: 40000` will take precedence.
-        args: >
-          --customSourceTags mySource
-          --prefix=dev
+      metricPort: 2878
+      preprocessor: advanced-proxy-preprocessor-rules
+      resources:
+        requests:
+          cpu: 200m
+          memory: 1Gi
+        limits:
+          cpu: 1000m
+          memory: 3Gi
+      tracing:
+        wavefront:
+          port: 30000
+          samplingRate: "0.1"
+          samplingDuration: 100
+        zipkin:
+          port: 9411
+          applicationName: "zipkin"
+        jaeger:
+          port: 30001
+          httpPort: 30080
+          grpcPort: 14250
+          applicationName: "jaeger"
+      histogram:
+        port: 40000
+        minutePort: 40001
+        hourPort: 40002
+        dayPort: 40003
+      httpProxy:
+        secret: http-proxy-secret
+      # Note on Proxy Configuration Precedence
+      #
+      # Most wavefront proxy configuration options should be available via explicit fields in the custom resource.
+      # It is our recommendation to use those fields. However, it is also possible to specify options as proxy command
+      # line parameters in the `dataExport.wavefrontProxy.args` field. If both are used, the operator will allow it at
+      # this time, but the custom resource field will take precedence.
+      #
+      # For example, if you specify `--histogramDistListenerPorts 40123` in `dataExport.wavefrontProxy.args`
+      #  and `dataExport.wavefrontProxy.histogram.port: 40000`,
+      #  `dataExport.wavefrontProxy.histogram.port: 40000` will take precedence.
+      args: >
+        --customSourceTags mySource
+        --prefix=dev
 ---
 apiVersion: v1
 kind: ConfigMap
