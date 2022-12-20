@@ -362,7 +362,7 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.DataExport.WavefrontProxy.ConfigHash = ""
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = fmt.Sprintf("%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 
-		// The endpoint for logging requires the http:// prefix
+		// The endpoint for logging requires the "http://" prefix
 		wavefront.Spec.DataCollection.Logging.ProxyAddress = fmt.Sprintf("http://%s:%d", util.ProxyName, wavefront.Spec.DataExport.WavefrontProxy.MetricPort)
 
 		err = r.parseHttpProxyConfigs(wavefront, ctx)
@@ -375,8 +375,10 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 		wavefront.Spec.CanExportData = true
 		wavefront.Spec.DataCollection.Metrics.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
 
-		if strings.Contains(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url, "http") {
+		if strings.HasPrefix(wavefront.Spec.DataExport.ExternalWavefrontProxy.Url, "http") {
 			wavefront.Spec.DataCollection.Logging.ProxyAddress = wavefront.Spec.DataExport.ExternalWavefrontProxy.Url
+			// The endpoint for collector requires it to be in the hostname:port format
+			wavefront.Spec.DataCollection.Metrics.ProxyAddress = strings.TrimPrefix(wavefront.Spec.DataCollection.Metrics.ProxyAddress, "http://")
 		} else {
 			// The endpoint for logging requires the http:// prefix
 			wavefront.Spec.DataCollection.Logging.ProxyAddress = fmt.Sprintf("http://%s", wavefront.Spec.DataExport.ExternalWavefrontProxy.Url)
