@@ -324,6 +324,9 @@ type Logging struct {
 
 	// ConfigHash is for internal use only
 	ConfigHash string `json:"-"`
+
+	// ProxyAddress is for internal use only
+	ProxyAddress string `json:"-"`
 }
 
 // WavefrontStatus defines the observed state of Wavefront
