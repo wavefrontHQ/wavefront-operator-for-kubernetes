@@ -330,6 +330,28 @@ spec:
                           as point tags on all metrics emitted.
                         type: object
                     type: object
+                  tolerations:
+                    description: Configure for DaemonSet metric and logging data collectors.  It
+                      appends to the default tolerations already set.'
+                    items:
+                      properties:
+                        effect:
+                          enum:
+                          - NoSchedule
+                          - NoExecute
+                          type: string
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - Equal
+                          - Exists
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: atomic
                 type: object
               dataExport:
                 description: DataExport options

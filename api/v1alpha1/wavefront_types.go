@@ -122,6 +122,11 @@ type DataCollection struct {
 
 	//Enable and configure wavefront logging
 	Logging Logging `json:"logging,omitempty"`
+
+	// Configure for DaemonSet metric and logging data collectors.  It appends to the default tolerations already set.'
+	// +optional
+	// +listType=atomic
+	Tolerations []Toleration `json:"tolerations,omitempty"`
 }
 
 type WavefrontProxy struct {
@@ -275,6 +280,19 @@ type Resource struct {
 	// Memory is for specifying Memory requirements
 	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	EphemeralStorage string `json:"ephemeral-storage,omitempty" yaml:"ephemeral-storage,omitempty"`
+}
+
+type Toleration struct {
+	//
+	Key string `json:"key,omitempty" yaml:"key,omitempty"`
+
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+
+	// +kubebuilder:validation:Enum=Equal;Exists
+	Operator string `json:"operator,omitempty" yaml:"operator,omitempty"`
+
+	// +kubebuilder:validation:Enum=NoSchedule;NoExecute
+	Effect string `json:"effect,omitempty" yaml:"effect,omitempty"`
 }
 
 type Resources struct {
