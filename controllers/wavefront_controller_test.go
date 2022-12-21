@@ -194,9 +194,10 @@ func TestReconcileAll(t *testing.T) {
 		require.True(t, mockKM.ProxyDeploymentContains("namespace: customNamespace"))
 	})
 
-	t.Run("Can configure additional data collection tolerations", func(t *testing.T) {
+	t.Run("Can configure additional data collection daemonset tolerations", func(t *testing.T) {
 		r, mockKM := componentScenario(wftest.CR(func(w *wf.Wavefront) {
 			w.Spec.DataCollection.Logging.Enable = true
+			w.Spec.DataCollection.Metrics.Enable = true
 			w.Spec.DataCollection.Tolerations = []wf.Toleration{
 				wf.Toleration{
 					Key:    "my-toleration",
@@ -211,6 +212,8 @@ func TestReconcileAll(t *testing.T) {
 
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("- key: my-toleration\n          value: my-value\n          effect: NoSchedule"))
 		require.True(t, mockKM.LoggingDaemonSetContains("- key: my-toleration\n          value: my-value\n          effect: NoSchedule"))
+		require.False(t, mockKM.ClusterCollectorDeploymentContains("- key: my-toleration\n          value: my-value\n          effect: NoSchedule"))
+		require.False(t, mockKM.ProxyDeploymentContains("- key: my-toleration\n          value: my-value\n          effect: NoSchedule"))
 	})
 }
 

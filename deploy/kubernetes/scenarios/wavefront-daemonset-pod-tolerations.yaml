@@ -1,0 +1,26 @@
+# Need to change YOUR_CLUSTER_NAME and YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: observability-system
+spec:
+  clusterName: akodali-kind-operator-221221
+  wavefrontUrl: https://nimba.wavefront.com
+  dataCollection:
+    # These are top level tolerations to be applied to all data collection (metrics and logging) DaemonSet pods. These
+    # are meant to add custom tolerations to DaemonSet pods inorder to enable metrics and log collection from tainted
+    # nodes.
+    tolerations:
+      - key: "key1"
+        operator: "Equal"
+        value: "value1"
+        effect: "NoSchedule"
+    metrics:
+      enable: true
+    logging:
+      enable: true
+  dataExport:
+    wavefrontProxy:
+      enable: true
+

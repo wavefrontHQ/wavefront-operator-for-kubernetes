@@ -10,11 +10,19 @@ spec:
   wavefrontUrl: YOUR_WAVEFRONT_URL
   wavefrontTokenSecret: wavefront-secret
   dataCollection:
+    # These are top level tolerations to be applied to all data collection (metrics and logging) DaemonSet pods. These
+    # are meant to add custom tolerations to DaemonSet pods inorder to enable metrics and log collection from tainted
+    # nodes.
+    tolerations:
+      - key: "key1"
+        operator: "Equal"
+        value: "value1"
+        effect: "NoSchedule"
     logging:
       enable: true
       resources:
         requests:
-          cpu: 200m
+          cpu: 200mb/controllers/wavefront_controller_test.go
           memory: 200Mi
         limits:
           memory: 1Gi
