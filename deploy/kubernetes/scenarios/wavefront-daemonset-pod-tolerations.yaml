@@ -5,8 +5,8 @@ metadata:
   name: wavefront
   namespace: observability-system
 spec:
-  clusterName: akodali-kind-operator-221221
-  wavefrontUrl: https://nimba.wavefront.com
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
     # These are top level tolerations to be applied to all data collection (metrics and logging) DaemonSet pods. These
     # are meant to add custom tolerations to DaemonSet pods inorder to enable metrics and log collection from tainted

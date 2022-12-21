@@ -293,13 +293,12 @@ type Toleration struct {
 	// Valid operators are Exists and Equal. Defaults to Equal.
 	// Exists is equivalent to wildcard for value, so that a pod can
 	// tolerate all taints of a particular category.
-	// +kubebuilder:default:Equal
-	// +kubebuilder:validation:Enum=Equal;Exists
+	// +kubebuilder:validation:Enum:=Equal;Exists
 	Operator string `json:"operator,omitempty" yaml:"operator,omitempty"`
 
 	// Effect indicates the taint effect to match. Empty means match all taint effects.
 	// When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
-	// +kubebuilder:validation:Enum=NoSchedule;PreferNoSchedule;NoExecute
+	// +kubebuilder:validation:Enum:=NoSchedule;PreferNoSchedule;NoExecute
 	Effect string `json:"effect,omitempty" yaml:"effect,omitempty"`
 }
 
