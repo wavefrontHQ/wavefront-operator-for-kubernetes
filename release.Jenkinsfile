@@ -49,7 +49,8 @@ pipeline {
     stage("Deploy and Test") {
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
-        GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+        GKE_CLUSTER_NAME = "k8po-jenkins-ci-zone-a"
+        GCP_ZONE="a"
         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
         WF_CLUSTER = 'nimba'
       }

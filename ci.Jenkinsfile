@@ -32,7 +32,6 @@ pipeline {
     stage("Setup For Publish") {
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
-        GKE_CLUSTER_NAME = "k8po-jenkins-ci"
       }
       steps {
         sh './hack/jenkins/setup-for-integration-test.sh'
@@ -76,7 +75,8 @@ pipeline {
             timeout(time: 30, unit: 'MINUTES')
           }
           environment {
-            GKE_CLUSTER_NAME = "k8po-jenkins-ci"
+            GKE_CLUSTER_NAME = "k8po-jenkins-ci-zone-a"
+            GCP_ZONE="a"
             GCP_CREDS = credentials("GCP_CREDS")
             GCP_PROJECT = "wavefront-gcp-dev"
           }
