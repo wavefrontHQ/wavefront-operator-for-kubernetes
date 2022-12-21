@@ -122,6 +122,9 @@ type DataCollection struct {
 
 	//Enable and configure wavefront logging
 	Logging Logging `json:"logging,omitempty"`
+
+	// Top level tolerations to be applied to metrics and logging DaemonSet resource types. This adds custom tolerations to the pods.
+	Tolerations []Toleration `json:"tolerations,omitempty"`
 }
 
 type WavefrontProxy struct {
@@ -275,6 +278,28 @@ type Resource struct {
 	// Memory is for specifying Memory requirements
 	// +kubebuilder:validation:Pattern:=`^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$`
 	EphemeralStorage string `json:"ephemeral-storage,omitempty" yaml:"ephemeral-storage,omitempty"`
+}
+
+type Toleration struct {
+	// Key is the taint key that the toleration applies to. Empty means match all taint keys.
+	// If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+	Key string `json:"key,omitempty" yaml:"key,omitempty"`
+
+	// Value is the taint value the toleration matches to.
+	// If the operator is Exists, the value should be empty, otherwise just a regular string.
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+
+	// Operator represents a key's relationship to the value.
+	// Valid operators are Exists and Equal. Defaults to Equal.
+	// Exists is equivalent to wildcard for value, so that a pod can
+	// tolerate all taints of a particular category.
+	// +kubebuilder:validation:Enum:=Equal;Exists
+	Operator string `json:"operator,omitempty" yaml:"operator,omitempty"`
+
+	// Effect indicates the taint effect to match. Empty means match all taint effects.
+	// When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+	// +kubebuilder:validation:Enum:=NoSchedule;PreferNoSchedule;NoExecute
+	Effect string `json:"effect,omitempty" yaml:"effect,omitempty"`
 }
 
 type Resources struct {
