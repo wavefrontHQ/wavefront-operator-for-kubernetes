@@ -35,6 +35,10 @@ spec:
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
+      tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          value: arm64
       containers:
         - name: wavefront-proxy
           image: {{ .ImageRegistry }}/proxy:12.0

@@ -35,6 +35,9 @@ spec:
         - key: node-role.kubernetes.io/control-plane
           effect: NoSchedule
           operator: Exists
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          value: arm64
       serviceAccountName: wavefront-collector
       automountServiceAccountToken: true
       containers:

@@ -32,6 +32,10 @@ spec:
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
+      tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          value: arm64
       containers:
       - command:
         - /manager
