@@ -935,7 +935,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.1.1-alpha-b9761f8e
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.1.1-alpha-ff33e854
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -968,3 +968,7 @@ spec:
         runAsUser: 65534
       serviceAccountName: wavefront-controller-manager
       terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: kubernetes.io/arch
+        value: arm64
