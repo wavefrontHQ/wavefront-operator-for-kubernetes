@@ -40,6 +40,9 @@ pipeline {
       }
     }
     stage("Publish") {
+      agent {
+        label "integration"
+      }
       environment {
         RELEASE_TYPE = "alpha"
       }
@@ -69,7 +72,7 @@ pipeline {
       parallel {
         stage("GKE") {
           agent {
-            label "gke"
+            label "integration"
           }
           options {
             timeout(time: 30, unit: 'MINUTES')
@@ -80,50 +83,24 @@ pipeline {
             GCP_CREDS = credentials("GCP_CREDS")
             GCP_PROJECT = "wavefront-gcp-dev"
           }
-          stages {
-            stage("without customization") {
-              steps {
-                sh './hack/jenkins/setup-for-integration-test.sh'
-                sh './hack/jenkins/install_docker_buildx.sh'
-                sh 'make semver-cli'
-                lock("integration-test-gke") {
-                    sh 'make gke-connect-to-cluster'
-                    sh 'make clean-cluster'
-                    sh 'make integration-test'
-                    sh 'make clean-cluster'
-                }
-              }
-            }
-
-            stage("with customization") {
-              environment {
-                KUSTOMIZATION_TYPE="custom"
-                NS="custom-namespace"
-                SOURCE_PREFIX="projects.registry.vmware.com/tanzu_observability"
-                PREFIX="projects.registry.vmware.com/tanzu_observability_keights_saas"
-                HARBOR_CREDS = credentials("projects-registry-vmware-tanzu_observability_keights_saas-robot")
-                INTEGRATION_TEST_ARGS="-r advanced"
-              }
-              steps {
-                sh './hack/jenkins/setup-for-integration-test.sh'
-                sh './hack/jenkins/install_docker_buildx.sh'
-                sh 'make semver-cli'
-                lock("integration-test-gke") {
-                  sh 'make gke-connect-to-cluster'
-                  sh 'docker logout $PREFIX'
-                  sh 'echo $HARBOR_CREDS_PSW | docker login $PREFIX -u $HARBOR_CREDS_USR --password-stdin'
-                  sh 'make docker-copy-images'
-                  sh 'make integration-test'
-                  sh 'make clean-cluster'
-                }
-              }
+          steps {
+            sh './hack/jenkins/setup-for-integration-test.sh'
+            sh './hack/jenkins/install_docker_buildx.sh'
+            sh 'make semver-cli'
+            lock("integration-test-gke") {
+                sh 'make gke-connect-to-cluster'
+                sh 'make clean-cluster'
+                sh 'make integration-test'
+                sh 'make clean-cluster'
+                sh 'KUSTOMIZATION_TYPE=custom NS=custom-namespace INTEGRATION_TEST_ARGS="-r advanced" make integration-test'
+                sh 'make clean-cluster'
             }
           }
         }
 
         stage("EKS") {
           agent {
-            label "eks"
+            label "integration"
           }
           options {
             timeout(time: 30, unit: 'MINUTES')
@@ -148,7 +125,7 @@ pipeline {
 
         stage("AKS") {
           agent {
-            label "aks"
+            label "integration"
           }
           options {
             timeout(time: 30, unit: 'MINUTES')
