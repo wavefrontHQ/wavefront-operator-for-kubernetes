@@ -58,6 +58,9 @@ pipeline {
       }
     }
     stage("Update RC branch") {
+      agent {
+        label "integration"
+      }
       environment {
         RELEASE_TYPE = "alpha"
         TOKEN = credentials('GITHUB_TOKEN')
