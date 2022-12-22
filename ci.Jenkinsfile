@@ -23,6 +23,9 @@ pipeline {
 
   stages {
     stage("Test Go Code") {
+      agent {
+        label "golang"
+      }
       steps {
         sh 'make checkfmt vet test'
         sh 'make linux-golangci-lint'
@@ -30,6 +33,9 @@ pipeline {
       }
     }
     stage("Setup For Publish") {
+      agent {
+        label "integration"
+      }
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
       }
