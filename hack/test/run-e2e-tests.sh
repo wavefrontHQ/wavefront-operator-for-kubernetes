@@ -250,6 +250,18 @@ function run_logging_integration_checks() {
     exit 1
   fi
 
+  hasValidFormat=$(jq .hasValidFormat "${RES}")
+  if [[ ${hasValidFormat} != "true" ]]; then
+    red "Test proxy received logs with invalid format"
+    exit 1
+  fi
+
+  missingTags=$(jq .missingTags "${RES}")
+  if [[ ${missingTags} != "null" ]]; then
+    red "Test proxy received logs without expected tags: ${missingTags}"
+    exit 1
+  fi
+
   echo " done."
 }
 

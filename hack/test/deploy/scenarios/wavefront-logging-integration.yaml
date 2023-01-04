@@ -76,6 +76,14 @@ spec:
       enable: true
       tags:
         env: non-production
+        user_defined_tag: user_defined_tag_value
+      filters:
+        tagAllowList:
+          namespace_name:
+            - kube-system
+        tagDenyList:
+          source:
+            - kind-control-plane
   dataExport:
     externalWavefrontProxy:
       url: test-proxy:2878
