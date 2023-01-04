@@ -57,6 +57,9 @@ data:
         Merge_Log_Key    log_processed
         Labels           On
         Annotations      Off
+        # TODO: Do we have to create a parser for "skip_container_metadata false"?
+        #Regex_Parser     container_name
+        # TODO: Do we need "skip_master_url" and "skip_namespace_metadata"?
     
     [FILTER]
         Name nest
@@ -74,6 +77,11 @@ data:
         Allowlist_key container_id
         Record source ${K8S_NODE_NAME}
         Record cluster ${CLUSTER_NAME}
+        # TODO how do we do "record.dig" for:
+        # - service
+        # - application
+        # - timestamp
+        # TODO: add user-defined TagAllowList and TagDenyList
     
     [OUTPUT]
         Name http
