@@ -75,6 +75,8 @@ spec:
           subPath: custom_parsers.conf
         - mountPath: /var/log
           name: varlog
+        - name: varlogcontainers
+          mountPath: /var/log/containers
         - mountPath: /var/lib/docker/containers
           name: varlibdockercontainers
           readOnly: true
@@ -88,6 +90,9 @@ spec:
       serviceAccount: wavefront-logging
       serviceAccountName: wavefront-logging
       terminationGracePeriodSeconds: 30
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       volumes:
       - configMap:
           defaultMode: 420
@@ -97,6 +102,9 @@ spec:
           path: /var/log
           type: ""
         name: varlog
+      - name: varlogcontainers
+        hostPath:
+          path: /var/log/containers
       - hostPath:
           path: /var/lib/docker/containers
           type: ""
