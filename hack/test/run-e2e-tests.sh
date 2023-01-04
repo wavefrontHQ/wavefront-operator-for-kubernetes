@@ -238,11 +238,18 @@ function run_logging_integration_checks() {
 
   RES=$(mktemp)
 
-  while true; do # wait until we get a good connection
-    # TODO some kind of "no data" error code based on whether store has received any logs
+  for _ in {1..10}; do
     RES_CODE=$(curl --silent --output "$RES" --write-out "%{http_code}" "http://localhost:8888/logs/assert")
-    [[ $RES_CODE -lt 200 ]] || break
+    if [[ $RES_CODE -eq 200 ]]; then
+      break
+    fi
+    sleep 1
   done
+
+  if [[ $RES_CODE -eq 204 ]]; then
+    red "Logs were never received by test proxy"
+    exit 1
+  fi
 
   # TODO look at result and pass or fail test
   if [[ $RES_CODE -gt 399 ]]; then
