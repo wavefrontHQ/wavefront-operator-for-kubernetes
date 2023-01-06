@@ -63,7 +63,7 @@ spec:
           successThreshold: 1
           timeoutSeconds: 1
         resources:
-{{ .DataCollection.Logging.Resources | toYaml | indent 12 }}
+{{ .DataCollection.Logging.Resources | toYaml | indent 10 }}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
