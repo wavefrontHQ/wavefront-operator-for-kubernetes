@@ -3,6 +3,7 @@ module github.com/wavefrontHQ/wavefront-operator-for-kubernetes
 go 1.17
 
 require (
+	github.com/pb33f/libopenapi v0.4.12
 	github.com/stretchr/testify v1.8.1
 	github.com/wavefronthq/wavefront-sdk-go v0.11.0
 	go.uber.org/zap v1.24.0
@@ -18,6 +19,7 @@ require (
 	github.com/caio/go-tdigest v3.1.0+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.2.0 // indirect
@@ -41,6 +43,7 @@ require (
 	github.com/prometheus/common v0.28.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
