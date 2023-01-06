@@ -89,6 +89,7 @@ spec:
       securityContext: {}
       serviceAccount: wavefront-logging
       serviceAccountName: wavefront-logging
+      automountServiceAccountToken: true
       terminationGracePeriodSeconds: 30
       tolerations:
         - key: node-role.kubernetes.io/master

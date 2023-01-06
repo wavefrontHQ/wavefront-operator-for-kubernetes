@@ -41,7 +41,7 @@ spec:
           value: arm64
       containers:
         - name: wavefront-proxy
-          image: deosu877/proxy-dev:12.1-SNAPSHOT_20221121-103330
+          image: {{ .ImageRegistry }}/proxy:12.1
           imagePullPolicy: Always
           env:
             - name: WAVEFRONT_URL
