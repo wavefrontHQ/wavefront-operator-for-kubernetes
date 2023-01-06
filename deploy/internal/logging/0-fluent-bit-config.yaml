@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wavefront-logging-config
+  namespace: {{ .Namespace }}
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: logging
+data:
+  custom_parsers.conf: |
+    [PARSER]
+        Name docker_no_time
+        Format json
+        Time_Keep Off
+        Time_Key time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+  fluent-bit.conf: |
+    [SERVICE]
+        Daemon Off
+        Flush 1
+        Log_Level info
+        Parsers_File parsers.conf
+        Parsers_File custom_parsers.conf
+        HTTP_Server On
+        HTTP_Listen 0.0.0.0
+        HTTP_Port 2020
+        Health_Check On
+
+    [INPUT]
+        Name tail
+        Path /var/log/containers/*.log
+        Exclude_Path /var/log/containers/wavefront-logging*
+        multiline.parser docker, cri
+        Tag kube.*
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines On
+
+    [INPUT]
+        Name systemd
+        Tag host.*
+        Systemd_Filter _SYSTEMD_UNIT=kubelet.service
+        Read_From_Tail On
+
+    [FILTER]
+        Name             kubernetes
+        Match            kube.*
+        Kube_URL         https://kubernetes.default.svc:443
+        Kube_CA_File     /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File  /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix  kube.var.log.containers.
+        Merge_Log        On
+        Merge_Log_Key    log_processed
+        Labels           On
+        Annotations      Off
+        # TODO: Do we have to create a parser for "skip_container_metadata false"?
+        #Regex_Parser     container_name
+        # TODO: Do we need "skip_master_url" and "skip_namespace_metadata"?
+    
+    [FILTER]
+        Name nest
+        Match kube.*
+        Operation lift
+        Nested_under kubernetes
+    
+    [FILTER]
+        Name  record_modifier
+        Match kube.*
+        Allowlist_key namespace_name
+        Allowlist_key pod_name
+        Allowlist_key pod_id
+        Allowlist_key container_name
+        Allowlist_key container_id
+        Record source ${K8S_NODE_NAME}
+        Record cluster ${CLUSTER_NAME}
+        # TODO how do we do "record.dig" for:
+        # - service
+        # - application
+        # - timestamp
+        # TODO: add user-defined TagAllowList and TagDenyList
+    
+    [OUTPUT]
+        Name http
+        Match kube.*
+        Proxy http://wavefront-proxy:2878
+        URI /logs/json_array?f=logs_json_lines
+        Format json_lines
+        json_date_key timestamp
+        json_date_format epoch
+    
+    [OUTPUT]
+        Name file
+        Match kube.*
+        Path /tmp

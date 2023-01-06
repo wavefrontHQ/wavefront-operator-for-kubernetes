@@ -4,7 +4,7 @@ resources:
 - role_binding.yaml
 - components/collector/1-collector-roles.yaml
 - components/collector/2-collector-rbac.yaml
-- components/logging/1-fluentd-roles.yaml
-- components/logging/2-fluentd-rbac.yaml
+- components/logging/1-logging-roles.yaml
+- components/logging/2-logging-rbac.yaml
 - legacy-installation-detection/1-legacy-install-detection-roles.yaml
 - legacy-installation-detection/2-legacy-install-detection-rbac.yaml
