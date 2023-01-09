@@ -5,22 +5,13 @@ metadata:
   name: wavefront
   namespace: observability-system
 spec:
-  clusterName: jyuqi-20230106-allowlist
-  wavefrontUrl: https://nimba.wavefront.com
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
     metrics:
       enable: true
     logging:
       enable: true
-      filters:
-        tagAllowList:
-          namespace_name:
-            - kube-system
-        tagDenyList:
-#          namespace_name:
-#            - kube-system
-          source:
-            - kind-control-plane
   dataExport:
     wavefrontProxy:
       enable: true

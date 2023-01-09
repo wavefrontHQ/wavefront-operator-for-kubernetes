@@ -18,6 +18,8 @@ spec:
           memory: 200Mi
         limits:
           memory: 1Gi
+      tags:
+        env: production
       filters:
         tagAllowList:
           # Can be any logging tag (source, service, application, container_name, pod_name, namespace_name, and cluster)
