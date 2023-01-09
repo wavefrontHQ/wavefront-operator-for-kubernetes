@@ -80,7 +80,6 @@ data:
         # TODO how do we do "record.dig" for:
         # - service
         # - application
-        # - timestamp
         # TODO: add user-defined TagAllowList and TagDenyList
         #Record service "$kubernetes['labels']['app']['service']? $kubernetes['labels']['app']['service'] : 'none'" 
         {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
@@ -90,6 +89,7 @@ data:
     {{- if .DataCollection.Logging.Filters.TagAllowList }}
     [FILTER]
         Name      grep
+        Match   *
         {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagAllowList }}
         {{- $sep := "" }}
         Regex {{ $tagKey }} ^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$
@@ -99,6 +99,7 @@ data:
     {{- if .DataCollection.Logging.Filters.TagDenyList }}
     [FILTER]
         Name      grep
+        Match   *
         {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
         {{- $sep := "" }}
         Exclude {{ $tagKey }} ^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$
