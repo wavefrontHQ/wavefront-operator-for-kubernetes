@@ -68,23 +68,39 @@ data:
         Nested_under kubernetes
     
     [FILTER]
-        Name  record_modifier
+        Name nest
+        Match kube.*
+        Operation lift
+        Nested_under labels
+    
+    [FILTER]
+        Name record_modifier
         Match kube.*
         Allowlist_key namespace_name
         Allowlist_key pod_name
         Allowlist_key pod_id
         Allowlist_key container_name
         Allowlist_key container_id
+        Allowlist_key service
+        Allowlist_key application
         Record source ${K8S_NODE_NAME}
         Record cluster ${CLUSTER_NAME}
-        # TODO how do we do "record.dig" for:
-        # - service
-        # - application
-        #Record service "$kubernetes['labels']['app']['service']? $kubernetes['labels']['app']['service'] : 'none'" 
         {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
         Record {{ $tagKey }} {{ $tagValue }}
         {{- end }}
     
+    [FILTER]
+        Name    modify
+        Match   *
+        Condition Key_Does_Not_Exist service
+        Set service none
+
+    [FILTER]
+        Name    modify
+        Match   *
+        Condition Key_Does_Not_Exist application
+        Set application none
+
     {{- if .DataCollection.Logging.Filters.TagAllowList }}
     [FILTER]
         Name      grep
