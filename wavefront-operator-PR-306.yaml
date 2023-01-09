@@ -108,9 +108,11 @@ spec:
                         default:
                           limits:
                             cpu: 1000m
+                            ephemeral-storage: 2Gi
                             memory: 500Mi
                           requests:
                             cpu: 100m
+                            ephemeral-storage: 1Gi
                             memory: 200Mi
                         description: Resources Compute resources required by the logging
                           containers.
@@ -335,6 +337,44 @@ spec:
                           as point tags on all metrics emitted.
                         type: object
                     type: object
+                  tolerations:
+                    description: Top level tolerations to be applied to metrics and
+                      logging DaemonSet resource types. This adds custom tolerations
+                      to the pods.
+                    items:
+                      properties:
+                        effect:
+                          description: Effect indicates the taint effect to match.
+                            Empty means match all taint effects. When specified, allowed
+                            values are NoSchedule, PreferNoSchedule and NoExecute.
+                          enum:
+                          - NoSchedule
+                          - PreferNoSchedule
+                          - NoExecute
+                          type: string
+                        key:
+                          description: Key is the taint key that the toleration applies
+                            to. Empty means match all taint keys. If the key is empty,
+                            operator must be Exists; this combination means to match
+                            all values and all keys.
+                          type: string
+                        operator:
+                          description: Operator represents a key's relationship to
+                            the value. Valid operators are Exists and Equal. Defaults
+                            to Equal. Exists is equivalent to wildcard for value,
+                            so that a pod can tolerate all taints of a particular
+                            category.
+                          enum:
+                          - Equal
+                          - Exists
+                          type: string
+                        value:
+                          description: Value is the taint value the toleration matches
+                            to. If the operator is Exists, the value should be empty,
+                            otherwise just a regular string.
+                          type: string
+                      type: object
+                    type: array
                 type: object
               dataExport:
                 description: DataExport options
@@ -346,7 +386,6 @@ spec:
                         description: Url is the proxy URL that the collector sends
                           metrics to.
                         minLength: 10
-                        pattern: ^http*
                         type: string
                     required:
                     - url
@@ -934,7 +973,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.1.1-alpha-f664bf16
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.1.1-alpha-e7e8af63
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -967,3 +1006,7 @@ spec:
         runAsUser: 65534
       serviceAccountName: wavefront-controller-manager
       terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: kubernetes.io/arch
+        value: arm64
