@@ -80,7 +80,6 @@ data:
         # TODO how do we do "record.dig" for:
         # - service
         # - application
-        # TODO: add user-defined TagAllowList and TagDenyList
         #Record service "$kubernetes['labels']['app']['service']? $kubernetes['labels']['app']['service'] : 'none'" 
         {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
         Record {{ $tagKey }} {{ $tagValue }}
