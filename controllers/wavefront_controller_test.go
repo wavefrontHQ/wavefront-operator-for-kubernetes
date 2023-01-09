@@ -152,8 +152,8 @@ func TestReconcileAll(t *testing.T) {
 
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
 		require.True(t, mockKM.ClusterCollectorDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-collector"))
-		//require.True(t, mockKM.LoggingDaemonSetContains("image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-fluentd"))
-		//require.True(t, mockKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
+		require.True(t, mockKM.LoggingDaemonSetContains("image: cr.fluentbit.io/fluent/fluent-bit"))
+		require.True(t, mockKM.ProxyDeploymentContains("image: projects.registry.vmware.com/tanzu_observability/proxy"))
 	})
 
 	t.Run("Can Configure Custom Registry", func(t *testing.T) {
@@ -171,8 +171,7 @@ func TestReconcileAll(t *testing.T) {
 
 		require.True(t, mockKM.NodeCollectorDaemonSetContains("image: docker.io/kubernetes-collector"))
 		require.True(t, mockKM.ClusterCollectorDeploymentContains("image: docker.io/kubernetes-collector"))
-		//TODO: Implement Me
-		//require.True(t, mockKM.LoggingDaemonSetContains("image: docker.io/kubernetes-operator-fluentd"))
+		require.True(t, mockKM.LoggingDaemonSetContains("image: docker.io/fluent/fluent-bit"))
 		require.True(t, mockKM.ProxyDeploymentContains("image: docker.io/proxy"))
 	})
 

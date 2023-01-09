@@ -54,6 +54,9 @@ type WavefrontSpec struct {
 	// ImageRegistry for internal use
 	ImageRegistry string `json:"-"`
 
+	// LoggingImageRegistry for internal use
+	LoggingImageRegistry string `json:"-"`
+
 	// ControllerManagerUID is for internal use of deletion delegation
 	ControllerManagerUID string `json:"-"`
 

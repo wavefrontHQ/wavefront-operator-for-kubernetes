@@ -344,6 +344,12 @@ func (r *WavefrontReconciler) preprocess(wavefront *wf.Wavefront, ctx context.Co
 	wavefront.Spec.Namespace = r.namespace
 
 	wavefront.Spec.ImageRegistry = filepath.Dir(deployment.Spec.Template.Spec.Containers[0].Image)
+	if wavefront.Spec.ImageRegistry == util.DefaultImageRegistry {
+		wavefront.Spec.LoggingImageRegistry = util.DefaultLoggingImageRegistry
+	} else {
+		wavefront.Spec.LoggingImageRegistry = wavefront.Spec.ImageRegistry
+	}
+
 	if wavefront.Spec.DataCollection.Metrics.Enable {
 		if len(wavefront.Spec.DataCollection.Metrics.CustomConfig) == 0 {
 			wavefront.Spec.DataCollection.Metrics.CollectorConfigName = "default-wavefront-collector-config"

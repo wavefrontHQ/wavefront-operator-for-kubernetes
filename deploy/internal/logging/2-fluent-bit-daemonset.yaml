@@ -30,7 +30,7 @@ spec:
         app.kubernetes.io/component: logging
     spec:
       containers:
-      - image: cr.fluentbit.io/fluent/fluent-bit:2.0.6-debug
+      - image: {{ .LoggingImageRegistry }}/fluent/fluent-bit:2.0.6
         env:
           - name: K8S_NODE_NAME
             valueFrom:
