@@ -792,6 +792,7 @@ func TestReconcileLogging(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
 		require.True(t, mockKM.LoggingConfigMapContains("Proxy http://wavefront-proxy:2878"))
+		require.True(t, mockKM.LoggingConfigMapContains("URI /logs/json_lines?f=logs_json_lines"))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {

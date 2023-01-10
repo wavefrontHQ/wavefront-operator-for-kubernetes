@@ -113,7 +113,7 @@ data:
         Name http
         Match kube.*
         Proxy {{.DataCollection.Logging.ProxyAddress}}
-        URI /logs/json_array?f=logs_json_lines
+        URI /logs/json_lines?f=logs_json_lines
         Format json_lines
         json_date_key timestamp
         json_date_format epoch

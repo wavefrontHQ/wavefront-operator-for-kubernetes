@@ -4,18 +4,6 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 source ${REPO_ROOT}/hack/test/k8s-utils.sh
 NS=observability-system
 
-function print_usage_and_exit() {
-  echo "Failure: $1"
-  echo "Usage: $0 [flags] [options]"
-  echo -e "\t-t wavefront token (required)"
-  echo -e "\t-c wavefront instance name (default: 'nimba')"
-  echo -e "\t-v operator version (default: load from 'release/OPERATOR_VERSION')"
-  echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
-  echo -e "\t-d namespace to create CR in (default: observability-system"
-  echo -e "\t-r tests to run (runs all by default)"
-  exit 1
-}
-
 function setup_test() {
   local type=$1
   local wf_url="${2:-${WAVEFRONT_URL}}"
@@ -284,12 +272,27 @@ function run_test() {
     run_logging_integration_checks
   fi
 
-  clean_up_test $type
+	if ! $NO_CLEANUP; then
+		clean_up_test $type
+	fi
+
   green "Successfully ran $type test!"
 }
 
-function main() {
+function print_usage_and_exit() {
+  echo "Failure: $1"
+  echo "Usage: $0 [flags] [options]"
+  echo -e "\t-t wavefront token (required)"
+  echo -e "\t-c wavefront instance name (default: 'nimba')"
+  echo -e "\t-v operator version (default: load from 'release/OPERATOR_VERSION')"
+  echo -e "\t-n config cluster name for metric grouping (default: \$(whoami)-<default version from file>-release-test)"
+  echo -e "\t-r tests to run (runs all by default)"
+  echo -e "\t-d namespace to create CR in (default: observability-system)"
+  echo -e "\t-e no cl[e]anup after test to debug testing framework"
+  exit 1
+}
 
+function main() {
   # REQUIRED
   local WAVEFRONT_TOKEN=
 
@@ -299,8 +302,9 @@ function main() {
   local K8S_ENV=$(cd ${REPO_ROOT}/hack/test && ./get-k8s-cluster-env.sh)
   local CONFIG_CLUSTER_NAME=$(create_cluster_name)
   local tests_to_run=()
+	NO_CLEANUP=false
 
-  while getopts ":c:t:v:n:d:r:" opt; do
+  while getopts ":t:c:v:n:r:d:e" opt; do
     case $opt in
     t)
       WAVEFRONT_TOKEN="$OPTARG"
@@ -320,6 +324,9 @@ function main() {
     d)
       NS="$OPTARG"
       ;;
+		e)
+			NO_CLEANUP=true
+			;;
     \?)
       print_usage_and_exit "Invalid option: -$OPTARG"
       ;;
