@@ -246,6 +246,8 @@ function run_logging_integration_checks() {
     sleep 1
   done
 
+  cat "${RES}" > /tmp/test
+
   if [[ $RES_CODE -eq 204 ]]; then
     red "Logs were never received by test proxy"
     exit 1
@@ -257,37 +259,33 @@ function run_logging_integration_checks() {
     exit 1
   fi
 
-  hasValidFormat=$(jq .hasValidFormat "${RES}")
-  if [[ ${hasValidFormat} != "true" ]]; then
+  hasValidFormat=$(jq -r .hasValidFormat "${RES}")
+  if [[ ${hasValidFormat} -ne 1 ]]; then
     red "Test proxy received logs with invalid format"
     exit 1
   fi
 
 
-  hasValidTags=$(jq .hasValidTags "${RES}")
+  hasValidTags=$(jq -r .hasValidTags "${RES}")
 
-  missingExpectedTags=$(jq .missingExpectedTags "${RES}")
-  missingExpectedCount=$(jq .missingExpectedCount "${RES}")
+  missingExpectedTags="$(jq .missingExpectedTags "${RES}")"
 
-  emptyExpectedTags=$(jq .emptyExpectedTags "${RES}")
-  emptyExpectedCount=$(jq .emptyExpectedCount "${RES}")
+  emptyExpectedTags="$(jq .emptyExpectedTags "${RES}")"
 
-  unexpectedAllowedLogs=$(jq .unexpectedAllowedLogs "${RES}")
-  unexpectedAllowedCount=$(jq .unexpectedAllowedCount "${RES}")
+  unexpectedAllowedLogs="$(jq .unexpectedAllowedLogs "${RES}")"
 
-  unexpectedDeniedTags=$(jq .unexpectedDeniedTags "${RES}")
-  unexpectedDeniedCount=$(jq .unexpectedDeniedCount "${RES}")
+  unexpectedDeniedTags="$(jq .unexpectedDeniedTags "${RES}")"
 
-  receivedLogsCount='infiniteee lol'
-  if [[ ${hasValidTags} != "true" ]]; then
-    [[ ${missingExpectedTags} != "null" ]] && red "Test proxy received logs (${missingExpectedCount} / ${receivedLogsCount}) without expected tags: ${missingExpectedTags}"
-    [[ ${emptyExpectedTags} != "null" ]] && red "Test proxy received logs (${emptyExpectedCount} / ${receivedLogsCount}) with expected tags that were empty: ${emptyExpectedTags}"
-    [[ ${unexpectedAllowedLogs} != "null" ]] && red "Test proxy received logs (${unexpectedAllowedCount} / ${receivedLogsCount}) that should not have been there because none of their tags were allowed: ${unexpectedAllowedLogs}"
-    [[ ${unexpectedDeniedTags} != "null" ]] && red "Test proxy received logs (${unexpectedDeniedCount} / ${receivedLogsCount}) that should not have been there because some of their tags were denied: ${unexpectedDeniedTags}"
+  hasReceivedLogs=$(jq .hasReceivedLogs "${RES}")
+  if [[ ${hasReceivedLogs} == "true" ]]; then
+    [[ ${missingExpectedTags} != "null" ]] && red "Test proxy received logs without expected tags: ${missingExpectedTags}"
+    [[ ${emptyExpectedTags} != "null" ]] && red "Test proxy received logs with expected tags that were empty: ${emptyExpectedTags}"
+    [[ ${unexpectedAllowedLogs} != "null" ]] && red "Test proxy received logs that should not have been there because none of their tags were allowed: ${unexpectedAllowedLogs}"
+    [[ ${unexpectedDeniedTags} != "null" ]] && red "Test proxy received logs that should not have been there because some of their tags should have been denied: ${unexpectedDeniedTags}"
     exit 1
   fi
 
-  echo " done."
+  echo "Integration test complete."
 }
 
 function run_test() {
@@ -321,7 +319,7 @@ function run_test() {
     run_logging_integration_checks
   fi
 
-  clean_up_test $type
+  #clean_up_test $type
   green "Successfully ran $type test!"
 }
 
