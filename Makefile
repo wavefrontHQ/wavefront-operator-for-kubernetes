@@ -286,7 +286,7 @@ clean-cluster:
 .PHONY: nuke-kind
 nuke-kind:
 	kind delete cluster
-	kind create cluster
+	kind create cluster --image kindest/node:v1.24.7
 
 #----- GKE -----#
 GCP_PROJECT?=wavefront-gcp-dev
