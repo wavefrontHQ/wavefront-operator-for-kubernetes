@@ -29,6 +29,18 @@ spec:
         app.kubernetes.io/name: wavefront
         app.kubernetes.io/component: logging
     spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+          operator: Exists
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          value: arm64
+      {{- if .DataCollection.Tolerations }}
+{{ .DataCollection.Tolerations | toYaml | indent 8 }}
+      {{- end }}
       containers:
       - image: {{ .LoggingImageRegistry }}/fluent/fluent-bit:2.0.6
         env:

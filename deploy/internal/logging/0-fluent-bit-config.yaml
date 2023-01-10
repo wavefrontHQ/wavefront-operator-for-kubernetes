@@ -126,8 +126,3 @@ data:
         Format json_lines
         json_date_key timestamp
         json_date_format epoch
-    
-    [OUTPUT]
-        Name file
-        Match kube.*
-        Path /tmp

@@ -791,7 +791,7 @@ func TestReconcileLogging(t *testing.T) {
 
 		require.NoError(t, err)
 		require.True(t, mockKM.AppliedContains("apps/v1", "DaemonSet", "wavefront", "logging", util.LoggingName))
-		require.True(t, mockKM.LoggingConfigMapContains("endpoint http://wavefront-proxy:2878/logs/json_array?f=logs_json_arr"))
+		require.True(t, mockKM.LoggingConfigMapContains("Proxy http://wavefront-proxy:2878"))
 	})
 
 	t.Run("default resources for logging", func(t *testing.T) {
@@ -865,7 +865,7 @@ func TestReconcileLogging(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
-		require.True(t, mockKM.LoggingConfigMapContains("endpoint http://my-proxy:8888/logs/json_array?f=logs_json_arr"))
+		require.True(t, mockKM.LoggingConfigMapContains("Proxy http://my-proxy:8888"))
 	})
 
 	t.Run("Verify external wavefront proxy url without http specified in URL", func(t *testing.T) {
@@ -876,7 +876,7 @@ func TestReconcileLogging(t *testing.T) {
 
 		_, err := r.Reconcile(context.Background(), defaultRequest())
 		require.NoError(t, err)
-		require.True(t, mockKM.LoggingConfigMapContains("endpoint http://my-proxy:8888/logs/json_array?f=logs_json_arr"))
+		require.True(t, mockKM.LoggingConfigMapContains("Proxy http://my-proxy:8888"))
 	})
 
 	t.Run("can be disabled", func(t *testing.T) {
