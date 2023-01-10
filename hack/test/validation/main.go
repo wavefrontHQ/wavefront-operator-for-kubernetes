@@ -22,6 +22,7 @@ func main() {
 	manifestFilePath := os.Args[1]
 	//crPath := os.Args[2]
 
+	// TODO: use yq to pull out the actual schema and pass it in as a temp file so I don't have to figure out how bytes conversion works
 	manifestYAMLFile, err := os.ReadFile(manifestFilePath)
 	if err != nil {
 		panic(err)
