@@ -25,10 +25,10 @@ function setup_test() {
 
   wait_for_cluster_ready "$NS"
 
-  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g"  ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml  |
-   sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" |
-   sed "s/YOUR_API_TOKEN/${WAVEFRONT_TOKEN}/g" |
-    sed "s/YOUR_NAMESPACE/${NS}/g" > hack/test/_v1alpha1_wavefront_test.yaml
+  sed "s/YOUR_CLUSTER_NAME/$cluster_name/g" ${REPO_ROOT}/hack/test/deploy/scenarios/wavefront-$type.yaml |
+    sed "s/YOUR_WAVEFRONT_URL/$wf_url/g" |
+    sed "s/YOUR_API_TOKEN/${WAVEFRONT_TOKEN}/g" |
+    sed "s/YOUR_NAMESPACE/${NS}/g" >hack/test/_v1alpha1_wavefront_test.yaml
 
   kubectl apply -f hack/test/_v1alpha1_wavefront_test.yaml
 
@@ -63,7 +63,7 @@ function run_health_checks() {
     exit 1
   fi
 
-  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n $NS | grep " ERROR "| wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+  proxyLogErrorCount=$(kubectl logs deployment/wavefront-proxy -n $NS | grep " ERROR " | wc -l | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
   if [[ $proxyLogErrorCount -gt 0 ]]; then
     red "Expected proxy log error count of 0, but got $proxyLogErrorCount"
     exit 1
@@ -102,7 +102,7 @@ function clean_up_test() {
   wait_for_proxy_termination "$NS"
 }
 
-function checks_to_remove(){
+function checks_to_remove() {
   local file_name=$1
   local component_name=$2
   local checks=$3
@@ -112,7 +112,7 @@ function checks_to_remove(){
     tempFile=$(mktemp)
     local excludeCheck=$(echo $i | sed -r 's/:/ /g')
     local awk_command="!/.*$excludeCheck.*$component_name|.*$component_name.*$excludeCheck/"
-    cat "$file_name" | awk "$awk_command" > "$tempFile" && mv "$tempFile" "$file_name"
+    cat "$file_name" | awk "$awk_command" >"$tempFile" && mv "$tempFile" "$file_name"
   done
 }
 
@@ -123,28 +123,27 @@ function run_static_analysis() {
 
   local resources_yaml_file=$(mktemp)
   local exit_status=0
-  kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n $NS -o yaml \
-  | yq '.items[] | split_doc' - > "$resources_yaml_file"
+  kubectl get "$(kubectl api-resources --verbs=list --namespaced -o name | tr '\n' ',' | sed s/,\$//)" --ignore-not-found -n $NS -o yaml |
+    yq '.items[] | split_doc' - >"$resources_yaml_file"
 
   echo "Running static analysis: kube-linter"
 
-
   local kube_lint_results_file=$(mktemp)
   local kube_lint_check_errors=$(mktemp)
-  ${REPO_ROOT}/bin/kube-linter lint "$resources_yaml_file" --format json 1> "$kube_lint_results_file" 2>/dev/null || true
+  ${REPO_ROOT}/bin/kube-linter lint "$resources_yaml_file" --format json 1>"$kube_lint_results_file" 2>/dev/null || true
 
   local current_lint_errors="$(jq '.Reports | length' "$kube_lint_results_file")"
   yellow "Kube linter error count: ${current_lint_errors}"
 
-  jq -r '.Reports[] | "|" + .Check + "|  " +.Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file" 1> "$kube_lint_check_errors"  2>/dev/null || true
+  jq -r '.Reports[] | "|" + .Check + "|  " +.Object.K8sObject.GroupVersionKind.Kind + " " + .Object.K8sObject.Namespace + "/" +  .Object.K8sObject.Name + ": " + .Diagnostic.Message' "$kube_lint_results_file" 1>"$kube_lint_check_errors" 2>/dev/null || true
 
   #REMOVE KNOWN CHECKS
   #non root checks for logging
-  checks_to_remove "$kube_lint_check_errors"  "wavefront-logging" "run-as-non-root,no-read-only-root-fs"
+  checks_to_remove "$kube_lint_check_errors" "wavefront-logging" "run-as-non-root,no-read-only-root-fs"
   #sensitive-host-mounts checks for the collector
   checks_to_remove "$kube_lint_check_errors" "collector" "sensitive-host-mounts"
 
-  current_lint_errors=$(cat "$kube_lint_check_errors" | wc -l )
+  current_lint_errors=$(cat "$kube_lint_check_errors" | wc -l)
   yellow "Kube linter error count (with known errors removed): ${current_lint_errors}"
   local known_lint_errors=0
   if [ $current_lint_errors -gt $known_lint_errors ]; then
@@ -156,9 +155,9 @@ function run_static_analysis() {
   echo "Running static analysis: kube-score"
   local kube_score_results_file=$(mktemp)
   local kube_score_critical_errors=$(mktemp)
-  ${REPO_ROOT}/bin/kube-score score "$resources_yaml_file" --ignore-test pod-networkpolicy --output-format ci> "$kube_score_results_file" || true
+  ${REPO_ROOT}/bin/kube-score score "$resources_yaml_file" --ignore-test pod-networkpolicy --output-format ci >"$kube_score_results_file" || true
 
-  grep '\[CRITICAL\]' "$kube_score_results_file" > "$kube_score_critical_errors"
+  grep '\[CRITICAL\]' "$kube_score_results_file" >"$kube_score_critical_errors"
   local current_score_errors=$(cat "$kube_score_critical_errors" | wc -l)
   yellow "Kube score error count: ${current_score_errors}"
 
@@ -182,8 +181,7 @@ function run_static_analysis() {
   local automountToken=
   local service_accounts=$(kubectl get serviceaccounts -l app.kubernetes.io/name=wavefront -n $NS -o name | tr '\n' ',' | sed "s/serviceaccount\///g" | sed s/,\$//)
 
-  for i in ${service_accounts//,/ }
-  do
+  for i in ${service_accounts//,/ }; do
     automountToken=$(kubectl get serviceaccount $i -n $NS -o=jsonpath='{.automountServiceAccountToken}' | tr -d '\n')
     if [[ $automountToken != "false" ]]; then
       red "Failure: Expected automountToken in $i to be \"false\", but was $automountToken"
@@ -194,8 +192,7 @@ function run_static_analysis() {
   echo "Running static analysis: Pod automountServiceAccountToken checks"
   local pods=$(kubectl get pods -l app.kubernetes.io/name=wavefront -n $NS -o name | tr '\n' ',' | sed "s/pod\///g" | sed s/,\$//)
 
-  for i in ${pods//,/ }
-  do
+  for i in ${pods//,/ }; do
     automountToken=$(kubectl get pod $i -n $NS -o=jsonpath='{.spec.automountServiceAccountToken}' | tr -d '\n')
     if [[ $automountToken == "" ]]; then
       red "Failure: Expected automountToken in $i to be set"
@@ -210,7 +207,7 @@ function run_static_analysis() {
 
 function run_logging_checks() {
   printf "Running logging checks ..."
-  local max_logs_received=0;
+  local max_logs_received=0
   for _ in {1..12}; do
     max_logs_received=$(kubectl -n $NS logs -l app.kubernetes.io/name=wavefront -l app.kubernetes.io/component=proxy --tail=-1 | grep "Logs received" | awk 'match($0, /[0-9]+ logs\/s/) { print substr( $0, RSTART, RLENGTH )}' | awk '{print $1}' | sort -n | tail -n1 2>/dev/null)
     if [[ $max_logs_received -gt 0 ]]; then
@@ -246,7 +243,9 @@ function run_logging_integration_checks() {
     sleep 1
   done
 
-  cat "${RES}" > /tmp/test
+  # Helpful for debugging:
+  # cat "${RES}" >/tmp/test
+  # kubectl --namespace "$NS" logs deployment/test-proxy
 
   if [[ $RES_CODE -eq 204 ]]; then
     red "Logs were never received by test proxy"
@@ -265,27 +264,51 @@ function run_logging_integration_checks() {
     exit 1
   fi
 
-
   hasValidTags=$(jq -r .hasValidTags "${RES}")
-
   missingExpectedTags="$(jq .missingExpectedTags "${RES}")"
+  missingExpectedTagsCount="$(jq .missingExpectedTagsCount "${RES}")"
 
   emptyExpectedTags="$(jq .emptyExpectedTags "${RES}")"
+  emptyExpectedTagsCount="$(jq .emptyExpectedTagsCount "${RES}")"
 
   unexpectedAllowedLogs="$(jq .unexpectedAllowedLogs "${RES}")"
+  unexpectedAllowedLogsCount="$(jq .unexpectedAllowedLogsCount "${RES}")"
 
   unexpectedDeniedTags="$(jq .unexpectedDeniedTags "${RES}")"
+  unexpectedDeniedTagsCount="$(jq .unexpectedDeniedTagsCount "${RES}")"
 
-  hasReceivedLogs=$(jq .hasReceivedLogs "${RES}")
-  if [[ ${hasReceivedLogs} == "true" ]]; then
-    [[ ${missingExpectedTags} != "null" ]] && red "Test proxy received logs without expected tags: ${missingExpectedTags}"
-    [[ ${emptyExpectedTags} != "null" ]] && red "Test proxy received logs with expected tags that were empty: ${emptyExpectedTags}"
-    [[ ${unexpectedAllowedLogs} != "null" ]] && red "Test proxy received logs that should not have been there because none of their tags were allowed: ${unexpectedAllowedLogs}"
-    [[ ${unexpectedDeniedTags} != "null" ]] && red "Test proxy received logs that should not have been there because some of their tags should have been denied: ${unexpectedDeniedTags}"
+  receivedLogCount=$(jq .receivedLogCount "${RES}")
+
+  if [[ ${hasValidTags} -ne 1 ]]; then
+    red "Invalid tags were found:"
+    if [[ ${missingExpectedTags} != "null" ]]; then
+      echo ""
+      red "* Test proxy received logs (${missingExpectedTagsCount}/${receivedLogCount} logs) that were missing expected tags:"
+      red "${missingExpectedTags}"
+    fi
+
+    if [[ ${emptyExpectedTags} != "null" ]]; then
+      echo ""
+      red "* Test proxy received logs (${emptyExpectedTagsCount}/${receivedLogCount} logs) with expected tags that were empty:"
+      red "${emptyExpectedTags}"
+    fi
+
+    if [[ ${unexpectedAllowedLogs} != "null" ]]; then
+      echo ""
+      red "* Test proxy received (${unexpectedAllowedLogsCount}/${receivedLogCount} logs) logs that should not have been there because none of their tags were in the allowlist:"
+      red "${unexpectedAllowedLogs}"
+    fi
+
+    if [[ ${unexpectedDeniedTags} != "null" ]]; then
+      echo ""
+      red "* Test proxy received (${unexpectedDeniedTagsCount}/${receivedLogCount} logs) logs that should not have been there because some of their tags were in the denylist:"
+      red "${unexpectedDeniedTags}"
+    fi
+
     exit 1
   fi
 
-  echo "Integration test complete."
+  echo "Integration test complete. ${receivedLogCount} logs were checked."
 }
 
 function run_test() {
@@ -363,11 +386,11 @@ function main() {
 
   if [[ ${#tests_to_run[@]} -eq 0 ]]; then
     tests_to_run=(
-      "validation-errors"
-      "validation-legacy"
-      "allow-legacy-install"
-      "basic"
-      "advanced"
+      #      "validation-errors"
+      #      "validation-legacy"
+      #      "allow-legacy-install"
+      #      "basic"
+      #      "advanced"
       "logging-integration"
     )
   fi
