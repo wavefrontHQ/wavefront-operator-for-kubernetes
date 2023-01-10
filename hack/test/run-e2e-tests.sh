@@ -342,7 +342,7 @@ function run_test() {
     run_logging_integration_checks
   fi
 
-  #clean_up_test $type
+  clean_up_test $type
   green "Successfully ran $type test!"
 }
 
@@ -386,11 +386,11 @@ function main() {
 
   if [[ ${#tests_to_run[@]} -eq 0 ]]; then
     tests_to_run=(
-      #      "validation-errors"
-      #      "validation-legacy"
-      #      "allow-legacy-install"
-      #      "basic"
-      #      "advanced"
+      "validation-errors"
+      "validation-legacy"
+      "allow-legacy-install"
+      "basic"
+      "advanced"
       "logging-integration"
     )
   fi
