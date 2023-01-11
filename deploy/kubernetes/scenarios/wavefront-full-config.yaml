@@ -21,11 +21,17 @@ spec:
     logging:
       enable: true
       resources:
-        requests:
-          cpu: 200mb/controllers/wavefront_controller_test.go
-          memory: 200Mi
         limits:
+          cpu: 1000m
+          ephemeral-storage: 2Gi
           memory: 1Gi
+        requests:
+          cpu: 200m
+          ephemeral-storage: 1Gi
+          memory: 200Mi
+      # Can be any key value pair that users can add to all logging emitted.
+      tags:
+        userDefinedTag: userDefinedValue
       filters:
         tagAllowList:
           # Can be any logging tag (source, service, application, container_name, pod_name, namespace_name, and cluster)
@@ -42,6 +48,9 @@ spec:
       #
       # customConfig will override all top-level metrics config (filters, etc.) except for clusterCollector and nodeCollector
       customConfig: wavefront-collector-config
+      # Can be any key value pair that users can add to all metrics emitted.
+      tags:
+        userDefinedTag: userDefinedValue
       filters:
         allowList:
           - kubernetes.*
@@ -49,23 +58,28 @@ spec:
           - kubernetes.sys_container.*
           - kubernetes.collector.runtime.*
       defaultCollectionInterval: 90s #defaults to 60s
+      # Rules based and Prometheus endpoints auto-discovery.
       enableDiscovery: true #defaults to true
       clusterCollector:
         resources:
-          requests:
-            cpu: 200m
-            memory: 10Mi
           limits:
             cpu: 400m
+            ephemeral-storage: 1Gi
             memory: 512Mi
-      nodeCollector:
-        resources:
           requests:
             cpu: 200m
+            ephemeral-storage: 20Mi
             memory: 10Mi
+      nodeCollector:
+        resources:
           limits:
             cpu: 200m
+            ephemeral-storage: 512Mi
             memory: 256Mi
+          requests:
+            cpu: 200m
+            ephemeral-storage: 20Mi
+            memory: 10Mi
   dataExport:
     # Note on externalWavefrontProxy and wavefrontProxy
     #
@@ -79,12 +93,14 @@ spec:
       metricPort: 2878
       preprocessor: advanced-proxy-preprocessor-rules
       resources:
-        requests:
-          cpu: 200m
-          memory: 1Gi
         limits:
           cpu: 1000m
-          memory: 3Gi
+          ephemeral-storage: 8Gi
+          memory: 4Gi
+        requests:
+          cpu: 100m
+          ephemeral-storage: 2Gi
+          memory: 1Gi
       tracing:
         wavefront:
           port: 30000
@@ -98,11 +114,19 @@ spec:
           httpPort: 30080
           grpcPort: 14250
           applicationName: "jaeger"
+      # Histogram distribution configuration
       histogram:
         port: 40000
         minutePort: 40001
         hourPort: 40002
         dayPort: 40003
+      # OpenTelemetry Protocol configuration
+      oltp:
+        grpcPort: 4317
+        httpPrt: 4318
+        resourceAttrsOnMetricsIncluded: false
+      # DeltaCounterPort accumulates 1-minute delta counters on Wavefront data format
+      deltaCounterPort: 50000
       httpProxy:
         secret: http-proxy-secret
       # Note on Proxy Configuration Precedence
@@ -118,6 +142,7 @@ spec:
       args: >
         --customSourceTags mySource
         --prefix=dev
+      replicas: 1
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -130,7 +155,8 @@ metadata:
 data:
   config.yaml: |
     clusterName: YOUR_CLUSTER_NAME
-    enableDiscovery: true
+    # Rules based and Prometheus endpoints auto-discovery.
+    enableDiscovery: true 
     enableEvents: false
     defaultCollectionInterval: 60s
 
