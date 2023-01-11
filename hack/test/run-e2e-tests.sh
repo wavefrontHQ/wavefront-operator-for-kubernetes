@@ -248,21 +248,21 @@ function run_logging_integration_checks() {
 
   if [[ $RES_CODE -eq 204 ]]; then
     red "Logs were never received by test proxy"
-    kubectl -n observability-system exec deployment/test-proxy -i -t -- cat /logs/test-proxy.log
+    kubectl -n observability-system exec deployment/test-proxy -- cat /logs/test-proxy.log
     exit 1
   fi
 
   # TODO look at result and pass or fail test
   if [[ $RES_CODE -gt 399 ]]; then
     red "LOGGING ASSERTION FAILURE"
-    kubectl -n observability-system exec deployment/test-proxy -i -t -- cat /logs/test-proxy.log
+    kubectl -n observability-system exec deployment/test-proxy -- cat /logs/test-proxy.log
     exit 1
   fi
 
   hasValidFormat=$(jq -r .hasValidFormat "${RES}")
   if [[ ${hasValidFormat} -ne 1 ]]; then
     red "Test proxy received logs with invalid format"
-    kubectl -n observability-system exec deployment/test-proxy -i -t -- cat /logs/test-proxy.log
+    kubectl -n observability-system exec deployment/test-proxy -- cat /logs/test-proxy.log
     exit 1
   fi
 
