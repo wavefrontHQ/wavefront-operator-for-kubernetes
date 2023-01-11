@@ -62,6 +62,11 @@ data:
         Nested_under labels
     
     [FILTER]
+        Name modify
+        Match kube.*
+        Rename docker_id container_id
+    
+    [FILTER]
         Name record_modifier
         Match kube.*
         Allowlist_key namespace_name
@@ -79,20 +84,20 @@ data:
     
     [FILTER]
         Name    modify
-        Match   *
+        Match   kube.*
         Condition Key_Does_Not_Exist service
         Set service none
 
     [FILTER]
         Name    modify
-        Match   *
+        Match   kube.*
         Condition Key_Does_Not_Exist application
         Set application none
 
     {{- if .DataCollection.Logging.Filters.TagAllowList }}
     [FILTER]
         Name      grep
-        Match   *
+        Match   kube.*
         {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagAllowList }}
         {{- $sep := "" }}
         Regex {{ $tagKey }} ^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$
@@ -102,7 +107,7 @@ data:
     {{- if .DataCollection.Logging.Filters.TagDenyList }}
     [FILTER]
         Name      grep
-        Match   *
+        Match   kube.*
         {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
         {{- $sep := "" }}
         Exclude {{ $tagKey }} ^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$
