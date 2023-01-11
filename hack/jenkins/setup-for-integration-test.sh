@@ -11,6 +11,11 @@ if ! [ -x "$(command -v gcloud)" ]; then
   gke-gcloud-auth-plugin --version
 fi
 
+if ! [ -x "$(command -v gke-gcloud-auth-plugin)" ]; then
+  sudo /home/worker/google-cloud-sdk/bin/gcloud  components install gke-gcloud-auth-plugin
+  gke-gcloud-auth-plugin --version
+fi
+
 gcloud auth activate-service-account --key-file "$GCP_CREDS"
 gcloud config set project wavefront-gcp-dev
 
