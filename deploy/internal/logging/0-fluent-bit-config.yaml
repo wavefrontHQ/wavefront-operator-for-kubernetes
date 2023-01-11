@@ -31,12 +31,6 @@ data:
         Mem_Buf_Limit     5MB
         Skip_Long_Lines   On
 
-    [INPUT]
-        Name            systemd
-        Tag             host.*
-        Systemd_Filter  _SYSTEMD_UNIT=kubelet.service
-        Read_From_Tail  On
-
     [FILTER]
         Name             kubernetes
         Match            kube.*
