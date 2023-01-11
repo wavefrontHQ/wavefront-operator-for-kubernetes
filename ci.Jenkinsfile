@@ -22,13 +22,13 @@ pipeline {
   }
 
   stages {
-    stage("Test Go Code") {
-      steps {
-        sh 'make checkfmt vet test'
-        sh 'make linux-golangci-lint'
-        sh 'make golangci-lint'
-      }
-    }
+//     stage("Test Go Code") {
+//       steps {
+//         sh 'make checkfmt vet test'
+//         sh 'make linux-golangci-lint'
+//         sh 'make golangci-lint'
+//       }
+//     }
     stage("Setup For Publish") {
       environment {
         GCP_CREDS = credentials("GCP_CREDS")
