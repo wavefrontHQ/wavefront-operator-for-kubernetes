@@ -13,7 +13,7 @@ cat /etc/os-release || true
 
 hostnamectl  || true
 
-gcloud components install gke-gcloud-auth-plugin
+sudo /home/worker/google-cloud-sdk/bin/gcloud  components install gke-gcloud-auth-plugin
 sudo yum install google-cloud-sdk-gke-gcloud-auth-plugin || true
 sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin || true
 gcloud auth activate-service-account --key-file "$GCP_CREDS"
