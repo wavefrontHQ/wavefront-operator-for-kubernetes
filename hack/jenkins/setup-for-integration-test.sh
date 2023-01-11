@@ -9,7 +9,11 @@ if ! [ -x "$(command -v gcloud)" ]; then
   sudo PREFIX=$HOME ./install.sh --disable-prompts >/dev/null;
 fi
 
-sudo gcloud components install gke-gcloud-auth-plugin || true
+cat /etc/os-release || true
+
+hostnamectl  || true
+
+gcloud components install gke-gcloud-auth-plugin
 sudo yum install google-cloud-sdk-gke-gcloud-auth-plugin || true
 sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin || true
 gcloud auth activate-service-account --key-file "$GCP_CREDS"
