@@ -49,6 +49,7 @@ spec:
           - kubernetes.sys_container.*
           - kubernetes.collector.runtime.*
       defaultCollectionInterval: 90s #defaults to 60s
+      # Note: something about Prometheus endpoints
       enableDiscovery: true #defaults to true
       clusterCollector:
         resources:
