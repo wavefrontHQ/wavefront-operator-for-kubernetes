@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/pb33f/libopenapi"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 )
 
@@ -28,16 +27,19 @@ func main() {
 		panic(err)
 	}
 
-	var comWF comWFYAML
-	err = yaml.Unmarshal(manifestYAMLFile, &comWF)
-	if err != nil {
-		panic(err)
-	}
+	fmt.Printf("the yaml file?! %s", manifestYAMLFile)
 
-	schemaDocument, err := libopenapi.NewDocument(comWF.Spec.Versions[0].Schema.OpenAPIV3Schema.([]byte))
-	if err != nil {
-		panic(err)
-	}
+	//var comWF comWFYAML
+	//err = yaml.Unmarshal(manifestYAMLFile, &comWF)
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	schemaDocument, err := libopenapi.NewDocument(manifestYAMLFile)
+	//schemaDocument, err := libopenapi.NewDocument(comWF.Spec.Versions[0].Schema.OpenAPIV3Schema.([]byte))
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	v3Model, errors := schemaDocument.BuildV3Model()
 
