@@ -7,15 +7,10 @@ if ! [ -x "$(command -v gcloud)" ]; then
   curl https://sdk.cloud.google.com > install.sh
   chmod +x ./install.sh
   sudo PREFIX=$HOME ./install.sh --disable-prompts >/dev/null;
+  sudo /home/worker/google-cloud-sdk/bin/gcloud  components install gke-gcloud-auth-plugin
+  gke-gcloud-auth-plugin --version
 fi
 
-cat /etc/os-release || true
-
-hostnamectl  || true
-
-sudo /home/worker/google-cloud-sdk/bin/gcloud  components install gke-gcloud-auth-plugin
-sudo yum install google-cloud-sdk-gke-gcloud-auth-plugin || true
-sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin || true
 gcloud auth activate-service-account --key-file "$GCP_CREDS"
 gcloud config set project wavefront-gcp-dev
 
