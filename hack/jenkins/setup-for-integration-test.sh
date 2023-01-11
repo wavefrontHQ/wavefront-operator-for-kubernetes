@@ -21,6 +21,7 @@ if ! [ -x "$(command -v aws)" ]; then
   sudo ./aws/install >/dev/null;
 fi
 
+gcloud components install gke-gcloud-auth-plugin
 gcloud auth activate-service-account --key-file "$GCP_CREDS"
 gcloud config set project wavefront-gcp-dev
 
