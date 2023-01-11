@@ -70,8 +70,8 @@ data:
         Allowlist_key   container_id
         Allowlist_key   service
         Allowlist_key   application
-        Record source   ${K8S_NODE_NAME}
-        Record cluster  ${CLUSTER_NAME}
+        Record          source   ${K8S_NODE_NAME}
+        Record          cluster  ${CLUSTER_NAME}
         {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
         Record          {{ $tagKey }} {{ $tagValue }}
         {{- end }}
