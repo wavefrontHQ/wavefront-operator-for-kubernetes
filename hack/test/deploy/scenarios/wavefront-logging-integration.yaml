@@ -28,9 +28,9 @@ spec:
                       - amd64
       containers:
         - name: test-proxy
-          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:latest-logs
+          image: projects.registry.vmware.com/tanzu_observability_keights_saas/test-proxy:latest-logging
           imagePullPolicy: Always
-          command: [ "/test-proxy", "-proxy", ":2878", "-logLevel", "info", "-mode", "logs" ]
+          command: [ "/test-proxy", "-proxy", ":2878", "-logLevel", "info", "-mode", "logs", "-logFilePath" , "/logs/test-proxy.log"]
           ports:
             - name: proxy-metrics
               containerPort: 2878
@@ -76,6 +76,15 @@ spec:
       enable: true
       tags:
         env: non-production
+        user_defined_tag: user_defined_tag_value
+      filters:
+        tagAllowList:
+          namespace_name:
+            - kube-system
+            - observability-system
+        tagDenyList:
+          container_name:
+            - kube-apiserver
   dataExport:
     externalWavefrontProxy:
       url: test-proxy:2878
