@@ -327,7 +327,7 @@ target-eks: docker-login-eks
 # create a new branch from main
 # usage: make branch JIRA=XXXX OR make branch NAME=YYYY
 branch:
-	$(eval NAME := $(if $(JIRA),K8SAAS-$(JIRA),$(NAME)))
+	$(eval NAME := $(if $(JIRA),K8SSAAS-$(JIRA),$(NAME)))
 	@if [ -z "$(NAME)" ]; then \
 		echo "usage: make branch JIRA=XXXX OR make branch NAME=YYYY"; \
 		exit 1; \
