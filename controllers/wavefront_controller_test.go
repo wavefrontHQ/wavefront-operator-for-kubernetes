@@ -573,9 +573,9 @@ func TestReconcileProxy(t *testing.T) {
 		containsProxyArg(t, "--traceZipkinApplicationName zipkin", *mockKM)
 	})
 
-	t.Run("can create proxy with OLTP enabled", func(t *testing.T) {
+	t.Run("can create proxy with OTLP enabled", func(t *testing.T) {
 		r, mockKM := emptyScenario(wftest.CR(func(w *wf.Wavefront) {
-			w.Spec.DataExport.WavefrontProxy.OLTP = wf.OLTP{
+			w.Spec.DataExport.WavefrontProxy.OTLP = wf.OTLP{
 				GrpcPort:                       4317,
 				HttpPort:                       4318,
 				ResourceAttrsOnMetricsIncluded: true,

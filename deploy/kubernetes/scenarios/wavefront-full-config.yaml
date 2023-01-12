@@ -121,7 +121,7 @@ spec:
         hourPort: 40002
         dayPort: 40003
       # OpenTelemetry Protocol configuration
-      oltp:
+      otlp:
         grpcPort: 4317
         httpPrt: 4318
         resourceAttrsOnMetricsIncluded: false

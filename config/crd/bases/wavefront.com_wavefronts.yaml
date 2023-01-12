@@ -437,15 +437,15 @@ spec:
                         description: MetricPort is the primary port for Wavefront
                           data format metrics. Defaults to 2878.
                         type: integer
-                      oltp:
+                      otlp:
                         description: OpenTelemetry Protocol configuration
                         properties:
                           grpcPort:
-                            description: GrpcPort for OLTP GRPC format data (usually
+                            description: GrpcPort for OTLP GRPC format data (usually
                               4317)
                             type: integer
                           httpPort:
-                            description: HttpPort for OLTP format data (usually 4318)
+                            description: HttpPort for OTLP format data (usually 4318)
                             type: integer
                           resourceAttrsOnMetricsIncluded:
                             description: Enable resource attributes on metrics to
