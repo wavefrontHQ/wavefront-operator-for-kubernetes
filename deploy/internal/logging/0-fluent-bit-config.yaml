@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wavefront-logging-config
+  namespace: {{ .Namespace }}
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wavefront-controller-manager
+      uid: {{ .ControllerManagerUID }}
+  labels:
+    app.kubernetes.io/name: wavefront
+    app.kubernetes.io/component: logging
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Daemon        Off
+        Flush         1
+        Log_Level     info
+        HTTP_Server   On
+        HTTP_Listen   0.0.0.0
+        HTTP_Port     2020
+        Health_Check  On
+
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        Exclude_Path      /var/log/containers/wavefront-logging*
+        multiline.parser  docker, cri
+        Tag               kube.*
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+
+    [FILTER]
+        Name             kubernetes
+        Match            kube.*
+        Kube_URL         https://kubernetes.default.svc:443
+        Kube_CA_File     /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File  /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix  kube.var.log.containers.
+        Merge_Log        On
+        Merge_Log_Key    log_processed
+        Labels           On
+        Annotations      Off
+    
+    [FILTER]
+        Name          nest
+        Match         kube.*
+        Operation     lift
+        Nested_under  kubernetes
+    
+    [FILTER]
+        Name          nest
+        Match         kube.*
+        Operation     lift
+        Nested_under  labels
+    
+    [FILTER]
+        Name    modify
+        Match   kube.*
+        Rename  docker_id container_id
+    
+    [FILTER]
+        Name            record_modifier
+        Match           kube.*
+        Allowlist_key   namespace_name
+        Allowlist_key   pod_name
+        Allowlist_key   pod_id
+        Allowlist_key   container_name
+        Allowlist_key   container_id
+        Allowlist_key   service
+        Allowlist_key   application
+        Record          source   ${K8S_NODE_NAME}
+        Record          cluster  ${CLUSTER_NAME}
+        {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
+        Record          {{ $tagKey }} {{ $tagValue }}
+        {{- end }}
+    
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_Does_Not_Exist  service
+        Set        service             none
+
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_Does_Not_Exist  application
+        Set        application         none
+
+    {{- if .DataCollection.Logging.Filters.TagAllowList }}
+    [FILTER]
+        Name   grep
+        Match  kube.*
+        {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagAllowList }}
+        {{- $sep := "" }}
+        Regex  {{ $tagKey }} ^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$
+        {{- end }}
+    {{- end }}
+    
+    {{- if .DataCollection.Logging.Filters.TagDenyList }}
+    [FILTER]
+        Name     grep
+        Match    kube.*
+        {{- range $tagKey, $tagValues := .DataCollection.Logging.Filters.TagDenyList }}
+        {{- $sep := "" }}
+        Exclude  {{ $tagKey }} ^{{- range $tagValue := $tagValues }}{{$sep}}{{$tagValue}}{{$sep = "$|^"}}{{end}}$
+        {{- end }}
+    {{- end }}
+    
+    [OUTPUT]
+        Name              http
+        Match             kube.*
+        Proxy             {{.DataCollection.Logging.ProxyAddress}}
+        URI               /logs/json_lines?f=logs_json_lines
+        Format            json_lines
+        json_date_key     timestamp
+        json_date_format  epoch

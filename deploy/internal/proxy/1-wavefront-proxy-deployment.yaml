@@ -41,7 +41,7 @@ spec:
           value: arm64
       containers:
         - name: wavefront-proxy
-          image: {{ .ImageRegistry }}/proxy:12.0
+          image: {{ .ImageRegistry }}/proxy:12.1
           imagePullPolicy: Always
           env:
             - name: WAVEFRONT_URL
