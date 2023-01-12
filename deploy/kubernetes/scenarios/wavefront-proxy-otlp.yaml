@@ -13,7 +13,7 @@ spec:
   dataExport:
     wavefrontProxy:
       enable: true
-      oltp:
+      otlp:
         grpcPort: 4317
         httpPort: 4318
         resourceAttrsOnMetricsIncluded: true

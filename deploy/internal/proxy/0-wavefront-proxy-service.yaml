@@ -66,14 +66,14 @@ spec:
       port: {{ .DataExport.WavefrontProxy.Histogram.DayPort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.WavefrontProxy.OLTP.GrpcPort}}
-    - name: oltp-grpc
-      port: {{ .DataExport.WavefrontProxy.OLTP.GrpcPort }}
+    {{if .DataExport.WavefrontProxy.OTLP.GrpcPort}}
+    - name: otlp-grpc
+      port: {{ .DataExport.WavefrontProxy.OTLP.GrpcPort }}
       protocol: TCP
     {{end}}
-    {{if .DataExport.WavefrontProxy.OLTP.HttpPort}}
-    - name: oltp-http
-      port: {{ .DataExport.WavefrontProxy.OLTP.HttpPort }}
+    {{if .DataExport.WavefrontProxy.OTLP.HttpPort}}
+    - name: otlp-http
+      port: {{ .DataExport.WavefrontProxy.OTLP.HttpPort }}
       protocol: TCP
     {{end}}
   selector:
