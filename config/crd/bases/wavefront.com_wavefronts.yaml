@@ -100,13 +100,13 @@ spec:
                       resources:
                         default:
                           limits:
-                            cpu: 1000m
+                            cpu: 200m
                             ephemeral-storage: 2Gi
-                            memory: 500Mi
+                            memory: 256Mi
                           requests:
                             cpu: 100m
                             ephemeral-storage: 1Gi
-                            memory: 200Mi
+                            memory: 50Mi
                         description: Resources Compute resources required by the logging
                           containers.
                         properties:

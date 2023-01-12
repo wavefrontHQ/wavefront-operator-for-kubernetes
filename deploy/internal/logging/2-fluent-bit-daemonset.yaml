@@ -103,9 +103,6 @@ spec:
       serviceAccountName: wavefront-logging
       automountServiceAccountToken: true
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
       volumes:
       - configMap:
           defaultMode: 420
