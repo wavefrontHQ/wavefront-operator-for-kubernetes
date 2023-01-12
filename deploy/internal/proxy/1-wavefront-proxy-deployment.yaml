@@ -79,7 +79,7 @@ spec:
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} --proxyUser {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} --proxyPassword {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} {{- end -}}
               {{- if .DataCollection.Logging.Enable }} --customMessageTags log {{- end }}
-
+          # TODO ^^ enable logging without logging components by using new field 'allowCustomLogging'
           ports:
             - containerPort: {{ .DataExport.WavefrontProxy.MetricPort }}
               protocol: TCP
