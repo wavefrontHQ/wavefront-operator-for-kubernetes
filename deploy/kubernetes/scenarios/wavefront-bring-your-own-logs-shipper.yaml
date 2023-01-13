@@ -16,7 +16,7 @@ spec:
     # For json_lines format: http://wavefront-proxy.observability-system.svc.cluster.local:2878/logs/json_lines?f=logs_json_lines
     wavefrontProxy:
       enable: true
-      # for more information on args, see:
+      # for more information on log related wavefront proxy args, see:
       # https://docs.wavefront.com/logging_proxy_configurations.html#proxy-configuration-properties-for-logs
       args: >
         --customMessageTags YOUR_CUSTOM_MESSAGE_TAG
