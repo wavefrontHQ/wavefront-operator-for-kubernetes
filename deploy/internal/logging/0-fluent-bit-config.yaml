@@ -72,6 +72,7 @@ data:
         Allowlist_key   application
         Record          source   ${K8S_NODE_NAME}
         Record          cluster  ${CLUSTER_NAME}
+        Record          integration  Kubernetes 
         {{- range $tagKey, $tagValue := .DataCollection.Logging.Tags }}
         Record          {{ $tagKey }} {{ $tagValue }}
         {{- end }}
