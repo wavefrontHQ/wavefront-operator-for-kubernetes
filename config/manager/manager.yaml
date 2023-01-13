@@ -20,6 +20,8 @@ spec:
       app.kubernetes.io/name: wavefront
       app.kubernetes.io/component: controller-manager
   replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:

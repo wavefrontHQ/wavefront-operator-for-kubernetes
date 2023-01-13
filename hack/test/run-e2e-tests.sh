@@ -420,6 +420,9 @@ function main() {
   if [[ " ${tests_to_run[*]} " =~ " validation-legacy " ]]; then
     run_test "validation-legacy" "unhealthy"
   fi
+  if [[ " ${tests_to_run[*]} " =~ " logging-integration " ]]; then
+    run_test "logging-integration" "logging-integration-checks"
+  fi
   if [[ " ${tests_to_run[*]} " =~ " allow-legacy-install " ]]; then
     run_test "allow-legacy-install" "healthy"
   fi
@@ -428,9 +431,6 @@ function main() {
   fi
   if [[ " ${tests_to_run[*]} " =~ " advanced " ]]; then
     run_test "advanced" "health" "test_wavefront_metrics" "logging"
-  fi
-  if [[ " ${tests_to_run[*]} " =~ " logging-integration " ]]; then
-    run_test "logging-integration" "logging-integration-checks"
   fi
 }
 
