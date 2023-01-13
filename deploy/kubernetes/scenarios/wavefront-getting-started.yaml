@@ -5,19 +5,11 @@ metadata:
   name: wavefront
   namespace: observability-system
 spec:
-  clusterName: k8ssass-1142-dev
-  wavefrontUrl: https://nimba.wavefront.com
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
   dataCollection:
     metrics:
       enable: true
-    allowCustomLogging: true
-    # all they have to do is point their logs to wavefront-proxy.observability-system..
-    # and enable logging on the proxy:
-    #   - name: WAVEFRONT_PROXY_ARGS
-    #    value: >
-    #      ...
-    #      --customMessageTags log
-    # make nuke-kind deploy && helm install fluentd-test-not-bitnami fluent/fluentd -f fluentd-vals.yaml
   dataExport:
     wavefrontProxy:
       enable: true

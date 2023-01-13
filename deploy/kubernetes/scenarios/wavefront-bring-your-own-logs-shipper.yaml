@@ -1,0 +1,20 @@
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: observability-system
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    metrics:
+      enable: true
+  dataExport:
+    # available at http://wavefront-proxy.observability-system.svc.cluster.local:2878/logs/json_array?f=logs_json_arr
+    wavefrontProxy:
+      enable: true
+      # for more information on args, see:
+      # https://docs.wavefront.com/logging_proxy_configurations.html#proxy-configuration-properties-for-logs
+      args: >
+        --customMessageTags YOUR_CUSTOM_MESSAGE_TAG
