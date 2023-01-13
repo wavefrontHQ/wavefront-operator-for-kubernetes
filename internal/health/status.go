@@ -98,7 +98,7 @@ func deploymentStatus(objClient client.Client, key client.ObjectKey) wf.Resource
 	componentStatus = reportStatusFromApp(
 		componentStatus,
 		deployment.Status.AvailableReplicas,
-		deployment.Status.Replicas,
+		*deployment.Spec.Replicas,
 	)
 	componentStatus = reportStatusFromPod(
 		componentStatus,

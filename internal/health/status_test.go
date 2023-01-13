@@ -23,25 +23,31 @@ const testNamespace = "testNamespace"
 func TestReconcileReportHealthStatus(t *testing.T) {
 	t.Run("report health status when all components are healthy", func(t *testing.T) {
 		wavefront := defaultWF()
+
+		replicas := int32(1)
 		proxyDeployment := &appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &replicas,
+			},
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
 				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
 				AvailableReplicas: 1,
 			},
 		}
 		collectorDeployment := &appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &replicas,
+			},
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
 				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
 				AvailableReplicas: 1,
 			},
 		}
@@ -81,25 +87,30 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 	t.Run("report health status when one component is unhealthy", func(t *testing.T) {
 		wavefront := defaultWF()
 
+		replicas := int32(1)
 		proxyDeployment := &appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &replicas,
+			},
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ProxyName,
 				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
 				AvailableReplicas: 0,
 			},
 		}
 		collectorDeployment := &appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &replicas,
+			},
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
 				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
 				AvailableReplicas: 1,
 			},
 		}
@@ -128,14 +139,17 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 	t.Run("report health status with less components", func(t *testing.T) {
 		wavefront := defaultWF()
 
+		replicas := int32(1)
 		collectorDeployment := &appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &replicas,
+			},
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      util.ClusterCollectorName,
 				Namespace: wavefront.Namespace,
 			},
 			Status: appsv1.DeploymentStatus{
-				Replicas:          1,
 				AvailableReplicas: 1,
 			},
 		}
@@ -251,6 +265,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 		wavefront := defaultWF()
 		wavefront.Spec.DataCollection.Metrics.Enable = true
+		replicas := int32(1)
 		RespondsToOOMKilled(t, wavefront,
 			&corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -274,13 +289,15 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				},
 			},
 			&appsv1.Deployment{
+				Spec: appsv1.DeploymentSpec{
+					Replicas: &replicas,
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: testNamespace,
 					Name:      util.ClusterCollectorName,
 				},
 				Status: appsv1.DeploymentStatus{
 					AvailableReplicas: 1,
-					Replicas:          1,
 				},
 			},
 		)
@@ -293,6 +310,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 		wavefront := defaultWF()
 		wavefront.Spec.DataCollection.Metrics.Enable = true
+		replicas := int32(1)
 		RespondsToOOMKilled(t, wavefront,
 			&corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -312,6 +330,9 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				},
 			},
 			&appsv1.Deployment{
+				Spec: appsv1.DeploymentSpec{
+					Replicas: &replicas,
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: testNamespace,
 					Name:      util.ClusterCollectorName,
@@ -319,7 +340,6 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				},
 				Status: appsv1.DeploymentStatus{
 					AvailableReplicas: 1,
-					Replicas:          1,
 				},
 			},
 		)
@@ -332,6 +352,7 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 		}
 		wavefront := defaultWF()
 		wavefront.Spec.DataExport.WavefrontProxy.Enable = true
+		replicas := int32(1)
 		RespondsToOOMKilled(t, wavefront,
 			&corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -345,6 +366,9 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				Spec: corev1.PodSpec{},
 			},
 			&appsv1.Deployment{
+				Spec: appsv1.DeploymentSpec{
+					Replicas: &replicas,
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: testNamespace,
 					Name:      util.ProxyName,
@@ -352,7 +376,6 @@ func TestReconcileReportHealthStatus(t *testing.T) {
 				},
 				Status: appsv1.DeploymentStatus{
 					AvailableReplicas: 1,
-					Replicas:          1,
 				},
 			},
 		)
@@ -443,9 +466,13 @@ func pastMaxInstallTime() time.Time {
 }
 
 func setup(initObjs ...runtime.Object) client.Client {
+	replicas := int32(1)
 	return fake.NewClientBuilder().WithRuntimeObjects(append(
 		initObjs,
 		&appsv1.Deployment{
+			Spec: appsv1.DeploymentSpec{
+				Replicas: &replicas,
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: testNamespace,
 				Name:      util.OperatorName,
@@ -456,7 +483,6 @@ func setup(initObjs ...runtime.Object) client.Client {
 			},
 			Status: appsv1.DeploymentStatus{
 				AvailableReplicas: 1,
-				Replicas:          1,
 			},
 		},
 	)...).Build()

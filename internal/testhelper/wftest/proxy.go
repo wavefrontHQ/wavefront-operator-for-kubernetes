@@ -7,6 +7,7 @@ import (
 )
 
 func Proxy(options ...func(*appsv1.Deployment)) *appsv1.Deployment {
+	replicas := int32(1)
 	proxy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ProxyName,
@@ -16,9 +17,11 @@ func Proxy(options ...func(*appsv1.Deployment)) *appsv1.Deployment {
 				"app.kubernetes.io/component": "proxy",
 			},
 		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+		},
 		Status: appsv1.DeploymentStatus{
 			AvailableReplicas: 1,
-			Replicas:          1,
 		},
 	}
 	for _, option := range options {
@@ -28,8 +31,9 @@ func Proxy(options ...func(*appsv1.Deployment)) *appsv1.Deployment {
 }
 
 func WithReplicas(availableReplicas, replicas int) func(*appsv1.Deployment) {
+	specReplicas := int32(replicas)
 	return func(d *appsv1.Deployment) {
 		d.Status.AvailableReplicas = int32(availableReplicas)
-		d.Status.Replicas = int32(replicas)
+		d.Spec.Replicas = &specReplicas
 	}
 }
