@@ -955,6 +955,8 @@ spec:
     matchLabels:
       app.kubernetes.io/component: controller-manager
       app.kubernetes.io/name: wavefront
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -973,7 +975,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.1.1-alpha-f495726d
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator-snapshot:2.1.1-alpha-7857af99
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
