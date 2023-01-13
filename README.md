@@ -15,6 +15,7 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 - [Operator Installation](#installation)
 - [Operator Configuration](#configuration)
 - [Operator Upgrade](#upgrade)
+- [Operator Downgrade](#downgrade)
 - [Operator Removal](#removal)
 
 ## Why use the Wavefront Operator for Kubernetes?
@@ -157,6 +158,15 @@ kubectl apply -f https://raw.githubusercontent.com/wavefrontHQ/wavefront-operato
 ```
 
 Note: This command will not upgrade any existing wavefront/wavefront helm installation. See [migration.md](./docs/migration.md) for migration instructions.
+
+# Downgrade
+
+Go to [Releases](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/releases), and find the previous release. Download the **wavefront-operator.yaml** from **Assets** section.
+Downgrade by running the following command :
+
+```
+kubectl apply -f wavefront-operator.yaml
+```
 
 # Removal
 
