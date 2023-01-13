@@ -161,11 +161,12 @@ Note: This command will not upgrade any existing wavefront/wavefront helm instal
 
 # Downgrade
 
-Go to [Releases](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/releases), and find the previous release. Download the **wavefront-operator.yaml** from **Assets** section.
-Downgrade by running the following command :
+Go to [Releases](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/releases), and find the previous release version number, for example v2.0.3. Replace the **PREVIOUS_VERSION** 
+in the following command:
 
 ```
-kubectl apply -f wavefront-operator.yaml
+
+kubectl apply -f https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/releases/download/PREVIOUS_VERSION/wavefront-operator.yaml
 ```
 
 # Removal
