@@ -161,7 +161,7 @@ Note: This command will not upgrade any existing wavefront/wavefront helm instal
 
 # Downgrade
 
-Go to [Releases](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/releases), and find the previous release version number, for example v2.0.3. Replace the **PREVIOUS_VERSION** 
+Go to [Releases](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/releases), and find the previous release version number, for example v2.0.3. Use this value to replace **PREVIOUS_VERSION** 
 in the following command:
 
 ```
