@@ -12,8 +12,8 @@ spec:
       enable: true
   dataExport:
     # Once deployed, the svc is available to consume logs at
-    # For json_array format: http://wavefront-proxy.observability-system.svc.cluster.local:2878/logs/json_array?f=logs_json_arr
-    # For json_lines format: http://wavefront-proxy.observability-system.svc.cluster.local:2878/logs/json_lines?f=logs_json_lines
+    # For json_array format: http://wavefront-proxy:2878/logs/json_array?f=logs_json_arr
+    # For json_lines format: http://wavefront-proxy:2878/logs/json_lines?f=logs_json_lines
     wavefrontProxy:
       enable: true
       # for more information on log related wavefront proxy args, see:
