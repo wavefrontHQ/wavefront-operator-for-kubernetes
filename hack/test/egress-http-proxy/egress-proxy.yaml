@@ -16,7 +16,7 @@ spec:
         app: egress-proxy
     spec:
       containers:
-        - image: mitmproxy/mitmproxy
+        - image: mitmproxy/mitmproxy:8.1.1
           imagePullPolicy: IfNotPresent
           command: ["/usr/local/bin/mitmdump"]
           name: egress-proxy
