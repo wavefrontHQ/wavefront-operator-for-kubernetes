@@ -34,6 +34,23 @@ spec:
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
+      tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          value: arm64
+      {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert}}
+      initContainers:
+        - name: pem-to-keystore
+          image: {{ .ImageRegistry }}/proxy:12.1
+          command: ['/bin/bash']
+          args: ['-c', "keytool -noprompt -cacerts -importcert -storepass changeit -file /tmp/ca/ca.pem -alias ca; keytool -storepass changeit -list -v -cacerts -alias ca"]
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+          - name: http-proxy-ca
+            mountPath: /tmp/ca
+      {{- end}}
       containers:
         - name: wavefront-proxy
           image: {{ .ImageRegistry }}/proxy:12.0
@@ -142,10 +159,6 @@ spec:
           {{- if .DataExport.WavefrontProxy.Preprocessor}}
           - name: preprocessor
             mountPath: /etc/wavefront/preprocessor
-          {{- end }}
-          {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert}}
-          - name: http-proxy-ca
-            mountPath: /tmp/ca
           {{- end }}
       volumes:
       - name: buffer-volume
