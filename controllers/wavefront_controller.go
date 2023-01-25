@@ -425,7 +425,14 @@ func setHttpProxyConfigs(httpProxySecret *corev1.Secret, wavefront *wf.Wavefront
 		httpProxySecretData[k] = string(v)
 	}
 
-	httpUrl, err := url.Parse(httpProxySecretData["http-url"])
+	rawHttpUrl := httpProxySecretData["http-url"]
+
+	// append http:// if we receive a service in order to correctly parse it -- only the hostname is used, not the scheme
+	if !strings.Contains(rawHttpUrl, "http://") && !strings.Contains(rawHttpUrl, "https://") {
+		rawHttpUrl = "http://" + rawHttpUrl
+	}
+
+	httpUrl, err := url.Parse(rawHttpUrl)
 	if err != nil {
 		return err
 	}

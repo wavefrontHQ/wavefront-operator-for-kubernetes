@@ -43,11 +43,16 @@ spec:
         - name: pem-to-keystore
           image: {{ .ImageRegistry }}/proxy:12.1
           command: ['/bin/bash']
-          args: ['-c', "keytool -noprompt -cacerts -importcert -storepass changeit -file /tmp/ca/ca.pem -alias ca; keytool -storepass changeit -list -v -cacerts -alias ca"]
+          args: ['-c', "keytool -import -noprompt -keystore $truststore_jks -file /tmp/ca/ca.pem -storepass changeit -alias http-proxy-ca"]
+          env:
+            - name: truststore_jks
+              value: /tmp/secrets/keystores/truststore.jks
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
           volumeMounts:
+          - name: http-proxy-keystores
+            mountPath: /tmp/secrets/keystores
           - name: http-proxy-ca
             mountPath: /tmp/ca
       {{- end}}
@@ -91,7 +96,10 @@ spec:
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} --proxyUser {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} --proxyPassword {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} {{- end -}}
               {{- if .DataCollection.Logging.Enable }} --customMessageTags log {{- end }}
-
+            {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+            - name: JAVA_ARGS
+              value: -Djavax.net.ssl.trustStore=/tmp/secrets/keystores/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
+            {{- end }}
           ports:
             - containerPort: {{ .DataExport.WavefrontProxy.MetricPort }}
               protocol: TCP
@@ -160,6 +168,10 @@ spec:
           - name: preprocessor
             mountPath: /etc/wavefront/preprocessor
           {{- end }}
+          {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+          - name: http-proxy-keystores
+            mountPath: /tmp/secrets/keystores
+          {{- end }}
       volumes:
       - name: buffer-volume
         emptyDir: {}
@@ -169,6 +181,8 @@ spec:
           name: {{ .DataExport.WavefrontProxy.Preprocessor }}
       {{- end }}
       {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+      - name: http-proxy-keystores
+        emptyDir: {}
       - name: http-proxy-ca
         secret:
           secretName: {{ .DataExport.WavefrontProxy.HttpProxy.Secret }}
