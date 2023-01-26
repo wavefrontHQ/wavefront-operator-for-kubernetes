@@ -1,5 +1,7 @@
 pipeline {
-  agent any
+   agent {
+      label "worker-1"
+    }
 
   tools {
     go 'Go 1.17'
