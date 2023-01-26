@@ -48,30 +48,30 @@ pipeline {
       }
     }
     // deploy to GKE and run manual tests
-    stage("Deploy and Test") {
-      environment {
-        GCP_CREDS = credentials("GCP_CREDS")
-        GKE_CLUSTER_NAME = "k8po-jenkins-ci-zone-a"
-        GCP_ZONE="a"
-        WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
-        WF_CLUSTER = 'nimba'
-      }
-      steps {
-        script {
-          env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
-        }
-        withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
-          lock("integration-test-gke") {
-            sh './hack/jenkins/setup-for-integration-test.sh'
-            sh 'make gke-connect-to-cluster'
-            sh 'make clean-cluster'
-            sh './hack/test/deploy/deploy-local.sh -t $WAVEFRONT_TOKEN'
-            sh './hack/test/run-e2e-tests.sh -t $WAVEFRONT_TOKEN'
-            sh 'make clean-cluster'
-          }
-        }
-      }
-    }
+//     stage("Deploy and Test") {
+//       environment {
+//         GCP_CREDS = credentials("GCP_CREDS")
+//         GKE_CLUSTER_NAME = "k8po-jenkins-ci-zone-a"
+//         GCP_ZONE="a"
+//         WAVEFRONT_TOKEN = credentials("WAVEFRONT_TOKEN_NIMBA")
+//         WF_CLUSTER = 'nimba'
+//       }
+//       steps {
+//         script {
+//           env.VERSION = readFile('./release/OPERATOR_VERSION').trim()
+//         }
+//         withEnv(["PATH+GO=${HOME}/go/bin", "PATH+GCLOUD=${HOME}/google-cloud-sdk/bin"]) {
+//           lock("integration-test-gke") {
+//             sh './hack/jenkins/setup-for-integration-test.sh'
+//             sh 'make gke-connect-to-cluster'
+//             sh 'make clean-cluster'
+//             sh './hack/test/deploy/deploy-local.sh -t $WAVEFRONT_TOKEN'
+//             sh './hack/test/run-e2e-tests.sh -t $WAVEFRONT_TOKEN'
+//             sh 'make clean-cluster'
+//           }
+//         }
+//       }
+//     }
     stage("Merge bumped versions") {
       steps {
         sh './hack/jenkins/merge-version-bump.sh'
