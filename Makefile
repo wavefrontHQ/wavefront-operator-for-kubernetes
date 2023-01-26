@@ -266,9 +266,11 @@ nuke-kind:
 
 #----- GKE -----#
 GCP_PROJECT?=wavefront-gcp-dev
+GCP_REGION=us-central1
+GCP_ZONE?=c
 
 gke-connect-to-cluster: gke-cluster-name-check
-	gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --zone us-central1-c --project $(GCP_PROJECT)
+	gcloud container clusters get-credentials $(GKE_CLUSTER_NAME) --zone $(GCP_REGION)-$(GCP_ZONE) --project $(GCP_PROJECT)
 
 gke-cluster-name-check:
 	@if [ -z ${GKE_CLUSTER_NAME} ]; then echo "Need to set GKE_CLUSTER_NAME" && exit 1; fi
