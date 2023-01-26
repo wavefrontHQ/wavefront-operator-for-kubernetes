@@ -7,7 +7,7 @@ pipeline {
 
   environment {
     BUMP_COMPONENT = "${params.BUMP_COMPONENT}"
-    GIT_BRANCH = getCurrentBranchName()
+    GIT_BRANCH = "release-2.1"
     GIT_CREDENTIAL_ID = 'wf-jenkins-github'
     GITHUB_TOKEN = credentials('GITHUB_TOKEN')
   }
