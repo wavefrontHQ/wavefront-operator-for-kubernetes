@@ -41,7 +41,7 @@ spec:
       {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert}}
       initContainers:
         - name: pem-to-keystore
-          image: {{ .ImageRegistry }}/proxy:12.1
+          image: {{ .ImageRegistry }}/proxy:12.0
           command: ['/bin/bash']
           args: ['-c', "keytool -import -noprompt -keystore $truststore_jks -file /tmp/ca/ca.pem -storepass changeit -alias http-proxy-ca"]
           env:
