@@ -1,3 +1,7 @@
+
+> **Warning**
+> Users of this operator should refer to documentation of latest released version: ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/wavefrontHQ/wavefront-operator-for-kubernetes?display_name=tag&sort=semver)
+
 ## Initial Availability Notice
 
 This project is in the initial availability phase.
