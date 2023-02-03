@@ -1,7 +1,4 @@
 
-> **Warning**
-> Users of this operator should refer to documentation of latest released version: ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/wavefrontHQ/wavefront-operator-for-kubernetes?display_name=tag&sort=semver)
-
 ## Initial Availability Notice
 
 This project is in the initial availability phase.
@@ -14,6 +11,12 @@ It is suitable for production usage.
 The Wavefront Operator for Kubernetes
 supports deploying the Wavefront Collector and the Wavefront Proxy in Kubernetes.
 This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
+
+## Documentation
+
+> **Warning** \
+> The documentation below may refer to unreleased features. \
+> Refer to the [README](https://github.com/wavefrontHQ/wavefront-operator-for-kubernetes/tree/v2.1.1#readme) of the latest released version.
 
 ## Quick Reference
 - [Operator Installation](#installation)
