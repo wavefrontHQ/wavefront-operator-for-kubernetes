@@ -21,11 +21,11 @@ This operator is based on [kubebuilder SDK](https://book.kubebuilder.io/).
 ## Why use the Wavefront Operator for Kubernetes?
 
 The operator simplifies operational aspects of managing the Wavefront integration. Here are some examples, with more to come!
- - Enhanced status reporting of the Wavefront integration so that users can ensure their cluster and Kubernetes resources are reporting data.
- - Kubernetes Operator features provide a declarative mechanism for deploying the Wavefront Collector and proxy in a Kubernetes environment.
- - Centralized configuration.
- - Enhanced configuration validation to surface what needs to be corrected in order to deploy successfully.
- - Efficient Kubernetes resource usage supports scaling  out the cluster (leader) node and worker nodes independently.
+- Enhanced status reporting of the Wavefront integration so that users can ensure their cluster and Kubernetes resources are reporting data.
+- Kubernetes Operator features provide a declarative mechanism for deploying the Wavefront Collector and proxy in a Kubernetes environment.
+- Centralized configuration.
+- Enhanced configuration validation to surface what needs to be corrected in order to deploy successfully.
+- Efficient Kubernetes resource usage supports scaling  out the cluster (leader) node and worker nodes independently.
 
 **Note:** The Collector that is deployed by the Operator still supports configuration via configmap.
 For example, Istio and MySQL metrics, Telegraf configuration, etc. are still supported.
@@ -146,8 +146,20 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Using an HTTP Proxy](./deploy/kubernetes/scenarios/wavefront-proxy-with-http-proxy.yaml)
  * [Getting started with logging configuration](./deploy/kubernetes/scenarios/wavefront-logging-getting-started.yaml)
  * [Full logging configuration](./deploy/kubernetes/scenarios/wavefront-logging-full-config.yaml)
+ * [Bring your own logs shipper](./deploy/kubernetes/scenarios/wavefront-bring-your-own-logs-shipper.yaml)
 
-You can see all configuration options in the [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
+In order to make the best use of your logging solution on kubernetes, we recommend having the below kubernetes log attributes
+
+| Log attribute key   | Description                  |
+|---------------------|------------------------------|
+| `cluster`           | The kubernetes cluster name  |
+| `pod_name`          | The pod name                 |
+| `container_name`    | The container name           |
+| `namespace_name`    | The namespace name           |
+| `pod_id`            | The pod id                   |
+| `container_id`      | The container id             |
+
+In addition to these, here are some [general log attributes](https://docs.wavefront.com/logging_overview.html#log-attributes) to configure your logs shipper based on your use case.
 
 # Upgrade
 

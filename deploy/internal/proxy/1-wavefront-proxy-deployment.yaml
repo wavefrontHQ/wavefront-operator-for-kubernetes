@@ -39,6 +39,24 @@ spec:
         - effect: NoSchedule
           key: kubernetes.io/arch
           value: arm64
+      {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+      initContainers:
+      - name: pem-to-keystore
+        image: {{ .ImageRegistry }}/proxy:12.1
+        command: ['/bin/bash']
+        args: ['-c', "keytool -import -noprompt -keystore $truststore_jks -file /tmp/ca/ca.pem -storepass changeit -alias http-proxy-ca"]
+        env:
+        - name: truststore_jks
+          value: /tmp/secrets/keystores/truststore.jks
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        volumeMounts:
+        - name: http-proxy-keystores
+          mountPath: /tmp/secrets/keystores
+        - name: http-proxy-ca
+          mountPath: /tmp/ca
+      {{- end }}
       containers:
         - name: wavefront-proxy
           image: {{ .ImageRegistry }}/proxy:12.1
@@ -79,55 +97,58 @@ spec:
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} --proxyUser {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyUser }} {{- end -}}
               {{- if .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} --proxyPassword {{ .DataExport.WavefrontProxy.HttpProxy.HttpProxyPassword }} {{- end -}}
               {{- if .DataCollection.Logging.Enable }} --customMessageTags log {{- end }}
-
+            {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+            - name: JAVA_ARGS
+              value: -Djavax.net.ssl.trustStore=/tmp/secrets/keystores/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
+            {{- end }}
           ports:
             - containerPort: {{ .DataExport.WavefrontProxy.MetricPort }}
               protocol: TCP
-            {{- if .DataExport.WavefrontProxy.DeltaCounterPort}}
+            {{- if .DataExport.WavefrontProxy.DeltaCounterPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.DeltaCounterPort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Tracing.Wavefront.Port}}
+            {{- if .DataExport.WavefrontProxy.Tracing.Wavefront.Port }}
             - containerPort: {{ .DataExport.WavefrontProxy.Tracing.Wavefront.Port }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Tracing.Jaeger.Port}}
+            {{- if .DataExport.WavefrontProxy.Tracing.Jaeger.Port }}
             - containerPort: {{ .DataExport.WavefrontProxy.Tracing.Jaeger.Port }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort}}
+            {{- if .DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.Tracing.Jaeger.GrpcPort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort}}
+            {{- if .DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.Tracing.Jaeger.HttpPort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Tracing.Zipkin.Port}}
+            {{- if .DataExport.WavefrontProxy.Tracing.Zipkin.Port }}
             - containerPort: {{ .DataExport.WavefrontProxy.Tracing.Zipkin.Port }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Histogram.Port}}
+            {{- if .DataExport.WavefrontProxy.Histogram.Port }}
             - containerPort: {{ .DataExport.WavefrontProxy.Histogram.Port }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Histogram.MinutePort}}
+            {{- if .DataExport.WavefrontProxy.Histogram.MinutePort }}
             - containerPort: {{ .DataExport.WavefrontProxy.Histogram.MinutePort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Histogram.HourPort}}
+            {{- if .DataExport.WavefrontProxy.Histogram.HourPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.Histogram.HourPort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.Histogram.DayPort}}
+            {{- if .DataExport.WavefrontProxy.Histogram.DayPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.Histogram.DayPort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.OTLP.GrpcPort}}
+            {{- if .DataExport.WavefrontProxy.OTLP.GrpcPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.OTLP.GrpcPort }}
               protocol: TCP
             {{- end }}
-            {{- if .DataExport.WavefrontProxy.OTLP.HttpPort}}
+            {{- if .DataExport.WavefrontProxy.OTLP.HttpPort }}
             - containerPort: {{ .DataExport.WavefrontProxy.OTLP.HttpPort }}
               protocol: TCP
             {{- end }}
@@ -144,13 +165,13 @@ spec:
           volumeMounts:
           - name: buffer-volume
             mountPath: /wavefront-proxy
-          {{- if .DataExport.WavefrontProxy.Preprocessor}}
+          {{- if .DataExport.WavefrontProxy.Preprocessor }}
           - name: preprocessor
             mountPath: /etc/wavefront/preprocessor
           {{- end }}
-          {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert}}
-          - name: http-proxy-ca
-            mountPath: /tmp/ca
+          {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+          - name: http-proxy-keystores
+            mountPath: /tmp/secrets/keystores
           {{- end }}
       volumes:
       - name: buffer-volume
@@ -161,6 +182,8 @@ spec:
           name: {{ .DataExport.WavefrontProxy.Preprocessor }}
       {{- end }}
       {{- if .DataExport.WavefrontProxy.HttpProxy.UseHttpProxyCAcert }}
+      - name: http-proxy-keystores
+        emptyDir: {}
       - name: http-proxy-ca
         secret:
           secretName: {{ .DataExport.WavefrontProxy.HttpProxy.Secret }}
