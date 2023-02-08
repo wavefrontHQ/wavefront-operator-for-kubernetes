@@ -107,11 +107,13 @@ spec:
                       resources:
                         default:
                           limits:
-                            cpu: 1000m
-                            memory: 500Mi
+                            cpu: 200m
+                            ephemeral-storage: 2Gi
+                            memory: 256Mi
                           requests:
                             cpu: 100m
-                            memory: 200Mi
+                            ephemeral-storage: 1Gi
+                            memory: 50Mi
                         description: Resources Compute resources required by the logging
                           containers.
                         properties:
@@ -335,6 +337,44 @@ spec:
                           as point tags on all metrics emitted.
                         type: object
                     type: object
+                  tolerations:
+                    description: Top level tolerations to be applied to metrics and
+                      logging DaemonSet resource types. This adds custom tolerations
+                      to the pods.
+                    items:
+                      properties:
+                        effect:
+                          description: Effect indicates the taint effect to match.
+                            Empty means match all taint effects. When specified, allowed
+                            values are NoSchedule, PreferNoSchedule and NoExecute.
+                          enum:
+                          - NoSchedule
+                          - PreferNoSchedule
+                          - NoExecute
+                          type: string
+                        key:
+                          description: Key is the taint key that the toleration applies
+                            to. Empty means match all taint keys. If the key is empty,
+                            operator must be Exists; this combination means to match
+                            all values and all keys.
+                          type: string
+                        operator:
+                          description: Operator represents a key's relationship to
+                            the value. Valid operators are Exists and Equal. Defaults
+                            to Equal. Exists is equivalent to wildcard for value,
+                            so that a pod can tolerate all taints of a particular
+                            category.
+                          enum:
+                          - Equal
+                          - Exists
+                          type: string
+                        value:
+                          description: Value is the taint value the toleration matches
+                            to. If the operator is Exists, the value should be empty,
+                            otherwise just a regular string.
+                          type: string
+                      type: object
+                    type: array
                 type: object
               dataExport:
                 description: DataExport options
@@ -346,7 +386,6 @@ spec:
                         description: Url is the proxy URL that the collector sends
                           metrics to.
                         minLength: 10
-                        pattern: ^http*
                         type: string
                     required:
                     - url
@@ -405,15 +444,15 @@ spec:
                         description: MetricPort is the primary port for Wavefront
                           data format metrics. Defaults to 2878.
                         type: integer
-                      oltp:
+                      otlp:
                         description: OpenTelemetry Protocol configuration
                         properties:
                           grpcPort:
-                            description: GrpcPort for OLTP GRPC format data (usually
+                            description: GrpcPort for OTLP GRPC format data (usually
                               4317)
                             type: integer
                           httpPort:
-                            description: HttpPort for OLTP format data (usually 4318)
+                            description: HttpPort for OTLP format data (usually 4318)
                             type: integer
                           resourceAttrsOnMetricsIncluded:
                             description: Enable resource attributes on metrics to
@@ -590,6 +629,7 @@ status:
   storedVersions: []
 ---
 apiVersion: v1
+automountServiceAccountToken: false
 kind: ServiceAccount
 metadata:
   name: wavefront-controller-manager
@@ -915,6 +955,8 @@ spec:
     matchLabels:
       app.kubernetes.io/component: controller-manager
       app.kubernetes.io/name: wavefront
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -923,6 +965,7 @@ spec:
         app.kubernetes.io/component: controller-manager
         app.kubernetes.io/name: wavefront
     spec:
+      automountServiceAccountToken: true
       containers:
       - command:
         - /manager
@@ -932,7 +975,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.1.1
+        image: projects.registry.vmware.com/tanzu_observability/kubernetes-operator:2.2.0
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -965,3 +1008,7 @@ spec:
         runAsUser: 65534
       serviceAccountName: wavefront-controller-manager
       terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: kubernetes.io/arch
+        value: arm64

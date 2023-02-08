@@ -42,7 +42,7 @@ spec:
 {{ .DataCollection.Tolerations | toYaml | indent 8 }}
       {{- end }}
       containers:
-      - image: {{ .LoggingImageRegistry }}/fluent/fluent-bit:2.0.6
+      - image: {{ .ImageRegistry }}/kubernetes-operator-fluentbit:2.0.8
         env:
           - name: K8S_NODE_NAME
             valueFrom:

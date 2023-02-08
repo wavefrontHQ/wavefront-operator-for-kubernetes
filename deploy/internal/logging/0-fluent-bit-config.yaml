@@ -59,10 +59,17 @@ data:
         Name    modify
         Match   kube.*
         Rename  docker_id container_id
+
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_value_matches  stream  stderr
+        Set        level  ERROR
     
     [FILTER]
         Name            record_modifier
         Match           kube.*
+        Allowlist_key   level
         Allowlist_key   namespace_name
         Allowlist_key   pod_name
         Allowlist_key   pod_id
