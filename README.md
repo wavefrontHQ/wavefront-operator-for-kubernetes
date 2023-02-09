@@ -102,6 +102,8 @@ The following tools are required for installing the integration.
    ```
    See [Logs Overview (Beta)](https://docs.wavefront.com/logging_overview.html) for an overview and some links to more doc about the logging beta. 
 
+   See [Bring Your Own Logs Shipper](#bring-your-own-logs-shipper) for an overview of how to use the operator with your own logs shipper.
+
 5. Deploy the Wavefront Collector and Proxy with your configuration
    ```
    kubectl apply -f <path_to_your_wavefront.yaml>
@@ -147,6 +149,15 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Getting started with logging configuration](./deploy/kubernetes/scenarios/wavefront-logging-getting-started.yaml)
  * [Full logging configuration](./deploy/kubernetes/scenarios/wavefront-logging-full-config.yaml)
  * [Bring your own logs shipper](./deploy/kubernetes/scenarios/wavefront-bring-your-own-logs-shipper.yaml)
+
+You can see all configuration options in the [wavefront-full-config.yaml](./deploy/kubernetes/scenarios/wavefront-full-config.yaml).
+
+## Bring Your Own Logs Shipper
+
+The operator deploys a data export component (wavefront-proxy) which can recieve log data and relay it to wavefront.
+You will need to configure your logs shipper to send logs to the data export component (wavefront-proxy) deployed by the operator.
+
+Here is a Wavefront Custom Resource [example config](./deploy/kubernetes/scenarios/wavefront-bring-your-own-logs-shipper.yaml) for this scenario.
 
 In order to make the best use of your logging solution on kubernetes, we recommend having the below kubernetes log attributes
 
