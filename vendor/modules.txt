@@ -102,11 +102,15 @@ github.com/spf13/pflag
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/wavefronthq/wavefront-sdk-go v0.11.0
+# github.com/wavefronthq/wavefront-sdk-go v0.12.0
 ## explicit; go 1.17
 github.com/wavefronthq/wavefront-sdk-go/event
 github.com/wavefronthq/wavefront-sdk-go/histogram
 github.com/wavefronthq/wavefront-sdk-go/internal
+github.com/wavefronthq/wavefront-sdk-go/internal/event
+github.com/wavefronthq/wavefront-sdk-go/internal/histogram
+github.com/wavefronthq/wavefront-sdk-go/internal/metric
+github.com/wavefronthq/wavefront-sdk-go/internal/span
 github.com/wavefronthq/wavefront-sdk-go/senders
 github.com/wavefronthq/wavefront-sdk-go/version
 # go.uber.org/atomic v1.7.0
