@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/tls"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,13 +18,21 @@ type reporter struct {
 	client    *http.Client
 }
 
-// NewReporter create a metrics Reporter
-func NewReporter(server string, token string) Reporter {
+// NewReporter creates a metrics Reporter
+func NewReporter(server string, token string, client *http.Client) Reporter {
 	return &reporter{
 		serverURL: server,
 		token:     token,
-		client:    &http.Client{Timeout: time.Second * 10},
+		client:    client,
 	}
+}
+
+func NewClient(timeout time.Duration, tlsConfig *tls.Config) *http.Client {
+	if tlsConfig == nil {
+		return &http.Client{Timeout: timeout}
+	}
+	transport := &http.Transport{TLSClientConfig: tlsConfig}
+	return &http.Client{Timeout: timeout, Transport: transport}
 }
 
 // Report creates and sends a POST to the reportEndpoint with the given pointLines
