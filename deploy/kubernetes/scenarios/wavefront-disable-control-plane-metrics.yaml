@@ -1,0 +1,18 @@
+# Need to change YOUR_CLUSTER_NAME, YOUR_WAVEFRONT_URL accordingly
+apiVersion: wavefront.com/v1alpha1
+kind: Wavefront
+metadata:
+  name: wavefront
+  namespace: observability-system
+spec:
+  clusterName: YOUR_CLUSTER_NAME
+  wavefrontUrl: YOUR_WAVEFRONT_URL
+  dataCollection:
+    metrics:
+      enable: true
+      # turn off control plane metrics with the following feature flag
+      controlPlane:
+        enable: false #defaults to true
+  dataExport:
+    wavefrontProxy:
+      enable: true
