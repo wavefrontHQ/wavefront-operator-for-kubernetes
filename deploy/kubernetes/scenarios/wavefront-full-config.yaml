@@ -60,6 +60,9 @@ spec:
       defaultCollectionInterval: 90s #defaults to 60s
       # Rules based and Prometheus endpoints auto-discovery.
       enableDiscovery: true #defaults to true
+      # controlPlane can enable/disable control plane metrics
+      controlPlane:
+        enable: true #defaults to true
       clusterCollector:
         resources:
           limits:
@@ -123,7 +126,7 @@ spec:
       # OpenTelemetry Protocol configuration
       otlp:
         grpcPort: 4317
-        httpPrt: 4318
+        httpPort: 4318
         resourceAttrsOnMetricsIncluded: false
       # DeltaCounterPort accumulates 1-minute delta counters on Wavefront data format
       deltaCounterPort: 50000
