@@ -140,7 +140,7 @@ We have templates for common scenarios. See the comments in each file for usage 
  * [Using an existing collector ConfigMap](./deploy/kubernetes/scenarios/wavefront-collector-existing-configmap.yaml)
  * [With plugin configuration in a secret](./deploy/kubernetes/scenarios/wavefront-collector-with-plugin-secret.yaml)
  * [Filtering metrics upon collection](./deploy/kubernetes/scenarios/wavefront-collector-filtering.yaml)
- * [Disabling control plane metrics](./deploy/kubernetes/wavefront-disable-control-plane-metrics.yaml)
+ * [Disabling control plane metrics](./deploy/kubernetes/scenarios/wavefront-disable-control-plane-metrics.yaml)
  * [Defining Kubernetes resource limits](./deploy/kubernetes/scenarios/wavefront-pod-resources.yaml)
  * [Defining data collection pod tolerations](./deploy/kubernetes/scenarios/wavefront-daemonset-pod-tolerations.yaml)
  * [Defining proxy pre-processor rules](./deploy/kubernetes/scenarios/wavefront-proxy-preprocessor-rules.yaml)
