@@ -1,3 +1,6 @@
+## ⚠️ REPO MIGRATION NOTICE ⚠️
+Development of the Wavefront Operator for Kubernetes has moved to https://github.com/wavefrontHQ/observability-for-kubernetes/. This repo is no longer maintained.
+
 ## Initial Availability Notice
 
 This project is in the initial availability phase.
