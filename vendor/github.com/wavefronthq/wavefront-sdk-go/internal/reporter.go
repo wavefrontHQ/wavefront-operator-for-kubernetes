@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/tls"
+	"github.com/wavefronthq/wavefront-sdk-go/internal/auth"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -13,17 +13,17 @@ import (
 
 // The implementation of a Reporter that reports points directly to a Wavefront server.
 type reporter struct {
-	serverURL string
-	token     string
-	client    *http.Client
+	serverURL    string
+	tokenService auth.Service
+	client       *http.Client
 }
 
 // NewReporter creates a metrics Reporter
-func NewReporter(server string, token string, client *http.Client) Reporter {
+func NewReporter(server string, tokenService auth.Service, client *http.Client) Reporter {
 	return &reporter{
-		serverURL: server,
-		token:     token,
-		client:    client,
+		serverURL:    server,
+		tokenService: tokenService,
+		client:       client,
 	}
 }
 
@@ -77,8 +77,10 @@ func (reporter reporter) buildRequest(format string, body []byte) (*http.Request
 
 	req.Header.Set(contentType, octetStream)
 	req.Header.Set(contentEncoding, gzipFormat)
-	if len(reporter.token) > 0 {
-		req.Header.Set(authzHeader, bearer+reporter.token)
+
+	err = reporter.tokenService.Authorize(req)
+	if err != nil {
+		return nil, err
 	}
 
 	q := req.URL.Query()
@@ -99,9 +101,14 @@ func (reporter reporter) ReportEvent(event string) (*http.Response, error) {
 	}
 
 	req.Header.Set(contentType, applicationJSON)
-	if len(reporter.token) > 0 {
+
+	if reporter.IsDirect() {
 		req.Header.Set(contentEncoding, gzipFormat)
-		req.Header.Set(authzHeader, bearer+reporter.token)
+	}
+
+	err = reporter.tokenService.Authorize(req)
+	if err != nil {
+		return nil, err
 	}
 
 	return reporter.execute(req)
@@ -112,7 +119,15 @@ func (reporter reporter) execute(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return resp, err
 	}
-	io.Copy(ioutil.Discard, resp.Body)
+	io.Copy(io.Discard, resp.Body)
 	defer resp.Body.Close()
 	return resp, nil
+}
+
+func (reporter reporter) Close() {
+	reporter.tokenService.Close()
+}
+
+func (reporter reporter) IsDirect() bool {
+	return reporter.tokenService.IsDirect()
 }

@@ -3,8 +3,8 @@ module github.com/wavefrontHQ/wavefront-operator-for-kubernetes
 go 1.17
 
 require (
-	github.com/stretchr/testify v1.8.2
-	github.com/wavefronthq/wavefront-sdk-go v0.12.0
+	github.com/stretchr/testify v1.8.4
+	github.com/wavefronthq/wavefront-sdk-go v0.14.0
 	go.uber.org/zap v1.24.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.23.16
@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/caio/go-tdigest v3.1.0+incompatible // indirect
+	github.com/caio/go-tdigest/v4 v4.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
