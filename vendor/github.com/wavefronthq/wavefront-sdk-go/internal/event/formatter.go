@@ -3,9 +3,10 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/wavefronthq/wavefront-sdk-go/event"
 	"github.com/wavefronthq/wavefront-sdk-go/internal"
-	"strconv"
 )
 
 // Line encode the event to a wf proxy format
