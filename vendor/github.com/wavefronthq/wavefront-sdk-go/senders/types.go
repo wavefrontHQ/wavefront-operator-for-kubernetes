@@ -28,11 +28,11 @@ type DistributionSender interface {
 // SpanSender Interface for sending tracing spans to Wavefront
 type SpanSender interface {
 	// SendSpan sends a tracing span to Wavefront.
-	// traceId, spanId, parentIds and preceding spanIds are expected to be UUID strings.
+	// traceID, spanId, parentIds and preceding spanIds are expected to be UUID strings.
 	// parents and preceding spans can be empty for a root span.
 	// span tag keys can be repeated (example: "user"="foo" and "user"="bar")
 	// span logs are currently omitted
-	SendSpan(name string, startMillis, durationMillis int64, source, traceId, spanId string, parents, followsFrom []string, tags []SpanTag, spanLogs []SpanLog) error
+	SendSpan(name string, startMillis, durationMillis int64, source, traceID, spanID string, parents, followsFrom []string, tags []SpanTag, spanLogs []SpanLog) error
 }
 
 // EventSender Interface for sending events to Wavefront. NOT yet supported.

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/wavefronthq/wavefront-sdk-go/internal"
 	"strconv"
+
+	"github.com/wavefronthq/wavefront-sdk-go/internal"
 )
 
 // Line gets a span line in the Wavefront span data format:
@@ -14,7 +15,7 @@ import (
 // "getAllUsers source=localhost traceId=7b3bf470-9456-11e8-9eb6-529269fb1459 spanId=0313bafe-9457-11e8-9eb6-529269fb1459
 //
 //	parent=2f64e538-9457-11e8-9eb6-529269fb1459 application=Wavefront http.method=GET 1533531013 343500"
-func Line(name string, startMillis, durationMillis int64, source, traceId, spanId string, parents, followsFrom []string, tags []Tag, spanLogs []Log, defaultSource string) (string, error) {
+func Line(name string, startMillis, durationMillis int64, source, traceID, spanID string, parents, followsFrom []string, tags []Tag, spanLogs []Log, defaultSource string) (string, error) {
 	if name == "" {
 		return "", errors.New("span name cannot be empty")
 	}
@@ -23,11 +24,11 @@ func Line(name string, startMillis, durationMillis int64, source, traceId, spanI
 		source = defaultSource
 	}
 
-	if !isUUIDFormat(traceId) {
-		return "", fmt.Errorf("traceId is not in UUID format: span=%s traceId=%s", name, traceId)
+	if !isUUIDFormat(traceID) {
+		return "", fmt.Errorf("traceId is not in UUID format: span=%s traceId=%s", name, traceID)
 	}
-	if !isUUIDFormat(spanId) {
-		return "", fmt.Errorf("spanId is not in UUID format: span=%s spanId=%s", name, spanId)
+	if !isUUIDFormat(spanID) {
+		return "", fmt.Errorf("spanId is not in UUID format: span=%s spanId=%s", name, spanID)
 	}
 
 	sb := internal.GetBuffer()
@@ -37,9 +38,9 @@ func Line(name string, startMillis, durationMillis int64, source, traceId, spanI
 	sb.WriteString(" source=")
 	sb.WriteString(internal.SanitizeValue(source))
 	sb.WriteString(" traceId=")
-	sb.WriteString(traceId)
+	sb.WriteString(traceID)
 	sb.WriteString(" spanId=")
-	sb.WriteString(spanId)
+	sb.WriteString(spanID)
 
 	for _, parent := range parents {
 		sb.WriteString(" parent=")
@@ -79,10 +80,10 @@ func Line(name string, startMillis, durationMillis int64, source, traceId, spanI
 	return sb.String(), nil
 }
 
-func LogJSON(traceId, spanId string, spanLogs []Log, span string) (string, error) {
+func LogJSON(traceID, spanID string, spanLogs []Log, span string) (string, error) {
 	l := Logs{
-		TraceId: traceId,
-		SpanId:  spanId,
+		TraceID: traceID,
+		SpanID:  spanID,
 		Logs:    spanLogs,
 		Span:    span,
 	}
@@ -122,8 +123,8 @@ type Log struct {
 }
 
 type Logs struct {
-	TraceId string `json:"traceId"`
-	SpanId  string `json:"spanId"`
+	TraceID string `json:"traceId"`
+	SpanID  string `json:"spanId"`
 	Logs    []Log  `json:"logs"`
 	Span    string `json:"span"`
 }

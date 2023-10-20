@@ -3,8 +3,9 @@ package metric
 import (
 	"errors"
 	"fmt"
-	"github.com/wavefronthq/wavefront-sdk-go/internal"
 	"strconv"
+
+	"github.com/wavefronthq/wavefront-sdk-go/internal"
 )
 
 // Gets a metric line in the Wavefront metrics data format:

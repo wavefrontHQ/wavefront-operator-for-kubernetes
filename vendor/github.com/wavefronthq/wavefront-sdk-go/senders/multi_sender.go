@@ -90,10 +90,10 @@ func (ms *multiSender) SendDistribution(name string, centroids []histogram.Centr
 	return errors.get()
 }
 
-func (ms *multiSender) SendSpan(name string, startMillis, durationMillis int64, source, traceId, spanId string, parents, followsFrom []string, tags []SpanTag, spanLogs []SpanLog) error {
+func (ms *multiSender) SendSpan(name string, startMillis, durationMillis int64, source, traceID, spanID string, parents, followsFrom []string, tags []SpanTag, spanLogs []SpanLog) error {
 	var errors multiError
 	for _, sender := range ms.senders {
-		err := sender.SendSpan(name, startMillis, durationMillis, source, traceId, spanId, parents, followsFrom, tags, spanLogs)
+		err := sender.SendSpan(name, startMillis, durationMillis, source, traceID, spanID, parents, followsFrom, tags, spanLogs)
 		if err != nil {
 			errors.add(err)
 		}

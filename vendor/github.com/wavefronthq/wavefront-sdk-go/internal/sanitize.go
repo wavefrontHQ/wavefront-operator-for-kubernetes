@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+var /* const */ quotation = regexp.MustCompile(`"`)
+var /* const */ lineBreak = regexp.MustCompile(`\n`)
+
 // Sanitize sanitizes string of metric name, source and key of tags according to the rule of Wavefront proxy.
 func Sanitize(str string) string {
 	sb := GetBuffer()
@@ -26,7 +29,7 @@ func Sanitize(str string) string {
 	if (strings.HasPrefix(str, DeltaPrefix) || strings.HasPrefix(str, AltDeltaPrefix)) &&
 		str[skipHead] == 126 {
 		sb.WriteString(string(str[skipHead]))
-		skipHead += 1
+		skipHead++
 	}
 	if str[0] == 126 {
 		sb.WriteString(string(str[0]))
@@ -62,6 +65,3 @@ func SanitizeValue(str string) string {
 	}
 	return "\"" + lineBreak.ReplaceAllString(res, "\\n") + "\""
 }
-
-var /* const */ quotation = regexp.MustCompile("\"")
-var /* const */ lineBreak = regexp.MustCompile("\\n")
